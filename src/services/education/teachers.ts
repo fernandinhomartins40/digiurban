@@ -1,6 +1,28 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Teacher, TeacherSchool, TeacherClass, PaginatedResponse, TeachersRequestParams } from "@/types/education";
+
+/**
+ * Helper function to map database teacher object to Teacher interface
+ */
+function mapDbTeacherToInterface(teacherData: any): Teacher {
+  return {
+    id: teacherData.id,
+    name: teacherData.name,
+    cpf: teacherData.cpf,
+    registrationNumber: teacherData.registration_number,
+    birthDate: teacherData.birth_date,
+    address: teacherData.address,
+    phone: teacherData.phone,
+    email: teacherData.email,
+    educationLevel: teacherData.education_level,
+    specialties: teacherData.specialties,
+    teachingAreas: teacherData.teaching_areas,
+    hiringDate: teacherData.hiring_date,
+    isActive: teacherData.is_active,
+    createdAt: teacherData.created_at,
+    updatedAt: teacherData.updated_at
+  };
+}
 
 /**
  * Fetches a paginated list of teachers based on filter criteria
@@ -82,7 +104,7 @@ export async function getTeachers(params: TeachersRequestParams = {}): Promise<P
   }
 
   return {
-    data: data as Teacher[],
+    data: data ? data.map(mapDbTeacherToInterface) : [],
     count: count || 0,
     page,
     pageSize,
@@ -103,7 +125,7 @@ export async function getTeacherById(id: string): Promise<Teacher> {
     throw error;
   }
 
-  return data as Teacher;
+  return mapDbTeacherToInterface(data);
 }
 
 /**

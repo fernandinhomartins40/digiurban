@@ -2691,6 +2691,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_class_students: {
+        Args: { class_id: string }
+        Returns: number
+      }
+      calculate_school_students: {
+        Args: { school_id: string }
+        Returns: number
+      }
       generate_enrollment_protocol: {
         Args: Record<PropertyKey, never>
         Returns: string

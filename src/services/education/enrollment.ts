@@ -89,7 +89,7 @@ export async function getEnrollments(params: EnrollmentsRequestParams = {}): Pro
         id: enrollment.assigned_school.id,
         name: enrollment.assigned_school.name
       } : null
-    })),
+    })) as Enrollment[],
     count: count || 0,
     page,
     pageSize,
@@ -236,25 +236,46 @@ export async function updateEnrollment(id: string, enrollment: Partial<Omit<Enro
   if (!currentEnrollment.class_id && enrollment.classId && enrollment.status === 'approved') {
     try {
       // Update class student count - directly update without RPC call
-      const { error: classUpdateError } = await supabase
-        .from("education_classes")
-        .update({ current_students: supabase.rpc('calculate_class_students', { class_id: enrollment.classId }) })
-        .eq("id", enrollment.classId);
-
-      if (classUpdateError) throw classUpdateError;
+      if (enrollment.classId) {
+        // Get the current count from the database
+        const { data: countData } = await supabase
+          .from("education_classes")
+          .select("current_students")
+          .eq("id", enrollment.classId)
+          .single();
+          
+        if (countData) {
+          const newCount = await supabase.rpc('calculate_class_students', { class_id: enrollment.classId });
+          
+          // Update the class with the new count
+          await supabase
+            .from("education_classes")
+            .update({ current_students: newCount })
+            .eq("id", enrollment.classId);
+        }
+      }
 
       // Update school student count if assigned for the first time
       if (!currentEnrollment.assigned_school_id && enrollment.assignedSchoolId) {
-        const { error: schoolUpdateError } = await supabase
+        const { data: schoolCountData } = await supabase
           .from("education_schools")
-          .update({ current_students: supabase.rpc('calculate_school_students', { school_id: enrollment.assignedSchoolId }) })
-          .eq("id", enrollment.assignedSchoolId);
-
-        if (schoolUpdateError) throw schoolUpdateError;
+          .select("current_students")
+          .eq("id", enrollment.assignedSchoolId)
+          .single();
+          
+        if (schoolCountData) {
+          const newSchoolCount = await supabase.rpc('calculate_school_students', { school_id: enrollment.assignedSchoolId });
+          
+          // Update the school with the new count
+          await supabase
+            .from("education_schools")
+            .update({ current_students: newSchoolCount })
+            .eq("id", enrollment.assignedSchoolId);
+        }
       }
     } catch (err) {
       console.error("Error updating counts:", err);
-      // If the RPC fails, continue with the enrollment update
+      // If the update fails, continue with the enrollment update
     }
   }
 
@@ -332,20 +353,18 @@ export async function approveEnrollment(
 
   // Update class and school student counts
   try {
-    // Directly update class student count
+    // Get current class count and update
+    const classCount = await supabase.rpc('calculate_class_students', { class_id: classId });
     await supabase
       .from("education_classes")
-      .update({ 
-        current_students: supabase.rpc('calculate_class_students', { class_id: classId })
-      })
+      .update({ current_students: classCount })
       .eq("id", classId);
 
-    // Directly update school student count
+    // Get current school count and update
+    const schoolCount = await supabase.rpc('calculate_school_students', { school_id: schoolId });
     await supabase
       .from("education_schools")
-      .update({ 
-        current_students: supabase.rpc('calculate_school_students', { school_id: schoolId })
-      })
+      .update({ current_students: schoolCount })
       .eq("id", schoolId);
   } catch (err) {
     console.error("Error updating counts:", err);

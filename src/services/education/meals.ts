@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { MealMenu, MealShift, SpecialDiet, MealFeedback, MealRating } from "@/types/education";
 
@@ -60,7 +61,7 @@ export async function getMealMenus(
     schoolId: menu.school_id,
     name: menu.name,
     shift: menu.shift as MealShift,
-    dayOfWeek: menu.day_of_week,
+    dayOfWeek: menu.dayOfWeek,
     menuItems: menu.menu_items,
     nutritionalInfo: menu.nutritional_info,
     isSpecialDiet: menu.is_special_diet,
@@ -429,7 +430,7 @@ export async function submitMealFeedback(feedback: Omit<MealFeedback, "id" | "cr
     parentName: data.parent_name,
     studentName: data.student_name,
     classId: data.class_id,
-    rating: data.rating,
+    rating: data.rating as MealRating,
     comments: data.comments,
     feedbackDate: data.feedback_date,
     createdAt: data.created_at

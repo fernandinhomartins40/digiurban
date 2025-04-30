@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Student, PaginatedResponse, StudentsRequestParams } from '@/types/education';
 
@@ -222,6 +221,9 @@ export async function updateStudent(id: string, student: Partial<Student>) {
 }
 
 // Get student's current enrollment
+/**
+ * Get student's current enrollment
+ */
 export async function getStudentCurrentEnrollment(studentId: string, schoolYear?: number) {
   try {
     const currentYear = schoolYear || new Date().getFullYear();
@@ -230,24 +232,17 @@ export async function getStudentCurrentEnrollment(studentId: string, schoolYear?
       .from('education_enrollments')
       .select(`
         *,
-        requested_school:requested_school_id(name),
-        assigned_school:assigned_school_id(name),
+        requested_school:education_schools!education_enrollments_requested_school_id_fkey(name),
+        assigned_school:education_schools!education_enrollments_assigned_school_id_fkey(name),
         class:class_id(name, grade)
       `)
       .eq('student_id', studentId)
       .eq('school_year', currentYear)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No enrollment found, not an error
-        return {
-          data: null,
-          error: null
-        };
-      }
       throw error;
     }
 
