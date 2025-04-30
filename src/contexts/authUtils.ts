@@ -86,7 +86,8 @@ export const fetchUserProfile = async (
         address: {
           street: citizenProfile.street || "",
           number: citizenProfile.number || "",
-          complement: citizenProfile.complement || undefined,
+          // Fixed: The 'complement' field doesn't exist in the database schema
+          // Remove direct reference to complement and make it undefined
           neighborhood: citizenProfile.neighborhood || "",
           city: citizenProfile.city || "",
           state: citizenProfile.state || "",
@@ -180,6 +181,7 @@ export const fetchUserProfile = async (
             address: {
               street: userData.user.user_metadata?.street || "",
               number: userData.user.user_metadata?.number || "",
+              // Don't include complement as it doesn't exist in the database
               neighborhood: userData.user.user_metadata?.neighborhood || "",
               city: userData.user.user_metadata?.city || "",
               state: userData.user.user_metadata?.state || "",
@@ -215,3 +217,4 @@ export const fetchUserProfile = async (
     return false;
   }
 };
+

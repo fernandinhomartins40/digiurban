@@ -9,6 +9,7 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Ensure we're using the most reliable configuration for auth
 export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
@@ -17,7 +18,8 @@ export const supabase = createClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       storageKey: 'digiurban-auth-storage',
-      storage: localStorage
+      storage: typeof window !== 'undefined' ? localStorage : undefined
     }
   }
 );
+

@@ -36,7 +36,8 @@ export function AdminLayout() {
       isLoading, 
       isAuthenticated, 
       userType, 
-      hasUser: !!user 
+      hasUser: !!user,
+      department: user?.role === 'admin' || user?.role === 'prefeito' ? user?.department : undefined
     });
     
     // Only take action once loading is complete
@@ -55,8 +56,15 @@ export function AdminLayout() {
         return;
       }
       
+      // Check if admin has a department set (required for the mail module)
+      if (isAuthenticated && userType === "admin" && user && (!user.department || user.department.trim() === "")) {
+        console.log("AdminLayout: Admin user has no department");
+        setLocalError("Seu usuário administrativo não possui um departamento configurado. Entre em contato com o suporte.");
+        return;
+      }
+      
       // Only mark ready for React Query operations when auth is complete
-      if (isAuthenticated && userType === "admin") {
+      if (isAuthenticated && userType === "admin" && user) {
         console.log("AdminLayout: User is admin, setting readyForQuery");
         setReadyForQuery(true);
       }
@@ -113,7 +121,7 @@ export function AdminLayout() {
     );
   }
 
-  // Additional safety check
+  // Additional safety check - make sure we have a user with department for mail module
   if (!isAuthenticated || !user) {
     return (
       <div className="flex items-center justify-center h-screen">

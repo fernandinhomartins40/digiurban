@@ -6,14 +6,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
 export function CitizenLayout() {
-  const { isLoading, isAuthenticated, userType } = useAuth();
+  const { isLoading, isAuthenticated, userType, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     console.log("CitizenLayout - Auth state:", { 
       isLoading, 
       isAuthenticated, 
-      userType 
+      userType,
+      user
     });
     
     // Only redirect after loading is complete
@@ -32,7 +33,7 @@ export function CitizenLayout() {
         return;
       }
     }
-  }, [isLoading, isAuthenticated, userType, navigate]);
+  }, [isLoading, isAuthenticated, userType, navigate, user]);
 
   // Show loading indicator for a maximum of 5 seconds
   const [showFallback, setShowFallback] = React.useState(false);
@@ -84,8 +85,8 @@ export function CitizenLayout() {
     );
   }
 
-  // Additional safety check
-  if (!isAuthenticated || userType !== "citizen") {
+  // Additional safety check - make sure we actually have a user object
+  if (!isAuthenticated || userType !== "citizen" || !user) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">

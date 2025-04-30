@@ -30,7 +30,7 @@ export interface CitizenUser {
   address: {
     street: string;
     number: string;
-    complement?: string; // Made complement optional to match the database
+    complement?: string; // Made complement optional since it doesn't exist in the database
     neighborhood: string;
     city: string;
     state: string;
@@ -53,3 +53,4 @@ export type User = AdminUser | CitizenUser;
 export function isAdminUser(user: User | null): user is AdminUser {
   return user?.role === "admin" || user?.role === "prefeito";
 }
+
