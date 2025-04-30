@@ -6,16 +6,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Controller, UseFormReturn } from "react-hook-form";
 
 interface TemplateFieldItemProps {
   index: number;
   onRemove: () => void;
+  form: UseFormReturn<any>;
 }
 
-export function TemplateFieldItem({ index, onRemove }: TemplateFieldItemProps) {
-  const { control, watch } = useForm();
-  const fieldType = watch(`fields.${index}.field_type`);
+export function TemplateFieldItem({ index, onRemove, form }: TemplateFieldItemProps) {
+  const watchFieldType = form.watch(`fields.${index}.field_type`);
   
   return (
     <div className="border rounded-md p-4 space-y-3 relative">
@@ -31,7 +31,7 @@ export function TemplateFieldItem({ index, onRemove }: TemplateFieldItemProps) {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <FormField
-          control={control}
+          control={form.control}
           name={`fields.${index}.field_label`}
           render={({ field }) => (
             <FormItem>
@@ -45,7 +45,7 @@ export function TemplateFieldItem({ index, onRemove }: TemplateFieldItemProps) {
         />
         
         <FormField
-          control={control}
+          control={form.control}
           name={`fields.${index}.field_key`}
           render={({ field }) => (
             <FormItem>
@@ -61,7 +61,7 @@ export function TemplateFieldItem({ index, onRemove }: TemplateFieldItemProps) {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <FormField
-          control={control}
+          control={form.control}
           name={`fields.${index}.field_type`}
           render={({ field }) => (
             <FormItem>
@@ -86,7 +86,7 @@ export function TemplateFieldItem({ index, onRemove }: TemplateFieldItemProps) {
         />
         
         <FormField
-          control={control}
+          control={form.control}
           name={`fields.${index}.is_required`}
           render={({ field }) => (
             <FormItem className="flex flex-row items-end space-x-3 space-y-0 pt-6">
@@ -103,21 +103,22 @@ export function TemplateFieldItem({ index, onRemove }: TemplateFieldItemProps) {
         />
       </div>
       
-      {fieldType === "select" && (
+      {watchFieldType === "select" && (
         <FormField
-          control={control}
+          control={form.control}
           name={`fields.${index}.field_options`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Opções (formato JSON: {"{chave: \"valor\"}"}) </FormLabel>
+              <FormLabel>Opções (formato JSON: {"chave": "valor"})</FormLabel>
               <FormControl>
                 <Textarea 
                   placeholder='{"op1": "Opção 1", "op2": "Opção 2"}'
-                  value={field.value ? JSON.stringify(field.value) : ""}
+                  value={typeof field.value === 'object' ? JSON.stringify(field.value) : field.value || ''}
                   onChange={(e) => {
                     try {
                       field.onChange(JSON.parse(e.target.value));
                     } catch (error) {
+                      // If it's not valid JSON yet, store as string
                       field.onChange(e.target.value);
                     }
                   }}

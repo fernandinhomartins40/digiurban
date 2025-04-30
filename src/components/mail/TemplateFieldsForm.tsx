@@ -1,10 +1,11 @@
 
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TemplateField } from "@/types/mail";
 import { UseFormReturn } from "react-hook-form";
+import { format } from "date-fns";
 import { Edit } from "lucide-react";
 
 interface TemplateFieldsFormProps {
@@ -16,6 +17,20 @@ export function TemplateFieldsForm({ fields, form }: TemplateFieldsFormProps) {
   if (!fields.length) {
     return null;
   }
+
+  const formatFieldValue = (value: any, type: string) => {
+    if (value === null || value === undefined) return '';
+    
+    if (type === 'date' && typeof value === 'string') {
+      try {
+        return format(new Date(value), 'yyyy-MM-dd');
+      } catch (e) {
+        return value;
+      }
+    }
+    
+    return value;
+  };
 
   return (
     <div className="space-y-4 border rounded-md p-4">
@@ -30,6 +45,9 @@ export function TemplateFieldsForm({ fields, form }: TemplateFieldsFormProps) {
             key={field.id}
             control={form.control}
             name={field.field_key as any}
+            rules={{
+              required: field.is_required ? `O campo ${field.field_label} é obrigatório` : false
+            }}
             render={({ field: formField }) => (
               <FormItem>
                 <FormLabel>
@@ -38,9 +56,31 @@ export function TemplateFieldsForm({ fields, form }: TemplateFieldsFormProps) {
                 </FormLabel>
                 <FormControl>
                   {field.field_type === 'textarea' ? (
-                    <Textarea placeholder={field.field_label} {...formField} />
+                    <Textarea 
+                      placeholder={field.field_label} 
+                      {...formField} 
+                      value={formField.value || ''}
+                    />
+                  ) : field.field_type === 'date' ? (
+                    <Input 
+                      type="date" 
+                      placeholder={field.field_label} 
+                      {...formField} 
+                      value={formatFieldValue(formField.value, 'date')}
+                    />
+                  ) : field.field_type === 'number' ? (
+                    <Input 
+                      type="number" 
+                      placeholder={field.field_label} 
+                      {...formField} 
+                      value={formField.value || ''}
+                    />
                   ) : field.field_type === 'select' && field.field_options ? (
-                    <Select onValueChange={formField.onChange} defaultValue={formField.value}>
+                    <Select 
+                      onValueChange={formField.onChange} 
+                      defaultValue={formField.value}
+                      value={formField.value || ''}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder={`Selecione ${field.field_label}`} />
                       </SelectTrigger>
@@ -51,7 +91,11 @@ export function TemplateFieldsForm({ fields, form }: TemplateFieldsFormProps) {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Input placeholder={field.field_label} {...formField} />
+                    <Input 
+                      placeholder={field.field_label} 
+                      {...formField} 
+                      value={formField.value || ''}
+                    />
                   )}
                 </FormControl>
                 <FormMessage />

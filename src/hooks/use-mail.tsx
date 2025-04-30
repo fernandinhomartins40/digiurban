@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import * as mailService from "@/services/mailService";
@@ -79,23 +80,37 @@ export function useMail() {
       enabled: !!documentId,
     });
   
-  const getIncomingDocuments = () =>
-    useQuery({
-      queryKey: ['incomingDocuments', isAdminUser(user) ? user.department : null],
-      queryFn: () => isAdminUser(user) ? mailService.getIncomingDocuments(user.department) : Promise.resolve([]),
+  const getIncomingDocuments = () => {
+    const userDept = isAdminUser(user) ? user?.department : null;
+    
+    return useQuery({
+      queryKey: ['incomingDocuments', userDept],
+      queryFn: () => isAdminUser(user) && user?.department 
+        ? mailService.getIncomingDocuments(user.department) 
+        : Promise.resolve([]),
       enabled: !!(user && isAdminUser(user) && user.department),
     });
+  };
   
-  const getOutgoingDocuments = () =>
-    useQuery({
-      queryKey: ['outgoingDocuments', isAdminUser(user) ? user.department : null],
-      queryFn: () => isAdminUser(user) ? mailService.getOutgoingDocuments(user.department) : Promise.resolve([]),
+  const getOutgoingDocuments = () => {
+    const userDept = isAdminUser(user) ? user?.department : null;
+    
+    return useQuery({
+      queryKey: ['outgoingDocuments', userDept],
+      queryFn: () => isAdminUser(user) && user?.department 
+        ? mailService.getOutgoingDocuments(user.department) 
+        : Promise.resolve([]),
       enabled: !!(user && isAdminUser(user) && user.department),
     });
+  };
   
   const forwardDocumentMutation = useMutation({
-    mutationFn: ({ documentId, toDepartment }: { documentId: string; toDepartment: string }) =>
-      isAdminUser(user) ? mailService.forwardDocument(documentId, user.department, toDepartment, user.id) : Promise.resolve(null),
+    mutationFn: ({ documentId, toDepartment }: { documentId: string; toDepartment: string }) => {
+      if (!isAdminUser(user) || !user?.department) {
+        return Promise.reject(new Error("Usuário não autorizado ou sem departamento"));
+      }
+      return mailService.forwardDocument(documentId, user.department, toDepartment, user.id);
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['documentDestinations'] });
@@ -178,8 +193,12 @@ export function useMail() {
     });
   
   const uploadAttachmentMutation = useMutation({
-    mutationFn: ({ file, documentId }: { file: File; documentId: string }) =>
-      mailService.uploadAttachment(file, documentId, user?.id!),
+    mutationFn: ({ file, documentId }: { file: File; documentId: string }) => {
+      if (!user?.id) {
+        return Promise.reject(new Error("Usuário não autenticado"));
+      }
+      return mailService.uploadAttachment(file, documentId, user.id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentAttachments'] });
       toast({
@@ -198,11 +217,14 @@ export function useMail() {
   });
   
   // Templates
-  const getTemplates = () =>
-    useQuery({
-      queryKey: ['templates', isAdminUser(user) ? user.department : null],
-      queryFn: () => mailService.getTemplates(isAdminUser(user) ? user.department : undefined),
+  const getTemplates = () => {
+    const userDept = isAdminUser(user) ? user?.department : null;
+    
+    return useQuery({
+      queryKey: ['templates', userDept],
+      queryFn: () => mailService.getTemplates(userDept || undefined),
     });
+  };
   
   const getTemplate = (id?: string) =>
     useQuery({
@@ -212,14 +234,19 @@ export function useMail() {
     });
   
   const createTemplateMutation = useMutation({
-    mutationFn: ({ template, fields }: { template: Partial<Template>, fields: Partial<TemplateField>[] }) =>
-      mailService.createTemplate({...template, creator_id: user?.id!}, fields),
-    onSuccess: () => {
+    mutationFn: ({ template, fields }: { template: Partial<Template>, fields: Partial<TemplateField>[] }) => {
+      if (!user?.id) {
+        return Promise.reject(new Error("Usuário não autenticado"));
+      }
+      return mailService.createTemplate({...template, creator_id: user.id}, fields);
+    },
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });
       toast({
         title: "Modelo criado",
         description: "O modelo foi criado com sucesso.",
       });
+      return data;
     },
     onError: (error) => {
       toast({
@@ -228,18 +255,21 @@ export function useMail() {
         variant: "destructive",
       });
       console.error(error);
+      throw error;
     }
   });
   
   const updateTemplateMutation = useMutation({
     mutationFn: ({ id, template, fields }: { id: string, template: Partial<Template>, fields: Partial<TemplateField>[] }) =>
       mailService.updateTemplate(id, template, fields),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ['template'] });
       toast({
         title: "Modelo atualizado",
         description: "O modelo foi atualizado com sucesso.",
       });
+      return data;
     },
     onError: (error) => {
       toast({
@@ -248,6 +278,7 @@ export function useMail() {
         variant: "destructive",
       });
       console.error(error);
+      throw error;
     }
   });
   

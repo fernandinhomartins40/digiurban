@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,8 +39,9 @@ import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
-import { isAdminUser } from "@/utils/authGuards";
+import { isAdminUser } from "@/types/auth";
 import { TemplateFieldItem } from "@/components/mail/TemplateFieldItem";
+import { toast } from "@/hooks/use-toast";
 
 const templateFormSchema = z.object({
   name: z.string().min(3, "Nome é obrigatório"),
@@ -64,6 +66,7 @@ export default function TemplateCreator() {
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState("editor");
   const [previewContent, setPreviewContent] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
   
   const { 
     documentTypes,
@@ -78,7 +81,7 @@ export default function TemplateCreator() {
   } = useMail();
   
   const { data: templates } = getTemplates();
-  const { data: currentTemplate } = getTemplate(templateId || "");
+  const { data: currentTemplate, isLoading: isLoadingTemplate } = getTemplate(templateId || "");
   
   const form = useForm<z.infer<typeof templateFormSchema>>({
     resolver: zodResolver(templateFormSchema),
@@ -123,9 +126,11 @@ export default function TemplateCreator() {
   
   // Update preview when content changes
   const content = form.watch("content");
+  const fields = form.watch("fields");
+  
   useEffect(() => {
     updatePreview(content);
-  }, [content]);
+  }, [content, fields]);
   
   const updatePreview = (content: string) => {
     let previewHtml = content;
@@ -175,8 +180,17 @@ export default function TemplateCreator() {
         await deleteTemplate(templateId);
         setTemplateId(null);
         handleCreateNew();
+        toast({
+          title: "Modelo removido",
+          description: "O modelo foi excluído com sucesso."
+        });
       } catch (error) {
         console.error("Error deleting template:", error);
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao excluir o modelo.",
+          variant: "destructive"
+        });
       }
     }
   };
@@ -184,14 +198,36 @@ export default function TemplateCreator() {
   async function onSubmit(values: z.infer<typeof templateFormSchema>) {
     try {
       if (!user || !isAdminUser(user)) {
-        return;
+        return toast({
+          title: "Erro de permissão",
+          description: "Você não tem permissão para criar ou editar modelos.",
+          variant: "destructive"
+        });
       }
       
-      // Prepare fields
-      const templateFields = values.fields.map((field, index) => ({
-        ...field,
-        order_position: index,
-      }));
+      // Process field options to ensure they're properly formatted
+      const processedFields = values.fields.map((field, index) => {
+        let processedField = { ...field, order_position: index };
+        
+        // Ensure field_options is a proper object if it's for a select type
+        if (field.field_type === "select") {
+          try {
+            if (typeof field.field_options === "string") {
+              processedField.field_options = JSON.parse(field.field_options);
+            }
+          } catch (error) {
+            console.error("Error parsing field options:", error);
+            toast({
+              title: "Erro no formato",
+              description: `As opções do campo "${field.field_label}" não estão em formato JSON válido.`,
+              variant: "destructive"
+            });
+            throw new Error("Invalid field options format");
+          }
+        }
+        
+        return processedField;
+      });
       
       // Create or update template
       if (templateId) {
@@ -205,14 +241,23 @@ export default function TemplateCreator() {
               content: values.content,
               departments: values.departments,
             },
-            fields: templateFields,
+            fields: processedFields,
           });
           
           if (result) {
             setCurrentTab("editor");
+            toast({
+              title: "Modelo atualizado",
+              description: "O modelo foi atualizado com sucesso."
+            });
           }
         } catch (error) {
           console.error("Error updating template:", error);
+          toast({
+            title: "Erro",
+            description: "Ocorreu um erro ao atualizar o modelo.",
+            variant: "destructive"
+          });
         }
       } else {
         try {
@@ -224,15 +269,24 @@ export default function TemplateCreator() {
               content: values.content,
               departments: values.departments,
             },
-            fields: templateFields,
+            fields: processedFields,
           });
           
           if (result) {
             setTemplateId(result.id);
             setCurrentTab("editor");
+            toast({
+              title: "Modelo criado",
+              description: "O modelo foi criado com sucesso."
+            });
           }
         } catch (error) {
           console.error("Error creating template:", error);
+          toast({
+            title: "Erro",
+            description: "Ocorreu um erro ao criar o modelo.",
+            variant: "destructive"
+          });
         }
       }
     } catch (error) {
@@ -279,10 +333,16 @@ export default function TemplateCreator() {
                   </Button>
                 ))}
                 
-                {templates?.length === 0 && (
+                {!templates?.length && (
                   <p className="text-sm text-muted-foreground text-center py-2">
                     Nenhum modelo salvo
                   </p>
+                )}
+                
+                {isLoadingTemplate && (
+                  <div className="flex justify-center py-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </div>
                 )}
               </div>
             </div>
@@ -424,6 +484,7 @@ export default function TemplateCreator() {
                               key={field.id}
                               index={index}
                               onRemove={() => remove(index)}
+                              form={form}
                             />
                           ))
                         )}
@@ -502,7 +563,7 @@ export default function TemplateCreator() {
                             As ações abaixo não podem ser desfeitas.
                           </p>
                           
-                          <Dialog>
+                          <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
                             <DialogTrigger asChild>
                               <Button variant="destructive">
                                 <Trash2 size={16} className="mr-2" />
@@ -517,7 +578,11 @@ export default function TemplateCreator() {
                                 </DialogDescription>
                               </DialogHeader>
                               <DialogFooter>
-                                <Button variant="outline" type="button">
+                                <Button 
+                                  variant="outline" 
+                                  type="button" 
+                                  onClick={() => setConfirmDelete(false)}
+                                >
                                   Cancelar
                                 </Button>
                                 <Button 
