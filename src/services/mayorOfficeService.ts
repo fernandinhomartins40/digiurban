@@ -13,6 +13,10 @@ import {
   ProgramDocument,
   RequestStatus,
   AppointmentStatus,
+  PriorityLevel,
+  PolicyStatus,
+  ProgramStatus,
+  GoalStatus,
 } from "@/types/mayorOffice";
 import { toast } from "@/hooks/use-toast";
 
@@ -67,7 +71,7 @@ export async function getDashboardStats(
 export async function getDirectRequests(
   status?: RequestStatus,
   department?: string,
-  priority?: string
+  priority?: PriorityLevel
 ): Promise<DirectRequest[]> {
   try {
     let query = supabase
@@ -100,8 +104,8 @@ export async function getDirectRequests(
       description: request.description,
       requesterId: request.requester_id,
       targetDepartment: request.target_department,
-      priority: request.priority,
-      status: request.status,
+      priority: request.priority as PriorityLevel,
+      status: request.status as RequestStatus,
       dueDate: request.due_date ? new Date(request.due_date) : undefined,
       completedAt: request.completed_at
         ? new Date(request.completed_at)
@@ -169,8 +173,8 @@ export async function createDirectRequest(request: Omit<DirectRequest, "id" | "p
       description: data.description,
       requesterId: data.requester_id,
       targetDepartment: data.target_department,
-      priority: data.priority,
-      status: data.status,
+      priority: data.priority as PriorityLevel,
+      status: data.status as RequestStatus,
       dueDate: data.due_date ? new Date(data.due_date) : undefined,
       completedAt: data.completed_at ? new Date(data.completed_at) : undefined,
       createdAt: new Date(data.created_at),
@@ -267,8 +271,8 @@ export async function getMayorAppointments(
       requestedDate: new Date(appointment.requested_date),
       requestedTime: appointment.requested_time,
       durationMinutes: appointment.duration_minutes,
-      status: appointment.status,
-      priority: appointment.priority,
+      status: appointment.status as AppointmentStatus,
+      priority: appointment.priority as PriorityLevel,
       adminNotes: appointment.admin_notes,
       responseMessage: appointment.response_message,
       respondedBy: appointment.responded_by,
@@ -309,7 +313,7 @@ export async function getPublicPolicies(status?: PolicyStatus): Promise<PublicPo
       description: policy.description,
       startDate: new Date(policy.start_date),
       endDate: policy.end_date ? new Date(policy.end_date) : undefined,
-      status: policy.status,
+      status: policy.status as PolicyStatus,
       responsibleId: policy.responsible_id,
       department: policy.department,
       createdBy: policy.created_by,
@@ -324,7 +328,7 @@ export async function getPublicPolicies(status?: PolicyStatus): Promise<PublicPo
         targetUnit: goal.target_unit,
         currentValue: goal.current_value,
         dueDate: goal.due_date ? new Date(goal.due_date) : undefined,
-        status: goal.status,
+        status: goal.status as GoalStatus,
         createdAt: new Date(goal.created_at),
         updatedAt: new Date(goal.updated_at),
       })),
@@ -368,7 +372,7 @@ export async function getStrategicPrograms(status?: ProgramStatus): Promise<Stra
       endDate: program.end_date ? new Date(program.end_date) : undefined,
       budget: program.budget,
       spentAmount: program.spent_amount,
-      status: program.status,
+      status: program.status as ProgramStatus,
       progressPercentage: program.progress_percentage,
       coordinatorId: program.coordinator_id,
       createdBy: program.created_by,
@@ -381,8 +385,9 @@ export async function getStrategicPrograms(status?: ProgramStatus): Promise<Stra
         description: milestone.description,
         dueDate: new Date(milestone.due_date),
         completionDate: milestone.completion_date ? new Date(milestone.completion_date) : undefined,
-        status: milestone.status,
+        status: milestone.status as GoalStatus,
         responsibleId: milestone.responsible_id,
+        responsibleName: milestone.responsible_name,
         createdAt: new Date(milestone.created_at),
         updatedAt: new Date(milestone.updated_at),
       })),
