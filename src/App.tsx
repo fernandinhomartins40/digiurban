@@ -1,27 +1,104 @@
+
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import { ChatPanel } from "@/components/chat/ChatPanel";
 
-const queryClient = new QueryClient();
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { CitizenLayout } from "@/components/layout/CitizenLayout";
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+import AdminDashboard from "@/pages/admin/Dashboard";
+import CitizenDashboard from "@/pages/citizen/Dashboard";
+import UserManagement from "@/pages/admin/users/UserManagement";
+
+// Protected route component
+const ProtectedRoute = ({ 
+  children, 
+  requiredUserType,
+}: { 
+  children: JSX.Element,
+  requiredUserType: "admin" | "citizen" | "any",
+}) => {
+  const { isAuthenticated, userType, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return null; // or loading component
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (requiredUserType === "any" || userType === requiredUserType) {
+    return children;
+  }
+  
+  return <Navigate to={`/${userType}/dashboard`} replace />;
+};
+
+// Auth route component (redirects if already logged in)
+const AuthRoute = ({ children }: { children: JSX.Element }) => {
+  const { isAuthenticated, userType, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return null; // or loading component
+  }
+  
+  if (isAuthenticated) {
+    return <Navigate to={`/${userType}/dashboard`} replace />;
+  }
+  
+  return children;
+};
+
+function AppWithProviders() {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
+        <Route path="/register" element={<AuthRoute><Register /></AuthRoute>} />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<ProtectedRoute requiredUserType="admin"><AdminLayout /></ProtectedRoute>}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<UserManagement />} />
+          {/* Add more admin routes here as needed */}
+        </Route>
+
+        {/* Citizen Routes */}
+        <Route path="/citizen" element={<ProtectedRoute requiredUserType="citizen"><CitizenLayout /></ProtectedRoute>}>
+          <Route path="dashboard" element={<CitizenDashboard />} />
+          {/* Add more citizen routes here as needed */}
+        </Route>
+
+        {/* Catch-all route for 404 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      
+      {/* Show chat panel only when authenticated */}
+      {isAuthenticated && <ChatPanel />}
+    </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="light" storageKey="digiUrbis-theme">
+        <AuthProvider>
+          <AppWithProviders />
+          <Toaster />
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  );
+}
 
 export default App;
