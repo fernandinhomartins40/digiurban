@@ -1,7 +1,7 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 
@@ -22,100 +22,42 @@ import MailDashboard from "@/pages/admin/correio/MailDashboard";
 import OficioDigital from "@/pages/admin/correio/OficioDigital";
 import TemplateCreator from "@/pages/admin/correio/TemplateCreator";
 
-// Protected route component
-const ProtectedRoute = ({ 
-  children, 
-  requiredUserType,
-}: { 
-  children: JSX.Element,
-  requiredUserType: "admin" | "citizen" | "any",
-}) => {
-  const { isAuthenticated, userType, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-    </div>;
-  }
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  if (requiredUserType === "any" || userType === requiredUserType) {
-    return children;
-  }
-  
-  return <Navigate to={`/${userType}/dashboard`} replace />;
-};
-
-// Auth route component (redirects if already logged in)
-const AuthRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated, userType, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-    </div>;
-  }
-  
-  if (isAuthenticated && userType) {
-    return <Navigate to={`/${userType}/dashboard`} replace />;
-  }
-  
-  return children;
-};
-
-function AppWithProviders() {
-  const { isAuthenticated } = useAuth();
-
-  return (
-    <>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
-        <Route path="/register" element={<AuthRoute><Register /></AuthRoute>} />
-        <Route path="/admin-register" element={<AuthRoute><AdminRegister /></AuthRoute>} />
-        <Route path="/esqueci-senha" element={<AuthRoute><ForgotPassword /></AuthRoute>} />
-        <Route path="/reset-password" element={<AuthRoute><ResetPassword /></AuthRoute>} />
-
-        {/* Admin Routes */}
-        <Route path="/admin" element={<ProtectedRoute requiredUserType="admin"><AdminLayout /></ProtectedRoute>}>
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="users" element={<UserManagement />} />
-          
-          {/* Correio Interno Routes */}
-          <Route path="correio/dashboard" element={<MailDashboard />} />
-          <Route path="correio/oficio-digital" element={<OficioDigital />} />
-          <Route path="correio/criador-oficios" element={<TemplateCreator />} />
-          
-          {/* Add more admin routes here as needed */}
-        </Route>
-
-        {/* Citizen Routes */}
-        <Route path="/citizen" element={<ProtectedRoute requiredUserType="citizen"><CitizenLayout /></ProtectedRoute>}>
-          <Route path="dashboard" element={<CitizenDashboard />} />
-          {/* Add more citizen routes here as needed */}
-        </Route>
-
-        {/* Catch-all route for 404 */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      
-      {/* Show chat panel only when authenticated */}
-      {isAuthenticated && <ChatPanel />}
-    </>
-  );
-}
-
 function App() {
   return (
     <BrowserRouter>
       <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
         <AuthProvider>
-          <AppWithProviders />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/admin-register" element={<AdminRegister />} />
+            <Route path="/esqueci-senha" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="users" element={<UserManagement />} />
+              
+              {/* Correio Interno Routes */}
+              <Route path="correio/dashboard" element={<MailDashboard />} />
+              <Route path="correio/oficio-digital" element={<OficioDigital />} />
+              <Route path="correio/criador-oficios" element={<TemplateCreator />} />
+            </Route>
+
+            {/* Citizen Routes */}
+            <Route path="/citizen" element={<CitizenLayout />}>
+              <Route path="dashboard" element={<CitizenDashboard />} />
+            </Route>
+
+            {/* Catch-all route for 404 */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+          
           <Toaster />
+          <ChatPanel />
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

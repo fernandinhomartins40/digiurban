@@ -1,9 +1,11 @@
+
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { User, UserRole } from "@/types/auth";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { toast } from "@/hooks/use-toast";
+import { getUserTypeFromRole, safeStorage } from "@/utils/authGuards";
 
 interface AuthContextType {
   user: User | null;
@@ -21,67 +23,29 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper to track auth initialization state across app restarts
+const AUTH_INIT_KEY = "digiurban-auth-initialized";
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userType, setUserType] = useState<"admin" | "citizen" | null>(null);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state change event:", event);
-      
-      setSession(session);
-      
-      if (session?.user) {
-        try {
-          // Use setTimeout to avoid potential deadlocks with Supabase auth
-          setTimeout(async () => {
-            await fetchUserProfile(session.user.id);
-          }, 0);
-        } catch (error) {
-          console.error("Error fetching user profile after auth state change:", error);
-          // Make sure isLoading is false even on error
-          setIsLoading(false);
-        }
-      } else {
-        setUser(null);
-        setUserType(null);
-        setIsLoading(false);
-      }
-    });
+  // Helper function to clear auth state
+  const clearAuthState = () => {
+    setUser(null);
+    setSession(null);
+    setUserType(null);
+    safeStorage.removeItem(AUTH_INIT_KEY);
+  };
 
-    // Check for initial session
-    const initializeAuth = async () => {
-      try {
-        setIsLoading(true);
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        setSession(session);
-        
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        } else {
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Error initializing auth:", error);
-        setUser(null);
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
+  // Function to safely fetch user profile
   const fetchUserProfile = async (userId: string) => {
     console.log("Fetching user profile for ID:", userId);
+
     try {
       // Try to get admin profile
       const { data: adminProfile, error: adminError } = await supabase
@@ -117,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         setUserType("admin");
         setIsLoading(false);
-        return;
+        return true;
       }
 
       // If not admin, try to get citizen profile
@@ -153,30 +117,134 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         setUserType("citizen");
         setIsLoading(false);
-        return;
+        return true;
       }
 
       // No profile found but user is authenticated in Supabase
-      console.warn("User authenticated but no profile found. Logging out.", userId);
-      toast({
-        title: "Erro de perfil",
-        description: "Seu perfil não foi encontrado. Por favor, entre em contato com o suporte.",
-        variant: "destructive",
-      });
-      
-      // Force logout as the user has no profile
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setUserType(null);
-      navigate("/login");
+      console.warn("User authenticated but no profile found. Will log out.", userId);
+      return false;
     } catch (error) {
-      console.error("Error fetching user profile:", error);
-    } finally {
-      // Always ensure isLoading is set to false
-      setIsLoading(false);
+      console.error("Error in fetchUserProfile:", error);
+      return false;
     }
   };
+
+  // Initialize auth state
+  useEffect(() => {
+    let isMounted = true;
+    let authSubscription: { unsubscribe: () => void } | null = null;
+
+    const initializeAuth = async () => {
+      try {
+        console.log("Initializing auth...");
+        setIsLoading(true);
+
+        // Set up auth state listener FIRST
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, currentSession) => {
+            console.log("Auth state change event:", event);
+            
+            if (!isMounted) return;
+            
+            if (currentSession?.user) {
+              console.log("Session found in auth state change");
+              setSession(currentSession);
+              
+              // Use setTimeout to avoid potential deadlocks with Supabase auth
+              setTimeout(async () => {
+                if (!isMounted) return;
+                
+                const profileFound = await fetchUserProfile(currentSession.user.id);
+                
+                if (!profileFound) {
+                  console.log("No profile found for authenticated user, logging out");
+                  // Clear auth state and force logout
+                  clearAuthState();
+                  supabase.auth.signOut().catch(console.error);
+                  toast({
+                    title: "Erro de perfil",
+                    description: "Seu perfil não foi encontrado. Por favor, entre em contato com o suporte.",
+                    variant: "destructive",
+                  });
+                  
+                  if (isMounted) navigate("/login");
+                }
+              }, 0);
+            } else {
+              console.log("No session found in auth state change");
+              if (isMounted) {
+                clearAuthState();
+                setIsLoading(false);
+              }
+            }
+          }
+        );
+        
+        authSubscription = subscription;
+
+        // THEN check for existing session
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
+        
+        if (initialSession?.user) {
+          console.log("Initial session found");
+          if (isMounted) setSession(initialSession);
+          
+          const profileFound = await fetchUserProfile(initialSession.user.id);
+          
+          if (!profileFound && isMounted) {
+            console.log("No profile found for authenticated user, logging out");
+            clearAuthState();
+            await supabase.auth.signOut();
+            toast({
+              title: "Erro de perfil",
+              description: "Seu perfil não foi encontrado. Por favor, entre em contato com o suporte.",
+              variant: "destructive",
+            });
+            
+            if (isMounted) navigate("/login");
+          }
+        } else {
+          console.log("No initial session found");
+          if (isMounted) {
+            clearAuthState();
+            setIsLoading(false);
+          }
+        }
+
+        if (isMounted) {
+          safeStorage.setItem(AUTH_INIT_KEY, "true");
+          setAuthInitialized(true);
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        if (isMounted) {
+          clearAuthState();
+          setIsLoading(false);
+        }
+      }
+    };
+
+    // Only initialize if not already done (prevents duplicate initializations)
+    if (safeStorage.getItem(AUTH_INIT_KEY) !== "true") {
+      initializeAuth();
+    } else {
+      setAuthInitialized(true);
+      if (!session && !user) {
+        setIsLoading(false);
+      }
+    }
+
+    return () => {
+      isMounted = false;
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
+    };
+  }, [navigate]);
 
   const login = async (email: string, password: string, userType: "admin" | "citizen") => {
     try {
@@ -188,9 +256,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) throw error;
-
+      
       // User type is checked on backend via profile tables
-      return;
     } catch (error: any) {
       console.error("Login error:", error.message);
       toast({
@@ -198,9 +265,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error.message || "Verifique suas credenciais e tente novamente",
         variant: "destructive",
       });
-      throw error;
-    } finally {
+      
+      // Make sure to set loading to false on error
       setIsLoading(false);
+      throw error;
     }
   };
 
@@ -231,8 +299,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         title: "Cadastro realizado",
         description: "Sua conta foi criada com sucesso!",
       });
-      
-      return;
     } catch (error: any) {
       console.error("Registration error:", error.message);
       toast({
@@ -240,9 +306,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error.message || "Não foi possível completar o cadastro",
         variant: "destructive",
       });
-      throw error;
-    } finally {
+      
+      // Make sure to set loading to false on error
       setIsLoading(false);
+      throw error;
     }
   };
 
@@ -250,10 +317,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setUserType(null);
-      navigate("/login");
+      clearAuthState();
+      navigate("/login", { replace: true });
     } catch (error: any) {
       console.error("Logout error:", error.message);
       toast({
@@ -261,7 +326,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "Não foi possível encerrar sua sessão",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -325,6 +389,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         permission[action]
     );
   };
+
+  // Provide the auth context only after initialization to prevent premature access
+  if (!authInitialized && isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <span className="ml-2">Iniciando autenticação...</span>
+      </div>
+    );
+  }
 
   const value = {
     user,
