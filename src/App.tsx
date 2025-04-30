@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -6,6 +7,7 @@ import { ChatPanel } from "@/components/chat/ChatPanel";
 
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
+import AdminRegister from "@/pages/auth/AdminRegister";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -69,6 +71,7 @@ function AppWithProviders() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
         <Route path="/register" element={<AuthRoute><Register /></AuthRoute>} />
+        <Route path="/admin-register" element={<AuthRoute><AdminRegister /></AuthRoute>} />
         <Route path="/esqueci-senha" element={<AuthRoute><ForgotPassword /></AuthRoute>} />
         <Route path="/reset-password" element={<AuthRoute><ResetPassword /></AuthRoute>} />
 
