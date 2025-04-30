@@ -66,7 +66,7 @@ export async function getEnrollments(params: EnrollmentsRequestParams = {}): Pro
       requestedSchoolId: enrollment.requested_school_id,
       assignedSchoolId: enrollment.assigned_school_id,
       schoolYear: enrollment.school_year,
-      status: enrollment.status,
+      status: enrollment.status as EnrollmentStatus,
       requestDate: enrollment.request_date,
       decisionDate: enrollment.decision_date,
       decisionBy: enrollment.decision_by,
@@ -124,7 +124,7 @@ export async function getEnrollmentById(id: string): Promise<Enrollment> {
     requestedSchoolId: data.requested_school_id,
     assignedSchoolId: data.assigned_school_id,
     schoolYear: data.school_year,
-    status: data.status,
+    status: data.status as EnrollmentStatus,
     requestDate: data.request_date,
     decisionDate: data.decision_date,
     decisionBy: data.decision_by,
@@ -164,7 +164,7 @@ export async function getEnrollmentById(id: string): Promise<Enrollment> {
 export async function createEnrollment(enrollment: Omit<Enrollment, "id" | "protocolNumber" | "createdAt" | "updatedAt">): Promise<Enrollment> {
   const { data, error } = await supabase
     .from("education_enrollments")
-    .insert([{
+    .insert({
       student_id: enrollment.studentId,
       class_id: enrollment.classId,
       requested_school_id: enrollment.requestedSchoolId,
@@ -177,7 +177,7 @@ export async function createEnrollment(enrollment: Omit<Enrollment, "id" | "prot
       justification: enrollment.justification,
       special_request: enrollment.specialRequest,
       notes: enrollment.notes
-    }])
+    })
     .select()
     .single();
 
@@ -193,7 +193,7 @@ export async function createEnrollment(enrollment: Omit<Enrollment, "id" | "prot
     requestedSchoolId: data.requested_school_id,
     assignedSchoolId: data.assigned_school_id,
     schoolYear: data.school_year,
-    status: data.status,
+    status: data.status as EnrollmentStatus,
     requestDate: data.request_date,
     decisionDate: data.decision_date,
     decisionBy: data.decision_by,
@@ -235,20 +235,22 @@ export async function updateEnrollment(id: string, enrollment: Partial<Omit<Enro
   // If class is being assigned for the first time and it's not null
   if (!currentEnrollment.class_id && enrollment.classId && enrollment.status === 'approved') {
     try {
-      // Update class student count
-      const { error: incrementError } = await supabase.rpc("increment_class_students", {
-        class_id: enrollment.classId
-      });
+      // Update class student count - directly update without RPC call
+      const { error: classUpdateError } = await supabase
+        .from("education_classes")
+        .update({ current_students: supabase.rpc('calculate_class_students', { class_id: enrollment.classId }) })
+        .eq("id", enrollment.classId);
 
-      if (incrementError) throw incrementError;
+      if (classUpdateError) throw classUpdateError;
 
       // Update school student count if assigned for the first time
       if (!currentEnrollment.assigned_school_id && enrollment.assignedSchoolId) {
-        const { error: schoolError } = await supabase.rpc("increment_school_students", {
-          school_id: enrollment.assignedSchoolId
-        });
+        const { error: schoolUpdateError } = await supabase
+          .from("education_schools")
+          .update({ current_students: supabase.rpc('calculate_school_students', { school_id: enrollment.assignedSchoolId }) })
+          .eq("id", enrollment.assignedSchoolId);
 
-        if (schoolError) throw schoolError;
+        if (schoolUpdateError) throw schoolUpdateError;
       }
     } catch (err) {
       console.error("Error updating counts:", err);
@@ -275,7 +277,7 @@ export async function updateEnrollment(id: string, enrollment: Partial<Omit<Enro
     requestedSchoolId: data.requested_school_id,
     assignedSchoolId: data.assigned_school_id,
     schoolYear: data.school_year,
-    status: data.status,
+    status: data.status as EnrollmentStatus,
     requestDate: data.request_date,
     decisionDate: data.decision_date,
     decisionBy: data.decision_by,
@@ -330,22 +332,24 @@ export async function approveEnrollment(
 
   // Update class and school student counts
   try {
-    // Increment class student count
-    const { error: classError } = await supabase.rpc("increment_class_students", {
-      class_id: classId
-    });
+    // Directly update class student count
+    await supabase
+      .from("education_classes")
+      .update({ 
+        current_students: supabase.rpc('calculate_class_students', { class_id: classId })
+      })
+      .eq("id", classId);
 
-    if (classError) throw classError;
-
-    // Increment school student count
-    const { error: schoolError } = await supabase.rpc("increment_school_students", {
-      school_id: schoolId
-    });
-
-    if (schoolError) throw schoolError;
+    // Directly update school student count
+    await supabase
+      .from("education_schools")
+      .update({ 
+        current_students: supabase.rpc('calculate_school_students', { school_id: schoolId })
+      })
+      .eq("id", schoolId);
   } catch (err) {
     console.error("Error updating counts:", err);
-    // If the RPCs fail, continue with the response
+    // If the update fails, continue with the response
   }
 
   return {
@@ -356,7 +360,7 @@ export async function approveEnrollment(
     requestedSchoolId: data.requested_school_id,
     assignedSchoolId: data.assigned_school_id,
     schoolYear: data.school_year,
-    status: data.status,
+    status: data.status as EnrollmentStatus,
     requestDate: data.request_date,
     decisionDate: data.decision_date,
     decisionBy: data.decision_by,
@@ -401,7 +405,7 @@ export async function rejectEnrollment(
     requestedSchoolId: data.requested_school_id,
     assignedSchoolId: data.assigned_school_id,
     schoolYear: data.school_year,
-    status: data.status,
+    status: data.status as EnrollmentStatus,
     requestDate: data.request_date,
     decisionDate: data.decision_date,
     decisionBy: data.decision_by,
@@ -445,7 +449,10 @@ export async function getEnrollmentStatsByStatus(
   };
 
   data.forEach(item => {
-    stats[item.status as EnrollmentStatus]++;
+    const status = item.status as EnrollmentStatus;
+    if (status in stats) {
+      stats[status]++;
+    }
   });
 
   return stats;

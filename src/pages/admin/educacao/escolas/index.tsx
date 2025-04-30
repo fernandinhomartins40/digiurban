@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { School, Plus, Search, FilterX } from "lucide-react";
 import { getSchools } from "@/services/education/schools";
 import { School as SchoolType, SchoolType as SchoolTypeEnum } from "@/types/education";
-import SchoolDialog from "@/components/educacao/escolas/SchoolDialog";
+import { SchoolDialog } from "@/components/educacao/escolas/SchoolDialog";
 import { useToast } from "@/hooks/use-toast";
 import { PaginationComponent } from "@/components/educacao/PaginationComponent";
 

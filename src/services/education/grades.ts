@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { Grade } from "@/types/education";
+import { Grade, GradePeriod } from "@/types/education";
 
 /**
  * Fetch grades for a student
@@ -32,7 +33,7 @@ export async function getStudentGrades(studentId: string, schoolYear?: number): 
     classId: grade.class_id,
     subject: grade.subject,
     teacherId: grade.teacher_id,
-    period: grade.period,
+    period: grade.period as GradePeriod,
     grade: grade.grade,
     attendanceDays: grade.attendance_days,
     absenceDays: grade.absence_days,
@@ -56,7 +57,7 @@ export async function getStudentGrades(studentId: string, schoolYear?: number): 
 /**
  * Fetch all grades for a class
  */
-export async function getClassGrades(classId: string, period?: string, subject?: string): Promise<Grade[]> {
+export async function getClassGrades(classId: string, period?: GradePeriod, subject?: string): Promise<Grade[]> {
   let query = supabase
     .from("education_grades")
     .select(`
@@ -86,7 +87,7 @@ export async function getClassGrades(classId: string, period?: string, subject?:
     classId: grade.class_id,
     subject: grade.subject,
     teacherId: grade.teacher_id,
-    period: grade.period,
+    period: grade.period as GradePeriod,
     grade: grade.grade,
     attendanceDays: grade.attendance_days,
     absenceDays: grade.absence_days,
@@ -156,7 +157,7 @@ export async function createGrade(grade: Omit<Grade, "id" | "createdAt" | "updat
     classId: data.class_id,
     subject: data.subject,
     teacherId: data.teacher_id,
-    period: data.period,
+    period: data.period as GradePeriod,
     grade: data.grade,
     attendanceDays: data.attendance_days,
     absenceDays: data.absence_days,
@@ -199,7 +200,7 @@ export async function updateGrade(id: string, grade: Partial<Omit<Grade, "id" | 
     classId: data.class_id,
     subject: data.subject,
     teacherId: data.teacher_id,
-    period: data.period,
+    period: data.period as GradePeriod,
     grade: data.grade,
     attendanceDays: data.attendance_days,
     absenceDays: data.absence_days,
@@ -268,7 +269,7 @@ export async function calculateStudentAverage(
 export async function calculateClassAverage(
   classId: string,
   subject: string,
-  period?: string
+  period?: GradePeriod
 ): Promise<number> {
   let query = supabase
     .from("education_grades")

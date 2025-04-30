@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -62,16 +61,18 @@ type SchoolFormValues = z.infer<typeof schoolFormSchema>;
 
 interface SchoolDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
-  school?: School;
-  onSuccess: () => void;
+  onOpenChange: (open: boolean) => void;
+  school?: School | null;
+  onCreated: () => void;
+  onUpdated: () => void;
 }
 
 export function SchoolDialog({
   open,
-  setOpen,
+  onOpenChange,
   school,
-  onSuccess,
+  onCreated,
+  onUpdated,
 }: SchoolDialogProps) {
   const isEditing = !!school;
   const title = isEditing ? "Editar Escola" : "Nova Escola";
@@ -106,13 +107,14 @@ export function SchoolDialog({
       if (isEditing && school) {
         await updateSchool(school.id, values);
         toast.success("Escola atualizada com sucesso");
+        onUpdated();
       } else {
-        await createSchool(values);
+        await createSchool(values as Omit<School, "id" | "createdAt" | "updatedAt">);
         toast.success("Escola cadastrada com sucesso");
+        onCreated();
       }
-      setOpen(false);
+      onOpenChange(false);
       form.reset();
-      onSuccess();
     } catch (error) {
       console.error("Erro ao salvar escola:", error);
       toast.error("Erro ao salvar escola");
@@ -127,7 +129,7 @@ export function SchoolDialog({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -436,7 +438,7 @@ export function SchoolDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => onOpenChange(false)}
               >
                 Cancelar
               </Button>
@@ -450,3 +452,6 @@ export function SchoolDialog({
     </Dialog>
   );
 }
+
+// Default export for compatibility with existing imports
+export default SchoolDialog;

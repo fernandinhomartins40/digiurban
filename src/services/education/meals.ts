@@ -1,29 +1,55 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  MealMenu, 
-  SpecialDiet, 
-  MealFeedback 
-} from "@/types/education";
+import { MealMenu, MealShift, SpecialDiet, MealFeedback, MealRating } from "@/types/education";
 
 /**
- * Fetches meal menus for a school
+ * Fetch meal menus for a school
  */
-export async function getMealMenus(schoolId: string, active: boolean = true): Promise<MealMenu[]> {
+export async function getMealMenus(
+  schoolId: string,
+  options: {
+    isActive?: boolean;
+    weekNumber?: number;
+    month?: number;
+    year?: number;
+    isSpecialDiet?: boolean;
+    dayOfWeek?: number;
+  } = {}
+): Promise<MealMenu[]> {
   let query = supabase
     .from("education_meal_menus")
     .select("*")
     .eq("school_id", schoolId);
 
-  if (active !== undefined) {
-    const today = new Date().toISOString().split('T')[0];
-    query = query
-      .eq("is_active", active)
-      .lte("active_from", today)
-      .or(`active_until.is.null,active_until.gte.${today}`);
+  // Apply filters
+  if (options.isActive !== undefined) {
+    query = query.eq("is_active", options.isActive);
   }
 
-  const { data, error } = await query.order("day_of_week", { ascending: true });
+  if (options.weekNumber !== undefined) {
+    query = query.eq("week_number", options.weekNumber);
+  }
+
+  if (options.month !== undefined) {
+    query = query.eq("month", options.month);
+  }
+
+  if (options.year !== undefined) {
+    query = query.eq("year", options.year);
+  }
+
+  if (options.isSpecialDiet !== undefined) {
+    query = query.eq("is_special_diet", options.isSpecialDiet);
+  }
+
+  if (options.dayOfWeek !== undefined) {
+    query = query.eq("day_of_week", options.dayOfWeek);
+  }
+
+  const { data, error } = await query
+    .order("year", { ascending: false })
+    .order("month", { ascending: options.year ? true : false })
+    .order("week_number", { ascending: options.month ? true : false })
+    .order("day_of_week", { ascending: true });
 
   if (error) {
     throw error;
@@ -33,7 +59,7 @@ export async function getMealMenus(schoolId: string, active: boolean = true): Pr
     id: menu.id,
     schoolId: menu.school_id,
     name: menu.name,
-    shift: menu.shift,
+    shift: menu.shift as MealShift,
     dayOfWeek: menu.day_of_week,
     menuItems: menu.menu_items,
     nutritionalInfo: menu.nutritional_info,
@@ -52,7 +78,7 @@ export async function getMealMenus(schoolId: string, active: boolean = true): Pr
 }
 
 /**
- * Get a single meal menu by ID
+ * Get meal menu by ID
  */
 export async function getMealMenuById(id: string): Promise<MealMenu> {
   const { data, error } = await supabase
@@ -69,7 +95,7 @@ export async function getMealMenuById(id: string): Promise<MealMenu> {
     id: data.id,
     schoolId: data.school_id,
     name: data.name,
-    shift: data.shift,
+    shift: data.shift as MealShift,
     dayOfWeek: data.day_of_week,
     menuItems: data.menu_items,
     nutritionalInfo: data.nutritional_info,
@@ -121,7 +147,7 @@ export async function createMealMenu(menu: Omit<MealMenu, "id" | "createdAt" | "
     id: data.id,
     schoolId: data.school_id,
     name: data.name,
-    shift: data.shift,
+    shift: data.shift as MealShift,
     dayOfWeek: data.day_of_week,
     menuItems: data.menu_items,
     nutritionalInfo: data.nutritional_info,
@@ -144,7 +170,7 @@ export async function createMealMenu(menu: Omit<MealMenu, "id" | "createdAt" | "
  */
 export async function updateMealMenu(id: string, menu: Partial<Omit<MealMenu, "id" | "createdAt" | "updatedAt">>): Promise<MealMenu> {
   const updateData: any = {};
-
+  
   // Map only the provided fields
   if (menu.name !== undefined) updateData.name = menu.name;
   if (menu.shift !== undefined) updateData.shift = menu.shift;
@@ -176,7 +202,7 @@ export async function updateMealMenu(id: string, menu: Partial<Omit<MealMenu, "i
     id: data.id,
     schoolId: data.school_id,
     name: data.name,
-    shift: data.shift,
+    shift: data.shift as MealShift,
     dayOfWeek: data.day_of_week,
     menuItems: data.menu_items,
     nutritionalInfo: data.nutritional_info,
@@ -318,16 +344,37 @@ export async function updateSpecialDiet(id: string, diet: Partial<Omit<SpecialDi
 }
 
 /**
- * Get feedback for a school's meal service
+ * Get meal feedback
  */
-export async function getMealFeedback(schoolId: string): Promise<MealFeedback[]> {
-  const { data, error } = await supabase
+export async function getMealFeedback(
+  schoolId: string,
+  options: {
+    mealMenuId?: string,
+    startDate?: string,
+    endDate?: string
+  } = {}
+): Promise<Array<MealFeedback & { mealMenuName?: string }>> {
+  let query = supabase
     .from("education_meal_feedback")
     .select(`
       *,
       education_meal_menus(name)
     `)
-    .eq("school_id", schoolId)
+    .eq("school_id", schoolId);
+
+  if (options.mealMenuId) {
+    query = query.eq("meal_menu_id", options.mealMenuId);
+  }
+
+  if (options.startDate) {
+    query = query.gte("feedback_date", options.startDate);
+  }
+
+  if (options.endDate) {
+    query = query.lte("feedback_date", options.endDate);
+  }
+
+  const { data, error } = await query
     .order("feedback_date", { ascending: false });
 
   if (error) {
@@ -342,7 +389,7 @@ export async function getMealFeedback(schoolId: string): Promise<MealFeedback[]>
     parentName: feedback.parent_name,
     studentName: feedback.student_name,
     classId: feedback.class_id,
-    rating: feedback.rating,
+    rating: feedback.rating as MealRating,
     comments: feedback.comments,
     feedbackDate: feedback.feedback_date,
     createdAt: feedback.created_at,
