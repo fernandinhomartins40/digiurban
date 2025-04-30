@@ -110,7 +110,7 @@ export function TemplateFieldItem({ index, onRemove, form }: TemplateFieldItemPr
           name={`fields.${index}.field_options`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Opções (formato JSON: {"chave": "valor"})</FormLabel>
+              <FormLabel>Opções (formato JSON: {"{chave: valor}"})</FormLabel>
               <FormControl>
                 <Textarea 
                   placeholder='{"op1": "Opção 1", "op2": "Opção 2"}'
