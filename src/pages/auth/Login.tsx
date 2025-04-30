@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,19 @@ import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated, userType } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState<"admin" | "citizen">("admin");
+  const [activeUserType, setActiveUserType] = useState<"admin" | "citizen">("admin");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated && userType) {
+      navigate(userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard");
+    }
+  }, [isAuthenticated, userType, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,10 +32,10 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await login(email, password, userType);
-      navigate(userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard");
-    } catch (error) {
-      setError("Falha no login. Verifique suas credenciais e tente novamente.");
+      await login(email, password, activeUserType);
+      // Redirect happens automatically through the auth state listener
+    } catch (error: any) {
+      setError(error.message || "Falha no login. Verifique suas credenciais e tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -42,7 +49,7 @@ export default function Login() {
           <p className="text-gray-600">Sistema Integrado de Gestão Municipal</p>
         </div>
 
-        <Tabs defaultValue="admin" onValueChange={(value) => setUserType(value as "admin" | "citizen")}>
+        <Tabs defaultValue="admin" onValueChange={(value) => setActiveUserType(value as "admin" | "citizen")}>
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="admin">Administração</TabsTrigger>
             <TabsTrigger value="citizen">Cidadão</TabsTrigger>
@@ -84,6 +91,11 @@ export default function Login() {
                       required
                     />
                   </div>
+                  <div className="text-right">
+                    <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
+                      Esqueci minha senha
+                    </Link>
+                  </div>
                 </CardContent>
                 <CardFooter>
                   <Button className="w-full" type="submit" disabled={isLoading}>
@@ -111,11 +123,11 @@ export default function Login() {
                     </Alert>
                   )}
                   <div className="space-y-2">
-                    <Label htmlFor="citizen-email">Email ou CPF</Label>
+                    <Label htmlFor="citizen-email">Email</Label>
                     <Input
                       id="citizen-email"
-                      type="text"
-                      placeholder="nome@email.com ou CPF"
+                      type="email"
+                      placeholder="nome@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -130,6 +142,11 @@ export default function Login() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                     />
+                  </div>
+                  <div className="text-right">
+                    <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
+                      Esqueci minha senha
+                    </Link>
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">

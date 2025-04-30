@@ -1,10 +1,9 @@
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, ArrowLeft } from "lucide-react";
@@ -31,7 +30,7 @@ const formSchema = z.object({
   neighborhood: z.string().min(3, "Bairro deve ter pelo menos 3 caracteres"),
   city: z.string().min(3, "Cidade deve ter pelo menos 3 caracteres"),
   state: z.string().min(2, "Estado deve ter pelo menos 2 caracteres"),
-  zipCode: z.string().min(8, "CEP inválido"),
+  zipcode: z.string().min(8, "CEP inválido"),
   phone: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
@@ -40,9 +39,16 @@ const formSchema = z.object({
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, isAuthenticated, userType } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated && userType) {
+      navigate(userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard");
+    }
+  }, [isAuthenticated, userType, navigate]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,7 +63,7 @@ export default function Register() {
       neighborhood: "",
       city: "",
       state: "",
-      zipCode: "",
+      zipcode: "",
       phone: "",
     },
   });
@@ -67,26 +73,10 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const userData = {
-        name: values.name,
-        email: values.email,
-        cpf: values.cpf,
-        password: values.password,
-        address: {
-          street: values.street,
-          number: values.number,
-          neighborhood: values.neighborhood,
-          city: values.city,
-          state: values.state,
-          zipCode: values.zipCode,
-        },
-        phone: values.phone,
-      };
-
-      await registerUser(userData, "citizen");
-      navigate("/citizen/dashboard");
-    } catch (error) {
-      setError("Falha no registro. Tente novamente mais tarde.");
+      await registerUser(values, "citizen");
+      // Redirect happens automatically through the auth state listener
+    } catch (error: any) {
+      setError(error.message || "Falha no registro. Tente novamente mais tarde.");
     } finally {
       setIsLoading(false);
     }
@@ -291,7 +281,7 @@ export default function Register() {
 
                     <FormField
                       control={form.control}
-                      name="zipCode"
+                      name="zipcode"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>CEP</FormLabel>

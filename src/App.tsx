@@ -7,6 +7,8 @@ import { ChatPanel } from "@/components/chat/ChatPanel";
 
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
+import ResetPassword from "@/pages/auth/ResetPassword";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { CitizenLayout } from "@/components/layout/CitizenLayout";
 
@@ -25,7 +27,9 @@ const ProtectedRoute = ({
   const { isAuthenticated, userType, isLoading } = useAuth();
   
   if (isLoading) {
-    return null; // or loading component
+    return <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+    </div>;
   }
   
   if (!isAuthenticated) {
@@ -44,10 +48,12 @@ const AuthRoute = ({ children }: { children: JSX.Element }) => {
   const { isAuthenticated, userType, isLoading } = useAuth();
   
   if (isLoading) {
-    return null; // or loading component
+    return <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+    </div>;
   }
   
-  if (isAuthenticated) {
+  if (isAuthenticated && userType) {
     return <Navigate to={`/${userType}/dashboard`} replace />;
   }
   
@@ -64,6 +70,8 @@ function AppWithProviders() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
         <Route path="/register" element={<AuthRoute><Register /></AuthRoute>} />
+        <Route path="/esqueci-senha" element={<AuthRoute><ForgotPassword /></AuthRoute>} />
+        <Route path="/reset-password" element={<AuthRoute><ResetPassword /></AuthRoute>} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute requiredUserType="admin"><AdminLayout /></ProtectedRoute>}>

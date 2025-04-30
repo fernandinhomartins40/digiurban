@@ -9,16 +9,147 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      admin_permissions: {
+        Row: {
+          admin_id: string
+          create_permission: boolean
+          created_at: string
+          delete_permission: boolean
+          id: string
+          module_id: string
+          read_permission: boolean
+          update_permission: boolean
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          create_permission?: boolean
+          created_at?: string
+          delete_permission?: boolean
+          id?: string
+          module_id: string
+          read_permission?: boolean
+          update_permission?: boolean
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          create_permission?: boolean
+          created_at?: string
+          delete_permission?: boolean
+          id?: string
+          module_id?: string
+          read_permission?: boolean
+          update_permission?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_permissions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_profiles: {
+        Row: {
+          created_at: string
+          department: string | null
+          email: string
+          id: string
+          name: string
+          position: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          email: string
+          id: string
+          name: string
+          position?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          email?: string
+          id?: string
+          name?: string
+          position?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      citizen_profiles: {
+        Row: {
+          city: string | null
+          cpf: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          neighborhood: string | null
+          number: string | null
+          phone: string | null
+          state: string | null
+          street: string | null
+          updated_at: string
+          zipcode: string | null
+        }
+        Insert: {
+          city?: string | null
+          cpf?: string | null
+          created_at?: string
+          email: string
+          id: string
+          name: string
+          neighborhood?: string | null
+          number?: string | null
+          phone?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+          zipcode?: string | null
+        }
+        Update: {
+          city?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          neighborhood?: string | null
+          number?: string | null
+          phone?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+          zipcode?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      user_has_permission: {
+        Args: {
+          module_id: string
+          action: Database["public"]["Enums"]["permission_action"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      permission_action: "create" | "read" | "update" | "delete"
+      user_role: "prefeito" | "admin" | "citizen"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +264,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      permission_action: ["create", "read", "update", "delete"],
+      user_role: ["prefeito", "admin", "citizen"],
+    },
   },
 } as const
