@@ -17,6 +17,11 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import CitizenDashboard from "@/pages/citizen/Dashboard";
 import UserManagement from "@/pages/admin/users/UserManagement";
 
+// Correio Interno (Internal Mail) Module
+import MailDashboard from "@/pages/admin/correio/MailDashboard";
+import OficioDigital from "@/pages/admin/correio/OficioDigital";
+import TemplateCreator from "@/pages/admin/correio/TemplateCreator";
+
 // Protected route component
 const ProtectedRoute = ({ 
   children, 
@@ -79,6 +84,12 @@ function AppWithProviders() {
         <Route path="/admin" element={<ProtectedRoute requiredUserType="admin"><AdminLayout /></ProtectedRoute>}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
+          
+          {/* Correio Interno Routes */}
+          <Route path="correio/dashboard" element={<MailDashboard />} />
+          <Route path="correio/oficio-digital" element={<OficioDigital />} />
+          <Route path="correio/criador-oficios" element={<TemplateCreator />} />
+          
           {/* Add more admin routes here as needed */}
         </Route>
 

@@ -31,6 +31,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useMail } from "@/hooks/use-mail";
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -39,11 +41,13 @@ interface SidebarItemProps {
   children?: {
     title: string;
     path: string;
+    badge?: number;
   }[];
   moduleId?: string;
+  badge?: number;
 }
 
-const SidebarItem = ({ icon, title, path, children, moduleId }: SidebarItemProps) => {
+const SidebarItem = ({ icon, title, path, children, moduleId, badge }: SidebarItemProps) => {
   const { hasPermission } = useAuth();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -68,6 +72,9 @@ const SidebarItem = ({ icon, title, path, children, moduleId }: SidebarItemProps
           >
             <span className="mr-2">{icon}</span>
             <span className="flex-1 text-left">{title}</span>
+            {badge > 0 && (
+              <Badge className="mr-2 bg-primary">{badge}</Badge>
+            )}
             {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </button>
           {isOpen && (
@@ -84,6 +91,9 @@ const SidebarItem = ({ icon, title, path, children, moduleId }: SidebarItemProps
                   )}
                 >
                   <span className="flex-1">{child.title}</span>
+                  {child.badge && child.badge > 0 && (
+                    <Badge className="bg-primary">{child.badge}</Badge>
+                  )}
                 </Link>
               ))}
             </div>
@@ -99,6 +109,9 @@ const SidebarItem = ({ icon, title, path, children, moduleId }: SidebarItemProps
         >
           <span className="mr-2">{icon}</span>
           <span className="flex-1">{title}</span>
+          {badge > 0 && (
+            <Badge className="bg-primary">{badge}</Badge>
+          )}
         </Link>
       )}
     </div>
@@ -107,6 +120,10 @@ const SidebarItem = ({ icon, title, path, children, moduleId }: SidebarItemProps
 
 export function AdminSidebar() {
   const { logout, user } = useAuth();
+  // Get unread messages count if available
+  const { getIncomingDocuments } = useMail();
+  const { data: incomingDocuments } = getIncomingDocuments();
+  const unreadCount = incomingDocuments?.filter(item => !item.read_at).length || 0;
 
   const sidebarItems: SidebarItemProps[] = [
     {
@@ -118,10 +135,12 @@ export function AdminSidebar() {
       icon: <Mail size={18} />,
       title: "Correio Interno",
       moduleId: "correio",
+      badge: unreadCount,
       children: [
         {
           title: "Dashboard",
           path: "/admin/correio/dashboard",
+          badge: unreadCount,
         },
         {
           title: "Ofício Digital",
