@@ -134,6 +134,1108 @@ export type Database = {
         }
         Relationships: []
       }
+      education_classes: {
+        Row: {
+          classroom: string | null
+          created_at: string
+          current_students: number | null
+          grade: string
+          id: string
+          is_active: boolean | null
+          max_students: number
+          name: string
+          school_id: string
+          shift: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          classroom?: string | null
+          created_at?: string
+          current_students?: number | null
+          grade: string
+          id?: string
+          is_active?: boolean | null
+          max_students: number
+          name: string
+          school_id: string
+          shift: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          classroom?: string | null
+          created_at?: string
+          current_students?: number | null
+          grade?: string
+          id?: string
+          is_active?: boolean | null
+          max_students?: number
+          name?: string
+          school_id?: string
+          shift?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_classes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "education_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_enrollments: {
+        Row: {
+          assigned_school_id: string | null
+          class_id: string | null
+          created_at: string
+          decision_by: string | null
+          decision_date: string | null
+          id: string
+          justification: string | null
+          notes: string | null
+          protocol_number: string
+          request_date: string
+          requested_school_id: string
+          school_year: number
+          special_request: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_school_id?: string | null
+          class_id?: string | null
+          created_at?: string
+          decision_by?: string | null
+          decision_date?: string | null
+          id?: string
+          justification?: string | null
+          notes?: string | null
+          protocol_number: string
+          request_date?: string
+          requested_school_id: string
+          school_year: number
+          special_request?: string | null
+          status: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_school_id?: string | null
+          class_id?: string | null
+          created_at?: string
+          decision_by?: string | null
+          decision_date?: string | null
+          id?: string
+          justification?: string | null
+          notes?: string | null
+          protocol_number?: string
+          request_date?: string
+          requested_school_id?: string
+          school_year?: number
+          special_request?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_enrollments_assigned_school_id_fkey"
+            columns: ["assigned_school_id"]
+            isOneToOne: false
+            referencedRelation: "education_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_enrollments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "education_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_enrollments_requested_school_id_fkey"
+            columns: ["requested_school_id"]
+            isOneToOne: false
+            referencedRelation: "education_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "education_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_grades: {
+        Row: {
+          absence_days: number | null
+          attendance_days: number | null
+          class_id: string
+          comments: string | null
+          created_at: string
+          created_by: string
+          grade: number | null
+          id: string
+          period: string
+          school_year: number
+          student_id: string
+          subject: string
+          teacher_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          absence_days?: number | null
+          attendance_days?: number | null
+          class_id: string
+          comments?: string | null
+          created_at?: string
+          created_by: string
+          grade?: number | null
+          id?: string
+          period: string
+          school_year: number
+          student_id: string
+          subject: string
+          teacher_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          absence_days?: number | null
+          attendance_days?: number | null
+          class_id?: string
+          comments?: string | null
+          created_at?: string
+          created_by?: string
+          grade?: number | null
+          id?: string
+          period?: string
+          school_year?: number
+          student_id?: string
+          subject?: string
+          teacher_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_grades_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "education_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_grades_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "education_students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_grades_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "education_teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_meal_feedback: {
+        Row: {
+          class_id: string | null
+          comments: string | null
+          created_at: string
+          feedback_date: string
+          id: string
+          meal_menu_id: string | null
+          parent_id: string | null
+          parent_name: string
+          rating: string
+          school_id: string
+          student_name: string
+        }
+        Insert: {
+          class_id?: string | null
+          comments?: string | null
+          created_at?: string
+          feedback_date?: string
+          id?: string
+          meal_menu_id?: string | null
+          parent_id?: string | null
+          parent_name: string
+          rating: string
+          school_id: string
+          student_name: string
+        }
+        Update: {
+          class_id?: string | null
+          comments?: string | null
+          created_at?: string
+          feedback_date?: string
+          id?: string
+          meal_menu_id?: string | null
+          parent_id?: string | null
+          parent_name?: string
+          rating?: string
+          school_id?: string
+          student_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_meal_feedback_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "education_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_meal_feedback_meal_menu_id_fkey"
+            columns: ["meal_menu_id"]
+            isOneToOne: false
+            referencedRelation: "education_meal_menus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_meal_feedback_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "education_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_meal_menus: {
+        Row: {
+          active_from: string
+          active_until: string | null
+          created_at: string
+          created_by: string | null
+          day_of_week: number
+          for_dietary_restrictions: string[] | null
+          id: string
+          is_active: boolean | null
+          is_special_diet: boolean | null
+          menu_items: string[]
+          month: number | null
+          name: string
+          nutritional_info: string | null
+          school_id: string
+          shift: string
+          updated_at: string
+          week_number: number | null
+          year: number
+        }
+        Insert: {
+          active_from: string
+          active_until?: string | null
+          created_at?: string
+          created_by?: string | null
+          day_of_week: number
+          for_dietary_restrictions?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          is_special_diet?: boolean | null
+          menu_items: string[]
+          month?: number | null
+          name: string
+          nutritional_info?: string | null
+          school_id: string
+          shift: string
+          updated_at?: string
+          week_number?: number | null
+          year: number
+        }
+        Update: {
+          active_from?: string
+          active_until?: string | null
+          created_at?: string
+          created_by?: string | null
+          day_of_week?: number
+          for_dietary_restrictions?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          is_special_diet?: boolean | null
+          menu_items?: string[]
+          month?: number | null
+          name?: string
+          nutritional_info?: string | null
+          school_id?: string
+          shift?: string
+          updated_at?: string
+          week_number?: number | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_meal_menus_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "education_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_occurrence_attachments: {
+        Row: {
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          occurrence_id: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          occurrence_id: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          occurrence_id?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_occurrence_attachments_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "education_occurrences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_occurrences: {
+        Row: {
+          class_id: string | null
+          created_at: string
+          description: string
+          id: string
+          occurrence_date: string
+          occurrence_type: string
+          parent_notification_date: string | null
+          parent_notified: boolean | null
+          reported_by: string
+          reported_by_name: string
+          resolution: string | null
+          resolution_date: string | null
+          resolved_by: string | null
+          school_id: string
+          severity: string | null
+          student_id: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          occurrence_date: string
+          occurrence_type: string
+          parent_notification_date?: string | null
+          parent_notified?: boolean | null
+          reported_by: string
+          reported_by_name: string
+          resolution?: string | null
+          resolution_date?: string | null
+          resolved_by?: string | null
+          school_id: string
+          severity?: string | null
+          student_id: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          occurrence_date?: string
+          occurrence_type?: string
+          parent_notification_date?: string | null
+          parent_notified?: boolean | null
+          reported_by?: string
+          reported_by_name?: string
+          resolution?: string | null
+          resolution_date?: string | null
+          resolved_by?: string | null
+          school_id?: string
+          severity?: string | null
+          student_id?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_occurrences_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "education_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_occurrences_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "education_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_occurrences_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "education_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_schools: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          current_students: number | null
+          director_contact: string | null
+          director_name: string | null
+          email: string | null
+          id: string
+          inep_code: string
+          is_active: boolean | null
+          max_capacity: number
+          name: string
+          neighborhood: string
+          pedagogical_coordinator: string | null
+          phone: string | null
+          shifts: string[]
+          state: string
+          type: string
+          updated_at: string
+          vice_director_contact: string | null
+          vice_director_name: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          address: string
+          city?: string
+          created_at?: string
+          current_students?: number | null
+          director_contact?: string | null
+          director_name?: string | null
+          email?: string | null
+          id?: string
+          inep_code: string
+          is_active?: boolean | null
+          max_capacity: number
+          name: string
+          neighborhood: string
+          pedagogical_coordinator?: string | null
+          phone?: string | null
+          shifts: string[]
+          state?: string
+          type: string
+          updated_at?: string
+          vice_director_contact?: string | null
+          vice_director_name?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          current_students?: number | null
+          director_contact?: string | null
+          director_name?: string | null
+          email?: string | null
+          id?: string
+          inep_code?: string
+          is_active?: boolean | null
+          max_capacity?: number
+          name?: string
+          neighborhood?: string
+          pedagogical_coordinator?: string | null
+          phone?: string | null
+          shifts?: string[]
+          state?: string
+          type?: string
+          updated_at?: string
+          vice_director_contact?: string | null
+          vice_director_name?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      education_special_diets: {
+        Row: {
+          created_at: string
+          diet_type: string
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          medical_documentation: boolean | null
+          notes: string | null
+          restrictions: string[]
+          school_id: string
+          start_date: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          diet_type: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          medical_documentation?: boolean | null
+          notes?: string | null
+          restrictions: string[]
+          school_id: string
+          start_date: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          diet_type?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          medical_documentation?: boolean | null
+          notes?: string | null
+          restrictions?: string[]
+          school_id?: string
+          start_date?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_special_diets_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "education_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_special_diets_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "education_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_student_transport: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          pickup_location: string
+          return_location: string
+          route_id: string
+          school_id: string
+          start_date: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          pickup_location: string
+          return_location: string
+          route_id: string
+          school_id: string
+          start_date: string
+          status: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          pickup_location?: string
+          return_location?: string
+          route_id?: string
+          school_id?: string
+          start_date?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_student_transport_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "education_transport_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_student_transport_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "education_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_student_transport_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "education_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_students: {
+        Row: {
+          address: string
+          birth_date: string
+          city: string
+          cpf: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          medical_info: string | null
+          name: string
+          neighborhood: string
+          parent_cpf: string | null
+          parent_email: string | null
+          parent_id: string | null
+          parent_name: string
+          parent_phone: string
+          registration_number: string
+          special_needs: string | null
+          state: string
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          address: string
+          birth_date: string
+          city?: string
+          cpf?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          medical_info?: string | null
+          name: string
+          neighborhood: string
+          parent_cpf?: string | null
+          parent_email?: string | null
+          parent_id?: string | null
+          parent_name: string
+          parent_phone: string
+          registration_number: string
+          special_needs?: string | null
+          state?: string
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string
+          birth_date?: string
+          city?: string
+          cpf?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          medical_info?: string | null
+          name?: string
+          neighborhood?: string
+          parent_cpf?: string | null
+          parent_email?: string | null
+          parent_id?: string | null
+          parent_name?: string
+          parent_phone?: string
+          registration_number?: string
+          special_needs?: string | null
+          state?: string
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      education_teacher_classes: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          subject: string
+          teacher_id: string
+          weekly_hours: number
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          subject: string
+          teacher_id: string
+          weekly_hours: number
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          subject?: string
+          teacher_id?: string
+          weekly_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_teacher_classes_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "education_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_teacher_classes_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "education_teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_teacher_schools: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          school_id: string
+          start_date: string
+          teacher_id: string
+          workload: number
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          school_id: string
+          start_date: string
+          teacher_id: string
+          workload: number
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          school_id?: string
+          start_date?: string
+          teacher_id?: string
+          workload?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_teacher_schools_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "education_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_teacher_schools_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "education_teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_teachers: {
+        Row: {
+          address: string
+          birth_date: string
+          cpf: string
+          created_at: string
+          education_level: string
+          email: string
+          hiring_date: string
+          id: string
+          is_active: boolean | null
+          name: string
+          phone: string
+          registration_number: string
+          specialties: string[] | null
+          teaching_areas: string[]
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          birth_date: string
+          cpf: string
+          created_at?: string
+          education_level: string
+          email: string
+          hiring_date: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          phone: string
+          registration_number: string
+          specialties?: string[] | null
+          teaching_areas: string[]
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          birth_date?: string
+          cpf?: string
+          created_at?: string
+          education_level?: string
+          email?: string
+          hiring_date?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          phone?: string
+          registration_number?: string
+          specialties?: string[] | null
+          teaching_areas?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      education_transport_requests: {
+        Row: {
+          complaint_type: string | null
+          created_at: string
+          current_route_id: string | null
+          description: string
+          id: string
+          pickup_location: string | null
+          protocol_number: string
+          request_type: string
+          requested_route_id: string | null
+          requester_contact: string
+          requester_id: string | null
+          requester_name: string
+          resolution_date: string | null
+          resolution_notes: string | null
+          resolved_by: string | null
+          return_location: string | null
+          school_id: string | null
+          status: string
+          student_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          complaint_type?: string | null
+          created_at?: string
+          current_route_id?: string | null
+          description: string
+          id?: string
+          pickup_location?: string | null
+          protocol_number: string
+          request_type: string
+          requested_route_id?: string | null
+          requester_contact: string
+          requester_id?: string | null
+          requester_name: string
+          resolution_date?: string | null
+          resolution_notes?: string | null
+          resolved_by?: string | null
+          return_location?: string | null
+          school_id?: string | null
+          status: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          complaint_type?: string | null
+          created_at?: string
+          current_route_id?: string | null
+          description?: string
+          id?: string
+          pickup_location?: string | null
+          protocol_number?: string
+          request_type?: string
+          requested_route_id?: string | null
+          requester_contact?: string
+          requester_id?: string | null
+          requester_name?: string
+          resolution_date?: string | null
+          resolution_notes?: string | null
+          resolved_by?: string | null
+          return_location?: string | null
+          school_id?: string | null
+          status?: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_transport_requests_current_route_id_fkey"
+            columns: ["current_route_id"]
+            isOneToOne: false
+            referencedRelation: "education_transport_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_transport_requests_requested_route_id_fkey"
+            columns: ["requested_route_id"]
+            isOneToOne: false
+            referencedRelation: "education_transport_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_transport_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "education_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_transport_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "education_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_transport_routes: {
+        Row: {
+          average_duration: number | null
+          created_at: string
+          current_students: number | null
+          departure_time: string
+          destination: string
+          distance: number | null
+          id: string
+          is_active: boolean | null
+          max_capacity: number
+          name: string
+          origin: string
+          return_time: string
+          school_ids: string[]
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          average_duration?: number | null
+          created_at?: string
+          current_students?: number | null
+          departure_time: string
+          destination: string
+          distance?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_capacity: number
+          name: string
+          origin: string
+          return_time: string
+          school_ids: string[]
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          average_duration?: number | null
+          created_at?: string
+          current_students?: number | null
+          departure_time?: string
+          destination?: string
+          distance?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_capacity?: number
+          name?: string
+          origin?: string
+          return_time?: string
+          school_ids?: string[]
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_transport_routes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "education_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      education_vehicles: {
+        Row: {
+          capacity: number
+          created_at: string
+          driver_contact: string
+          driver_license: string
+          driver_name: string
+          id: string
+          is_accessible: boolean | null
+          is_active: boolean | null
+          model: string
+          monitor_contact: string | null
+          monitor_name: string | null
+          plate: string
+          type: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          capacity: number
+          created_at?: string
+          driver_contact: string
+          driver_license: string
+          driver_name: string
+          id?: string
+          is_accessible?: boolean | null
+          is_active?: boolean | null
+          model: string
+          monitor_contact?: string | null
+          monitor_name?: string | null
+          plate: string
+          type: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          driver_contact?: string
+          driver_license?: string
+          driver_name?: string
+          id?: string
+          is_accessible?: boolean | null
+          is_active?: boolean | null
+          model?: string
+          monitor_contact?: string | null
+          monitor_name?: string | null
+          plate?: string
+          type?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       health_program_activities: {
         Row: {
           actual_participants: number | null
@@ -1589,6 +2691,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_enrollment_protocol: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_hr_protocol: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1606,6 +2712,10 @@ export type Database = {
         Returns: string
       }
       generate_tfd_protocol: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_transport_request_protocol: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

@@ -1,10 +1,10 @@
 
 import React from "react";
-import { BookOpen } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import { SidebarItemProps } from "@/types/sidebar";
 
 export const getEducacaoItem = (): SidebarItemProps => ({
-  icon: <BookOpen size={18} />,
+  icon: <GraduationCap size={18} />,
   title: "Educação",
   moduleId: "educacao",
   children: [
@@ -14,7 +14,7 @@ export const getEducacaoItem = (): SidebarItemProps => ({
     },
     {
       title: "Matrícula Escolar",
-      path: "/admin/educacao/matricula",
+      path: "/admin/educacao/matriculas",
     },
     {
       title: "Transporte Escolar",
@@ -22,7 +22,7 @@ export const getEducacaoItem = (): SidebarItemProps => ({
     },
     {
       title: "Alunos e Professores",
-      path: "/admin/educacao/pessoas",
+      path: "/admin/educacao/alunos-professores",
     },
     {
       title: "Merenda Escolar",

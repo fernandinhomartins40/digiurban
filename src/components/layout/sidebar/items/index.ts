@@ -1,29 +1,31 @@
 
-import { SidebarItemProps } from "@/types/sidebar";
+// Import all sidebar item modules
 import { getDashboardItem } from "./DashboardItem";
+import { getCorreioItem } from "./CorreioItem";
 import { getChatItem } from "./ChatItem";
 import { getGabineteItem } from "./GabineteItem";
-import { getCorreioItem } from "./CorreioItem";
 import { getAdministracaoItem } from "./AdministracaoItem";
-import { getFinancasItem } from "./FinancasItem";
-import { getEducacaoItem } from "./EducacaoItem";
 import { getSaudeItem } from "./SaudeItem";
+import { getEducacaoItem } from "./EducacaoItem";
 import { getAssistenciaItem } from "./AssistenciaItem";
+import { getEducacaoItem } from "./EducacaoItem";
+import { getMeioAmbienteItem } from "./MeioAmbienteItem";
 import { getObrasItem } from "./ObrasItem";
 import { getServicosItem } from "./ServicosItem";
-import { getMeioAmbienteItem } from "./MeioAmbienteItem";
+import { getFinancasItem } from "./FinancasItem";
 
-export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => [
-  getDashboardItem(),
-  getChatItem(unreadCount),
-  getGabineteItem(),
-  getCorreioItem(unreadCount),
-  getAdministracaoItem(),
-  getFinancasItem(),
-  getEducacaoItem(),
-  getSaudeItem(),
-  getAssistenciaItem(),
-  getObrasItem(),
-  getServicosItem(),
-  getMeioAmbienteItem(),
-];
+// Export all items for use in other components
+export {
+  getDashboardItem,
+  getCorreioItem,
+  getChatItem,
+  getGabineteItem,
+  getAdministracaoItem,
+  getSaudeItem,
+  getEducacaoItem,
+  getAssistenciaItem,
+  getMeioAmbienteItem,
+  getObrasItem,
+  getServicosItem,
+  getFinancasItem,
+};

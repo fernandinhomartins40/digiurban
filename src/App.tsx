@@ -1,11 +1,11 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
-import { AuthProvider } from "@/contexts/AuthContext"; // Ensure this import is correct
+import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
-import { NewChatPanel } from "@/components/chat/NewChatPanel"; // Updated import
+import { NewChatPanel } from "@/components/chat/NewChatPanel";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ChatProvider } from "@/contexts/ChatContext"; // Add ChatProvider import
+import { ChatProvider } from "@/contexts/ChatContext";
 
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
@@ -49,6 +49,10 @@ import ProgramasPage from "@/pages/admin/saude/programas/index";
 import CampanhasPage from "@/pages/admin/saude/campanhas/index";
 import ACSPage from "@/pages/admin/saude/acs/index";
 
+// Education Module
+import EducacaoIndex from "@/pages/admin/educacao/index";
+import EscolasIndex from "@/pages/admin/educacao/escolas/index";
+
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
 
@@ -59,7 +63,7 @@ function App() {
       <BrowserRouter>
         <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
           <AuthProvider>
-            <ChatProvider> {/* Add ChatProvider here to wrap all routes */}
+            <ChatProvider>
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
@@ -102,6 +106,15 @@ function App() {
                   <Route path="saude/programas" element={<ProgramasPage />} />
                   <Route path="saude/campanhas" element={<CampanhasPage />} />
                   <Route path="saude/acs" element={<ACSPage />} />
+                  
+                  {/* Education Module Routes */}
+                  <Route path="educacao" element={<EducacaoIndex />} />
+                  <Route path="educacao/escolas" element={<EscolasIndex />} />
+                  <Route path="educacao/matriculas" element={<EducacaoIndex />} /> {/* Placeholder */}
+                  <Route path="educacao/transporte" element={<EducacaoIndex />} /> {/* Placeholder */}
+                  <Route path="educacao/alunos-professores" element={<EducacaoIndex />} /> {/* Placeholder */}
+                  <Route path="educacao/merenda" element={<EducacaoIndex />} /> {/* Placeholder */}
+                  <Route path="educacao/ocorrencias" element={<EducacaoIndex />} /> {/* Placeholder */}
                 </Route>
 
                 {/* Citizen Routes */}
@@ -116,7 +129,7 @@ function App() {
               
               <Toaster />
               <NewChatPanel />
-            </ChatProvider> {/* Close ChatProvider */}
+            </ChatProvider>
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>
