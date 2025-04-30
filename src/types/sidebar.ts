@@ -11,6 +11,7 @@ export interface SidebarItemProps {
   icon: React.ReactNode;
   title: string;
   path?: string;
+  submenu?: SidebarChildItem[];
   children?: SidebarChildItem[];
   moduleId?: string;
   badge?: number;

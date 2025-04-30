@@ -5,19 +5,19 @@ import { SidebarItemProps } from "@/types/sidebar";
 export const getAdministracaoItem = (): SidebarItemProps => ({
   title: "Administração",
   icon: <Briefcase className="h-5 w-5" />,
-  path: "/admin/administracao", // Changed from href to path
+  path: "/admin/administracao",
   submenu: [
     {
       title: "Recursos Humanos",
-      path: "/admin/administracao/rh", // Changed from href to path
+      path: "/admin/administracao/rh",
     },
     {
       title: "Solicitações",
-      path: "/admin/administracao/solicitacoes", // Changed from href to path
+      path: "/admin/administracao/solicitacoes",
     },
     {
       title: "Compras",
-      path: "/admin/administracao/compras", // Changed from href to path
+      path: "/admin/administracao/compras",
     },
   ],
 });
