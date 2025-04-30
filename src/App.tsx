@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext"; // Ensure this import is correct
 import { Toaster } from "@/components/ui/toaster";
-import { ChatPanel } from "@/components/chat/ChatPanel";
+import { NewChatPanel } from "@/components/chat/NewChatPanel"; // Updated import
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import Login from "@/pages/auth/Login";
@@ -63,7 +63,7 @@ function App() {
             </Routes>
             
             <Toaster />
-            <ChatPanel />
+            <NewChatPanel />
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>
