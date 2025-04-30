@@ -45,7 +45,6 @@ const useFormField = () => {
   const itemContext = React.useContext(FormItemContext)
   const formContext = useFormContext()
 
-  // Add a check to see if formContext is null
   if (!formContext) {
     throw new Error("useFormField must be used within a Form component")
   }
