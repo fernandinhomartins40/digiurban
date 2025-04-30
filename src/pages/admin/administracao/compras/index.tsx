@@ -15,7 +15,7 @@ import {
   updatePurchaseStatus,
   type PurchaseRequest,
   type PurchaseRequestStatus
-} from "@/services/administration/purchaseService";
+} from "@/services/administration/purchase";
 import { isAdminUser } from "@/types/auth";
 
 export default function ComprasPage() {

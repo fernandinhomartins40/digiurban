@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +24,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PurchasePriority } from "@/types/administration";
 import { useAuth } from "@/contexts/auth/useAuth";
-import { createPurchaseRequest, uploadPurchaseAttachment } from "@/services/administration/purchaseService";
+import { createPurchaseRequest } from "@/services/administration/purchase/requests";
+import { uploadPurchaseAttachment } from "@/services/administration/purchase/attachments";
 import { toast } from "@/hooks/use-toast";
 
 const formSchema = z.object({

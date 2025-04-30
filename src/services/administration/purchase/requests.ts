@@ -1,13 +1,12 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { 
   PurchaseRequest, 
-  PurchaseItem, 
-  PurchaseAttachment, 
-  PurchaseRequestStatus,
-  PurchaseStatusHistory,
-  PurchasePriority
+  PurchasePriority,
+  PurchaseRequestStatus
 } from "@/types/administration";
 import { toast } from "@/hooks/use-toast";
+import { mapPurchaseRequestFromDb } from "./utils";
 
 // Create a new purchase request with items
 export async function createPurchaseRequest(
@@ -93,55 +92,6 @@ export async function createPurchaseRequest(
     console.error("Error creating purchase request:", error.message);
     toast({
       title: "Erro ao criar solicitação de compra",
-      description: error.message,
-      variant: "destructive",
-    });
-    return null;
-  }
-}
-
-// Upload attachment for purchase request
-export async function uploadPurchaseAttachment(
-  userId: string,
-  requestId: string,
-  file: File
-): Promise<PurchaseAttachment | null> {
-  try {
-    const filePath = `${userId}/${requestId}/${new Date().getTime()}-${file.name}`;
-    
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("purchase_attachments")
-      .upload(filePath, file);
-
-    if (uploadError) throw uploadError;
-
-    const { data, error } = await supabase
-      .from("purchase_attachments")
-      .insert({
-        request_id: requestId,
-        file_path: uploadData.path,
-        file_name: file.name,
-        file_type: file.type,
-        file_size: file.size,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return {
-      id: data.id,
-      requestId: data.request_id,
-      filePath: data.file_path,
-      fileName: data.file_name,
-      fileType: data.file_type,
-      fileSize: data.file_size,
-      createdAt: new Date(data.created_at),
-    };
-  } catch (error: any) {
-    console.error("Error uploading attachment:", error.message);
-    toast({
-      title: "Erro ao fazer upload do anexo",
       description: error.message,
       variant: "destructive",
     });
@@ -318,110 +268,12 @@ export async function updatePurchaseStatus(
   }
 }
 
-// Add entry to purchase status history
-export async function addPurchaseStatusHistory(
-  requestId: string,
-  status: PurchaseRequestStatus,
-  comments: string | null,
-  userId: string
-): Promise<PurchaseStatusHistory | null> {
-  try {
-    const { data, error } = await supabase
-      .from("purchase_status_history")
-      .insert({
-        request_id: requestId,
-        status,
-        comments,
-        changed_by: userId,
-      })
-      .select()
-      .single();
+// Import what we need from other files
+import { addPurchaseStatusHistory } from './statusHistory';
 
-    if (error) throw error;
-
-    return {
-      id: data.id,
-      requestId: data.request_id,
-      status: data.status,
-      comments: data.comments,
-      changedBy: data.changed_by,
-      createdAt: new Date(data.created_at),
-    };
-  } catch (error: any) {
-    console.error("Error adding purchase status history:", error.message);
-    return null;
-  }
-}
-
-// Fetch purchase request status history
-export async function fetchPurchaseHistory(requestId: string): Promise<PurchaseStatusHistory[]> {
-  try {
-    const { data, error } = await supabase
-      .from("purchase_status_history")
-      .select("*")
-      .eq("request_id", requestId)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-
-    return (data || []).map((history) => ({
-      id: history.id,
-      requestId: history.request_id,
-      status: history.status,
-      comments: history.comments,
-      changedBy: history.changed_by,
-      createdAt: new Date(history.created_at),
-    }));
-  } catch (error: any) {
-    console.error("Error fetching purchase history:", error.message);
-    toast({
-      title: "Erro ao carregar histórico",
-      description: error.message,
-      variant: "destructive",
-    });
-    return [];
-  }
-}
-
-// Explicitly export the types used by other files
+// Export types directly from our types file
 export type { 
   PurchaseRequest, 
   PurchaseRequestStatus,
   PurchasePriority
 };
-
-// Helper function to map purchase request data from database
-function mapPurchaseRequestFromDb(request: any): PurchaseRequest {
-  return {
-    id: request.id,
-    protocolNumber: request.protocol_number,
-    userId: request.user_id,
-    department: request.department,
-    justification: request.justification,
-    status: request.status,
-    priority: request.priority,
-    assignedTo: request.assigned_to,
-    createdAt: new Date(request.created_at),
-    updatedAt: new Date(request.updated_at),
-    items: request.items ? request.items.map((item: any) => ({
-      id: item.id,
-      requestId: item.request_id,
-      name: item.name,
-      quantity: item.quantity,
-      unit: item.unit,
-      description: item.description,
-      estimatedPrice: item.estimated_price,
-      createdAt: new Date(item.created_at),
-      updatedAt: new Date(item.updated_at),
-    })) : undefined,
-    attachments: request.attachments ? request.attachments.map((attachment: any) => ({
-      id: attachment.id,
-      requestId: attachment.request_id,
-      filePath: attachment.file_path,
-      fileName: attachment.file_name,
-      fileType: attachment.file_type,
-      fileSize: attachment.file_size,
-      createdAt: new Date(attachment.created_at),
-    })) : undefined,
-  };
-}

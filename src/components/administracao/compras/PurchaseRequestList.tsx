@@ -22,7 +22,7 @@ import {
 import { PurchaseRequest, PurchaseRequestStatus, PurchasePriority } from "@/types/administration";
 import { LoadingSpinner } from "@/components/gabinete/solicitacoes/LoadingSpinner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { fetchPurchaseHistory } from "@/services/administration/purchaseService";
+import { fetchPurchaseHistory } from "@/services/administration/purchase/statusHistory";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PurchaseRequestListProps {
