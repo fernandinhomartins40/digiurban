@@ -7,7 +7,7 @@ import { AdminUser, CitizenUser, User } from "@/types/auth";
  * @returns Boolean indicating if the user is an AdminUser
  */
 export function isAdminUser(user: User | null): user is AdminUser {
-  return user?.role === "admin" || user?.role === "prefeito";
+  return Boolean(user?.role === "admin" || user?.role === "prefeito");
 }
 
 /**
@@ -16,5 +16,5 @@ export function isAdminUser(user: User | null): user is AdminUser {
  * @returns Boolean indicating if the user is a CitizenUser
  */
 export function isCitizenUser(user: User | null): user is CitizenUser {
-  return user?.role === "citizen";
+  return Boolean(user?.role === "citizen");
 }

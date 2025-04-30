@@ -1,19 +1,32 @@
 
 import React from "react";
 import { AdminSidebar } from "./AdminSidebar";
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
 export function AdminLayout() {
-  const { isLoading } = useAuth();
+  const { isLoading, isAuthenticated, userType } = useAuth();
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-primary">Carregando...</span>
       </div>
     );
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    console.log("User not authenticated, redirecting to login");
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirect to citizen dashboard if user is not admin
+  if (userType !== "admin") {
+    console.log("User is not admin, redirecting to citizen dashboard");
+    return <Navigate to="/citizen/dashboard" replace />;
   }
 
   return (

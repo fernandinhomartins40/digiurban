@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { User, UserRole } from "@/types/auth";
 import { useNavigate } from "react-router-dom";
@@ -32,13 +31,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change event:", event);
+      
       setSession(session);
       
       if (session?.user) {
-        await fetchUserProfile(session.user.id);
+        try {
+          // Use setTimeout to avoid potential deadlocks with Supabase auth
+          setTimeout(async () => {
+            await fetchUserProfile(session.user.id);
+          }, 0);
+        } catch (error) {
+          console.error("Error fetching user profile after auth state change:", error);
+          // Make sure isLoading is false even on error
+          setIsLoading(false);
+        }
       } else {
         setUser(null);
         setUserType(null);
+        setIsLoading(false);
       }
     });
 
@@ -52,11 +63,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (session?.user) {
           await fetchUserProfile(session.user.id);
+        } else {
+          setIsLoading(false);
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
         setUser(null);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -69,28 +81,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
+    console.log("Fetching user profile for ID:", userId);
     try {
       // Try to get admin profile
-      const { data: adminProfile } = await supabase
+      const { data: adminProfile, error: adminError } = await supabase
         .from("admin_profiles")
         .select("*, admin_permissions(*)")
         .eq("id", userId)
         .single();
 
+      if (adminError && adminError.code !== 'PGRST116') {
+        console.error("Error fetching admin profile:", adminError);
+      }
+
       if (adminProfile) {
-        const permissions = adminProfile.admin_permissions.map((permission: any) => ({
+        console.log("Admin profile found:", adminProfile);
+        const permissions = adminProfile.admin_permissions?.map((permission: any) => ({
           moduleId: permission.module_id,
           create: permission.create_permission,
           read: permission.read_permission,
           update: permission.update_permission,
           delete: permission.delete_permission,
-        }));
+        })) || [];
 
         setUser({
           id: adminProfile.id,
           email: adminProfile.email,
           name: adminProfile.name,
-          role: adminProfile.role as UserRole, // Aqui está a correção principal: usando o tipo UserRole
+          role: adminProfile.role as UserRole,
           department: adminProfile.department,
           position: adminProfile.position,
           permissions,
@@ -98,17 +116,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           updatedAt: adminProfile.updated_at,
         });
         setUserType("admin");
+        setIsLoading(false);
         return;
       }
 
       // If not admin, try to get citizen profile
-      const { data: citizenProfile } = await supabase
+      const { data: citizenProfile, error: citizenError } = await supabase
         .from("citizen_profiles")
         .select("*")
         .eq("id", userId)
         .single();
 
+      if (citizenError && citizenError.code !== 'PGRST116') {
+        console.error("Error fetching citizen profile:", citizenError);
+      }
+
       if (citizenProfile) {
+        console.log("Citizen profile found:", citizenProfile);
         setUser({
           id: citizenProfile.id,
           email: citizenProfile.email,
@@ -128,9 +152,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           updatedAt: citizenProfile.updated_at,
         });
         setUserType("citizen");
+        setIsLoading(false);
+        return;
       }
+
+      // No profile found but user is authenticated in Supabase
+      console.warn("User authenticated but no profile found. Logging out.", userId);
+      toast({
+        title: "Erro de perfil",
+        description: "Seu perfil não foi encontrado. Por favor, entre em contato com o suporte.",
+        variant: "destructive",
+      });
+      
+      // Force logout as the user has no profile
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setUserType(null);
+      navigate("/login");
     } catch (error) {
       console.error("Error fetching user profile:", error);
+    } finally {
+      // Always ensure isLoading is set to false
+      setIsLoading(false);
     }
   };
 
@@ -286,7 +330,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     isLoading,
-    isAuthenticated: !!session,
+    isAuthenticated: !!session && !!user, // Consider both session and user profile
     userType,
     login,
     register,

@@ -12,16 +12,17 @@ import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, userType } = useAuth();
+  const { login, isAuthenticated, userType, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [activeUserType, setActiveUserType] = useState<"admin" | "citizen">("admin");
-  const [isLoading, setIsLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated && userType) {
+      console.log("Redirecting authenticated user to dashboard:", userType);
       navigate(userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard");
     }
   }, [isAuthenticated, userType, navigate]);
@@ -29,17 +30,22 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
+    setLocalLoading(true);
 
     try {
+      console.log("Attempting login with:", { email, activeUserType });
       await login(email, password, activeUserType);
       // Redirect happens automatically through the auth state listener
     } catch (error: any) {
+      console.error("Login error:", error);
       setError(error.message || "Falha no login. Verifique suas credenciais e tente novamente.");
     } finally {
-      setIsLoading(false);
+      setLocalLoading(false);
     }
   };
+
+  // Use localLoading or global isLoading
+  const showLoading = localLoading || isLoading;
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -79,6 +85,7 @@ export default function Login() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      disabled={showLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -89,6 +96,7 @@ export default function Login() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      disabled={showLoading}
                     />
                   </div>
                   <div className="text-right">
@@ -98,15 +106,16 @@ export default function Login() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
-                  <Button className="w-full" type="submit" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Entrar
+                  <Button className="w-full" type="submit" disabled={showLoading}>
+                    {showLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {showLoading ? "Processando..." : "Entrar"}
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full"
                     type="button"
                     onClick={() => navigate("/admin-register")}
+                    disabled={showLoading}
                   >
                     Criar conta de administrador
                   </Button>
@@ -139,6 +148,7 @@ export default function Login() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      disabled={showLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -149,6 +159,7 @@ export default function Login() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      disabled={showLoading}
                     />
                   </div>
                   <div className="text-right">
@@ -158,15 +169,16 @@ export default function Login() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
-                  <Button className="w-full" type="submit" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Entrar
+                  <Button className="w-full" type="submit" disabled={showLoading}>
+                    {showLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {showLoading ? "Processando..." : "Entrar"}
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full"
                     type="button"
                     onClick={() => navigate("/register")}
+                    disabled={showLoading}
                   >
                     Criar conta
                   </Button>
