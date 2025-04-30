@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { User, UserRole } from "@/types/auth";
 import { useNavigate } from "react-router-dom";
@@ -6,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { toast } from "@/hooks/use-toast";
 import { safeStorage } from "@/utils/authGuards";
-import { useAuthMethods } from "./useAuthMethods";
+import { useAuthMethods } from "./auth/useAuthMethods";
 import { fetchUserProfile } from "./authUtils";
 
 // Helper to track auth initialization state across app restarts

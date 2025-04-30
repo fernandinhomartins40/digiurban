@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { NavigateFunction } from "react-router-dom";
@@ -7,10 +6,9 @@ import { User } from "@/types/auth";
 import { Session } from "@supabase/supabase-js";
 
 /**
- * Hook providing authentication methods
+ * Core authentication methods implementation
  */
-export function useAuthMethods(
-  user: User | null,
+export function createAuthActions(
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setUser: React.Dispatch<React.SetStateAction<User | null>>,
   setSession: React.Dispatch<React.SetStateAction<Session | null>>,
@@ -38,7 +36,7 @@ export function useAuthMethods(
       // Wait a short time for the auth state to update
       // This helps prevent redirect loops
       setTimeout(() => {
-        if (!user) {
+        if (!setUser) {
           setIsLoading(false);
         }
       }, 3000);
@@ -114,72 +112,9 @@ export function useAuthMethods(
     }
   };
 
-  const resetPassword = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Email enviado",
-        description: "Verifique sua caixa de entrada para redefinir sua senha",
-      });
-    } catch (error: any) {
-      console.error("Reset password error:", error.message);
-      toast({
-        title: "Erro ao resetar senha",
-        description: error.message || "Não foi possível enviar o email de recuperação",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const updatePassword = async (newPassword: string) => {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Senha atualizada",
-        description: "Sua senha foi atualizada com sucesso",
-      });
-    } catch (error: any) {
-      console.error("Update password error:", error.message);
-      toast({
-        title: "Erro ao atualizar senha",
-        description: error.message || "Não foi possível atualizar sua senha",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const hasPermission = (moduleId: string, action: "create" | "read" | "update" | "delete") => {
-    if (!user || user.role === "citizen") return false;
-    
-    // Prefeito has all permissions
-    if (user.role === "prefeito") return true;
-    
-    // Check specific permissions
-    return user.permissions.some(
-      (permission) => 
-        (permission.moduleId === "all" || permission.moduleId === moduleId) && 
-        permission[action]
-    );
-  };
-
   return {
     login,
     register,
     logout,
-    resetPassword,
-    updatePassword,
-    hasPermission,
   };
 }
