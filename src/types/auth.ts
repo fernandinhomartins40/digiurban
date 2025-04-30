@@ -13,7 +13,7 @@ export interface AdminUser {
   id: string;
   email: string;
   name: string;
-  role: "prefeito" | "admin";
+  role: UserRole; // Alterado para usar UserRole para compatibilidade com Supabase
   department?: string;
   position?: string;
   permissions: AdminPermission[];

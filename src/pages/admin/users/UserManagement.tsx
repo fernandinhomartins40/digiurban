@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -33,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { UserPlus, MoreHorizontal, Edit, Trash2, AlertCircle, Loader2 } from "lucide-react";
-import { AdminUser, AdminPermission } from "@/types/auth";
+import { AdminUser, AdminPermission, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function UserManagement() {
@@ -202,7 +201,7 @@ export default function UserManagement() {
               user_type: 'admin',
               department: formData.department,
               position: formData.position,
-              role: 'admin'
+              role: 'admin' as UserRole // Explicitamente tipado como UserRole
             }
           }
         });

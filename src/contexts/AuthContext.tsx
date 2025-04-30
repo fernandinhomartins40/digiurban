@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: adminProfile.id,
           email: adminProfile.email,
           name: adminProfile.name,
-          role: adminProfile.role,
+          role: adminProfile.role as UserRole, // Aqui está a correção principal: usando o tipo UserRole
           department: adminProfile.department,
           position: adminProfile.position,
           permissions,
