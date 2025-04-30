@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { ChatPanel } from "@/components/chat/ChatPanel";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
@@ -22,45 +23,51 @@ import MailDashboard from "@/pages/admin/correio/MailDashboard";
 import OficioDigital from "@/pages/admin/correio/OficioDigital";
 import TemplateCreator from "@/pages/admin/correio/TemplateCreator";
 
+// Create a new QueryClient instance
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <BrowserRouter>
-      <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
-        <AuthProvider>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/admin-register" element={<AdminRegister />} />
-            <Route path="/esqueci-senha" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+    // Wrap the entire app with QueryClientProvider
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
+          <AuthProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/admin-register" element={<AdminRegister />} />
+              <Route path="/esqueci-senha" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="users" element={<UserManagement />} />
-              
-              {/* Correio Interno Routes */}
-              <Route path="correio/dashboard" element={<MailDashboard />} />
-              <Route path="correio/oficio-digital" element={<OficioDigital />} />
-              <Route path="correio/criador-oficios" element={<TemplateCreator />} />
-            </Route>
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="users" element={<UserManagement />} />
+                
+                {/* Correio Interno Routes */}
+                <Route path="correio/dashboard" element={<MailDashboard />} />
+                <Route path="correio/oficio-digital" element={<OficioDigital />} />
+                <Route path="correio/criador-oficios" element={<TemplateCreator />} />
+              </Route>
 
-            {/* Citizen Routes */}
-            <Route path="/citizen" element={<CitizenLayout />}>
-              <Route path="dashboard" element={<CitizenDashboard />} />
-            </Route>
+              {/* Citizen Routes */}
+              <Route path="/citizen" element={<CitizenLayout />}>
+                <Route path="dashboard" element={<CitizenDashboard />} />
+              </Route>
 
-            {/* Catch-all route for 404 */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          
-          <Toaster />
-          <ChatPanel />
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+              {/* Catch-all route for 404 */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            
+            <Toaster />
+            <ChatPanel />
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
