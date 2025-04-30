@@ -134,6 +134,184 @@ export type Database = {
         }
         Relationships: []
       }
+      health_program_activities: {
+        Row: {
+          actual_participants: number | null
+          date: string
+          description: string | null
+          id: string
+          location: string
+          max_participants: number | null
+          program_id: string
+          responsible_id: string
+          responsible_name: string
+          status: string
+          time: string
+          title: string
+        }
+        Insert: {
+          actual_participants?: number | null
+          date: string
+          description?: string | null
+          id?: string
+          location: string
+          max_participants?: number | null
+          program_id: string
+          responsible_id: string
+          responsible_name: string
+          status?: string
+          time: string
+          title: string
+        }
+        Update: {
+          actual_participants?: number | null
+          date?: string
+          description?: string | null
+          id?: string
+          location?: string
+          max_participants?: number | null
+          program_id?: string
+          responsible_id?: string
+          responsible_name?: string
+          status?: string
+          time?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_program_activities_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "health_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_program_attendance: {
+        Row: {
+          activity_id: string
+          attended: boolean
+          id: string
+          notes: string | null
+          participant_id: string
+        }
+        Insert: {
+          activity_id: string
+          attended?: boolean
+          id?: string
+          notes?: string | null
+          participant_id: string
+        }
+        Update: {
+          activity_id?: string
+          attended?: boolean
+          id?: string
+          notes?: string | null
+          participant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_program_attendance_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "health_program_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_program_attendance_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "health_program_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_program_participants: {
+        Row: {
+          exit_date: string | null
+          id: string
+          is_active: boolean
+          join_date: string
+          metrics: Json | null
+          notes: string | null
+          patient_id: string
+          patient_name: string
+          program_id: string
+        }
+        Insert: {
+          exit_date?: string | null
+          id?: string
+          is_active?: boolean
+          join_date?: string
+          metrics?: Json | null
+          notes?: string | null
+          patient_id: string
+          patient_name: string
+          program_id: string
+        }
+        Update: {
+          exit_date?: string | null
+          id?: string
+          is_active?: boolean
+          join_date?: string
+          metrics?: Json | null
+          notes?: string | null
+          patient_id?: string
+          patient_name?: string
+          program_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_program_participants_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "health_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_programs: {
+        Row: {
+          category: string
+          coordinator_id: string
+          coordinator_name: string
+          created_at: string
+          description: string
+          end_date: string | null
+          id: string
+          is_active: boolean
+          meeting_frequency: string | null
+          name: string
+          start_date: string
+        }
+        Insert: {
+          category: string
+          coordinator_id: string
+          coordinator_name: string
+          created_at?: string
+          description: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          meeting_frequency?: string | null
+          name: string
+          start_date: string
+        }
+        Update: {
+          category?: string
+          coordinator_id?: string
+          coordinator_name?: string
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          meeting_frequency?: string | null
+          name?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
       hr_document_types: {
         Row: {
           created_at: string
