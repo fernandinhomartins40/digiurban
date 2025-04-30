@@ -7,6 +7,7 @@ import { AlertCircle, Plus } from "lucide-react";
 import { getTFDReferrals, assignTFDReferralToTransport } from "@/services/health";
 import { TFDReferral } from "@/types/health";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PassengerListProps {
   transportId: string;
@@ -14,6 +15,7 @@ interface PassengerListProps {
 
 export function PassengerList({ transportId }: PassengerListProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [passengers, setPassengers] = useState<TFDReferral[]>([]);
   const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -33,6 +35,7 @@ export function PassengerList({ transportId }: PassengerListProps) {
         {
           id: "1",
           protocolNumber: "TFD-2023-0001",
+          patientId: "user-1", // Added patientId
           patientName: "Maria Silva",
           patientCpf: "123.456.789-00",
           specialty: "Cardiologia",
@@ -46,6 +49,7 @@ export function PassengerList({ transportId }: PassengerListProps) {
         {
           id: "2",
           protocolNumber: "TFD-2023-0002",
+          patientId: "user-2", // Added patientId
           patientName: "João Santos",
           patientCpf: "987.654.321-00",
           specialty: "Neurologia",

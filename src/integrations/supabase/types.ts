@@ -1426,6 +1426,164 @@ export type Database = {
         }
         Relationships: []
       }
+      tfd_documents: {
+        Row: {
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          referral_id: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          referral_id: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          document_type?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          referral_id?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tfd_documents_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "tfd_referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tfd_referrals: {
+        Row: {
+          created_at: string
+          destination_city: string
+          estimated_wait_time: number | null
+          id: string
+          observations: string | null
+          patient_cpf: string | null
+          patient_id: string
+          patient_name: string
+          priority: string
+          protocol_number: string
+          referral_reason: string
+          referred_at: string
+          referred_by: string
+          scheduled_date: string | null
+          specialty: string
+          status: string
+          transport_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          destination_city: string
+          estimated_wait_time?: number | null
+          id?: string
+          observations?: string | null
+          patient_cpf?: string | null
+          patient_id: string
+          patient_name: string
+          priority: string
+          protocol_number: string
+          referral_reason: string
+          referred_at?: string
+          referred_by: string
+          scheduled_date?: string | null
+          specialty: string
+          status?: string
+          transport_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          destination_city?: string
+          estimated_wait_time?: number | null
+          id?: string
+          observations?: string | null
+          patient_cpf?: string | null
+          patient_id?: string
+          patient_name?: string
+          priority?: string
+          protocol_number?: string
+          referral_reason?: string
+          referred_at?: string
+          referred_by?: string
+          scheduled_date?: string | null
+          specialty?: string
+          status?: string
+          transport_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tfd_transports: {
+        Row: {
+          capacity: number
+          created_at: string
+          departure_date: string
+          departure_time: string
+          driver_id: string
+          driver_name: string
+          id: string
+          notes: string | null
+          occupied_seats: number
+          return_date: string | null
+          return_time: string | null
+          updated_at: string
+          vehicle_description: string
+          vehicle_id: string
+        }
+        Insert: {
+          capacity: number
+          created_at?: string
+          departure_date: string
+          departure_time: string
+          driver_id: string
+          driver_name: string
+          id?: string
+          notes?: string | null
+          occupied_seats?: number
+          return_date?: string | null
+          return_time?: string | null
+          updated_at?: string
+          vehicle_description: string
+          vehicle_id: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          departure_date?: string
+          departure_time?: string
+          driver_id?: string
+          driver_name?: string
+          id?: string
+          notes?: string | null
+          occupied_seats?: number
+          return_date?: string | null
+          return_time?: string | null
+          updated_at?: string
+          vehicle_description?: string
+          vehicle_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1444,6 +1602,10 @@ export type Database = {
         Returns: string
       }
       generate_purchase_protocol: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_tfd_protocol: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

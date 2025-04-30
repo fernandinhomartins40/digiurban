@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createTFDReferral } from "@/services/health";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const formSchema = z.object({
   patientName: z.string().min(1, "Nome do paciente é obrigatório"),
@@ -33,6 +34,7 @@ interface NewReferralDialogProps {
 
 export function NewReferralDialog({ open, onOpenChange }: NewReferralDialogProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -48,15 +50,25 @@ export function NewReferralDialog({ open, onOpenChange }: NewReferralDialogProps
 
   const onSubmit = async (data: FormData) => {
     try {
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para criar um encaminhamento.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       await createTFDReferral({
         patientName: data.patientName,
+        patientId: user.id, // Using the current user's ID as a fallback
         patientCpf: data.patientCpf,
         specialty: data.specialty,
         destinationCity: data.destinationCity,
         referralReason: data.referralReason,
         priority: data.priority,
         observations: data.observations,
-        referredBy: "current-user", // This would be replaced with the actual user ID
+        referredBy: user.name || "current-user",
       });
 
       toast({

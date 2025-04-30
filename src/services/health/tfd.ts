@@ -27,8 +27,8 @@ function mapDbReferralToInterface(referral: any): TFDReferral {
 // Helper function to transform our interface format to database format
 function mapInterfaceReferralToDb(referral: Partial<TFDReferral>): any {
   const dbReferral: any = {
-    patient_name: referral.patientName,
     patient_id: referral.patientId,
+    patient_name: referral.patientName,
     patient_cpf: referral.patientCpf || null,
     specialty: referral.specialty,
     destination_city: referral.destinationCity,
@@ -179,9 +179,10 @@ export async function getTFDReferralById(id: string) {
       .from('tfd_referrals')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
     
     if (error) throw error;
+    if (!data) return { data: null, error: null };
     
     // Map database object to our interface format
     const mappedData = mapDbReferralToInterface(data);
