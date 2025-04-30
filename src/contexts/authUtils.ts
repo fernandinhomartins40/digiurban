@@ -66,22 +66,28 @@ export const fetchUserProfile = async (
 
     if (citizenProfile) {
       console.log("Citizen profile found:", citizenProfile);
+      
+      // Type check and safely access properties
+      const address = {
+        street: citizenProfile.street || "",
+        number: citizenProfile.number || "",
+        // The complement field doesn't exist in the database schema
+        // Handle it explicitly rather than trying to access it
+        complement: "",
+        neighborhood: citizenProfile.neighborhood || "",
+        city: citizenProfile.city || "",
+        state: citizenProfile.state || "",
+        zipCode: citizenProfile.zipcode || "",
+      };
+      
       setUser({
         id: citizenProfile.id,
         email: citizenProfile.email,
         name: citizenProfile.name,
-        cpf: citizenProfile.cpf,
+        cpf: citizenProfile.cpf || "",
         role: "citizen",
-        address: {
-          street: citizenProfile.street,
-          number: citizenProfile.number,
-          complement: citizenProfile.complement || "", // Added null check for complement
-          neighborhood: citizenProfile.neighborhood,
-          city: citizenProfile.city,
-          state: citizenProfile.state,
-          zipCode: citizenProfile.zipcode,
-        },
-        phone: citizenProfile.phone,
+        address,
+        phone: citizenProfile.phone || "",
         createdAt: citizenProfile.created_at,
         updatedAt: citizenProfile.updated_at,
       });

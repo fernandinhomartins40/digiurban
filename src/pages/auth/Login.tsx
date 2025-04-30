@@ -23,7 +23,7 @@ export default function Login() {
   useEffect(() => {
     if (isAuthenticated && userType) {
       console.log("Redirecting authenticated user to dashboard:", userType);
-      navigate(userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard");
+      navigate(userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard", { replace: true });
     }
   }, [isAuthenticated, userType, navigate]);
 
@@ -35,13 +35,16 @@ export default function Login() {
     try {
       console.log("Attempting login with:", { email, activeUserType });
       await login(email, password, activeUserType);
+      console.log("Login function completed");
       // Redirect happens automatically through the auth state listener
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("Login error in component:", error);
       setError(error.message || "Falha no login. Verifique suas credenciais e tente novamente.");
     } finally {
-      // Always ensure loading state is reset
-      setLocalLoading(false);
+      // Always ensure local loading state is reset
+      setTimeout(() => {
+        setLocalLoading(false);
+      }, 500);
     }
   };
 

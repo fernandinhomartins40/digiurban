@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { User, UserRole } from "@/types/auth";
 import { useNavigate } from "react-router-dom";
@@ -67,10 +68,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Set up auth state listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, currentSession) => {
-            console.log("Auth state change event:", event);
+          async (event, currentSession) => {
+            console.log("Auth state change event:", event, "Session:", currentSession?.user?.id);
             
             if (!isMounted) return;
+            
+            if (event === 'SIGNED_OUT') {
+              console.log("User signed out, clearing auth state");
+              clearAuthState();
+              setIsLoading(false);
+              return;
+            }
             
             if (currentSession?.user) {
               console.log("Session found in auth state change");
@@ -80,22 +88,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setTimeout(async () => {
                 if (!isMounted) return;
                 
-                const profileFound = await fetchUserProfile(currentSession.user.id, setUser, setUserType);
-                
-                if (!profileFound) {
-                  console.log("No profile found for authenticated user, logging out");
-                  // Clear auth state and force logout
-                  clearAuthState();
-                  supabase.auth.signOut().catch(console.error);
-                  toast({
-                    title: "Erro de perfil",
-                    description: "Seu perfil não foi encontrado. Por favor, entre em contato com o suporte.",
-                    variant: "destructive",
-                  });
+                try {
+                  const profileFound = await fetchUserProfile(currentSession.user.id, setUser, setUserType);
                   
+                  if (!profileFound) {
+                    console.log("No profile found for authenticated user, logging out");
+                    // Clear auth state and force logout
+                    clearAuthState();
+                    supabase.auth.signOut().catch(console.error);
+                    toast({
+                      title: "Erro de perfil",
+                      description: "Seu perfil não foi encontrado. Por favor, entre em contato com o suporte.",
+                      variant: "destructive",
+                    });
+                    
+                    if (isMounted) {
+                      setIsLoading(false);
+                      navigate("/login");
+                    }
+                  } else {
+                    // Profile found, make sure to set loading to false
+                    if (isMounted) {
+                      setIsLoading(false);
+                    }
+                  }
+                } catch (error) {
+                  console.error("Error fetching user profile:", error);
                   if (isMounted) {
                     setIsLoading(false);
-                    navigate("/login");
                   }
                 }
               }, 0);
@@ -119,24 +139,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         if (initialSession?.user) {
-          console.log("Initial session found");
+          console.log("Initial session found:", initialSession.user.id);
           if (isMounted) setSession(initialSession);
           
-          const profileFound = await fetchUserProfile(initialSession.user.id, setUser, setUserType);
-          
-          if (!profileFound && isMounted) {
-            console.log("No profile found for authenticated user, logging out");
-            clearAuthState();
-            await supabase.auth.signOut();
-            toast({
-              title: "Erro de perfil",
-              description: "Seu perfil não foi encontrado. Por favor, entre em contato com o suporte.",
-              variant: "destructive",
-            });
+          try {
+            const profileFound = await fetchUserProfile(initialSession.user.id, setUser, setUserType);
             
+            if (!profileFound && isMounted) {
+              console.log("No profile found for authenticated user, logging out");
+              clearAuthState();
+              await supabase.auth.signOut();
+              toast({
+                title: "Erro de perfil",
+                description: "Seu perfil não foi encontrado. Por favor, entre em contato com o suporte.",
+                variant: "destructive",
+              });
+              
+              if (isMounted) {
+                setIsLoading(false);
+                navigate("/login");
+              }
+            } else {
+              // Profile found, ensure loading state is updated
+              if (isMounted) {
+                setIsLoading(false);
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching user profile:", error);
             if (isMounted) {
               setIsLoading(false);
-              navigate("/login");
             }
           }
         } else {
@@ -166,6 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       initializeAuth();
     } else {
       setAuthInitialized(true);
+      // If we have an auth init key but no session, we need to make sure loading is false
       if (!session && !user) {
         setIsLoading(false);
       }

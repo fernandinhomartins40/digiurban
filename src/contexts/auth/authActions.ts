@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { NavigateFunction } from "react-router-dom";
@@ -25,21 +24,27 @@ export function createAuthActions(
   const login = async (email: string, password: string, userType: "admin" | "citizen") => {
     try {
       setIsLoading(true);
+      console.log(`Attempting login for ${email} as ${userType}`);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Login error from Supabase:", error);
+        throw error;
+      }
       
-      // Wait a short time for the auth state to update
-      // This helps prevent redirect loops
+      console.log("Login successful, session:", data.session);
+      
+      // Don't rely solely on auth state listener for redirection
+      // The auth state listener will handle setting the session state
+      // But we'll keep the loading state until we're confident the listener has fired
       setTimeout(() => {
-        if (!setUser) {
-          setIsLoading(false);
-        }
-      }, 3000);
+        console.log("Login timeout completed, resetting loading state");
+        setIsLoading(false);
+      }, 2000);
     } catch (error: any) {
       console.error("Login error:", error.message);
       toast({
