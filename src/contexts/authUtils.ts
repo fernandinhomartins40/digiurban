@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { User, UserRole } from "@/types/auth";
+import { User, UserRole, AdminUser, CitizenUser } from "@/types/auth";
 
 /**
  * Fetches a user profile from Supabase based on user ID
@@ -30,6 +30,8 @@ export const fetchUserProfile = async (
 
     if (adminProfile) {
       console.log("Admin profile found:", adminProfile);
+      
+      // Map permissions from the database format to our application format
       const permissions = adminProfile.admin_permissions?.map((permission: any) => ({
         moduleId: permission.module_id,
         create: permission.create_permission,
@@ -38,17 +40,20 @@ export const fetchUserProfile = async (
         delete: permission.delete_permission,
       })) || [];
 
-      setUser({
+      // Construct the admin user object with appropriate typing
+      const adminUser: AdminUser = {
         id: adminProfile.id,
         email: adminProfile.email,
         name: adminProfile.name,
         role: adminProfile.role as UserRole,
-        department: adminProfile.department,
-        position: adminProfile.position,
+        department: adminProfile.department || undefined,
+        position: adminProfile.position || undefined,
         permissions,
         createdAt: adminProfile.created_at,
         updatedAt: adminProfile.updated_at,
-      });
+      };
+      
+      setUser(adminUser);
       setUserType("admin");
       return true;
     }
@@ -67,30 +72,29 @@ export const fetchUserProfile = async (
     if (citizenProfile) {
       console.log("Citizen profile found:", citizenProfile);
       
-      // Type check and safely access properties
-      const address = {
-        street: citizenProfile.street || "",
-        number: citizenProfile.number || "",
-        // The complement field doesn't exist in the database schema
-        // Handle it explicitly rather than trying to access it
-        complement: "",
-        neighborhood: citizenProfile.neighborhood || "",
-        city: citizenProfile.city || "",
-        state: citizenProfile.state || "",
-        zipCode: citizenProfile.zipcode || "",
-      };
-      
-      setUser({
+      // Map database fields to our application structure
+      // Note: The database schema doesn't have a nested address structure
+      const citizenUser: CitizenUser = {
         id: citizenProfile.id,
         email: citizenProfile.email,
         name: citizenProfile.name,
         cpf: citizenProfile.cpf || "",
         role: "citizen",
-        address,
+        address: {
+          street: citizenProfile.street || "",
+          number: citizenProfile.number || "",
+          complement: "", // The DB doesn't have this field, so we set an empty string
+          neighborhood: citizenProfile.neighborhood || "",
+          city: citizenProfile.city || "",
+          state: citizenProfile.state || "",
+          zipCode: citizenProfile.zipcode || "",
+        },
         phone: citizenProfile.phone || "",
         createdAt: citizenProfile.created_at,
         updatedAt: citizenProfile.updated_at,
-      });
+      };
+      
+      setUser(citizenUser);
       setUserType("citizen");
       return true;
     }

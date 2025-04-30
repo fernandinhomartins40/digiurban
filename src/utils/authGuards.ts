@@ -34,7 +34,7 @@ export function getUserTypeFromRole(role: string | undefined): "admin" | "citize
 }
 
 /**
- * Safe wrapper for localStorage access
+ * Safe wrapper for localStorage access with proper error handling
  */
 export const safeStorage = {
   getItem(key: string): string | null {
@@ -51,6 +51,8 @@ export const safeStorage = {
       localStorage.setItem(key, value);
     } catch (error) {
       console.error("Error setting localStorage item:", error);
+      // You could implement a fallback storage mechanism here
+      // For example, using an in-memory store or session cookies
     }
   },
   
@@ -62,3 +64,18 @@ export const safeStorage = {
     }
   }
 };
+
+/**
+ * Helper to determine if browser supports localStorage
+ */
+export function supportsLocalStorage(): boolean {
+  try {
+    const testKey = '__test__';
+    localStorage.setItem(testKey, testKey);
+    const supports = localStorage.getItem(testKey) === testKey;
+    localStorage.removeItem(testKey);
+    return supports;
+  } catch (e) {
+    return false;
+  }
+}

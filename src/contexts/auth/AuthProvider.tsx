@@ -22,9 +22,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserType,
     authInitialized,
     authError,
+    setSafetyTimeout
   } = useAuthInitialization(navigate);
 
-  // Import auth methods
+  // Import auth methods with enhanced timeout handling
   const { 
     login, 
     register, 
@@ -32,7 +33,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resetPassword, 
     updatePassword, 
     hasPermission 
-  } = useAuthMethods(user, setIsLoading, setUser, setSession, setUserType, navigate);
+  } = useAuthMethods(
+    user, 
+    setIsLoading, 
+    setUser, 
+    setSession, 
+    setUserType, 
+    setSafetyTimeout,
+    navigate
+  );
 
   // Provide the auth context only after initialization to prevent premature access
   if (!authInitialized && isLoading && !authError) {

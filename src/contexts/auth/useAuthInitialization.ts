@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { User } from "@/types/auth";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { fetchUserProfile } from "../authUtils";
 import { NavigateFunction } from "react-router-dom";
-import { safeStorage } from "@/utils/authGuards";
+import { getUserTypeFromRole } from "@/utils/authGuards";
 
 // Helper to track auth initialization state across app restarts
 const AUTH_INIT_KEY = "digiurban-auth-initialized";
@@ -18,14 +18,38 @@ export function useAuthInitialization(navigate: NavigateFunction) {
   const [userType, setUserType] = useState<"admin" | "citizen" | null>(null);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [safetyTimeout, setSafetyTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Helper function to clear auth state
-  const clearAuthState = () => {
+  const clearAuthState = useCallback(() => {
+    if (safetyTimeout) {
+      clearTimeout(safetyTimeout);
+      setSafetyTimeout(null);
+    }
     setUser(null);
     setSession(null);
     setUserType(null);
-    safeStorage.removeItem(AUTH_INIT_KEY);
-  };
+    try {
+      localStorage.removeItem(AUTH_INIT_KEY);
+    } catch (e) {
+      console.error("Error accessing localStorage:", e);
+    }
+  }, [safetyTimeout]);
+
+  // Helper to handle profile fetch failures
+  const handleProfileError = useCallback((userId: string) => {
+    console.log("No profile found for authenticated user, logging out");
+    // Clear auth state and force logout
+    clearAuthState();
+    supabase.auth.signOut().catch(console.error);
+    toast({
+      title: "Erro de perfil",
+      description: "Seu perfil não foi encontrado. Por favor, entre em contato com o suporte.",
+      variant: "destructive",
+    });
+    setIsLoading(false);
+    navigate("/login");
+  }, [clearAuthState, navigate]);
 
   // Initialize auth state
   useEffect(() => {
@@ -45,6 +69,12 @@ export function useAuthInitialization(navigate: NavigateFunction) {
             
             if (!isMounted) return;
             
+            // Clear any pending safety timeouts when auth state changes
+            if (safetyTimeout) {
+              clearTimeout(safetyTimeout);
+              setSafetyTimeout(null);
+            }
+            
             if (event === 'SIGNED_OUT') {
               console.log("User signed out, clearing auth state");
               clearAuthState();
@@ -61,23 +91,14 @@ export function useAuthInitialization(navigate: NavigateFunction) {
                 if (!isMounted) return;
                 
                 try {
-                  const profileFound = await fetchUserProfile(currentSession.user.id, setUser, setUserType);
+                  const profileFound = await fetchUserProfile(
+                    currentSession.user.id, 
+                    setUser, 
+                    setUserType
+                  );
                   
                   if (!profileFound) {
-                    console.log("No profile found for authenticated user, logging out");
-                    // Clear auth state and force logout
-                    clearAuthState();
-                    supabase.auth.signOut().catch(console.error);
-                    toast({
-                      title: "Erro de perfil",
-                      description: "Seu perfil não foi encontrado. Por favor, entre em contato com o suporte.",
-                      variant: "destructive",
-                    });
-                    
-                    if (isMounted) {
-                      setIsLoading(false);
-                      navigate("/login");
-                    }
+                    handleProfileError(currentSession.user.id);
                   } else {
                     // Profile found, make sure to set loading to false
                     if (isMounted) {
@@ -115,22 +136,14 @@ export function useAuthInitialization(navigate: NavigateFunction) {
           if (isMounted) setSession(initialSession);
           
           try {
-            const profileFound = await fetchUserProfile(initialSession.user.id, setUser, setUserType);
+            const profileFound = await fetchUserProfile(
+              initialSession.user.id, 
+              setUser, 
+              setUserType
+            );
             
             if (!profileFound && isMounted) {
-              console.log("No profile found for authenticated user, logging out");
-              clearAuthState();
-              await supabase.auth.signOut();
-              toast({
-                title: "Erro de perfil",
-                description: "Seu perfil não foi encontrado. Por favor, entre em contato com o suporte.",
-                variant: "destructive",
-              });
-              
-              if (isMounted) {
-                setIsLoading(false);
-                navigate("/login");
-              }
+              handleProfileError(initialSession.user.id);
             } else {
               // Profile found, ensure loading state is updated
               if (isMounted) {
@@ -152,7 +165,11 @@ export function useAuthInitialization(navigate: NavigateFunction) {
         }
 
         if (isMounted) {
-          safeStorage.setItem(AUTH_INIT_KEY, "true");
+          try {
+            localStorage.setItem(AUTH_INIT_KEY, "true");
+          } catch (e) {
+            console.error("Error accessing localStorage:", e);
+          }
           setAuthInitialized(true);
         }
       } catch (error) {
@@ -166,7 +183,14 @@ export function useAuthInitialization(navigate: NavigateFunction) {
     };
 
     // Only initialize if not already done (prevents duplicate initializations)
-    if (safeStorage.getItem(AUTH_INIT_KEY) !== "true") {
+    let isInitialized = false;
+    try {
+      isInitialized = localStorage.getItem(AUTH_INIT_KEY) === "true";
+    } catch (e) {
+      console.error("Error accessing localStorage:", e);
+    }
+    
+    if (!isInitialized) {
       initializeAuth();
     } else {
       setAuthInitialized(true);
@@ -181,8 +205,11 @@ export function useAuthInitialization(navigate: NavigateFunction) {
       if (authSubscription) {
         authSubscription.unsubscribe();
       }
+      if (safetyTimeout) {
+        clearTimeout(safetyTimeout);
+      }
     };
-  }, [navigate]);
+  }, [navigate, clearAuthState, handleProfileError, safetyTimeout]);
 
   return {
     user,
@@ -195,6 +222,7 @@ export function useAuthInitialization(navigate: NavigateFunction) {
     setUserType,
     authInitialized,
     authError,
-    clearAuthState
+    clearAuthState,
+    setSafetyTimeout
   };
 }

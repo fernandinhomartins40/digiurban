@@ -3,6 +3,7 @@ import { toast } from "@/hooks/use-toast";
 import { NavigateFunction } from "react-router-dom";
 import { User } from "@/types/auth";
 import { Session } from "@supabase/supabase-js";
+import { AuthError } from "@supabase/supabase-js";
 
 /**
  * Core authentication methods implementation
@@ -32,31 +33,56 @@ export function createAuthActions(
       });
 
       if (error) {
-        console.error("Login error from Supabase:", error);
-        throw error;
+        handleAuthError(error);
+        return;
       }
       
       console.log("Login successful, session:", data.session);
       
-      // Don't rely solely on auth state listener for redirection
-      // The auth state listener will handle setting the session state
-      // But we'll keep the loading state until we're confident the listener has fired
-      setTimeout(() => {
-        console.log("Login timeout completed, resetting loading state");
-        setIsLoading(false);
-      }, 2000);
-    } catch (error: any) {
-      console.error("Login error:", error.message);
-      toast({
-        title: "Erro no login",
-        description: error.message || "Verifique suas credenciais e tente novamente",
-        variant: "destructive",
-      });
+      // The auth state listener should handle setting user state
+      // We'll keep loading true just briefly to ensure everything is loaded
+      // but we no longer rely on arbitrary timeouts
       
-      // CRITICAL: Always set loading to false on error
-      setIsLoading(false);
-      throw error;
+      // If after 3 seconds we're still loading, reset to prevent UI lockup
+      const safetyTimeout = setTimeout(() => {
+        console.log("Safety timeout triggered - resetting loading state");
+        setIsLoading(false);
+      }, 3000);
+      
+      // Return the safety timeout so we can clear it if auth state changes properly
+      return safetyTimeout;
+    } catch (error: any) {
+      handleAuthError(error);
     }
+  };
+
+  /**
+   * Handle authentication errors with appropriate messages
+   */
+  const handleAuthError = (error: AuthError | any) => {
+    console.error("Auth error:", error.message);
+    
+    // Determine specific error message based on error code
+    let errorMessage = "Ocorreu um erro durante a autenticação.";
+    
+    if (error.status === 400) {
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Email ou senha inválidos. Verifique suas credenciais.";
+      } else if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Email não confirmado. Verifique sua caixa de entrada.";
+      }
+    } else if (error.status === 429) {
+      errorMessage = "Muitas tentativas. Tente novamente mais tarde.";
+    }
+    
+    toast({
+      title: "Erro no login",
+      description: errorMessage,
+      variant: "destructive",
+    });
+    
+    // Always reset loading state on error
+    setIsLoading(false);
   };
 
   const register = async (userData: any, userType: "admin" | "citizen") => {
@@ -80,23 +106,26 @@ export function createAuthActions(
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        handleAuthError(error);
+        return;
+      }
 
       toast({
         title: "Cadastro realizado",
         description: "Sua conta foi criada com sucesso!",
       });
-    } catch (error: any) {
-      console.error("Registration error:", error.message);
-      toast({
-        title: "Erro no cadastro",
-        description: error.message || "Não foi possível completar o cadastro",
-        variant: "destructive",
-      });
       
-      // Make sure to set loading to false on error
-      setIsLoading(false);
-      throw error;
+      // Registration succeeded but user might need email verification
+      if (data?.session) {
+        console.log("User registered and logged in automatically");
+      } else {
+        console.log("User registered, email verification may be required");
+        setIsLoading(false);
+        navigate("/login", { replace: true });
+      }
+    } catch (error: any) {
+      handleAuthError(error);
     }
   };
 
@@ -121,5 +150,6 @@ export function createAuthActions(
     login,
     register,
     logout,
+    clearAuthState,
   };
 }
