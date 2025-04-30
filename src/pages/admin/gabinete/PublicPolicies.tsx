@@ -27,7 +27,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Loader2, Plus, Search, Target, Calendar, ArrowRight } from "lucide-react";
-import { getPublicPolicies } from "@/services/mayorOfficeService";
+import { getPublicPolicies } from "@/services/mayorOffice";
 import { PublicPolicy, PolicyStatus } from "@/types/mayorOffice";
 import { useAuth } from "@/contexts/AuthContext";
 

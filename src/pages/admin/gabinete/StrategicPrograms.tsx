@@ -33,7 +33,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Loader2, Plus, Search, Calendar, Target, FileText } from "lucide-react";
-import { getStrategicPrograms } from "@/services/mayorOfficeService";
+import { getStrategicPrograms } from "@/services/mayorOffice";
 import { ProgramStatus, StrategicProgram } from "@/types/mayorOffice";
 import { useAuth } from "@/contexts/AuthContext";
 
