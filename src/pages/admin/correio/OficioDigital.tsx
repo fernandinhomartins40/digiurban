@@ -22,14 +22,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { AttachmentUpload } from "@/components/mail/AttachmentUpload";
 import { useMail } from "@/hooks/use-mail";
-import { isAdminUser } from "@/types/auth";
-import { Template, TemplateField } from "@/types/mail";
+import { isAdminUser } from "@/utils/authGuards";
+import { Template } from "@/types/mail";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit, Loader2, Mail, Send } from "lucide-react";
+import { Loader2, Mail, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { z } from "zod";
+import { generateDocumentFormSchema } from "@/schemas/documentForms";
+import { TemplateFieldsForm } from "@/components/mail/TemplateFieldsForm";
 
 export default function OficioDigital() {
   const { user } = useAuth();
@@ -60,43 +61,17 @@ export default function OficioDigital() {
   }, [template]);
   
   // Generate form schema dynamically based on template fields
-  const generateFormSchema = () => {
-    if (!selectedTemplate || !selectedTemplate.fields?.length) {
-      // Default schema
-      return z.object({
-        title: z.string().min(3, "O título é obrigatório"),
-        documentTypeId: z.string().min(1, "Selecione o tipo de documento"),
-        content: z.string().min(10, "O conteúdo é obrigatório"),
-        toDepartment: z.string().min(3, "O departamento de destino é obrigatório"),
-      });
-    }
-    
-    // Start with base form fields
-    const schemaObj: Record<string, z.ZodTypeAny> = {
-      title: z.string().min(3, "O título é obrigatório"),
-      documentTypeId: z.string().min(1, "Selecione o tipo de documento"),
-      toDepartment: z.string().min(3, "O departamento de destino é obrigatório"),
-    };
-    
-    // Add dynamic fields based on template
-    selectedTemplate.fields?.forEach((field: TemplateField) => {
-      let fieldSchema = z.string();
-      
-      if (field.is_required) {
-        fieldSchema = fieldSchema.min(1, `${field.field_label} é obrigatório`);
-      } else {
-        fieldSchema = z.string().optional();
-      }
-      
-      schemaObj[field.field_key] = fieldSchema;
-    });
-    
-    return z.object(schemaObj);
+  const formSchema = generateDocumentFormSchema(selectedTemplate?.fields);
+  
+  type FormValues = {
+    title: string;
+    documentTypeId: string;
+    content?: string;
+    toDepartment: string;
+    [key: string]: any;
   };
   
-  const formSchema = generateFormSchema();
-  
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
@@ -129,7 +104,7 @@ export default function OficioDigital() {
     return content;
   };
   
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: FormValues) {
     try {
       if (!user || !isAdminUser(user)) {
         toast({
@@ -141,23 +116,21 @@ export default function OficioDigital() {
       }
 
       // Extract field values
-      const { title, documentTypeId, toDepartment, ...fieldValues } = values;
+      const { title, documentTypeId, toDepartment, content, ...fieldValues } = values;
       
       // Generate content from template if available
-      let content = "";
+      let documentContent = content || "";
       if (selectedTemplate) {
-        content = generateContent(selectedTemplate, fieldValues as Record<string, string>);
-      } else {
-        content = values.content as string;
+        documentContent = generateContent(selectedTemplate, fieldValues);
       }
       
       // Create document
       const createdDoc = await createDocument({
         title,
-        content,
+        content: documentContent,
         document_type_id: documentTypeId,
         creator_id: user.id,
-        department: isAdminUser(user) ? user.department : "",
+        department: user.department || "",
         template_id: selectedTemplate?.id || null,
       });
       
@@ -286,55 +259,7 @@ export default function OficioDigital() {
                 
                 {/* Template Fields (dynamic) */}
                 {selectedTemplate?.fields && selectedTemplate.fields.length > 0 ? (
-                  <div className="space-y-4 border rounded-md p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Edit size={16} />
-                      <h3 className="font-medium">Campos do Modelo</h3>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {selectedTemplate.fields.map((field) => (
-                        <FormField
-                          key={field.id}
-                          control={form.control}
-                          name={field.field_key as any}
-                          render={({ field: formField }) => (
-                            <FormItem>
-                              <FormLabel>
-                                {field.field_label}
-                                {field.is_required && <span className="text-destructive ml-1">*</span>}
-                              </FormLabel>
-                              <FormControl>
-                                {field.field_type === 'textarea' ? (
-                                  <Textarea placeholder={field.field_label} {...formField} />
-                                ) : field.field_type === 'select' && field.field_options ? (
-                                  <Select onValueChange={formField.onChange} defaultValue={formField.value}>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder={`Selecione ${field.field_label}`} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {Object.entries(field.field_options).map(([key, value]) => (
-                                        <SelectItem key={key} value={key}>{value as string}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                ) : (
-                                  <Input placeholder={field.field_label} {...formField} />
-                                )}
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ))}
-                    </div>
-                    
-                    <div className="bg-muted p-3 rounded-md">
-                      <p className="text-sm text-muted-foreground">
-                        Os campos acima serão inseridos automaticamente no modelo do documento.
-                      </p>
-                    </div>
-                  </div>
+                  <TemplateFieldsForm fields={selectedTemplate.fields} form={form} />
                 ) : (
                   <FormField
                     control={form.control}
