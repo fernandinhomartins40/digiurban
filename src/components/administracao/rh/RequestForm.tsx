@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { HRRequestType } from "@/types/administration";
 import { useAuth } from "@/contexts/auth/useAuth";
-import { createRequest, uploadRequestAttachment } from "@/services/administration/hrRequestsService";
+import { createRequest, uploadRequestAttachment } from "@/services/administration/hr"; // Updated import path
 import { toast } from "@/hooks/use-toast";
 
 const baseFormSchema = z.object({

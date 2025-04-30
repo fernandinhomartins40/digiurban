@@ -20,7 +20,7 @@ import {
   fetchUserRequests,
   fetchAllRequests,
   updateRequestStatus
-} from "@/services/administration/hrRequestsService";
+} from "@/services/administration/hr"; // Updated import path
 import { HRDocument, HRDocumentStatus, DocumentType, HRRequestType, HRRequest, HRRequestStatus } from "@/types/administration";
 import { isAdminUser } from "@/types/auth";
 

@@ -22,7 +22,7 @@ import {
 import { HRRequest, HRRequestStatus } from "@/types/administration";
 import { LoadingSpinner } from "@/components/gabinete/solicitacoes/LoadingSpinner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { fetchRequestAttachments, fetchRequestHistory } from "@/services/administration/hrRequestsService";
+import { fetchRequestAttachments, fetchRequestHistory } from "@/services/administration/hr"; // Updated import path
 import { supabase } from "@/integrations/supabase/client";
 
 interface RequestListProps {
