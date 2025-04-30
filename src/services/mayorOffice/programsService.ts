@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ProgramStatus, StrategicProgram, GoalStatus } from "@/types/mayorOffice";
+import { StrategicProgram, ProgramStatus } from "@/types/mayorOffice";
 import { toast } from "@/hooks/use-toast";
 
 // Strategic Programs
@@ -10,7 +10,7 @@ export async function getStrategicPrograms(status?: ProgramStatus): Promise<Stra
       .from("strategic_programs")
       .select(
         `*, 
-        strategic_program_milestones(*), 
+        strategic_program_milestones(*),
         strategic_program_documents(*)`
       )
       .order("created_at", { ascending: false });
@@ -34,7 +34,7 @@ export async function getStrategicPrograms(status?: ProgramStatus): Promise<Stra
       status: program.status as ProgramStatus,
       progressPercentage: program.progress_percentage,
       coordinatorId: program.coordinator_id,
-      coordinatorName: program.coordinator_name,
+      coordinatorName: program.coordinator_id, // This field doesn't exist in the DB, using coordinator_id as fallback
       createdBy: program.created_by,
       createdAt: new Date(program.created_at),
       updatedAt: new Date(program.updated_at),
@@ -45,9 +45,9 @@ export async function getStrategicPrograms(status?: ProgramStatus): Promise<Stra
         description: milestone.description,
         dueDate: new Date(milestone.due_date),
         completionDate: milestone.completion_date ? new Date(milestone.completion_date) : undefined,
-        status: milestone.status as GoalStatus,
+        status: milestone.status,
         responsibleId: milestone.responsible_id,
-        responsibleName: milestone.responsible_name,
+        responsibleName: milestone.responsible_id, // This field may not exist in the DB
         createdAt: new Date(milestone.created_at),
         updatedAt: new Date(milestone.updated_at),
       })) || [],

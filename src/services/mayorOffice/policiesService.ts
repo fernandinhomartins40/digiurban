@@ -30,7 +30,7 @@ export async function getPublicPolicies(status?: PolicyStatus): Promise<PublicPo
       endDate: policy.end_date ? new Date(policy.end_date) : undefined,
       status: policy.status as PolicyStatus,
       responsibleId: policy.responsible_id,
-      responsibleName: policy.responsible_name,
+      responsibleName: policy.responsible_id, // This field doesn't exist in the DB, using responsible_id as fallback
       department: policy.department,
       createdBy: policy.created_by,
       createdAt: new Date(policy.created_at),
