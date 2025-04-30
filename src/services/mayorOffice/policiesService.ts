@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { PolicyStatus, PublicPolicy } from "@/types/mayorOffice";
+import { PolicyStatus, GoalStatus, PublicPolicy } from "@/types/mayorOffice";
 import { toast } from "@/hooks/use-toast";
 
 // Public Policies
@@ -8,7 +8,10 @@ export async function getPublicPolicies(status?: PolicyStatus): Promise<PublicPo
   try {
     let query = supabase
       .from("public_policies")
-      .select(`*, public_policy_goals(*)`)
+      .select(
+        `*, 
+        public_policy_goals(*)`
+      )
       .order("created_at", { ascending: false });
 
     if (status) {
@@ -27,6 +30,7 @@ export async function getPublicPolicies(status?: PolicyStatus): Promise<PublicPo
       endDate: policy.end_date ? new Date(policy.end_date) : undefined,
       status: policy.status as PolicyStatus,
       responsibleId: policy.responsible_id,
+      responsibleName: policy.responsible_name,
       department: policy.department,
       createdBy: policy.created_by,
       createdAt: new Date(policy.created_at),
@@ -40,10 +44,10 @@ export async function getPublicPolicies(status?: PolicyStatus): Promise<PublicPo
         targetUnit: goal.target_unit,
         currentValue: goal.current_value,
         dueDate: goal.due_date ? new Date(goal.due_date) : undefined,
-        status: goal.status as PolicyStatus,
+        status: goal.status as GoalStatus,
         createdAt: new Date(goal.created_at),
         updatedAt: new Date(goal.updated_at),
-      })),
+      })) || [],
     }));
   } catch (error: any) {
     console.error("Error fetching public policies:", error.message);
