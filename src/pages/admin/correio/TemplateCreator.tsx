@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -160,7 +159,7 @@ function FieldItem({
           name={`fields.${index}.field_options`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Opções (formato JSON: {"chave": "valor"})</FormLabel>
+              <FormLabel>Opções (formato JSON: {"{chave: \"valor\"}"}) </FormLabel>
               <FormControl>
                 <Textarea 
                   placeholder='{"op1": "Opção 1", "op2": "Opção 2"}'
