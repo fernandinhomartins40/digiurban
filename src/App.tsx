@@ -35,6 +35,11 @@ import DirectRequests from "@/pages/admin/gabinete/DirectRequests";
 import PublicPolicies from "@/pages/admin/gabinete/PublicPolicies";
 import StrategicPrograms from "@/pages/admin/gabinete/StrategicPrograms";
 
+// Administration Module
+import AdministracaoIndex from "@/pages/admin/administracao/index";
+import RHPage from "@/pages/admin/administracao/rh/index";
+import ComprasPage from "@/pages/admin/administracao/compras/index";
+
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
 
@@ -74,6 +79,11 @@ function App() {
                   <Route path="gabinete/solicitacoes" element={<DirectRequests />} />
                   <Route path="gabinete/politicas" element={<PublicPolicies />} />
                   <Route path="gabinete/programas" element={<StrategicPrograms />} />
+
+                  {/* Administration Module Routes */}
+                  <Route path="administracao" element={<AdministracaoIndex />} />
+                  <Route path="administracao/rh" element={<RHPage />} />
+                  <Route path="administracao/compras" element={<ComprasPage />} />
                 </Route>
 
                 {/* Citizen Routes */}

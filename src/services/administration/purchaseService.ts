@@ -1,0 +1,418 @@
+
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  PurchaseRequest, 
+  PurchaseItem, 
+  PurchaseAttachment, 
+  PurchaseRequestStatus,
+  PurchaseStatusHistory,
+  PurchasePriority
+} from "@/types/administration";
+import { toast } from "@/hooks/use-toast";
+
+// Create a new purchase request with items
+export async function createPurchaseRequest(
+  userId: string,
+  department: string,
+  justification: string,
+  priority: PurchasePriority,
+  items: { name: string; quantity: number; unit: string; description?: string; estimatedPrice?: number }[]
+): Promise<PurchaseRequest | null> {
+  try {
+    // First, create the purchase request
+    const { data, error } = await supabase
+      .from("purchase_requests")
+      .insert({
+        user_id: userId,
+        department,
+        justification,
+        priority,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    const requestId = data.id;
+
+    // Then, add all the items
+    const itemsToInsert = items.map(item => ({
+      request_id: requestId,
+      name: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+      description: item.description || null,
+      estimated_price: item.estimatedPrice || null,
+    }));
+
+    const { error: itemsError } = await supabase
+      .from("purchase_items")
+      .insert(itemsToInsert);
+
+    if (itemsError) throw itemsError;
+
+    // Add entry to status history
+    await addPurchaseStatusHistory(
+      requestId,
+      'pending',
+      'Solicitação de compra criada',
+      userId
+    );
+
+    toast({
+      title: "Solicitação enviada",
+      description: `Solicitação de compra nº ${data.protocol_number} criada com sucesso.`,
+    });
+
+    return {
+      id: data.id,
+      protocolNumber: data.protocol_number,
+      userId: data.user_id,
+      department: data.department,
+      justification: data.justification,
+      status: data.status,
+      priority: data.priority,
+      assignedTo: data.assigned_to,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+      items: itemsToInsert.map((item, index) => ({
+        id: '', // We don't have the generated IDs yet
+        requestId: requestId,
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        description: item.description,
+        estimatedPrice: item.estimated_price,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })),
+    };
+  } catch (error: any) {
+    console.error("Error creating purchase request:", error.message);
+    toast({
+      title: "Erro ao criar solicitação de compra",
+      description: error.message,
+      variant: "destructive",
+    });
+    return null;
+  }
+}
+
+// Upload attachment for purchase request
+export async function uploadPurchaseAttachment(
+  userId: string,
+  requestId: string,
+  file: File
+): Promise<PurchaseAttachment | null> {
+  try {
+    const filePath = `${userId}/${requestId}/${new Date().getTime()}-${file.name}`;
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("purchase_attachments")
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data, error } = await supabase
+      .from("purchase_attachments")
+      .insert({
+        request_id: requestId,
+        file_path: uploadData.path,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      requestId: data.request_id,
+      filePath: data.file_path,
+      fileName: data.file_name,
+      fileType: data.file_type,
+      fileSize: data.file_size,
+      createdAt: new Date(data.created_at),
+    };
+  } catch (error: any) {
+    console.error("Error uploading attachment:", error.message);
+    toast({
+      title: "Erro ao fazer upload do anexo",
+      description: error.message,
+      variant: "destructive",
+    });
+    return null;
+  }
+}
+
+// Fetch purchase requests for a user
+export async function fetchUserPurchaseRequests(userId: string): Promise<PurchaseRequest[]> {
+  try {
+    const { data, error } = await supabase
+      .from("purchase_requests")
+      .select(`
+        *,
+        items:purchase_items(*)
+      `)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return (data || []).map(mapPurchaseRequestFromDb);
+  } catch (error: any) {
+    console.error("Error fetching user purchase requests:", error.message);
+    toast({
+      title: "Erro ao carregar solicitações de compra",
+      description: error.message,
+      variant: "destructive",
+    });
+    return [];
+  }
+}
+
+// Fetch department purchase requests
+export async function fetchDepartmentPurchaseRequests(department: string): Promise<PurchaseRequest[]> {
+  try {
+    const { data, error } = await supabase
+      .from("purchase_requests")
+      .select(`
+        *,
+        items:purchase_items(*)
+      `)
+      .eq("department", department)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return (data || []).map(mapPurchaseRequestFromDb);
+  } catch (error: any) {
+    console.error("Error fetching department purchase requests:", error.message);
+    toast({
+      title: "Erro ao carregar solicitações de compra do departamento",
+      description: error.message,
+      variant: "destructive",
+    });
+    return [];
+  }
+}
+
+// Fetch all purchase requests (admin function)
+export async function fetchAllPurchaseRequests(
+  status?: PurchaseRequestStatus,
+  department?: string
+): Promise<PurchaseRequest[]> {
+  try {
+    let query = supabase
+      .from("purchase_requests")
+      .select(`
+        *,
+        items:purchase_items(*)
+      `)
+      .order("created_at", { ascending: false });
+
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    if (department) {
+      query = query.eq("department", department);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    return (data || []).map(mapPurchaseRequestFromDb);
+  } catch (error: any) {
+    console.error("Error fetching all purchase requests:", error.message);
+    toast({
+      title: "Erro ao carregar solicitações de compra",
+      description: error.message,
+      variant: "destructive",
+    });
+    return [];
+  }
+}
+
+// Get purchase request by ID
+export async function getPurchaseRequestById(requestId: string): Promise<PurchaseRequest | null> {
+  try {
+    const { data, error } = await supabase
+      .from("purchase_requests")
+      .select(`
+        *,
+        items:purchase_items(*),
+        attachments:purchase_attachments(*)
+      `)
+      .eq("id", requestId)
+      .single();
+
+    if (error) throw error;
+
+    return mapPurchaseRequestFromDb(data);
+  } catch (error: any) {
+    console.error("Error fetching purchase request:", error.message);
+    toast({
+      title: "Erro ao carregar solicitação de compra",
+      description: error.message,
+      variant: "destructive",
+    });
+    return null;
+  }
+}
+
+// Update purchase request status
+export async function updatePurchaseStatus(
+  requestId: string,
+  status: PurchaseRequestStatus,
+  comments: string | null,
+  userId: string,
+  assignedTo?: string
+): Promise<PurchaseRequest | null> {
+  try {
+    let updateData: Record<string, any> = { status };
+    if (assignedTo) {
+      updateData.assigned_to = assignedTo;
+    }
+
+    const { data, error } = await supabase
+      .from("purchase_requests")
+      .update(updateData)
+      .eq("id", requestId)
+      .select(`
+        *,
+        items:purchase_items(*),
+        attachments:purchase_attachments(*)
+      `)
+      .single();
+
+    if (error) throw error;
+
+    // Add entry to status history
+    await addPurchaseStatusHistory(
+      requestId,
+      status,
+      comments || `Status atualizado para ${status}`,
+      userId
+    );
+
+    toast({
+      title: "Status atualizado",
+      description: `Solicitação de compra atualizada para ${status}.`,
+    });
+
+    return mapPurchaseRequestFromDb(data);
+  } catch (error: any) {
+    console.error("Error updating purchase request status:", error.message);
+    toast({
+      title: "Erro ao atualizar status",
+      description: error.message,
+      variant: "destructive",
+    });
+    return null;
+  }
+}
+
+// Add entry to purchase status history
+export async function addPurchaseStatusHistory(
+  requestId: string,
+  status: PurchaseRequestStatus,
+  comments: string | null,
+  userId: string
+): Promise<PurchaseStatusHistory | null> {
+  try {
+    const { data, error } = await supabase
+      .from("purchase_status_history")
+      .insert({
+        request_id: requestId,
+        status,
+        comments,
+        changed_by: userId,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      requestId: data.request_id,
+      status: data.status,
+      comments: data.comments,
+      changedBy: data.changed_by,
+      createdAt: new Date(data.created_at),
+    };
+  } catch (error: any) {
+    console.error("Error adding purchase status history:", error.message);
+    return null;
+  }
+}
+
+// Fetch purchase request status history
+export async function fetchPurchaseHistory(requestId: string): Promise<PurchaseStatusHistory[]> {
+  try {
+    const { data, error } = await supabase
+      .from("purchase_status_history")
+      .select("*")
+      .eq("request_id", requestId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return (data || []).map((history) => ({
+      id: history.id,
+      requestId: history.request_id,
+      status: history.status,
+      comments: history.comments,
+      changedBy: history.changed_by,
+      createdAt: new Date(history.created_at),
+    }));
+  } catch (error: any) {
+    console.error("Error fetching purchase history:", error.message);
+    toast({
+      title: "Erro ao carregar histórico",
+      description: error.message,
+      variant: "destructive",
+    });
+    return [];
+  }
+}
+
+// Helper function to map purchase request data from database
+function mapPurchaseRequestFromDb(request: any): PurchaseRequest {
+  return {
+    id: request.id,
+    protocolNumber: request.protocol_number,
+    userId: request.user_id,
+    department: request.department,
+    justification: request.justification,
+    status: request.status,
+    priority: request.priority,
+    assignedTo: request.assigned_to,
+    createdAt: new Date(request.created_at),
+    updatedAt: new Date(request.updated_at),
+    items: request.items ? request.items.map((item: any) => ({
+      id: item.id,
+      requestId: item.request_id,
+      name: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+      description: item.description,
+      estimatedPrice: item.estimated_price,
+      createdAt: new Date(item.created_at),
+      updatedAt: new Date(item.updated_at),
+    })) : undefined,
+    attachments: request.attachments ? request.attachments.map((attachment: any) => ({
+      id: attachment.id,
+      requestId: attachment.request_id,
+      filePath: attachment.file_path,
+      fileName: attachment.file_name,
+      fileType: attachment.file_type,
+      fileSize: attachment.file_size,
+      createdAt: new Date(attachment.created_at),
+    })) : undefined,
+  };
+}

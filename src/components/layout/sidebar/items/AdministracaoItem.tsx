@@ -1,24 +1,23 @@
 
-import React from "react";
-import { Briefcase } from "lucide-react";
+import { BriefcaseBusiness } from "lucide-react";
 import { SidebarItemProps } from "@/types/sidebar";
 
 export const getAdministracaoItem = (): SidebarItemProps => ({
-  icon: <Briefcase size={18} />,
   title: "Administração",
-  moduleId: "administracao",
-  children: [
+  icon: <BriefcaseBusiness className="h-5 w-5" />,
+  href: "/admin/administracao",
+  submenu: [
     {
-      title: "RH",
-      path: "/admin/administracao/rh",
+      title: "Recursos Humanos",
+      href: "/admin/administracao/rh",
     },
     {
-      title: "Solicitações Gerais",
-      path: "/admin/administracao/solicitacoes",
+      title: "Solicitações",
+      href: "/admin/administracao/solicitacoes",
     },
     {
       title: "Compras",
-      path: "/admin/administracao/compras",
+      href: "/admin/administracao/compras",
     },
   ],
 });

@@ -134,6 +134,230 @@ export type Database = {
         }
         Relationships: []
       }
+      hr_document_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hr_documents: {
+        Row: {
+          created_at: string
+          document_type_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          observations: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["hr_document_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          observations?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["hr_document_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          observations?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["hr_document_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_documents_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "hr_document_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_request_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          request_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          request_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_request_attachments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "hr_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_request_status_history: {
+        Row: {
+          changed_by: string
+          comments: string | null
+          created_at: string
+          id: string
+          request_id: string
+          status: Database["public"]["Enums"]["hr_request_status"]
+        }
+        Insert: {
+          changed_by: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          request_id: string
+          status: Database["public"]["Enums"]["hr_request_status"]
+        }
+        Update: {
+          changed_by?: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          request_id?: string
+          status?: Database["public"]["Enums"]["hr_request_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_request_status_history_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "hr_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_request_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          form_schema: Json | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          form_schema?: Json | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          form_schema?: Json | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hr_requests: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          form_data: Json
+          id: string
+          protocol_number: string
+          request_type_id: string
+          status: Database["public"]["Enums"]["hr_request_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          form_data: Json
+          id?: string
+          protocol_number: string
+          request_type_id: string
+          status?: Database["public"]["Enums"]["hr_request_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          form_data?: Json
+          id?: string
+          protocol_number?: string
+          request_type_id?: string
+          status?: Database["public"]["Enums"]["hr_request_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_requests_request_type_id_fkey"
+            columns: ["request_type_id"]
+            isOneToOne: false
+            referencedRelation: "hr_request_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mail_document_attachments: {
         Row: {
           document_id: string
@@ -726,6 +950,162 @@ export type Database = {
           },
         ]
       }
+      purchase_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          request_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          request_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_attachments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          estimated_price: number | null
+          id: string
+          name: string
+          quantity: number
+          request_id: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          estimated_price?: number | null
+          id?: string
+          name: string
+          quantity: number
+          request_id: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          estimated_price?: number | null
+          id?: string
+          name?: string
+          quantity?: number
+          request_id?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_requests: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          department: string
+          id: string
+          justification: string
+          priority: Database["public"]["Enums"]["purchase_priority"]
+          protocol_number: string
+          status: Database["public"]["Enums"]["purchase_request_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          department: string
+          id?: string
+          justification: string
+          priority?: Database["public"]["Enums"]["purchase_priority"]
+          protocol_number: string
+          status?: Database["public"]["Enums"]["purchase_request_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          department?: string
+          id?: string
+          justification?: string
+          priority?: Database["public"]["Enums"]["purchase_priority"]
+          protocol_number?: string
+          status?: Database["public"]["Enums"]["purchase_request_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      purchase_status_history: {
+        Row: {
+          changed_by: string
+          comments: string | null
+          created_at: string
+          id: string
+          request_id: string
+          status: Database["public"]["Enums"]["purchase_request_status"]
+        }
+        Insert: {
+          changed_by: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          request_id: string
+          status: Database["public"]["Enums"]["purchase_request_status"]
+        }
+        Update: {
+          changed_by?: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          request_id?: string
+          status?: Database["public"]["Enums"]["purchase_request_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_status_history_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       strategic_program_documents: {
         Row: {
           created_at: string | null
@@ -873,11 +1253,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_hr_protocol: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_mayor_protocol: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
       generate_protocol_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_purchase_protocol: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
@@ -890,8 +1278,18 @@ export type Database = {
       }
     }
     Enums: {
+      hr_document_status: "pending" | "approved" | "rejected"
+      hr_request_status: "pending" | "in_progress" | "approved" | "rejected"
       mail_document_status: "pending" | "forwarded" | "responded" | "completed"
       permission_action: "create" | "read" | "update" | "delete"
+      purchase_priority: "low" | "normal" | "high" | "urgent"
+      purchase_request_status:
+        | "pending"
+        | "in_analysis"
+        | "approved"
+        | "in_process"
+        | "completed"
+        | "rejected"
       user_role: "prefeito" | "admin" | "citizen"
     }
     CompositeTypes: {
@@ -1008,8 +1406,19 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      hr_document_status: ["pending", "approved", "rejected"],
+      hr_request_status: ["pending", "in_progress", "approved", "rejected"],
       mail_document_status: ["pending", "forwarded", "responded", "completed"],
       permission_action: ["create", "read", "update", "delete"],
+      purchase_priority: ["low", "normal", "high", "urgent"],
+      purchase_request_status: [
+        "pending",
+        "in_analysis",
+        "approved",
+        "in_process",
+        "completed",
+        "rejected",
+      ],
       user_role: ["prefeito", "admin", "citizen"],
     },
   },
