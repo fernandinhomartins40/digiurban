@@ -48,9 +48,9 @@ export function DocumentFiltersForm({ onFilter }: DocumentFiltersFormProps) {
   function onSubmit(values: z.infer<typeof formSchema>) {
     const filters: DocumentFilters = {};
     
-    if (values.type) filters.type = values.type;
+    if (values.type && values.type !== "all") filters.type = values.type;
     if (values.department) filters.department = values.department;
-    if (values.status) filters.status = values.status as any;
+    if (values.status && values.status !== "all") filters.status = values.status as any;
     if (values.search) filters.search = values.search;
     
     onFilter(filters);

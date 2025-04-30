@@ -407,7 +407,7 @@ export default function TemplateCreator() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="">Nenhum</SelectItem>
+                                  <SelectItem value="none">Nenhum</SelectItem>
                                   {documentTypes.data?.map((type) => (
                                     <SelectItem key={type.id} value={type.id}>
                                       {type.name}
