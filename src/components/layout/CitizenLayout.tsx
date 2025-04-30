@@ -1,12 +1,35 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { CitizenNavbar } from "./CitizenNavbar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
 export function CitizenLayout() {
-  const { isLoading } = useAuth();
+  const { isLoading, isAuthenticated, userType } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log("CitizenLayout - Auth state:", { 
+      isLoading, 
+      isAuthenticated, 
+      userType 
+    });
+    
+    // If not loading and not authenticated, redirect to login
+    if (!isLoading && !isAuthenticated) {
+      console.log("CitizenLayout: Not authenticated, redirecting to login");
+      navigate("/login", { replace: true });
+      return;
+    }
+    
+    // If authenticated but not a citizen, redirect to appropriate dashboard
+    if (!isLoading && isAuthenticated && userType !== "citizen") {
+      console.log("CitizenLayout: User is not citizen, redirecting to admin dashboard");
+      navigate("/admin/dashboard", { replace: true });
+      return;
+    }
+  }, [isLoading, isAuthenticated, userType, navigate]);
 
   if (isLoading) {
     return (

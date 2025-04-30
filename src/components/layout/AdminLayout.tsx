@@ -13,6 +13,13 @@ export function AdminLayout() {
   const navigate = useNavigate();
   
   useEffect(() => {
+    console.log("AdminLayout - Auth state:", { 
+      isLoading, 
+      isAuthenticated, 
+      userType, 
+      hasUser: !!user 
+    });
+    
     // Extra safety check - if we're not loading and not authenticated, redirect to login
     if (!isLoading && !isAuthenticated) {
       console.log("AdminLayout: Not authenticated, redirecting to login");
@@ -29,9 +36,10 @@ export function AdminLayout() {
     
     // Only mark ready for React Query operations when auth is complete
     if (!isLoading && isAuthenticated && userType === "admin") {
+      console.log("AdminLayout: User is admin, setting readyForQuery");
       setReadyForQuery(true);
     }
-  }, [isLoading, isAuthenticated, userType, navigate]);
+  }, [isLoading, isAuthenticated, userType, navigate, user]);
 
   // Show loading state
   if (isLoading) {

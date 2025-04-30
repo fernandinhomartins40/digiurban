@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { NavigateFunction } from "react-router-dom";
@@ -40,13 +41,20 @@ export function createAuthActions(
       console.log("Login successful, session:", data.session);
       
       // The auth state listener should handle setting user state
-      // We'll keep loading true just briefly to ensure everything is loaded
-      // but we no longer rely on arbitrary timeouts
+      // but we'll also set it directly here to ensure immediate feedback
+      setSession(data.session);
       
       // If after 3 seconds we're still loading, reset to prevent UI lockup
       const safetyTimeout = setTimeout(() => {
         console.log("Safety timeout triggered - resetting loading state");
         setIsLoading(false);
+        
+        // Force navigation as a fallback
+        if (data.session) {
+          const redirectPath = userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard";
+          console.log(`Forcing redirect to ${redirectPath} after timeout`);
+          navigate(redirectPath, { replace: true });
+        }
       }, 3000);
       
       // Return the safety timeout so we can clear it if auth state changes properly

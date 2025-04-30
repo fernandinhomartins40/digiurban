@@ -55,6 +55,7 @@ export const fetchUserProfile = async (
       
       setUser(adminUser);
       setUserType("admin");
+      console.log("Auth state updated with admin user");
       return true;
     }
 
@@ -96,6 +97,7 @@ export const fetchUserProfile = async (
       
       setUser(citizenUser);
       setUserType("citizen");
+      console.log("Auth state updated with citizen user");
       return true;
     }
 

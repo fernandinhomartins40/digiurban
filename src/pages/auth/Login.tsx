@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/contexts/auth/useAuth"; // Updated import path
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,11 +21,14 @@ export default function Login() {
 
   // Redirect if already logged in
   useEffect(() => {
+    console.log("Login - Auth state:", { isLoading, isAuthenticated, userType });
+    
     if (isAuthenticated && userType) {
-      console.log("Redirecting authenticated user to dashboard:", userType);
-      navigate(userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard", { replace: true });
+      console.log("Login: Already authenticated, redirecting to dashboard:", userType);
+      const redirectPath = userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard";
+      navigate(redirectPath, { replace: true });
     }
-  }, [isAuthenticated, userType, navigate]);
+  }, [isAuthenticated, userType, navigate, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,12 +36,19 @@ export default function Login() {
     setLocalLoading(true);
 
     try {
-      console.log("Attempting login with:", { email, activeUserType });
+      console.log("Login: Attempting login with:", { email, activeUserType });
       await login(email, password, activeUserType);
-      console.log("Login function completed");
-      // Redirect happens automatically through the auth state listener
+      console.log("Login: Login function completed");
+      
+      // Force redirecionamento após sucesso no login após um pequeno delay
+      // Este é um fallback caso o listener de estado não funcione
+      setTimeout(() => {
+        const redirectPath = activeUserType === "admin" ? "/admin/dashboard" : "/citizen/dashboard";
+        console.log(`Login: Forced redirect to ${redirectPath} after successful login`);
+        navigate(redirectPath, { replace: true });
+      }, 500);
     } catch (error: any) {
-      console.error("Login error in component:", error);
+      console.error("Login: Error during login:", error);
       setError(error.message || "Falha no login. Verifique suas credenciais e tente novamente.");
     } finally {
       // Always ensure local loading state is reset
