@@ -5,6 +5,7 @@ import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { isAdminUser } from "@/types/auth";
 
 export function AdminLayout() {
   const { isLoading, isAuthenticated, userType, user } = useAuth();
@@ -37,7 +38,7 @@ export function AdminLayout() {
       isAuthenticated, 
       userType, 
       hasUser: !!user,
-      department: user?.role === 'admin' || user?.role === 'prefeito' ? user?.department : undefined
+      department: isAdminUser(user) ? user?.department : undefined
     });
     
     // Only take action once loading is complete
@@ -57,7 +58,7 @@ export function AdminLayout() {
       }
       
       // Check if admin has a department set (required for the mail module)
-      if (isAuthenticated && userType === "admin" && user && (!user.department || user.department.trim() === "")) {
+      if (isAuthenticated && userType === "admin" && user && isAdminUser(user) && (!user.department || user.department.trim() === "")) {
         console.log("AdminLayout: Admin user has no department");
         setLocalError("Seu usuário administrativo não possui um departamento configurado. Entre em contato com o suporte.");
         return;

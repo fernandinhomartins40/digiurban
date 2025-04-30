@@ -53,4 +53,3 @@ export type User = AdminUser | CitizenUser;
 export function isAdminUser(user: User | null): user is AdminUser {
   return user?.role === "admin" || user?.role === "prefeito";
 }
-

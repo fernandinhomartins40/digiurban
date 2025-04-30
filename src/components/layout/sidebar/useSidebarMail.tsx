@@ -1,6 +1,6 @@
 
-import { useMail } from "@/hooks/use-mail";
 import { useEffect, useState } from "react";
+import { useMail } from "@/hooks/use-mail";
 
 export const useSidebarMail = (ready: boolean) => {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -12,8 +12,11 @@ export const useSidebarMail = (ready: boolean) => {
     }
     
     try {
-      // Get unread messages count if available
-      const { getIncomingDocuments } = useMail();
+      // Get mail hook inside the component
+      const mailHook = useMail();
+      const { getIncomingDocuments } = mailHook;
+      
+      // Get documents
       const { data: incomingDocuments } = getIncomingDocuments();
       
       if (incomingDocuments) {
