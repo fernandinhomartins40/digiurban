@@ -32,33 +32,29 @@ const formSchema = z.object({
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   confirmPassword: z.string(),
   role: z.enum(["admin", "prefeito"]),
-  department: z.string().min(3, "Departamento deve ter pelo menos 3 caracteres")
-    .optional()
-    .refine((val, ctx) => {
-      // If role is prefeito, department is optional
-      if (ctx.path && ctx.path.length > 0) {
-        const data = ctx.path[0] ? ctx.path[0] : {};
-        if (data && typeof data === 'object' && 'role' in data && data.role === 'prefeito') {
-          return true;
-        }
-      }
-      return val && val.length >= 3; 
-    }, "Departamento deve ter pelo menos 3 caracteres"),
-  position: z.string().min(2, "Cargo deve ter pelo menos 2 caracteres")
-    .optional()
-    .refine((val, ctx) => {
-      // If role is prefeito, position is optional
-      if (ctx.path && ctx.path.length > 0) {
-        const data = ctx.path[0] ? ctx.path[0] : {};
-        if (data && typeof data === 'object' && 'role' in data && data.role === 'prefeito') {
-          return true;
-        }
-      }
-      return val && val.length >= 2; 
-    }, "Cargo deve ter pelo menos 2 caracteres"),
+  department: z.string().min(3, "Departamento deve ter pelo menos 3 caracteres").optional(),
+  position: z.string().min(2, "Cargo deve ter pelo menos 2 caracteres").optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
+}).superRefine((data, ctx) => {
+  // Validate department when role is admin
+  if (data.role === "admin" && (!data.department || data.department.length < 3)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Departamento deve ter pelo menos 3 caracteres",
+      path: ["department"]
+    });
+  }
+  
+  // Validate position when role is admin
+  if (data.role === "admin" && (!data.position || data.position.length < 2)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Cargo deve ter pelo menos 2 caracteres",
+      path: ["position"]
+    });
+  }
 });
 
 export default function AdminRegister() {
