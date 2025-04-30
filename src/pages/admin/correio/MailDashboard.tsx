@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { DocumentStatusBadge } from "@/components/mail/DocumentStatusBadge";
 import { ResponseDocumentDialog } from "@/components/mail/ResponseDocumentDialog";
 import { useMail } from "@/hooks/use-mail";
 import { Document, DocumentDestination, DocumentFilters } from "@/types/mail";
+import { isAdminUser } from "@/types/auth";
 import { formatDate } from "@/lib/utils";
 import { FileText } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -25,7 +25,9 @@ export default function MailDashboard() {
   const { getDocuments, getIncomingDocuments, getOutgoingDocuments, markAsRead } = useMail();
   const { data: incomingDocuments, isLoading: isLoadingIncoming, refetch: refetchIncoming } = getIncomingDocuments();
   const { data: outgoingDocuments, isLoading: isLoadingOutgoing } = getOutgoingDocuments();
-  const { data: myDocuments, isLoading: isLoadingMy } = getDocuments({ ...documentFilters, department: user?.department });
+  const { data: myDocuments, isLoading: isLoadingMy } = getDocuments(
+    isAdminUser(user) ? { ...documentFilters, department: user.department } : documentFilters
+  );
   
   // Mark document as read when opened
   useEffect(() => {

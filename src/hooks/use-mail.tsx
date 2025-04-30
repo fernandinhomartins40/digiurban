@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import * as mailService from "@/services/mailService";
 import { Document, DocumentAttachment, DocumentDestination, DocumentFilters, DocumentStatus, DocumentType, Template, TemplateField } from "@/types/mail";
+import { isAdminUser } from "@/types/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useMail() {
@@ -79,21 +80,21 @@ export function useMail() {
   
   const getIncomingDocuments = () =>
     useQuery({
-      queryKey: ['incomingDocuments', user?.department],
-      queryFn: () => mailService.getIncomingDocuments(user?.department!),
-      enabled: !!user?.department,
+      queryKey: ['incomingDocuments', isAdminUser(user) ? user.department : null],
+      queryFn: () => isAdminUser(user) ? mailService.getIncomingDocuments(user.department!) : Promise.resolve([]),
+      enabled: !!(user && isAdminUser(user) && user.department),
     });
   
   const getOutgoingDocuments = () =>
     useQuery({
-      queryKey: ['outgoingDocuments', user?.department],
-      queryFn: () => mailService.getOutgoingDocuments(user?.department!),
-      enabled: !!user?.department,
+      queryKey: ['outgoingDocuments', isAdminUser(user) ? user.department : null],
+      queryFn: () => isAdminUser(user) ? mailService.getOutgoingDocuments(user.department!) : Promise.resolve([]),
+      enabled: !!(user && isAdminUser(user) && user.department),
     });
   
   const forwardDocumentMutation = useMutation({
     mutationFn: ({ documentId, toDepartment }: { documentId: string; toDepartment: string }) =>
-      mailService.forwardDocument(documentId, user?.department!, toDepartment, user?.id!),
+      isAdminUser(user) ? mailService.forwardDocument(documentId, user.department!, toDepartment, user.id!) : Promise.resolve(null),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['documentDestinations'] });
@@ -196,8 +197,8 @@ export function useMail() {
   // Templates
   const getTemplates = () =>
     useQuery({
-      queryKey: ['templates', user?.department],
-      queryFn: () => mailService.getTemplates(user?.department),
+      queryKey: ['templates', isAdminUser(user) ? user.department : null],
+      queryFn: () => mailService.getTemplates(isAdminUser(user) ? user.department : undefined),
     });
   
   const getTemplate = (id?: string) =>

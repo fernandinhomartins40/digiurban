@@ -48,3 +48,8 @@ export interface CitizenUser {
 }
 
 export type User = AdminUser | CitizenUser;
+
+// Add a type guard function to check if a user is an AdminUser
+export function isAdminUser(user: User | null): user is AdminUser {
+  return user?.role === "admin" || user?.role === "prefeito";
+}

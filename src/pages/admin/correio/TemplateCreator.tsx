@@ -38,6 +38,7 @@ import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
+import { isAdminUser } from "@/types/auth";
 
 const templateFormSchema = z.object({
   name: z.string().min(3, "Nome é obrigatório"),
@@ -210,7 +211,7 @@ export default function TemplateCreator() {
       description: "",
       documentTypeId: "",
       content: "",
-      departments: user?.department ? [user.department] : [],
+      departments: isAdminUser(user) && user.department ? [user.department] : [],
       fields: [],
     },
   });
@@ -302,6 +303,10 @@ export default function TemplateCreator() {
   
   async function onSubmit(values: z.infer<typeof templateFormSchema>) {
     try {
+      if (!user || !isAdminUser(user)) {
+        return;
+      }
+      
       // Prepare fields
       const templateFields = values.fields.map((field, index) => ({
         ...field,
@@ -310,7 +315,7 @@ export default function TemplateCreator() {
       
       // Create or update template
       if (templateId) {
-        await updateTemplate({
+        const result = await updateTemplate({
           id: templateId,
           template: {
             name: values.name,
@@ -321,6 +326,10 @@ export default function TemplateCreator() {
           },
           fields: templateFields,
         });
+        
+        if (result) {
+          setCurrentTab("editor");
+        }
       } else {
         const result = await createTemplate({
           template: {
@@ -333,10 +342,11 @@ export default function TemplateCreator() {
           fields: templateFields,
         });
         
-        setTemplateId(result.id);
+        if (result) {
+          setTemplateId(result.id);
+          setCurrentTab("editor");
+        }
       }
-      
-      setCurrentTab("editor");
     } catch (error) {
       console.error("Error saving template:", error);
     }

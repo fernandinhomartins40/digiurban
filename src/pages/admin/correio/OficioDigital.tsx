@@ -72,7 +72,7 @@ export default function OficioDigital() {
     }
     
     // Start with base form fields
-    let schemaObj: any = {
+    const schemaObj: Record<string, any> = {
       title: z.string().min(3, "O título é obrigatório"),
       documentTypeId: z.string().min(1, "Selecione o tipo de documento"),
       toDepartment: z.string().min(3, "O departamento de destino é obrigatório"),
@@ -85,7 +85,7 @@ export default function OficioDigital() {
       if (field.is_required) {
         fieldSchema = fieldSchema.min(1, `${field.field_label} é obrigatório`);
       } else {
-        fieldSchema = fieldSchema.optional();
+        fieldSchema = z.string().optional();
       }
       
       schemaObj[field.field_key] = fieldSchema;
@@ -131,6 +131,15 @@ export default function OficioDigital() {
   
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      if (!user || !isAdminUser(user)) {
+        toast({
+          title: "Erro de permissão",
+          description: "Você não tem permissão para criar documentos.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Extract field values
       const { title, documentTypeId, toDepartment, ...fieldValues } = values;
       
@@ -147,26 +156,28 @@ export default function OficioDigital() {
         title,
         content,
         document_type_id: documentTypeId,
-        creator_id: user?.id!,
-        department: user?.department!,
+        creator_id: user.id,
+        department: user.department,
         template_id: selectedTemplate?.id || null,
       });
       
-      setDocumentId(document.id);
-      
-      // Forward document to destination department
-      await forwardDocument({
-        documentId: document.id,
-        toDepartment,
-      });
-      
-      toast({
-        title: "Documento criado com sucesso",
-        description: `Protocolo: ${document.protocol_number}`,
-      });
-      
-      // Redirect to dashboard
-      navigate("/admin/correio/dashboard");
+      if (document) {
+        setDocumentId(document.id);
+        
+        // Forward document to destination department
+        await forwardDocument({
+          documentId: document.id,
+          toDepartment,
+        });
+        
+        toast({
+          title: "Documento criado com sucesso",
+          description: `Protocolo: ${document.protocol_number}`,
+        });
+        
+        // Redirect to dashboard
+        navigate("/admin/correio/dashboard");
+      }
     } catch (error) {
       console.error("Error creating document:", error);
       toast({
