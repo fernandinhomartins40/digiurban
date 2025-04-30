@@ -40,10 +40,16 @@ const FormField = <
   )
 }
 
+// Create a safe version of useFormContext that doesn't throw
+const useSafeFormContext = () => {
+  const context = useFormContext();
+  return context;
+}
+
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
-  const formContext = useFormContext()
+  const formContext = useSafeFormContext()
 
   if (!formContext) {
     throw new Error("useFormField must be used within a Form component")
@@ -89,83 +95,172 @@ const FormItem = React.forwardRef<
 })
 FormItem.displayName = "FormItem"
 
+// Create a standalone version of FormLabel that doesn't require FormContext
 const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
 >(({ className, ...props }, ref) => {
-  const { error, formItemId } = useFormField()
-
-  return (
-    <Label
-      ref={ref}
-      className={cn(error && "text-destructive", className)}
-      htmlFor={formItemId}
-      {...props}
-    />
-  )
+  const formContext = useSafeFormContext();
+  
+  // If we're in a form context, use the field data
+  if (formContext) {
+    try {
+      const { error, formItemId } = useFormField();
+      return (
+        <Label
+          ref={ref}
+          className={cn(error && "text-destructive", className)}
+          htmlFor={formItemId}
+          {...props}
+        />
+      );
+    } catch (e) {
+      // If useFormField fails, fall back to standalone label
+      return <Label ref={ref} className={className} {...props} />;
+    }
+  }
+  
+  // Standalone mode
+  return <Label ref={ref} className={className} {...props} />;
 })
 FormLabel.displayName = "FormLabel"
 
+// Create a standalone version of FormControl
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
-
-  return (
-    <Slot
-      ref={ref}
-      id={formItemId}
-      aria-describedby={
-        !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
-      aria-invalid={!!error}
-      {...props}
-    />
-  )
+  const formContext = useSafeFormContext();
+  
+  // If we're in a form context, use the field data
+  if (formContext) {
+    try {
+      const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+      return (
+        <Slot
+          ref={ref}
+          id={formItemId}
+          aria-describedby={
+            !error
+              ? `${formDescriptionId}`
+              : `${formDescriptionId} ${formMessageId}`
+          }
+          aria-invalid={!!error}
+          {...props}
+        />
+      );
+    } catch (e) {
+      // If useFormField fails, render without context-specific props
+      return <Slot ref={ref} {...props} />;
+    }
+  }
+  
+  // Standalone mode
+  return <Slot ref={ref} {...props} />;
 })
 FormControl.displayName = "FormControl"
 
+// Create a standalone version of FormDescription
 const FormDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => {
-  const { formDescriptionId } = useFormField()
-
+  const formContext = useSafeFormContext();
+  
+  // If we're in a form context, use the field data
+  if (formContext) {
+    try {
+      const { formDescriptionId } = useFormField();
+      return (
+        <p
+          ref={ref}
+          id={formDescriptionId}
+          className={cn("text-sm text-muted-foreground", className)}
+          {...props}
+        />
+      );
+    } catch (e) {
+      // If useFormField fails, render without id
+      return (
+        <p
+          ref={ref}
+          className={cn("text-sm text-muted-foreground", className)}
+          {...props}
+        />
+      );
+    }
+  }
+  
+  // Standalone mode
   return (
     <p
       ref={ref}
-      id={formDescriptionId}
       className={cn("text-sm text-muted-foreground", className)}
       {...props}
     />
-  )
+  );
 })
 FormDescription.displayName = "FormDescription"
 
+// Create a standalone version of FormMessage
 const FormMessage = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
-  const { error, formMessageId } = useFormField()
-  const body = error ? String(error?.message) : children
-
-  if (!body) {
-    return null
+  const formContext = useSafeFormContext();
+  
+  // If we're in a form context, use the field data
+  if (formContext) {
+    try {
+      const { error, formMessageId } = useFormField();
+      const body = error ? String(error?.message) : children;
+      
+      if (!body) {
+        return null;
+      }
+      
+      return (
+        <p
+          ref={ref}
+          id={formMessageId}
+          className={cn("text-sm font-medium text-destructive", className)}
+          {...props}
+        >
+          {body}
+        </p>
+      );
+    } catch (e) {
+      // If useFormField fails but we have children, render them
+      if (!children) {
+        return null;
+      }
+      
+      return (
+        <p
+          ref={ref}
+          className={cn("text-sm font-medium text-destructive", className)}
+          {...props}
+        >
+          {children}
+        </p>
+      );
+    }
   }
-
+  
+  // Standalone mode
+  if (!children) {
+    return null;
+  }
+  
   return (
     <p
       ref={ref}
-      id={formMessageId}
       className={cn("text-sm font-medium text-destructive", className)}
       {...props}
     >
-      {body}
+      {children}
     </p>
-  )
+  );
 })
 FormMessage.displayName = "FormMessage"
 
