@@ -40,6 +40,15 @@ import AdministracaoIndex from "@/pages/admin/administracao/index";
 import RHPage from "@/pages/admin/administracao/rh/index";
 import ComprasPage from "@/pages/admin/administracao/compras/index";
 
+// Health Module
+import SaudeIndex from "@/pages/admin/saude/index";
+import AtendimentosPage from "@/pages/admin/saude/atendimentos/index";
+import MedicamentosPage from "@/pages/admin/saude/medicamentos/index";
+import TFDPage from "@/pages/admin/saude/tfd/index";
+import ProgramasPage from "@/pages/admin/saude/programas/index";
+import CampanhasPage from "@/pages/admin/saude/campanhas/index";
+import ACSPage from "@/pages/admin/saude/acs/index";
+
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
 
@@ -84,6 +93,15 @@ function App() {
                   <Route path="administracao" element={<AdministracaoIndex />} />
                   <Route path="administracao/rh" element={<RHPage />} />
                   <Route path="administracao/compras" element={<ComprasPage />} />
+                  
+                  {/* Health Module Routes */}
+                  <Route path="saude" element={<SaudeIndex />} />
+                  <Route path="saude/atendimentos" element={<AtendimentosPage />} />
+                  <Route path="saude/medicamentos" element={<MedicamentosPage />} />
+                  <Route path="saude/tfd" element={<TFDPage />} />
+                  <Route path="saude/programas" element={<ProgramasPage />} />
+                  <Route path="saude/campanhas" element={<CampanhasPage />} />
+                  <Route path="saude/acs" element={<ACSPage />} />
                 </Route>
 
                 {/* Citizen Routes */}
