@@ -32,8 +32,30 @@ const formSchema = z.object({
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   confirmPassword: z.string(),
   role: z.enum(["admin", "prefeito"]),
-  department: z.string().min(3, "Departamento deve ter pelo menos 3 caracteres"),
-  position: z.string().min(2, "Cargo deve ter pelo menos 2 caracteres"),
+  department: z.string().min(3, "Departamento deve ter pelo menos 3 caracteres")
+    .optional()
+    .refine((val, ctx) => {
+      // If role is prefeito, department is optional
+      if (ctx.path && ctx.path.length > 0) {
+        const data = ctx.path[0] ? ctx.path[0] : {};
+        if (data && typeof data === 'object' && 'role' in data && data.role === 'prefeito') {
+          return true;
+        }
+      }
+      return val && val.length >= 3; 
+    }, "Departamento deve ter pelo menos 3 caracteres"),
+  position: z.string().min(2, "Cargo deve ter pelo menos 2 caracteres")
+    .optional()
+    .refine((val, ctx) => {
+      // If role is prefeito, position is optional
+      if (ctx.path && ctx.path.length > 0) {
+        const data = ctx.path[0] ? ctx.path[0] : {};
+        if (data && typeof data === 'object' && 'role' in data && data.role === 'prefeito') {
+          return true;
+        }
+      }
+      return val && val.length >= 2; 
+    }, "Cargo deve ter pelo menos 2 caracteres"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
@@ -64,6 +86,17 @@ export default function AdminRegister() {
       position: "",
     },
   });
+
+  // Watch the role field to detect changes
+  const roleValue = form.watch("role");
+
+  // Set default values when role is prefeito
+  useEffect(() => {
+    if (roleValue === "prefeito") {
+      form.setValue("department", "Gabinete do Prefeito");
+      form.setValue("position", "Prefeito");
+    }
+  }, [roleValue, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setError(null);
@@ -205,7 +238,11 @@ export default function AdminRegister() {
                         <FormItem>
                           <FormLabel>Departamento</FormLabel>
                           <FormControl>
-                            <Input placeholder="Secretaria de Obras" {...field} />
+                            <Input 
+                              placeholder="Secretaria de Obras" 
+                              disabled={roleValue === "prefeito"}
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -219,7 +256,11 @@ export default function AdminRegister() {
                         <FormItem>
                           <FormLabel>Cargo</FormLabel>
                           <FormControl>
-                            <Input placeholder="Diretor" {...field} />
+                            <Input 
+                              placeholder="Diretor" 
+                              disabled={roleValue === "prefeito"}
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
