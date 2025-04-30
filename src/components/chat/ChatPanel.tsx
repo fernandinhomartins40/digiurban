@@ -1,11 +1,10 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PaperPlane, Paperclip, User, Users, X } from "lucide-react";
+import { Send, Paperclip, User, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Message = {
@@ -199,7 +198,7 @@ export function ChatPanel() {
         className="rounded-full h-12 w-12 shadow-lg"
         variant={isPanelOpen ? "outline" : "default"}
       >
-        {isPanelOpen ? <X /> : <PaperPlane />}
+        {isPanelOpen ? <X /> : <Send />}
       </Button>
 
       {/* Chat Panel */}
@@ -297,7 +296,7 @@ export function ChatPanel() {
                             className="flex-1"
                           />
                           <Button size="sm" onClick={sendMessage}>
-                            <PaperPlane size={16} />
+                            <Send size={16} />
                           </Button>
                         </div>
                       </div>
@@ -394,7 +393,7 @@ export function ChatPanel() {
                             className="flex-1"
                           />
                           <Button size="sm" onClick={sendMessage}>
-                            <PaperPlane size={16} />
+                            <Send size={16} />
                           </Button>
                         </div>
                       </div>
