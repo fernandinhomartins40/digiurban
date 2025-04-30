@@ -75,6 +75,7 @@ export const fetchUserProfile = async (
         address: {
           street: citizenProfile.street,
           number: citizenProfile.number,
+          complement: citizenProfile.complement || "", // Added null check for complement
           neighborhood: citizenProfile.neighborhood,
           city: citizenProfile.city,
           state: citizenProfile.state,

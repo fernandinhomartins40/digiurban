@@ -30,7 +30,7 @@ export interface CitizenUser {
   address: {
     street: string;
     number: string;
-    complement?: string;
+    complement?: string; // Made complement optional to match the database
     neighborhood: string;
     city: string;
     state: string;
