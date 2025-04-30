@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import * as mailService from "@/services/mailService";
@@ -33,12 +32,13 @@ export function useMail() {
   
   const createDocumentMutation = useMutation({
     mutationFn: (document: Partial<Document>) => mailService.createDocument(document),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       toast({
         title: "Documento criado",
         description: "O documento foi criado com sucesso.",
       });
+      return data;
     },
     onError: (error) => {
       toast({
@@ -47,6 +47,7 @@ export function useMail() {
         variant: "destructive",
       });
       console.error(error);
+      throw error;
     }
   });
   
@@ -81,21 +82,21 @@ export function useMail() {
   const getIncomingDocuments = () =>
     useQuery({
       queryKey: ['incomingDocuments', isAdminUser(user) ? user.department : null],
-      queryFn: () => isAdminUser(user) ? mailService.getIncomingDocuments(user.department!) : Promise.resolve([]),
+      queryFn: () => isAdminUser(user) ? mailService.getIncomingDocuments(user.department) : Promise.resolve([]),
       enabled: !!(user && isAdminUser(user) && user.department),
     });
   
   const getOutgoingDocuments = () =>
     useQuery({
       queryKey: ['outgoingDocuments', isAdminUser(user) ? user.department : null],
-      queryFn: () => isAdminUser(user) ? mailService.getOutgoingDocuments(user.department!) : Promise.resolve([]),
+      queryFn: () => isAdminUser(user) ? mailService.getOutgoingDocuments(user.department) : Promise.resolve([]),
       enabled: !!(user && isAdminUser(user) && user.department),
     });
   
   const forwardDocumentMutation = useMutation({
     mutationFn: ({ documentId, toDepartment }: { documentId: string; toDepartment: string }) =>
-      isAdminUser(user) ? mailService.forwardDocument(documentId, user.department!, toDepartment, user.id!) : Promise.resolve(null),
-    onSuccess: () => {
+      isAdminUser(user) ? mailService.forwardDocument(documentId, user.department, toDepartment, user.id) : Promise.resolve(null),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['documentDestinations'] });
       queryClient.invalidateQueries({ queryKey: ['incomingDocuments'] });
@@ -104,6 +105,7 @@ export function useMail() {
         title: "Documento encaminhado",
         description: "O documento foi encaminhado com sucesso.",
       });
+      return data;
     },
     onError: (error) => {
       toast({
@@ -112,6 +114,7 @@ export function useMail() {
         variant: "destructive",
       });
       console.error(error);
+      throw error;
     }
   });
   
@@ -274,29 +277,34 @@ export function useMail() {
     // Documents
     getDocuments,
     getDocument,
-    createDocument: createDocumentMutation.mutate,
-    updateDocumentStatus: updateDocumentStatusMutation.mutate,
+    createDocument: (doc: Partial<Document>) => createDocumentMutation.mutateAsync(doc),
+    updateDocumentStatus: (id: string, status: DocumentStatus) => updateDocumentStatusMutation.mutateAsync({ id, status }),
     
     // Document Destinations
     getDocumentDestinations,
     getIncomingDocuments,
     getOutgoingDocuments,
-    forwardDocument: forwardDocumentMutation.mutate,
-    markAsRead: markAsReadMutation.mutate,
-    respondToDocument: respondToDocumentMutation.mutate,
-    markAsCompleted: markAsCompletedMutation.mutate,
+    forwardDocument: ({ documentId, toDepartment }: { documentId: string; toDepartment: string }) => 
+      forwardDocumentMutation.mutateAsync({ documentId, toDepartment }),
+    markAsRead: (destinationId: string) => markAsReadMutation.mutateAsync(destinationId),
+    respondToDocument: ({ destinationId, response }: { destinationId: string; response: string }) => 
+      respondToDocumentMutation.mutateAsync({ destinationId, response }),
+    markAsCompleted: (id: string) => markAsCompletedMutation.mutateAsync(id),
     
     // Attachments
     getDocumentAttachments,
-    uploadAttachment: uploadAttachmentMutation.mutate,
+    uploadAttachment: ({ file, documentId }: { file: File; documentId: string }) => 
+      uploadAttachmentMutation.mutateAsync({ file, documentId }),
     getAttachmentUrl: mailService.getAttachmentUrl,
     
     // Templates
     getTemplates,
     getTemplate,
-    createTemplate: createTemplateMutation.mutate,
-    updateTemplate: updateTemplateMutation.mutate,
-    deleteTemplate: deleteTemplateMutation.mutate,
+    createTemplate: ({ template, fields }: { template: Partial<Template>, fields: Partial<TemplateField>[] }) => 
+      createTemplateMutation.mutateAsync({ template, fields }),
+    updateTemplate: ({ id, template, fields }: { id: string, template: Partial<Template>, fields: Partial<TemplateField>[] }) => 
+      updateTemplateMutation.mutateAsync({ id, template, fields }),
+    deleteTemplate: (id: string) => deleteTemplateMutation.mutateAsync(id),
     
     // Loading states
     isLoadingCreate: createDocumentMutation.isPending,

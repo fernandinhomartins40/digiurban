@@ -22,14 +22,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { AttachmentUpload } from "@/components/mail/AttachmentUpload";
 import { useMail } from "@/hooks/use-mail";
+import { isAdminUser } from "@/types/auth";
 import { Template, TemplateField } from "@/types/mail";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit, Loader2, Mail, Send } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { Badge } from "@/components/ui/badge";
 
 export default function OficioDigital() {
   const { user } = useAuth();
@@ -53,11 +53,11 @@ export default function OficioDigital() {
   const { data: template } = getTemplate(templateId);
   
   // Update selected template when loaded
-  useState(() => {
+  useEffect(() => {
     if (template) {
       setSelectedTemplate(template);
     }
-  });
+  }, [template]);
   
   // Generate form schema dynamically based on template fields
   const generateFormSchema = () => {
@@ -72,7 +72,7 @@ export default function OficioDigital() {
     }
     
     // Start with base form fields
-    const schemaObj: Record<string, any> = {
+    const schemaObj: Record<string, z.ZodTypeAny> = {
       title: z.string().min(3, "O título é obrigatório"),
       documentTypeId: z.string().min(1, "Selecione o tipo de documento"),
       toDepartment: z.string().min(3, "O departamento de destino é obrigatório"),
@@ -152,27 +152,27 @@ export default function OficioDigital() {
       }
       
       // Create document
-      const document = await createDocument({
+      const createdDoc = await createDocument({
         title,
         content,
         document_type_id: documentTypeId,
         creator_id: user.id,
-        department: user.department,
+        department: isAdminUser(user) ? user.department : "",
         template_id: selectedTemplate?.id || null,
       });
       
-      if (document) {
-        setDocumentId(document.id);
+      if (createdDoc) {
+        setDocumentId(createdDoc.id);
         
         // Forward document to destination department
         await forwardDocument({
-          documentId: document.id,
+          documentId: createdDoc.id,
           toDepartment,
         });
         
         toast({
           title: "Documento criado com sucesso",
-          description: `Protocolo: ${document.protocol_number}`,
+          description: `Protocolo: ${createdDoc.protocol_number}`,
         });
         
         // Redirect to dashboard
