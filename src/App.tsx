@@ -1,7 +1,7 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/auth/AuthProvider"; // Updated import path
 import { Toaster } from "@/components/ui/toaster";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
