@@ -2,6 +2,102 @@
 import { supabase } from "@/integrations/supabase/client";
 import { HealthProgram, ProgramParticipant, ProgramActivity } from "@/types/health";
 
+// Helper function to transform the database format (snake_case) to our interface format (camelCase)
+function mapDbProgramToInterface(program: any): HealthProgram {
+  return {
+    id: program.id,
+    name: program.name,
+    description: program.description,
+    startDate: program.start_date,
+    endDate: program.end_date || null,
+    isActive: program.is_active,
+    meetingFrequency: program.meeting_frequency || null,
+    coordinatorId: program.coordinator_id,
+    coordinatorName: program.coordinator_name,
+    category: program.category,
+    createdAt: program.created_at
+  };
+}
+
+// Helper function to transform our interface format (camelCase) to the database format (snake_case)
+function mapInterfaceProgramToDb(program: Partial<HealthProgram>): any {
+  return {
+    name: program.name,
+    description: program.description,
+    start_date: program.startDate,
+    end_date: program.endDate || null,
+    is_active: program.isActive,
+    meeting_frequency: program.meetingFrequency || null,
+    coordinator_id: program.coordinatorId,
+    coordinator_name: program.coordinatorName,
+    category: program.category
+  };
+}
+
+// Helper function for participants
+function mapDbParticipantToInterface(participant: any): ProgramParticipant {
+  return {
+    id: participant.id,
+    programId: participant.program_id,
+    patientId: participant.patient_id,
+    patientName: participant.patient_name,
+    joinDate: participant.join_date,
+    exitDate: participant.exit_date || null,
+    isActive: participant.is_active,
+    notes: participant.notes || null,
+    metrics: participant.metrics || null
+  };
+}
+
+// Helper function to map interface participant to db format
+function mapInterfaceParticipantToDb(participant: Partial<ProgramParticipant>): any {
+  return {
+    program_id: participant.programId,
+    patient_id: participant.patientId,
+    patient_name: participant.patientName,
+    join_date: participant.joinDate,
+    exit_date: participant.exitDate || null,
+    is_active: participant.isActive,
+    notes: participant.notes || null,
+    metrics: participant.metrics || null
+  };
+}
+
+// Helper function for activities
+function mapDbActivityToInterface(activity: any): ProgramActivity {
+  return {
+    id: activity.id,
+    programId: activity.program_id,
+    title: activity.title,
+    description: activity.description || null,
+    date: activity.date,
+    time: activity.time,
+    location: activity.location,
+    responsibleId: activity.responsible_id,
+    responsibleName: activity.responsible_name,
+    maxParticipants: activity.max_participants || null,
+    actualParticipants: activity.actual_participants || null,
+    status: activity.status
+  };
+}
+
+// Helper function to map interface activity to db format
+function mapInterfaceActivityToDb(activity: Partial<ProgramActivity>): any {
+  return {
+    program_id: activity.programId,
+    title: activity.title,
+    description: activity.description || null,
+    date: activity.date,
+    time: activity.time,
+    location: activity.location,
+    responsible_id: activity.responsibleId,
+    responsible_name: activity.responsibleName,
+    max_participants: activity.maxParticipants || null,
+    actual_participants: activity.actualParticipants || null,
+    status: activity.status
+  };
+}
+
 // Get all health programs with pagination and filters
 export async function getHealthPrograms(
   page = 1,
@@ -45,8 +141,11 @@ export async function getHealthPrograms(
     
     if (error) throw error;
     
+    // Map database objects to our interface format
+    const mappedData = data ? data.map(mapDbProgramToInterface) : [];
+    
     return {
-      data: data as HealthProgram[],
+      data: mappedData,
       count: count || 0,
       page,
       pageSize
@@ -73,8 +172,11 @@ export async function getHealthProgramById(id: string) {
     
     if (error) throw error;
     
+    // Map database object to our interface format
+    const mappedData = mapDbProgramToInterface(data);
+    
     return {
-      data: data as HealthProgram,
+      data: mappedData,
       error: null
     };
   } catch (error) {
@@ -89,16 +191,22 @@ export async function getHealthProgramById(id: string) {
 // Create a new health program
 export async function createHealthProgram(program: Omit<HealthProgram, 'id' | 'createdAt'>) {
   try {
+    // Map our interface format to database format
+    const dbProgram = mapInterfaceProgramToDb(program);
+    
     const { data, error } = await supabase
       .from('health_programs')
-      .insert([program])
+      .insert([dbProgram])
       .select()
       .single();
     
     if (error) throw error;
     
+    // Map back to our interface format
+    const mappedData = mapDbProgramToInterface(data);
+    
     return {
-      data: data as HealthProgram,
+      data: mappedData,
       error: null
     };
   } catch (error) {
@@ -113,17 +221,23 @@ export async function createHealthProgram(program: Omit<HealthProgram, 'id' | 'c
 // Update a health program
 export async function updateHealthProgram(id: string, updates: Partial<HealthProgram>) {
   try {
+    // Map our interface format to database format
+    const dbUpdates = mapInterfaceProgramToDb(updates);
+    
     const { data, error } = await supabase
       .from('health_programs')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
     
+    // Map back to our interface format
+    const mappedData = mapDbProgramToInterface(data);
+    
     return {
-      data: data as HealthProgram,
+      data: mappedData,
       error: null
     };
   } catch (error) {
@@ -138,16 +252,22 @@ export async function updateHealthProgram(id: string, updates: Partial<HealthPro
 // Register a participant to a program
 export async function registerProgramParticipant(participant: Omit<ProgramParticipant, 'id'>) {
   try {
+    // Map our interface format to database format
+    const dbParticipant = mapInterfaceParticipantToDb(participant);
+    
     const { data, error } = await supabase
       .from('health_program_participants')
-      .insert([participant])
+      .insert([dbParticipant])
       .select()
       .single();
     
     if (error) throw error;
     
+    // Map back to our interface format
+    const mappedData = mapDbParticipantToInterface(data);
+    
     return {
-      data: data as ProgramParticipant,
+      data: mappedData,
       error: null
     };
   } catch (error) {
@@ -170,8 +290,11 @@ export async function getProgramParticipants(programId: string) {
     
     if (error) throw error;
     
+    // Map database objects to our interface format
+    const mappedData = data ? data.map(mapDbParticipantToInterface) : [];
+    
     return {
-      data: data as ProgramParticipant[],
+      data: mappedData,
       error: null
     };
   } catch (error) {
@@ -196,7 +319,8 @@ export async function getParticipantPrograms(patientId: string) {
     
     if (error) throw error;
     
-    const programs = data.map(item => item.health_programs) as HealthProgram[];
+    // Map and extract the programs
+    const programs = data.map(item => mapDbProgramToInterface(item.health_programs));
     
     return {
       data: programs,
@@ -214,16 +338,22 @@ export async function getParticipantPrograms(patientId: string) {
 // Create a program activity
 export async function createProgramActivity(activity: Omit<ProgramActivity, 'id'>) {
   try {
+    // Map our interface format to database format
+    const dbActivity = mapInterfaceActivityToDb(activity);
+    
     const { data, error } = await supabase
       .from('health_program_activities')
-      .insert([activity])
+      .insert([dbActivity])
       .select()
       .single();
     
     if (error) throw error;
     
+    // Map back to our interface format
+    const mappedData = mapDbActivityToInterface(data);
+    
     return {
-      data: data as ProgramActivity,
+      data: mappedData,
       error: null
     };
   } catch (error) {
@@ -247,8 +377,11 @@ export async function getProgramActivities(programId: string) {
     
     if (error) throw error;
     
+    // Map database objects to our interface format
+    const mappedData = data ? data.map(mapDbActivityToInterface) : [];
+    
     return {
-      data: data as ProgramActivity[],
+      data: mappedData,
       error: null
     };
   } catch (error) {
@@ -345,7 +478,7 @@ export async function getAbsentParticipants(programId: string, threshold: number
       
       // If attended activities is less than total - threshold, they're considered absent
       if (attendance.length <= activityIds.length - threshold) {
-        absentParticipants.push(participant);
+        absentParticipants.push(mapDbParticipantToInterface(participant));
       }
     }
     
