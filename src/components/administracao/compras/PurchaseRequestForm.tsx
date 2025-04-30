@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2, SendHorizonal, Plus, Trash2 } from "lucide-react";
@@ -60,8 +59,10 @@ export function PurchaseRequestForm({ onRequestCreated, departmentsList }: Purch
     },
   });
 
-  const { fields, append, remove } = form.useFieldArray({
+  // Use useFieldArray from react-hook-form directly
+  const { fields, append, remove } = useFieldArray({
     name: "items",
+    control: form.control
   });
 
   // Handle file selection

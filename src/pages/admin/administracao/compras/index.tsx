@@ -13,8 +13,8 @@ import {
   fetchDepartmentPurchaseRequests,
   fetchAllPurchaseRequests,
   updatePurchaseStatus,
-  PurchaseRequest,
-  PurchaseRequestStatus
+  type PurchaseRequest,
+  type PurchaseRequestStatus
 } from "@/services/administration/purchaseService";
 import { isAdminUser } from "@/types/auth";
 

@@ -66,20 +66,35 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
     // Build dynamic form schema based on fields from selected request type
     const schemaFields: { [key: string]: any } = {};
     requestType.formSchema.fields.forEach((field) => {
-      let fieldSchema = z.string();
+      let fieldSchema: any;
       
-      if (field.required) {
-        fieldSchema = fieldSchema.min(1, `${field.label} é obrigatório`);
-      } else {
-        fieldSchema = fieldSchema.optional();
-      }
-
       if (field.type === 'date') {
-        fieldSchema = z.string().min(1, `${field.label} é obrigatório`);
+        fieldSchema = z.string();
+        if (field.required) {
+          fieldSchema = fieldSchema.min(1, `${field.label} é obrigatório`);
+        } else {
+          fieldSchema = fieldSchema.optional();
+        }
       } else if (field.type === 'number') {
-        fieldSchema = z.string()
-          .min(1, `${field.label} é obrigatório`)
-          .transform((val) => parseInt(val, 10));
+        fieldSchema = z.string().transform((val) => parseInt(val, 10) || 0);
+        if (field.required) {
+          fieldSchema = z.string().min(1, `${field.label} é obrigatório`).transform((val) => parseInt(val, 10) || 0);
+        }
+      } else if (field.type === 'textarea' || field.type === 'text') {
+        fieldSchema = z.string();
+        if (field.required) {
+          fieldSchema = fieldSchema.min(1, `${field.label} é obrigatório`);
+        } else {
+          fieldSchema = fieldSchema.optional();
+        }
+      } else {
+        // Default to string
+        fieldSchema = z.string();
+        if (field.required) {
+          fieldSchema = fieldSchema.min(1, `${field.label} é obrigatório`);
+        } else {
+          fieldSchema = fieldSchema.optional();
+        }
       }
 
       schemaFields[field.name] = fieldSchema;
