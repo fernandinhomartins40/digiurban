@@ -28,6 +28,13 @@ import TemplateCreator from "@/pages/admin/correio/TemplateCreator";
 import AdminChatPage from "@/pages/admin/chat/ChatPage";
 import CitizenChatPage from "@/pages/citizen/chat/ChatPage";
 
+// Gabinete do Prefeito Module
+import MayorDashboard from "@/pages/admin/gabinete/Dashboard";
+import AppointmentScheduler from "@/pages/admin/gabinete/AppointmentScheduler";
+import DirectRequests from "@/pages/admin/gabinete/DirectRequests";
+import PublicPolicies from "@/pages/admin/gabinete/PublicPolicies";
+import StrategicPrograms from "@/pages/admin/gabinete/StrategicPrograms";
+
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
 
@@ -60,6 +67,13 @@ function App() {
                   
                   {/* Chat Route */}
                   <Route path="chat" element={<AdminChatPage />} />
+                  
+                  {/* Gabinete do Prefeito Routes */}
+                  <Route path="gabinete/dashboard" element={<MayorDashboard />} />
+                  <Route path="gabinete/agendamentos" element={<AppointmentScheduler />} />
+                  <Route path="gabinete/solicitacoes" element={<DirectRequests />} />
+                  <Route path="gabinete/politicas" element={<PublicPolicies />} />
+                  <Route path="gabinete/programas" element={<StrategicPrograms />} />
                 </Route>
 
                 {/* Citizen Routes */}
