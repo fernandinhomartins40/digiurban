@@ -16,25 +16,43 @@ export function CitizenLayout() {
       userType 
     });
     
-    // If not loading and not authenticated, redirect to login
-    if (!isLoading && !isAuthenticated) {
-      console.log("CitizenLayout: Not authenticated, redirecting to login");
-      navigate("/login", { replace: true });
-      return;
-    }
-    
-    // If authenticated but not a citizen, redirect to appropriate dashboard
-    if (!isLoading && isAuthenticated && userType !== "citizen") {
-      console.log("CitizenLayout: User is not citizen, redirecting to admin dashboard");
-      navigate("/admin/dashboard", { replace: true });
-      return;
+    // Only redirect after loading is complete
+    if (!isLoading) {
+      // If not authenticated, redirect to login
+      if (!isAuthenticated) {
+        console.log("CitizenLayout: Not authenticated, redirecting to login");
+        navigate("/login", { replace: true });
+        return;
+      }
+      
+      // If authenticated but not a citizen, redirect to appropriate dashboard
+      if (isAuthenticated && userType !== "citizen") {
+        console.log("CitizenLayout: User is not citizen, redirecting to admin dashboard");
+        navigate("/admin/dashboard", { replace: true });
+        return;
+      }
     }
   }, [isLoading, isAuthenticated, userType, navigate]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p>Carregando informações do usuário...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Additional safety check
+  if (!isAuthenticated || userType !== "citizen") {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p>Verificando credenciais...</p>
+        </div>
       </div>
     );
   }

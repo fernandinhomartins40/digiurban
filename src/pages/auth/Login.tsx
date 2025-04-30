@@ -18,10 +18,11 @@ export default function Login() {
   const [activeUserType, setActiveUserType] = useState<"admin" | "citizen">("admin");
   const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loginAttempted, setLoginAttempted] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
-    console.log("Login - Auth state:", { isLoading, isAuthenticated, userType });
+    console.log("Login - Auth state:", { isLoading, isAuthenticated, userType, loginAttempted });
     
     if (isAuthenticated && userType) {
       console.log("Login: Already authenticated, redirecting to dashboard:", userType);
@@ -30,36 +31,49 @@ export default function Login() {
     }
   }, [isAuthenticated, userType, navigate, isLoading]);
 
+  // Emergency fallback if login freezes
+  useEffect(() => {
+    if (loginAttempted && isLoading) {
+      const timer = setTimeout(() => {
+        console.log("Login: Emergency timeout triggered after 8 seconds");
+        setLocalLoading(false);
+        setError("Tempo limite excedido. Por favor, tente novamente.");
+      }, 8000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loginAttempted, isLoading]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLocalLoading(true);
+    setLoginAttempted(true);
 
     try {
       console.log("Login: Attempting login with:", { email, activeUserType });
       await login(email, password, activeUserType);
       console.log("Login: Login function completed");
-      
-      // Force redirecionamento após sucesso no login após um pequeno delay
-      // Este é um fallback caso o listener de estado não funcione
-      setTimeout(() => {
-        const redirectPath = activeUserType === "admin" ? "/admin/dashboard" : "/citizen/dashboard";
-        console.log(`Login: Forced redirect to ${redirectPath} after successful login`);
-        navigate(redirectPath, { replace: true });
-      }, 500);
     } catch (error: any) {
       console.error("Login: Error during login:", error);
       setError(error.message || "Falha no login. Verifique suas credenciais e tente novamente.");
     } finally {
-      // Always ensure local loading state is reset
+      // Always ensure local loading state is reset after a delay
       setTimeout(() => {
         setLocalLoading(false);
       }, 500);
     }
   };
 
+  // Reset login form
+  const handleReset = () => {
+    setError(null);
+    setLocalLoading(false);
+    setLoginAttempted(false);
+  };
+
   // Show local loading OR global loading, but prevent showing both
-  const showLoading = localLoading || (isLoading && !localLoading);
+  const showLoading = localLoading || (isLoading && loginAttempted);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -120,10 +134,26 @@ export default function Login() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
-                  <Button className="w-full" type="submit" disabled={showLoading}>
-                    {showLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {showLoading ? "Processando..." : "Entrar"}
-                  </Button>
+                  {showLoading ? (
+                    <Button className="w-full" disabled>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processando...
+                    </Button>
+                  ) : loginAttempted ? (
+                    <div className="flex w-full space-x-2">
+                      <Button className="flex-1" type="submit">
+                        Tentar novamente
+                      </Button>
+                      <Button variant="outline" className="flex-1" onClick={handleReset}>
+                        Reiniciar
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button className="w-full" type="submit">
+                      Entrar
+                    </Button>
+                  )}
+                  
                   <Button
                     variant="outline"
                     className="w-full"
@@ -183,10 +213,26 @@ export default function Login() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
-                  <Button className="w-full" type="submit" disabled={showLoading}>
-                    {showLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {showLoading ? "Processando..." : "Entrar"}
-                  </Button>
+                  {showLoading ? (
+                    <Button className="w-full" disabled>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processando...
+                    </Button>
+                  ) : loginAttempted ? (
+                    <div className="flex w-full space-x-2">
+                      <Button className="flex-1" type="submit">
+                        Tentar novamente
+                      </Button>
+                      <Button variant="outline" className="flex-1" onClick={handleReset}>
+                        Reiniciar
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button className="w-full" type="submit">
+                      Entrar
+                    </Button>
+                  )}
+                  
                   <Button
                     variant="outline"
                     className="w-full"

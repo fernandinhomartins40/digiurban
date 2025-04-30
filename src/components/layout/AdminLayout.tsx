@@ -20,24 +20,27 @@ export function AdminLayout() {
       hasUser: !!user 
     });
     
-    // Extra safety check - if we're not loading and not authenticated, redirect to login
-    if (!isLoading && !isAuthenticated) {
-      console.log("AdminLayout: Not authenticated, redirecting to login");
-      navigate("/login", { replace: true });
-      return;
-    }
-    
-    // If we're authenticated but not an admin user, redirect to citizen dashboard
-    if (!isLoading && isAuthenticated && userType !== "admin") {
-      console.log("AdminLayout: User is not admin, redirecting to citizen dashboard");
-      navigate("/citizen/dashboard", { replace: true });
-      return;
-    }
-    
-    // Only mark ready for React Query operations when auth is complete
-    if (!isLoading && isAuthenticated && userType === "admin") {
-      console.log("AdminLayout: User is admin, setting readyForQuery");
-      setReadyForQuery(true);
+    // Only take action once loading is complete
+    if (!isLoading) {
+      // If not authenticated, redirect to login
+      if (!isAuthenticated) {
+        console.log("AdminLayout: Not authenticated, redirecting to login");
+        navigate("/login", { replace: true });
+        return;
+      }
+      
+      // If we're authenticated but not an admin user, redirect to citizen dashboard
+      if (isAuthenticated && userType !== "admin") {
+        console.log("AdminLayout: User is not admin, redirecting to citizen dashboard");
+        navigate("/citizen/dashboard", { replace: true });
+        return;
+      }
+      
+      // Only mark ready for React Query operations when auth is complete
+      if (isAuthenticated && userType === "admin") {
+        console.log("AdminLayout: User is admin, setting readyForQuery");
+        setReadyForQuery(true);
+      }
     }
   }, [isLoading, isAuthenticated, userType, navigate, user]);
 
@@ -69,10 +72,22 @@ export function AdminLayout() {
     );
   }
 
-  // At this point we should be authenticated and an admin user
+  // Additional safety check
   if (!isAuthenticated || !user) {
-    console.log("AdminLayout: Authentication validation failed, redirecting to login");
-    return <Navigate to="/login" replace />;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p>Verificando credenciais...</p>
+          <button 
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-md"
+            onClick={() => navigate("/login", { replace: true })}
+          >
+            Voltar para login
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (userType !== "admin") {
@@ -81,7 +96,6 @@ export function AdminLayout() {
   }
 
   // We're authenticated and an admin, so render the admin layout
-  // Only pass readyForQuery to sidebar when we're fully authenticated
   return (
     <div className="flex h-screen bg-gray-50">
       <AdminSidebar ready={readyForQuery} />

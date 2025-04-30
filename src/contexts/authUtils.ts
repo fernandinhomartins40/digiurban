@@ -22,10 +22,11 @@ export const fetchUserProfile = async (
       .from("admin_profiles")
       .select("*, admin_permissions(*)")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
-    if (adminError && adminError.code !== 'PGRST116') {
+    if (adminError) {
       console.error("Error fetching admin profile:", adminError);
+      return false;
     }
 
     if (adminProfile) {
@@ -64,17 +65,17 @@ export const fetchUserProfile = async (
       .from("citizen_profiles")
       .select("*")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
-    if (citizenError && citizenError.code !== 'PGRST116') {
+    if (citizenError) {
       console.error("Error fetching citizen profile:", citizenError);
+      return false;
     }
 
     if (citizenProfile) {
       console.log("Citizen profile found:", citizenProfile);
       
       // Map database fields to our application structure
-      // Note: The database schema doesn't have a nested address structure
       const citizenUser: CitizenUser = {
         id: citizenProfile.id,
         email: citizenProfile.email,
@@ -84,7 +85,7 @@ export const fetchUserProfile = async (
         address: {
           street: citizenProfile.street || "",
           number: citizenProfile.number || "",
-          complement: "", // The DB doesn't have this field, so we set an empty string
+          complement: citizenProfile.complement || "", 
           neighborhood: citizenProfile.neighborhood || "",
           city: citizenProfile.city || "",
           state: citizenProfile.state || "",
@@ -101,11 +102,55 @@ export const fetchUserProfile = async (
       return true;
     }
 
-    // No profile found but user is authenticated in Supabase
-    console.warn("User authenticated but no profile found. Will log out.", userId);
+    // No profile found 
+    console.warn("User authenticated but no profile found:", userId);
+    
+    // Attempt to create a profile based on user metadata
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user) {
+        const userType = userData.user.user_metadata?.user_type;
+        if (userType) {
+          console.log("Attempting to create missing profile based on metadata for type:", userType);
+          
+          if (userType === "admin") {
+            await supabase.from("admin_profiles").insert({
+              id: userId,
+              email: userData.user.email || "",
+              name: userData.user.user_metadata?.name || "Admin User",
+              role: userData.user.user_metadata?.role || "admin",
+              department: userData.user.user_metadata?.department || "",
+              position: userData.user.user_metadata?.position || "",
+            });
+            console.log("Created missing admin profile");
+          } else if (userType === "citizen") {
+            await supabase.from("citizen_profiles").insert({
+              id: userId,
+              email: userData.user.email || "",
+              name: userData.user.user_metadata?.name || "Citizen User",
+              cpf: userData.user.user_metadata?.cpf || "",
+              street: userData.user.user_metadata?.street || "",
+              number: userData.user.user_metadata?.number || "",
+              neighborhood: userData.user.user_metadata?.neighborhood || "",
+              city: userData.user.user_metadata?.city || "",
+              state: userData.user.user_metadata?.state || "",
+              zipcode: userData.user.user_metadata?.zipcode || "",
+              phone: userData.user.user_metadata?.phone || "",
+            });
+            console.log("Created missing citizen profile");
+          }
+          
+          // Try fetching again after creation
+          return await fetchUserProfile(userId, setUser, setUserType);
+        }
+      }
+    } catch (createError) {
+      console.error("Failed to create missing profile:", createError);
+    }
+    
     return false;
   } catch (error) {
-    console.error("Error in fetchUserProfile:", error);
+    console.error("Unexpected error in fetchUserProfile:", error);
     return false;
   }
 };
