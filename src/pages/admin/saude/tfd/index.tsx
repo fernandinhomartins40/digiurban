@@ -1,11 +1,46 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, FileText } from "lucide-react";
+import { NewReferralDialog } from "@/components/saude/tfd/NewReferralDialog";
+import { ReferralDetailsDialog } from "@/components/saude/tfd/ReferralDetailsDialog";
+import { NewTransportDialog } from "@/components/saude/tfd/NewTransportDialog";
+import { TransportDetailsDialog } from "@/components/saude/tfd/TransportDetailsDialog";
+import { TFDReferral, TFDTransport } from "@/types/health";
 
 export default function TFDPage() {
+  const [newReferralOpen, setNewReferralOpen] = useState(false);
+  const [referralDetailsOpen, setReferralDetailsOpen] = useState(false);
+  const [newTransportOpen, setNewTransportOpen] = useState(false);
+  const [transportDetailsOpen, setTransportDetailsOpen] = useState(false);
+  const [selectedReferralId, setSelectedReferralId] = useState<string | undefined>();
+  const [selectedTransport, setSelectedTransport] = useState<TFDTransport | undefined>();
+  
+  // Mock data for passengers dialog
+  const mockTransport: TFDTransport = {
+    id: "trans-1",
+    vehicleId: "van-1",
+    vehicleDescription: "Van - São Paulo",
+    driverId: "driver-1",
+    driverName: "Carlos Silva",
+    departureDate: "2023-05-10",
+    departureTime: "06:00",
+    capacity: 12,
+    occupiedSeats: 8
+  };
+  
+  const handleReferralDetails = (referralId: string) => {
+    setSelectedReferralId(referralId);
+    setReferralDetailsOpen(true);
+  };
+  
+  const handleTransportDetails = (transport: TFDTransport) => {
+    setSelectedTransport(transport);
+    setTransportDetailsOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -15,7 +50,7 @@ export default function TFDPage() {
             Tratamento Fora do Domicílio - Gerenciamento de encaminhamentos e transportes.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setNewReferralOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Novo Encaminhamento
         </Button>
       </div>
@@ -107,7 +142,9 @@ export default function TFDPage() {
                       </div>
                     </td>
                     <td className="p-3 text-center">
-                      <Button size="sm" variant="outline">Detalhes</Button>
+                      <Button size="sm" variant="outline" onClick={() => handleReferralDetails(`ref-${i}`)}>
+                        Detalhes
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -130,7 +167,7 @@ export default function TFDPage() {
                 <option value="ambulancia">Ambulância</option>
               </select>
             </div>
-            <Button>
+            <Button onClick={() => setNewTransportOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Novo Transporte
             </Button>
           </div>
@@ -180,8 +217,39 @@ export default function TFDPage() {
                     </div>
                   </div>
                   <div className="mt-4 flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1">Passageiros</Button>
-                    <Button size="sm" className="flex-1">Detalhes</Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1" 
+                      onClick={() => handleTransportDetails({
+                        ...mockTransport,
+                        id: `trans-${i}`,
+                        vehicleDescription: ["Van - São Paulo", "Ambulância - Campinas", "Van - Ribeirão Preto"][i - 1],
+                        driverName: ["Carlos Silva", "Roberto Alves", "Marcos Santos"][i - 1],
+                        departureDate: ["2023-05-10", "2023-05-15", "2023-05-20"][i - 1],
+                        departureTime: ["06:00", "07:30", "05:00"][i - 1],
+                        capacity: [12, 1, 12][i - 1],
+                        occupiedSeats: [8, 1, 10][i - 1]
+                      })}
+                    >
+                      Passageiros
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleTransportDetails({
+                        ...mockTransport,
+                        id: `trans-${i}`,
+                        vehicleDescription: ["Van - São Paulo", "Ambulância - Campinas", "Van - Ribeirão Preto"][i - 1],
+                        driverName: ["Carlos Silva", "Roberto Alves", "Marcos Santos"][i - 1],
+                        departureDate: ["2023-05-10", "2023-05-15", "2023-05-20"][i - 1],
+                        departureTime: ["06:00", "07:30", "05:00"][i - 1],
+                        capacity: [12, 1, 12][i - 1],
+                        occupiedSeats: [8, 1, 10][i - 1]
+                      })}
+                    >
+                      Detalhes
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -195,6 +263,11 @@ export default function TFDPage() {
           </div>
         </TabsContent>
       </Tabs>
+      
+      <NewReferralDialog open={newReferralOpen} onOpenChange={setNewReferralOpen} />
+      <ReferralDetailsDialog open={referralDetailsOpen} onOpenChange={setReferralDetailsOpen} referralId={selectedReferralId} />
+      <NewTransportDialog open={newTransportOpen} onOpenChange={setNewTransportOpen} />
+      <TransportDetailsDialog open={transportDetailsOpen} onOpenChange={setTransportDetailsOpen} transport={selectedTransport} />
     </div>
   );
 }
