@@ -8,7 +8,6 @@ import { getAdministracaoItem } from "./AdministracaoItem";
 import { getSaudeItem } from "./SaudeItem";
 import { getEducacaoItem } from "./EducacaoItem";
 import { getAssistenciaItem } from "./AssistenciaItem";
-import { getEducacaoItem } from "./EducacaoItem";
 import { getMeioAmbienteItem } from "./MeioAmbienteItem";
 import { getObrasItem } from "./ObrasItem";
 import { getServicosItem } from "./ServicosItem";
