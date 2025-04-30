@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -77,7 +76,7 @@ export default function CitizenDashboard() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Olá, {user?.name || "Cidadão"}</h1>
         <p className="text-muted-foreground">
-          Bem-vindo ao digiUrbis, seu portal de serviços municipais.
+          Bem-vindo ao digiurban, seu portal de serviços municipais.
         </p>
       </div>
 

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -78,7 +77,7 @@ export function CitizenNavbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <h1 className="text-xl font-bold text-primary">digiUrbis</h1>
+            <h1 className="text-xl font-bold text-primary">digiurban</h1>
           </div>
 
           {/* Desktop navigation */}

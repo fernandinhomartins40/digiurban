@@ -9,7 +9,7 @@ export default function AdminDashboard() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
-          Visão geral do sistema digiUrbis para administração municipal.
+          Visão geral do sistema digiurban para administração municipal.
         </p>
       </div>
 

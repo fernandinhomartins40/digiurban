@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -99,7 +98,7 @@ function AppWithProviders() {
 function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider defaultTheme="light" storageKey="digiUrbis-theme">
+      <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
         <AuthProvider>
           <AppWithProviders />
           <Toaster />

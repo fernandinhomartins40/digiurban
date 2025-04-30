@@ -206,7 +206,7 @@ export function ChatPanel() {
         <div className="absolute bottom-16 right-0 w-80 md:w-96 h-[600px] bg-white rounded-lg shadow-xl border flex flex-col">
           {/* Panel Header */}
           <div className="p-4 border-b">
-            <h3 className="font-semibold">Chat digiUrbis</h3>
+            <h3 className="font-semibold">Chat digiurban</h3>
           </div>
 
           {/* Panel Content */}
@@ -414,7 +414,7 @@ export function ChatPanel() {
                     <div className="bg-primary/10 p-4 rounded-full">
                       <Users className="h-6 w-6 text-primary" />
                     </div>
-                    <h3 className="font-medium">Suporte digiUrbis</h3>
+                    <h3 className="font-medium">Suporte digiurban</h3>
                     <p className="text-sm text-gray-500 max-w-xs">
                       Precisa de ajuda? Nossa equipe de suporte está disponível de segunda a
                       sexta, das 8h às 18h.
