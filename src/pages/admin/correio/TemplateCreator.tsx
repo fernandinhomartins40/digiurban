@@ -95,7 +95,7 @@ export default function TemplateCreator() {
     },
   });
   
-  const { fields, append, remove } = useFieldArray({
+  const { fields: formFields, append, remove } = useFieldArray({
     control: form.control,
     name: "fields",
   });
@@ -126,11 +126,11 @@ export default function TemplateCreator() {
   
   // Update preview when content changes
   const content = form.watch("content");
-  const fields = form.watch("fields");
+  const templateFields = form.watch("fields");
   
   useEffect(() => {
     updatePreview(content);
-  }, [content, fields]);
+  }, [content, templateFields]);
   
   const updatePreview = (content: string) => {
     let previewHtml = content;
@@ -154,7 +154,7 @@ export default function TemplateCreator() {
       field_type: "text",
       is_required: false,
       field_options: {},
-      order_position: fields.length,
+      order_position: formFields.length,
     });
   };
   
@@ -472,14 +472,14 @@ export default function TemplateCreator() {
                       </div>
                       
                       <div className="space-y-4">
-                        {fields.length === 0 ? (
+                        {formFields.length === 0 ? (
                           <div className="border rounded-md p-6 text-center">
                             <p className="text-muted-foreground">
                               Nenhum campo adicionado. Clique em "Adicionar Campo" para começar.
                             </p>
                           </div>
                         ) : (
-                          fields.map((field, index) => (
+                          formFields.map((field, index) => (
                             <TemplateFieldItem
                               key={field.id}
                               index={index}

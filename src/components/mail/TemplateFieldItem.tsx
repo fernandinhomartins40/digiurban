@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
-import { Controller, UseFormReturn } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 
 interface TemplateFieldItemProps {
   index: number;
