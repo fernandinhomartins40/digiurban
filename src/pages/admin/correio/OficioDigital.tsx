@@ -294,7 +294,7 @@ export default function OficioDigital() {
                       <SelectValue placeholder={isLoadingTemplates ? "Carregando modelos..." : "Selecionar modelo ou criar do zero"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Criar do zero (sem modelo)</SelectItem>
+                      <SelectItem value="none">Criar do zero (sem modelo)</SelectItem>
                       {templates?.map((template) => (
                         <SelectItem key={template.id} value={template.id}>
                           {template.name}
