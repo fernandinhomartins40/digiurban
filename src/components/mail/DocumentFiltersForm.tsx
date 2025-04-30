@@ -83,7 +83,7 @@ export function DocumentFiltersForm({ onFilter }: DocumentFiltersFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Todos os tipos</SelectItem>
+                        <SelectItem value="all">Todos os tipos</SelectItem>
                         {documentTypes.data?.map((type) => (
                           <SelectItem key={type.id} value={type.id}>
                             {type.name}
@@ -127,7 +127,7 @@ export function DocumentFiltersForm({ onFilter }: DocumentFiltersFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Todos os status</SelectItem>
+                        <SelectItem value="all">Todos os status</SelectItem>
                         <SelectItem value="pending">Pendente</SelectItem>
                         <SelectItem value="forwarded">Encaminhado</SelectItem>
                         <SelectItem value="responded">Respondido</SelectItem>
