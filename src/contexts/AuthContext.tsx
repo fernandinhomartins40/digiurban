@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { User, UserRole } from "@/types/auth";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [userType, setUserType] = useState<"admin" | "citizen" | null>(null);
   const [authInitialized, setAuthInitialized] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Helper function to clear auth state
@@ -138,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log("Initializing auth...");
         setIsLoading(true);
+        setAuthError(null);
 
         // Set up auth state listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -167,7 +168,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     variant: "destructive",
                   });
                   
-                  if (isMounted) navigate("/login");
+                  if (isMounted) {
+                    setIsLoading(false);
+                    navigate("/login");
+                  }
                 }
               }, 0);
             } else {
@@ -205,7 +209,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               variant: "destructive",
             });
             
-            if (isMounted) navigate("/login");
+            if (isMounted) {
+              setIsLoading(false);
+              navigate("/login");
+            }
           }
         } else {
           console.log("No initial session found");
@@ -222,6 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error("Error initializing auth:", error);
         if (isMounted) {
+          setAuthError("Erro ao inicializar autenticação");
           clearAuthState();
           setIsLoading(false);
         }
@@ -249,6 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string, userType: "admin" | "citizen") => {
     try {
       setIsLoading(true);
+      setAuthError(null);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -257,7 +266,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       
-      // User type is checked on backend via profile tables
+      // Wait a short time for the auth state to update
+      // This helps prevent redirect loops
+      setTimeout(() => {
+        if (!session && !user) {
+          setIsLoading(false);
+        }
+      }, 3000);
     } catch (error: any) {
       console.error("Login error:", error.message);
       toast({
@@ -266,7 +281,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
       
-      // Make sure to set loading to false on error
+      // CRITICAL: Always set loading to false on error
       setIsLoading(false);
       throw error;
     }
@@ -391,11 +406,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Provide the auth context only after initialization to prevent premature access
-  if (!authInitialized && isLoading) {
+  if (!authInitialized && isLoading && !authError) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
         <span className="ml-2">Iniciando autenticação...</span>
+      </div>
+    );
+  }
+
+  // Show auth error if there is one
+  if (authError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="bg-red-50 text-red-800 p-4 rounded-md max-w-md mb-4">
+          <h3 className="text-lg font-medium">Erro na autenticação</h3>
+          <p>{authError}</p>
+        </div>
+        <button 
+          className="px-4 py-2 bg-primary text-white rounded-md"
+          onClick={() => window.location.reload()}
+        >
+          Tentar novamente
+        </button>
       </div>
     );
   }

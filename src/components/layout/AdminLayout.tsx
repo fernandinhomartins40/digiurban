@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 export function AdminLayout() {
   const { isLoading, isAuthenticated, userType, user } = useAuth();
   const [localError, setLocalError] = useState<string | null>(null);
+  const [readyForQuery, setReadyForQuery] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -24,6 +25,11 @@ export function AdminLayout() {
       console.log("AdminLayout: User is not admin, redirecting to citizen dashboard");
       navigate("/citizen/dashboard", { replace: true });
       return;
+    }
+    
+    // Only mark ready for React Query operations when auth is complete
+    if (!isLoading && isAuthenticated && userType === "admin") {
+      setReadyForQuery(true);
     }
   }, [isLoading, isAuthenticated, userType, navigate]);
 
@@ -67,9 +73,10 @@ export function AdminLayout() {
   }
 
   // We're authenticated and an admin, so render the admin layout
+  // Only pass readyForQuery to sidebar when we're fully authenticated
   return (
     <div className="flex h-screen bg-gray-50">
-      <AdminSidebar />
+      <AdminSidebar ready={readyForQuery} />
       <main className="flex-1 overflow-auto p-6">
         <Outlet />
       </main>

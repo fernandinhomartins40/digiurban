@@ -40,12 +40,13 @@ export default function Login() {
       console.error("Login error:", error);
       setError(error.message || "Falha no login. Verifique suas credenciais e tente novamente.");
     } finally {
+      // Always ensure loading state is reset
       setLocalLoading(false);
     }
   };
 
-  // Use localLoading or global isLoading
-  const showLoading = localLoading || isLoading;
+  // Show local loading OR global loading, but prevent showing both
+  const showLoading = localLoading || (isLoading && !localLoading);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

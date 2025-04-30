@@ -118,12 +118,26 @@ const SidebarItem = ({ icon, title, path, children, moduleId, badge }: SidebarIt
   );
 };
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  ready?: boolean; // Flag to indicate when it's safe to use React Query
+}
+
+export function AdminSidebar({ ready = false }: AdminSidebarProps) {
   const { logout, user } = useAuth();
-  // Get unread messages count if available
-  const { getIncomingDocuments } = useMail();
-  const { data: incomingDocuments } = getIncomingDocuments();
-  const unreadCount = incomingDocuments?.filter(item => !item.read_at).length || 0;
+  
+  // Only fetch unread messages if the component is ready for React Query
+  let unreadCount = 0;
+  
+  if (ready) {
+    try {
+      // Get unread messages count if available
+      const { getIncomingDocuments } = useMail();
+      const { data: incomingDocuments } = getIncomingDocuments();
+      unreadCount = incomingDocuments?.filter(item => !item.read_at).length || 0;
+    } catch (error) {
+      console.error("Failed to get mail data:", error);
+    }
+  }
 
   const sidebarItems: SidebarItemProps[] = [
     {
