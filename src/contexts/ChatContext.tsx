@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 // Define types for our chat system
 export type ChatType = "citizen" | "internal";
@@ -55,6 +56,8 @@ interface ChatContextType {
   closeConversation: (conversationId: string) => Promise<void>;
   createConversation: (type: ChatType, participants: string[], title: string, protocolId?: string) => Promise<string>;
   loadMoreMessages: (conversationId: string) => Promise<void>;
+  searchConversations: (query: string) => ChatConversation[];
+  filterConversationsByStatus: (status: "active" | "archived" | "closed" | "all") => ChatConversation[];
 }
 
 // Create the initial context
@@ -100,6 +103,32 @@ const MOCK_CONVERSATIONS: ChatConversation[] = [
     lastMessageTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     unreadCount: 1,
     status: "active",
+  },
+  {
+    id: "conv4",
+    title: "Secretaria de Obras",
+    type: "citizen",
+    participants: [
+      { id: "dept3", name: "Secretaria de Obras", departmentId: "works" },
+    ],
+    lastMessage: "Solicitação de reparo concluída",
+    lastMessageTime: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    unreadCount: 0,
+    protocolId: "2025-000125",
+    status: "closed",
+  },
+  {
+    id: "conv5",
+    title: "Departamento de Finanças",
+    type: "internal",
+    participants: [
+      { id: "user3", name: "Ana Oliveira", departmentId: "finance", departmentName: "Finanças" },
+      { id: "user4", name: "Carlos Mendes", departmentId: "legal", departmentName: "Jurídico" },
+    ],
+    lastMessage: "Documentos enviados para análise",
+    lastMessageTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    unreadCount: 0,
+    status: "closed",
   }
 ];
 
@@ -136,6 +165,35 @@ const MOCK_MESSAGES: Record<string, ChatMessage[]> = {
       timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
       read: false,
     }
+  ],
+  "conv3": [
+    {
+      id: "m4",
+      senderId: "user1",
+      senderName: "Maria Silva",
+      senderType: "admin",
+      content: "Olá João, estou com um problema no sistema financeiro.",
+      timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+      read: true,
+    },
+    {
+      id: "m5",
+      senderId: "user2",
+      senderName: "João Santos",
+      senderType: "admin",
+      content: "Oi Maria, qual é o problema que você está enfrentando?",
+      timestamp: new Date(Date.now() - 2.5 * 60 * 60 * 1000).toISOString(),
+      read: true,
+    },
+    {
+      id: "m6",
+      senderId: "user1",
+      senderName: "Maria Silva",
+      senderType: "admin",
+      content: "O relatório mensal não está sendo gerado corretamente. Você pode verificar o problema com o sistema?",
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      read: false,
+    }
   ]
 };
 
@@ -154,19 +212,31 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // In a real implementation, we would fetch from the database here
     setLoading(true);
     
-    // Load different conversations based on user type
-    const loadedConversations = MOCK_CONVERSATIONS.filter(conv => {
-      if (userType === "citizen") {
-        return conv.type === "citizen";
-      } else {
-        // Admin can see both types of conversations based on their department
-        return true;
-      }
-    });
+    // Simulate loading delay
+    const timer = setTimeout(() => {
+      // Load different conversations based on user type
+      const loadedConversations = MOCK_CONVERSATIONS.filter(conv => {
+        if (userType === "citizen") {
+          return conv.type === "citizen";
+        } else {
+          // Admin can see both types of conversations based on their department
+          return true;
+        }
+      });
 
-    setConversations(loadedConversations);
-    setMessages(MOCK_MESSAGES);
-    setLoading(false);
+      // Sort conversations by last message time (most recent first)
+      loadedConversations.sort((a, b) => {
+        if (!a.lastMessageTime) return 1;
+        if (!b.lastMessageTime) return -1;
+        return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
+      });
+
+      setConversations(loadedConversations);
+      setMessages(MOCK_MESSAGES);
+      setLoading(false);
+    }, 500); // Simulate network delay
+
+    return () => clearTimeout(timer);
   }, [isAuthenticated, user, userType]);
 
   const setActiveConversation = (conversationId: string | null) => {
@@ -217,6 +287,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           : conv
       )
     );
+    
+    toast({
+      title: "Mensagem enviada",
+      description: "Sua mensagem foi enviada com sucesso.",
+    });
   };
 
   const markAsRead = async (conversationId: string) => {
@@ -254,6 +329,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       )
     );
     
+    toast({
+      title: "Conversa encerrada",
+      description: "A conversa foi encerrada com sucesso.",
+    });
+    
     if (activeConversationId === conversationId) {
       setActiveConversationId(null);
     }
@@ -273,17 +353,41 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       participants: participants.map(id => ({ id, name: `Participant ${id}` })),
       unreadCount: 0,
       protocolId,
+      lastMessageTime: new Date().toISOString(),
       status: "active",
     };
 
-    setConversations(prev => [...prev, newConversation]);
+    setConversations(prev => [newConversation, ...prev]);
+    
+    toast({
+      title: "Conversa criada",
+      description: "Nova conversa iniciada com sucesso.",
+    });
+    
     return newConversation.id;
   };
 
   const loadMoreMessages = async (conversationId: string) => {
     // In real implementation, load more messages from the database
-    // For now just show a log
-    console.log(`Loading more messages for conversation ${conversationId}`);
+    // For now just show a toast
+    toast({
+      description: "Carregando mensagens anteriores...",
+    });
+  };
+
+  const searchConversations = (query: string): ChatConversation[] => {
+    if (!query.trim()) return conversations;
+    
+    return conversations.filter(conv => 
+      conv.title.toLowerCase().includes(query.toLowerCase()) ||
+      (conv.protocolId && conv.protocolId.toLowerCase().includes(query.toLowerCase()))
+    );
+  };
+
+  const filterConversationsByStatus = (status: "active" | "archived" | "closed" | "all"): ChatConversation[] => {
+    if (status === "all") return conversations;
+    
+    return conversations.filter(conv => conv.status === status);
   };
 
   return (
@@ -299,6 +403,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       closeConversation,
       createConversation,
       loadMoreMessages,
+      searchConversations,
+      filterConversationsByStatus
     }}>
       {children}
     </ChatContext.Provider>

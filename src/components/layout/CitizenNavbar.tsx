@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -10,7 +11,8 @@ import {
   User,
   Menu,
   LogOut,
-  X
+  X,
+  MessageCircle
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -19,16 +21,30 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useChat } from "@/contexts/ChatContext";
+import { Badge } from "@/components/ui/badge";
 
 export function CitizenNavbar() {
   const { logout, user } = useAuth();
+  const { conversations } = useChat();
   const location = useLocation();
+
+  // Calculate unread messages
+  const unreadCount = conversations
+    .filter(conv => conv.type === "citizen")
+    .reduce((total, conv) => total + conv.unreadCount, 0);
 
   const navItems = [
     {
       icon: <Home size={18} />,
       title: "Início",
       path: "/citizen/dashboard",
+    },
+    {
+      icon: <MessageCircle size={18} />,
+      title: "Chat",
+      path: "/citizen/chat",
+      badge: unreadCount,
     },
     {
       icon: <FileText size={18} />,
@@ -67,6 +83,9 @@ export function CitizenNavbar() {
         >
           <span className="mr-2">{item.icon}</span>
           <span>{item.title}</span>
+          {item.badge > 0 && (
+            <Badge className="ml-2">{item.badge}</Badge>
+          )}
         </Link>
       ))}
     </>

@@ -20,7 +20,8 @@ import {
   Map,
   HelpCircle,
   Shield,
-  Bus
+  Bus,
+  MessageCircle
 } from "lucide-react";
 import { SidebarItemProps } from "@/types/sidebar";
 
@@ -29,6 +30,12 @@ export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => 
     icon: <Home size={18} />,
     title: "Dashboard",
     path: "/admin/dashboard",
+  },
+  {
+    icon: <MessageCircle size={18} />,
+    title: "Chat",
+    path: "/admin/chat",
+    badge: unreadCount,
   },
   {
     icon: <Mail size={18} />,

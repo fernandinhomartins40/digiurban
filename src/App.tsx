@@ -23,6 +23,10 @@ import MailDashboard from "@/pages/admin/correio/MailDashboard";
 import OficioDigital from "@/pages/admin/correio/OficioDigital";
 import TemplateCreator from "@/pages/admin/correio/TemplateCreator";
 
+// Chat Module
+import AdminChatPage from "@/pages/admin/chat/ChatPage";
+import CitizenChatPage from "@/pages/citizen/chat/ChatPage";
+
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
 
@@ -51,11 +55,15 @@ function App() {
                 <Route path="correio/dashboard" element={<MailDashboard />} />
                 <Route path="correio/oficio-digital" element={<OficioDigital />} />
                 <Route path="correio/criador-oficios" element={<TemplateCreator />} />
+                
+                {/* Chat Route */}
+                <Route path="chat" element={<AdminChatPage />} />
               </Route>
 
               {/* Citizen Routes */}
               <Route path="/citizen" element={<CitizenLayout />}>
                 <Route path="dashboard" element={<CitizenDashboard />} />
+                <Route path="chat" element={<CitizenChatPage />} />
               </Route>
 
               {/* Catch-all route for 404 */}

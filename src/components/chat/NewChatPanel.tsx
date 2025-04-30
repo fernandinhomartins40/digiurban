@@ -7,12 +7,15 @@ import { cn } from "@/lib/utils";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { CitizenChatView } from "./CitizenChatView";
 import { AdminChatView } from "./AdminChatView";
+import { Link } from "react-router-dom";
 
 export function NewChatPanel() {
   const { user } = useAuth();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   if (!user) return null;
+
+  const chatPagePath = user.role === "citizen" ? "/citizen/chat" : "/admin/chat";
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
@@ -29,6 +32,16 @@ export function NewChatPanel() {
       {isPanelOpen && (
         <ChatProvider>
           <div className="absolute bottom-16 right-0 w-80 md:w-96 h-[600px] bg-white rounded-lg shadow-xl border flex flex-col">
+            <div className="p-3 border-b flex justify-between items-center">
+              <h3 className="font-semibold">Chat rápido</h3>
+              <Link 
+                to={chatPagePath} 
+                className="text-xs text-primary hover:underline"
+                onClick={() => setIsPanelOpen(false)}
+              >
+                Ver todas as conversas
+              </Link>
+            </div>
             {user.role === "citizen" ? <CitizenChatView /> : <AdminChatView />}
           </div>
         </ChatProvider>
