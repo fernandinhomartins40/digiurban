@@ -390,11 +390,493 @@ export type Database = {
           },
         ]
       }
+      mayor_appointments: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          description: string | null
+          duration_minutes: number
+          id: string
+          priority: string
+          requested_date: string
+          requested_time: string
+          requester_email: string
+          requester_id: string | null
+          requester_name: string
+          requester_phone: string | null
+          responded_at: string | null
+          responded_by: string | null
+          response_message: string | null
+          status: string
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          priority?: string
+          requested_date: string
+          requested_time: string
+          requester_email: string
+          requester_id?: string | null
+          requester_name: string
+          requester_phone?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          response_message?: string | null
+          status?: string
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          priority?: string
+          requested_date?: string
+          requested_time?: string
+          requester_email?: string
+          requester_id?: string | null
+          requester_name?: string
+          requester_phone?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          response_message?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      mayor_dashboard_stats: {
+        Row: {
+          created_at: string | null
+          id: string
+          sector_id: string | null
+          stat_date: string
+          stat_target: number | null
+          stat_type: string
+          stat_value: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          sector_id?: string | null
+          stat_date?: string
+          stat_target?: number | null
+          stat_type: string
+          stat_value?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          sector_id?: string | null
+          stat_date?: string
+          stat_target?: number | null
+          stat_type?: string
+          stat_value?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      mayor_direct_requests: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          description: string
+          due_date: string | null
+          id: string
+          priority: string
+          protocol_number: string
+          requester_id: string | null
+          status: string
+          target_department: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          description: string
+          due_date?: string | null
+          id?: string
+          priority?: string
+          protocol_number: string
+          requester_id?: string | null
+          status?: string
+          target_department: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string
+          due_date?: string | null
+          id?: string
+          priority?: string
+          protocol_number?: string
+          requester_id?: string | null
+          status?: string
+          target_department?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      mayor_office_audit_log: {
+        Row: {
+          action_details: Json | null
+          action_type: string
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          performed_by: string
+        }
+        Insert: {
+          action_details?: Json | null
+          action_type: string
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          performed_by: string
+        }
+        Update: {
+          action_details?: Json | null
+          action_type?: string
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          performed_by?: string
+        }
+        Relationships: []
+      }
+      mayor_request_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          request_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          request_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          request_id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mayor_request_attachments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "mayor_direct_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mayor_request_comments: {
+        Row: {
+          author_id: string
+          comment_text: string
+          created_at: string | null
+          id: string
+          request_id: string
+        }
+        Insert: {
+          author_id: string
+          comment_text: string
+          created_at?: string | null
+          id?: string
+          request_id: string
+        }
+        Update: {
+          author_id?: string
+          comment_text?: string
+          created_at?: string | null
+          id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mayor_request_comments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "mayor_direct_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_policies: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          department: string
+          description: string
+          end_date: string | null
+          id: string
+          responsible_id: string
+          start_date: string
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          department: string
+          description: string
+          end_date?: string | null
+          id?: string
+          responsible_id: string
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          department?: string
+          description?: string
+          end_date?: string | null
+          id?: string
+          responsible_id?: string
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      public_policy_goals: {
+        Row: {
+          created_at: string | null
+          current_value: number | null
+          description: string
+          due_date: string | null
+          id: string
+          policy_id: string
+          status: string
+          target_unit: string | null
+          target_value: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_value?: number | null
+          description: string
+          due_date?: string | null
+          id?: string
+          policy_id: string
+          status?: string
+          target_unit?: string | null
+          target_value?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_value?: number | null
+          description?: string
+          due_date?: string | null
+          id?: string
+          policy_id?: string
+          status?: string
+          target_unit?: string | null
+          target_value?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_policy_goals_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "public_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategic_program_documents: {
+        Row: {
+          created_at: string | null
+          document_description: string | null
+          document_title: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          program_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          document_description?: string | null
+          document_title: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          program_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string | null
+          document_description?: string | null
+          document_title?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          program_id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategic_program_documents_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategic_program_milestones: {
+        Row: {
+          completion_date: string | null
+          created_at: string | null
+          description: string
+          due_date: string
+          id: string
+          program_id: string
+          responsible_id: string | null
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          completion_date?: string | null
+          created_at?: string | null
+          description: string
+          due_date: string
+          id?: string
+          program_id: string
+          responsible_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          completion_date?: string | null
+          created_at?: string | null
+          description?: string
+          due_date?: string
+          id?: string
+          program_id?: string
+          responsible_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategic_program_milestones_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategic_programs: {
+        Row: {
+          budget: number | null
+          coordinator_id: string
+          created_at: string | null
+          created_by: string
+          description: string
+          end_date: string | null
+          id: string
+          progress_percentage: number | null
+          spent_amount: number | null
+          start_date: string
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          budget?: number | null
+          coordinator_id: string
+          created_at?: string | null
+          created_by: string
+          description: string
+          end_date?: string | null
+          id?: string
+          progress_percentage?: number | null
+          spent_amount?: number | null
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          budget?: number | null
+          coordinator_id?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string
+          end_date?: string | null
+          id?: string
+          progress_percentage?: number | null
+          spent_amount?: number | null
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      generate_mayor_protocol: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_protocol_number: {
         Args: Record<PropertyKey, never>
         Returns: string
