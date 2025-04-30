@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted = false;
     };
-  }, [navigate]);
+  }, []);
 
   // Create auth methods
   const login = async (email: string, password: string, userType: "admin" | "citizen") => {
