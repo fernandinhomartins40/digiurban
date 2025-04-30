@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         // Set up auth state listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, currentSession) => {
+          (event, currentSession) => {
             console.log("Auth state change event:", event, "Session:", currentSession?.user?.id);
             
             if (!isMounted) return;
@@ -53,50 +53,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 
                 try {
                   // Set a timeout for profile fetching
-                  const timeoutPromise = new Promise<boolean>((_, reject) => {
-                    setTimeout(() => reject(new Error("Profile fetch timeout")), 5000);
+                  const profilePromise = fetchUserProfile(currentSession.user.id, setUser, setUserType);
+                  
+                  const timeoutPromise = new Promise<boolean>((resolve) => {
+                    setTimeout(() => resolve(false), 5000);
                   });
                   
-                  // Try to fetch profile with a timeout
-                  const profileResult = await Promise.race([
-                    fetchUserProfile(currentSession.user.id, setUser, setUserType),
-                    timeoutPromise
-                  ]).catch(error => {
-                    console.error("Error or timeout fetching profile:", error);
-                    return false;
-                  });
+                  // Race between profile fetch and timeout
+                  const profileFound = await Promise.race([profilePromise, timeoutPromise]);
                   
-                  if (!profileResult) {
-                    console.warn("No profile found or timeout occurred, creating one");
+                  if (!profileFound) {
+                    console.warn("Profile fetch timed out or failed, using metadata");
+                    
                     // Try to extract user_type from metadata as fallback
                     const metadataUserType = currentSession.user.user_metadata?.user_type;
                     if (metadataUserType) {
                       setUserType(metadataUserType);
-                      // We'll create a minimal user object
-                      const minimalUser = {
-                        id: currentSession.user.id,
-                        email: currentSession.user.email || "",
-                        name: currentSession.user.user_metadata?.name || "User",
-                        role: metadataUserType === "admin" ? "admin" : "citizen",
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                        ...(metadataUserType === "admin" 
-                          ? { permissions: [] } 
-                          : { 
-                              cpf: "", 
-                              address: {
-                                street: "",
-                                number: "",
-                                neighborhood: "",
-                                city: "",
-                                state: "",
-                                zipCode: ""
-                              }
-                            })
-                      };
-                      setUser(minimalUser as User);
+                      
+                      // Try to create profile in the background
+                      fetchUserProfile(currentSession.user.id, setUser, setUserType)
+                        .catch(err => console.error("Background profile creation failed:", err));
                     }
                   }
+                } catch (error) {
+                  console.error("Error handling auth change:", error);
                 } finally {
                   // Always ensure we stop loading
                   if (isMounted) {
@@ -128,50 +108,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           try {
             // Set a timeout for initial profile fetching
-            const timeoutPromise = new Promise<boolean>((_, reject) => {
-              setTimeout(() => reject(new Error("Initial profile fetch timeout")), 5000);
+            const profilePromise = fetchUserProfile(initialSession.user.id, setUser, setUserType);
+            
+            const timeoutPromise = new Promise<boolean>((resolve) => {
+              setTimeout(() => resolve(false), 5000);
             });
             
-            // Try to fetch profile with a timeout
-            const profileResult = await Promise.race([
-              fetchUserProfile(initialSession.user.id, setUser, setUserType),
-              timeoutPromise
-            ]).catch(error => {
-              console.error("Error or timeout fetching initial profile:", error);
-              return false;
-            });
+            // Race between profile fetch and timeout
+            const profileFound = await Promise.race([profilePromise, timeoutPromise]);
             
-            if (!profileResult && isMounted) {
-              console.warn("No initial profile found or timeout occurred, using metadata");
+            if (!profileFound && isMounted) {
+              console.warn("Initial profile fetch timed out or failed, using metadata");
+              
               // Try to extract user_type from metadata as fallback
               const metadataUserType = initialSession.user.user_metadata?.user_type;
               if (metadataUserType) {
                 setUserType(metadataUserType);
-                // Create a minimal user object
-                const minimalUser = {
-                  id: initialSession.user.id,
-                  email: initialSession.user.email || "",
-                  name: initialSession.user.user_metadata?.name || "User",
-                  role: metadataUserType === "admin" ? "admin" : "citizen",
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                  ...(metadataUserType === "admin" 
-                    ? { permissions: [] } 
-                    : { 
-                        cpf: "", 
-                        address: {
-                          street: "",
-                          number: "",
-                          neighborhood: "",
-                          city: "",
-                          state: "",
-                          zipCode: ""
-                        }
-                      })
-                };
-                setUser(minimalUser as User);
+                
+                // Try to create profile in the background
+                fetchUserProfile(initialSession.user.id, setUser, setUserType)
+                  .catch(err => console.error("Background profile creation failed:", err));
               }
             }
+          } catch (error) {
+            console.error("Error fetching initial profile:", error);
           } finally {
             // Always ensure loading state is updated
             if (isMounted) {
@@ -326,8 +286,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         title: "Email enviado",
         description: "Verifique sua caixa de entrada para redefinir sua senha.",
       });
-      
-      return true;
     } catch (error: any) {
       console.error("Reset password error:", error.message);
       toast({
@@ -335,7 +293,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error.message || "Falha ao enviar email de redefinição de senha",
         variant: "destructive",
       });
-      return false;
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -356,7 +314,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       setTimeout(() => navigate("/login", { replace: true }), 2000);
-      return true;
     } catch (error: any) {
       console.error("Update password error:", error.message);
       toast({
@@ -364,7 +321,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error.message || "Falha ao atualizar senha",
         variant: "destructive",
       });
-      return false;
+      throw error;
     } finally {
       setIsLoading(false);
     }

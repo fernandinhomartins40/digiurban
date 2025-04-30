@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,7 +23,7 @@ export default function Login() {
   useEffect(() => {
     console.log("Login - Auth state:", { isLoading, isAuthenticated, userType, loginAttempted });
     
-    if (isAuthenticated && userType) {
+    if (!isLoading && isAuthenticated && userType) {
       console.log("Login: Already authenticated, redirecting to dashboard:", userType);
       const redirectPath = userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard";
       navigate(redirectPath, { replace: true });

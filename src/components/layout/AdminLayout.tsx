@@ -12,6 +12,25 @@ export function AdminLayout() {
   const [readyForQuery, setReadyForQuery] = useState(false);
   const navigate = useNavigate();
   
+  // Show fallback UI after timeout
+  const [showFallback, setShowFallback] = React.useState(false);
+  
+  React.useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (isLoading) {
+      timer = setTimeout(() => {
+        setShowFallback(true);
+      }, 5000);
+    } else {
+      setShowFallback(false);
+    }
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isLoading]);
+  
   useEffect(() => {
     console.log("AdminLayout - Auth state:", { 
       isLoading, 
@@ -50,6 +69,28 @@ export function AdminLayout() {
       <div className="flex flex-col items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
         <span className="text-primary">Verificando credenciais...</span>
+        
+        {showFallback && (
+          <div className="mt-8 max-w-md">
+            <p className="text-center text-red-600 mb-4">
+              O carregamento está demorando mais do que o esperado.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded"
+                onClick={() => navigate("/login", { replace: true })}
+              >
+                Voltar para login
+              </button>
+              <button
+                className="px-4 py-2 bg-primary text-white rounded"
+                onClick={() => window.location.reload()}
+              >
+                Recarregar página
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

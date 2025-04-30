@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole, AdminUser, CitizenUser } from "@/types/auth";
+import { toast } from "@/hooks/use-toast";
 
 /**
  * Fetches a user profile from Supabase based on user ID
@@ -15,7 +16,7 @@ export const fetchUserProfile = async (
   setUserType: React.Dispatch<React.SetStateAction<"admin" | "citizen" | null>>
 ): Promise<boolean> => {
   console.log("Fetching user profile for ID:", userId);
-
+  
   try {
     // Try to get admin profile
     const { data: adminProfile, error: adminError } = await supabase
@@ -26,7 +27,7 @@ export const fetchUserProfile = async (
 
     if (adminError) {
       console.error("Error fetching admin profile:", adminError);
-      return false;
+      throw adminError;
     }
 
     if (adminProfile) {
@@ -69,7 +70,7 @@ export const fetchUserProfile = async (
 
     if (citizenError) {
       console.error("Error fetching citizen profile:", citizenError);
-      return false;
+      throw citizenError;
     }
 
     if (citizenProfile) {
@@ -85,7 +86,7 @@ export const fetchUserProfile = async (
         address: {
           street: citizenProfile.street || "",
           number: citizenProfile.number || "",
-          complement: citizenProfile.complement || "", 
+          complement: citizenProfile.complement || undefined,
           neighborhood: citizenProfile.neighborhood || "",
           city: citizenProfile.city || "",
           state: citizenProfile.state || "",
@@ -102,55 +103,115 @@ export const fetchUserProfile = async (
       return true;
     }
 
-    // No profile found 
-    console.warn("User authenticated but no profile found:", userId);
+    console.warn("No profile found for user:", userId);
     
     // Attempt to create a profile based on user metadata
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (userData?.user) {
         const userType = userData.user.user_metadata?.user_type;
-        if (userType) {
-          console.log("Attempting to create missing profile based on metadata for type:", userType);
+        
+        if (userType === "admin") {
+          console.log("Creating missing admin profile");
+          const { error: createError } = await supabase.from("admin_profiles").insert({
+            id: userId,
+            email: userData.user.email || "",
+            name: userData.user.user_metadata?.name || "Admin User",
+            role: userData.user.user_metadata?.role || "admin",
+            department: userData.user.user_metadata?.department || "",
+            position: userData.user.user_metadata?.position || "",
+          });
           
-          if (userType === "admin") {
-            await supabase.from("admin_profiles").insert({
-              id: userId,
-              email: userData.user.email || "",
-              name: userData.user.user_metadata?.name || "Admin User",
-              role: userData.user.user_metadata?.role || "admin",
-              department: userData.user.user_metadata?.department || "",
-              position: userData.user.user_metadata?.position || "",
-            });
-            console.log("Created missing admin profile");
-          } else if (userType === "citizen") {
-            await supabase.from("citizen_profiles").insert({
-              id: userId,
-              email: userData.user.email || "",
-              name: userData.user.user_metadata?.name || "Citizen User",
-              cpf: userData.user.user_metadata?.cpf || "",
+          if (createError) {
+            console.error("Failed to create admin profile:", createError);
+            throw createError;
+          }
+          
+          // Set minimal user object temporarily
+          const adminUser: AdminUser = {
+            id: userId,
+            email: userData.user.email || "",
+            name: userData.user.user_metadata?.name || "Admin User",
+            role: userData.user.user_metadata?.role as UserRole || "admin",
+            permissions: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          
+          setUser(adminUser);
+          setUserType("admin");
+          console.log("Created temporary admin user object");
+          
+          toast({
+            title: "Perfil criado",
+            description: "Seu perfil de administrador foi criado com sucesso"
+          });
+          
+          return true;
+          
+        } else if (userType === "citizen") {
+          console.log("Creating missing citizen profile");
+          const { error: createError } = await supabase.from("citizen_profiles").insert({
+            id: userId,
+            email: userData.user.email || "",
+            name: userData.user.user_metadata?.name || "Citizen User",
+            cpf: userData.user.user_metadata?.cpf || "",
+            street: userData.user.user_metadata?.street || "",
+            number: userData.user.user_metadata?.number || "",
+            neighborhood: userData.user.user_metadata?.neighborhood || "",
+            city: userData.user.user_metadata?.city || "",
+            state: userData.user.user_metadata?.state || "",
+            zipcode: userData.user.user_metadata?.zipcode || "",
+            phone: userData.user.user_metadata?.phone || "",
+          });
+          
+          if (createError) {
+            console.error("Failed to create citizen profile:", createError);
+            throw createError;
+          }
+          
+          // Set minimal user object temporarily
+          const citizenUser: CitizenUser = {
+            id: userId,
+            email: userData.user.email || "",
+            name: userData.user.user_metadata?.name || "Citizen User",
+            cpf: userData.user.user_metadata?.cpf || "",
+            role: "citizen",
+            address: {
               street: userData.user.user_metadata?.street || "",
               number: userData.user.user_metadata?.number || "",
               neighborhood: userData.user.user_metadata?.neighborhood || "",
               city: userData.user.user_metadata?.city || "",
               state: userData.user.user_metadata?.state || "",
-              zipcode: userData.user.user_metadata?.zipcode || "",
-              phone: userData.user.user_metadata?.phone || "",
-            });
-            console.log("Created missing citizen profile");
-          }
+              zipCode: userData.user.user_metadata?.zipcode || ""
+            },
+            phone: userData.user.user_metadata?.phone || "",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
           
-          // Try fetching again after creation
-          return await fetchUserProfile(userId, setUser, setUserType);
+          setUser(citizenUser);
+          setUserType("citizen");
+          console.log("Created temporary citizen user object");
+          
+          toast({
+            title: "Perfil criado",
+            description: "Seu perfil de cidadão foi criado com sucesso"
+          });
+          
+          return true;
         }
       }
+      
+      console.error("Could not create profile: Insufficient user metadata");
+      return false;
+      
     } catch (createError) {
-      console.error("Failed to create missing profile:", createError);
+      console.error("Error creating profile:", createError);
+      return false;
     }
-    
-    return false;
   } catch (error) {
-    console.error("Unexpected error in fetchUserProfile:", error);
+    console.error("Error in fetchUserProfile:", error);
     return false;
   }
 };

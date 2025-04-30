@@ -34,13 +34,52 @@ export function CitizenLayout() {
     }
   }, [isLoading, isAuthenticated, userType, navigate]);
 
+  // Show loading indicator for a maximum of 5 seconds
+  const [showFallback, setShowFallback] = React.useState(false);
+  
+  React.useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (isLoading) {
+      timer = setTimeout(() => {
+        setShowFallback(true);
+      }, 5000);
+    } else {
+      setShowFallback(false);
+    }
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isLoading]);
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p>Carregando informações do usuário...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p>Carregando informações do usuário...</p>
+        
+        {showFallback && (
+          <div className="mt-8 max-w-md">
+            <p className="text-center text-red-600 mb-4">
+              O carregamento está demorando mais do que o esperado.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded"
+                onClick={() => navigate("/login", { replace: true })}
+              >
+                Voltar para login
+              </button>
+              <button
+                className="px-4 py-2 bg-primary text-white rounded"
+                onClick={() => window.location.reload()}
+              >
+                Recarregar página
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -52,6 +91,12 @@ export function CitizenLayout() {
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
           <p>Verificando credenciais...</p>
+          <button
+            className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            onClick={() => navigate("/login", { replace: true })}
+          >
+            Voltar para login
+          </button>
         </div>
       </div>
     );
