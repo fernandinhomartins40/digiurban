@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import {
   StudentTransport,
@@ -412,12 +411,9 @@ export async function getStudentTransports(
   } = {}
 ): Promise<StudentTransport[]> {
   try {
-    let query = supabase.from('education_student_transports')
-      .select(`
-        *,
-        education_students(id, name, registration_number),
-        education_schools(id, name, type)
-      `);
+    // First, query student transports
+    let query = supabase.from('education_student_transport')
+      .select('*');
     
     if (filters.studentId) {
       query = query.eq('student_id', filters.studentId);
@@ -435,33 +431,53 @@ export async function getStudentTransports(
       query = query.eq('status', filters.status);
     }
     
-    const { data, error } = await query;
+    const { data: transportData, error: transportError } = await query;
     
-    if (error) throw error;
+    if (transportError) throw transportError;
     
-    return data.map(transport => ({
-      id: transport.id,
-      studentId: transport.student_id,
-      routeId: transport.route_id,
-      pickupLocation: transport.pickup_location,
-      returnLocation: transport.return_location,
-      schoolId: transport.school_id,
-      startDate: transport.start_date,
-      endDate: transport.end_date,
-      status: transport.status as TransportStatus,
-      createdAt: transport.created_at,
-      updatedAt: transport.updated_at,
-      studentInfo: transport.education_students ? {
-        id: transport.education_students.id,
-        name: transport.education_students.name,
-        registrationNumber: transport.education_students.registration_number
-      } : undefined,
-      schoolInfo: transport.education_schools ? {
-        id: transport.education_schools.id,
-        name: transport.education_schools.name,
-        type: transport.education_schools.type
-      } : undefined
-    }));
+    // Then fetch related students and schools separately
+    const studentIds = transportData.map(t => t.student_id).filter(Boolean);
+    const schoolIds = transportData.map(t => t.school_id).filter(Boolean);
+    
+    const { data: students } = await supabase
+      .from('education_students')
+      .select('id, name, registration_number')
+      .in('id', studentIds);
+      
+    const { data: schools } = await supabase
+      .from('education_schools')
+      .select('id, name, type')
+      .in('id', schoolIds);
+      
+    // Build student transport objects with related data
+    return transportData.map(transport => {
+      const student = students?.find(s => s.id === transport.student_id);
+      const school = schools?.find(s => s.id === transport.school_id);
+      
+      return {
+        id: transport.id,
+        studentId: transport.student_id,
+        routeId: transport.route_id,
+        pickupLocation: transport.pickup_location,
+        returnLocation: transport.return_location,
+        schoolId: transport.school_id,
+        startDate: transport.start_date,
+        endDate: transport.end_date,
+        status: transport.status as TransportStatus,
+        createdAt: transport.created_at,
+        updatedAt: transport.updated_at,
+        studentInfo: student ? {
+          id: student.id,
+          name: student.name,
+          registrationNumber: student.registration_number
+        } : undefined,
+        schoolInfo: school ? {
+          id: school.id,
+          name: school.name,
+          type: school.type
+        } : undefined
+      };
+    });
   } catch (error) {
     console.error('Error fetching student transports:', error);
     return [];
@@ -474,40 +490,49 @@ export async function getStudentTransports(
  */
 export async function getStudentTransportById(id: string): Promise<StudentTransport | null> {
   try {
-    const { data, error } = await supabase
-      .from('education_student_transports')
-      .select(`
-        *,
-        education_students(id, name, registration_number),
-        education_schools(id, name, type)
-      `)
+    const { data: transport, error } = await supabase
+      .from('education_student_transport')
+      .select('*')
       .eq('id', id)
       .single();
 
     if (error) throw error;
-    if (!data) return null;
+    if (!transport) return null;
+
+    // Fetch related student and school
+    const { data: student } = await supabase
+      .from('education_students')
+      .select('id, name, registration_number')
+      .eq('id', transport.student_id)
+      .maybeSingle();
+
+    const { data: school } = await supabase
+      .from('education_schools')
+      .select('id, name, type')
+      .eq('id', transport.school_id)
+      .maybeSingle();
 
     return {
-      id: data.id,
-      studentId: data.student_id,
-      routeId: data.route_id,
-      pickupLocation: data.pickup_location,
-      returnLocation: data.return_location,
-      schoolId: data.school_id,
-      startDate: data.start_date,
-      endDate: data.end_date,
-      status: data.status as TransportStatus,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      studentInfo: data.education_students ? {
-        id: data.education_students.id,
-        name: data.education_students.name,
-        registrationNumber: data.education_students.registration_number
+      id: transport.id,
+      studentId: transport.student_id,
+      routeId: transport.route_id,
+      pickupLocation: transport.pickup_location,
+      returnLocation: transport.return_location,
+      schoolId: transport.school_id,
+      startDate: transport.start_date,
+      endDate: transport.end_date,
+      status: transport.status as TransportStatus,
+      createdAt: transport.created_at,
+      updatedAt: transport.updated_at,
+      studentInfo: student ? {
+        id: student.id,
+        name: student.name,
+        registrationNumber: student.registration_number
       } : undefined,
-      schoolInfo: data.education_schools ? {
-        id: data.education_schools.id,
-        name: data.education_schools.name,
-        type: data.education_schools.type
+      schoolInfo: school ? {
+        id: school.id,
+        name: school.name,
+        type: school.type
       } : undefined
     };
   } catch (error) {
@@ -524,7 +549,7 @@ export async function createStudentTransport(transport: Omit<StudentTransport, "
   try {
     // First insert the transport record
     const { data, error } = await supabase
-      .from('education_student_transports')
+      .from('education_student_transport')
       .insert({
         student_id: transport.studentId,
         route_id: transport.routeId,
@@ -540,13 +565,28 @@ export async function createStudentTransport(transport: Omit<StudentTransport, "
 
     if (error) throw error;
 
-    // Then update the route's current students count
-    await supabase
-      .from('education_transport_routes')
-      .update({
-        current_students: supabase.rpc('calculate_route_students', { route_id: transport.routeId })
-      })
-      .eq('id', transport.routeId);
+    // Update route's current students count
+    try {
+      // Fetch current count
+      const { data: routeData } = await supabase
+        .from('education_transport_routes')
+        .select('current_students')
+        .eq('id', transport.routeId)
+        .single();
+      
+      // Update with incremented count
+      if (routeData) {
+        await supabase
+          .from('education_transport_routes')
+          .update({
+            current_students: (routeData.current_students || 0) + 1
+          })
+          .eq('id', transport.routeId);
+      }
+    } catch (countError) {
+      console.error('Error updating route student count:', countError);
+      // Continue execution even if the count update fails
+    }
 
     return {
       id: data.id,
@@ -575,7 +615,7 @@ export async function createStudentTransport(transport: Omit<StudentTransport, "
 export async function updateStudentTransport(id: string, transport: Partial<StudentTransport>): Promise<StudentTransport> {
   try {
     const { data, error } = await supabase
-      .from('education_student_transports')
+      .from('education_student_transport')
       .update({
         student_id: transport.studentId,
         route_id: transport.routeId,
@@ -619,7 +659,7 @@ export async function deleteStudentTransport(id: string): Promise<void> {
   try {
     // First get the transport to know the route ID
     const { data: transportData } = await supabase
-      .from('education_student_transports')
+      .from('education_student_transport')
       .select('route_id')
       .eq('id', id)
       .single();
@@ -628,7 +668,7 @@ export async function deleteStudentTransport(id: string): Promise<void> {
     
     // Delete the transport
     const { error } = await supabase
-      .from('education_student_transports')
+      .from('education_student_transport')
       .delete()
       .eq('id', id);
 
@@ -636,12 +676,27 @@ export async function deleteStudentTransport(id: string): Promise<void> {
     
     // Update the route's current students count if we have a route ID
     if (routeId) {
-      await supabase
-        .from('education_transport_routes')
-        .update({
-          current_students: supabase.rpc('calculate_route_students', { route_id: routeId })
-        })
-        .eq('id', routeId);
+      try {
+        // Fetch current count
+        const { data: routeData } = await supabase
+          .from('education_transport_routes')
+          .select('current_students')
+          .eq('id', routeId)
+          .single();
+        
+        // Update with decremented count
+        if (routeData && routeData.current_students > 0) {
+          await supabase
+            .from('education_transport_routes')
+            .update({
+              current_students: routeData.current_students - 1
+            })
+            .eq('id', routeId);
+        }
+      } catch (countError) {
+        console.error('Error updating route student count:', countError);
+        // Continue execution even if the count update fails
+      }
     }
   } catch (error) {
     console.error('Error deleting student transport:', error);
