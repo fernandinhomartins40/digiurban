@@ -31,7 +31,7 @@ import {
 import {
   createSchool,
   updateSchool,
-} from "@/services/education";
+} from "@/services/education/schools";
 import { School } from "@/types/education";
 import { toast } from "sonner";
 

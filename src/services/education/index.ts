@@ -9,6 +9,9 @@ export * from './transport';
 export * from './meals';
 export * from './occurrences';
 export * from './grades';
+export * from './diets';
+export * from './feedback';
+export * from './menus';
 
 // Re-export types from types/education that are used in education services
 import { 

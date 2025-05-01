@@ -39,6 +39,12 @@ import HRRequestsPage from "./pages/admin/administracao/HRRequests";
 import PurchaseRequestsPage from "./pages/admin/financas/PurchaseRequests";
 import MailDocumentsPage from "./pages/admin/correio/MailDocuments";
 import ComprasPage from "./pages/admin/administracao/compras/index";
+import EscolasIndexPage from "./pages/admin/educacao/escolas/index";
+import MatriculasIndex from "./pages/admin/educacao/matriculas/index";
+import TransporteIndex from "./pages/admin/educacao/transporte/index";
+import AlunosProfessoresIndex from "./pages/admin/educacao/alunos-professores/index";
+import MerendaIndex from "./pages/admin/educacao/merenda/index";
+import OcorrenciasIndex from "./pages/admin/educacao/ocorrencias/index";
 
 function App() {
   return (
@@ -70,6 +76,12 @@ function App() {
 
           {/* Educação routes */}
           <Route path="admin/educacao" element={<EducacaoIndexPage />} />
+          <Route path="admin/educacao/escolas" element={<EscolasIndexPage />} />
+          <Route path="admin/educacao/matriculas" element={<MatriculasIndex />} />
+          <Route path="admin/educacao/transporte" element={<TransporteIndex />} />
+          <Route path="admin/educacao/alunos-professores" element={<AlunosProfessoresIndex />} />
+          <Route path="admin/educacao/merenda" element={<MerendaIndex />} />
+          <Route path="admin/educacao/ocorrencias" element={<OcorrenciasIndex />} />
 
           {/* Saúde routes */}
           <Route path="admin/saude" element={<SaudeIndexPage />} />
