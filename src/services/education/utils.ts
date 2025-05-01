@@ -56,7 +56,10 @@ export const mapSchoolFromDB = (dbData: any): School => {
     is_active: dbData.is_active,
     shifts: dbData.shifts,
     created_at: dbData.created_at,
-    updated_at: dbData.updated_at
+    updated_at: dbData.updated_at,
+    // Add missing properties required by the School type
+    active: dbData.is_active,
+    capacity: dbData.max_capacity
   };
 };
 
@@ -86,14 +89,16 @@ export const mapMealFromDB = (dbData: any): SchoolMeal => {
     shift: dbData.shift,
     menu_items: dbData.menu_items,
     nutritional_info: dbData.nutritional_info,
-    for_dietary_restrictions: dbData.for_dietary_restrictions,
-    is_special_diet: dbData.is_special_diet,
     month: dbData.month,
     year: dbData.year,
     week_number: dbData.week_number,
     is_active: dbData.is_active,
     created_at: dbData.created_at,
-    created_by: dbData.created_by
+    created_by: dbData.created_by,
+    // Map to our application type
+    date: dbData.active_from,
+    meal_type: dbData.shift,
+    description: dbData.name
   };
 };
 
@@ -111,6 +116,9 @@ export const mapMealToDB = (meal: Partial<SchoolMeal>) => {
  */
 export const mapIncidentFromDB = (dbData: any): SchoolIncident => {
   if (!dbData) return null as unknown as SchoolIncident;
+  
+  // Determine the status based on resolution_date
+  const status = dbData.resolution_date ? 'resolved' : 'open';
   
   return {
     id: dbData.id,
@@ -131,9 +139,12 @@ export const mapIncidentFromDB = (dbData: any): SchoolIncident => {
     resolution: dbData.resolution,
     resolved_by: dbData.resolved_by,
     resolution_date: dbData.resolution_date,
-    status: dbData.resolution_date ? 'resolved' : 'pending',
+    status: status,
     created_at: dbData.created_at,
-    updated_at: dbData.updated_at
+    updated_at: dbData.updated_at,
+    // Map to our application type
+    date: dbData.occurrence_date,
+    incident_type: dbData.occurrence_type
   };
 };
 
@@ -142,7 +153,7 @@ export const mapIncidentFromDB = (dbData: any): SchoolIncident => {
  */
 export const mapIncidentToDB = (incident: Partial<SchoolIncident>) => {
   // Remove properties that don't exist in the database table
-  const { status, school_name, student_name, ...dbData } = incident;
+  const { status, school_name, ...dbData } = incident;
   return dbData;
 };
 
@@ -174,7 +185,10 @@ export const mapTransportRequestFromDB = (dbData: any): TransportRequest => {
     resolution_date: dbData.resolution_date,
     resolved_by: dbData.resolved_by,
     created_at: dbData.created_at,
-    updated_at: dbData.updated_at
+    updated_at: dbData.updated_at,
+    // For backward compatibility
+    pickup_address: dbData.pickup_location,
+    distance_km: null
   };
 };
 
@@ -183,7 +197,7 @@ export const mapTransportRequestFromDB = (dbData: any): TransportRequest => {
  */
 export const mapTransportRequestToDB = (request: Partial<TransportRequest>) => {
   // Remove properties that don't exist in the database table
-  const { student_name, school_name, ...dbData } = request;
+  const { student_name, school_name, pickup_address, distance_km, ...dbData } = request;
   return dbData;
 };
 
@@ -208,7 +222,10 @@ export const mapTeacherFromDB = (dbData: any): Teacher => {
     specialties: dbData.specialties || [],
     is_active: dbData.is_active,
     created_at: dbData.created_at,
-    updated_at: dbData.updated_at
+    updated_at: dbData.updated_at,
+    // Add required property from Teacher type
+    active: dbData.is_active,
+    specialization: dbData.specialties ? dbData.specialties[0] : undefined
   };
 };
 
@@ -244,7 +261,9 @@ export const mapEnrollmentFromDB = (dbData: any): Enrollment => {
     notes: dbData.notes,
     justification: dbData.justification,
     created_at: dbData.created_at,
-    updated_at: dbData.updated_at
+    updated_at: dbData.updated_at,
+    // Optional field in Enrollment type
+    grade: undefined
   };
 };
 
@@ -253,7 +272,7 @@ export const mapEnrollmentFromDB = (dbData: any): Enrollment => {
  */
 export const mapEnrollmentToDB = (enrollment: Partial<Enrollment>) => {
   // Remove properties that don't exist in the database table
-  const { student_name, school_name, ...dbData } = enrollment;
+  const { student_name, school_name, grade, ...dbData } = enrollment;
   return dbData;
 };
 
