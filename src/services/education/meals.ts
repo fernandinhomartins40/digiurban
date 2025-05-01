@@ -28,8 +28,12 @@ export const fetchSchoolMeals = async (schoolId?: string): Promise<SchoolMeal[]>
     school_id: item.school_id,
     school_name: item.education_schools?.name || '',
     date: item.active_from,
+    active_from: item.active_from,
+    active_until: item.active_until,
     meal_type: item.shift || 'lunch',
+    shift: item.shift,
     description: item.name,
+    name: item.name,
     nutritional_info: item.nutritional_info || '',
     created_at: item.created_at,
     year: item.year,
@@ -63,8 +67,12 @@ export const fetchMealById = async (id: string): Promise<SchoolMeal> => {
     school_id: data.school_id,
     school_name: data.education_schools?.name || '',
     date: data.active_from,
+    active_from: data.active_from,
+    active_until: data.active_until,
     meal_type: data.shift || 'lunch',
+    shift: data.shift,
     description: data.name,
+    name: data.name,
     nutritional_info: data.nutritional_info || '',
     created_at: data.created_at,
     year: data.year,
@@ -77,19 +85,23 @@ export const createMealMenu = async (meal: Omit<SchoolMeal, 'id' | 'created_at'>
   // Convert from our interface to DB structure
   const mealData = {
     school_id: meal.school_id,
-    name: meal.description,
-    shift: meal.meal_type,
+    name: meal.description || meal.name,
+    shift: meal.meal_type || meal.shift,
     nutritional_info: meal.nutritional_info,
-    active_from: meal.date,
-    year: meal.year || new Date(meal.date).getFullYear(),
-    day_of_week: meal.day_of_week || new Date(meal.date).getDay() + 1, // 1-7 for Monday-Sunday
+    active_from: meal.date || meal.active_from,
+    active_until: meal.active_until,
+    year: meal.year || new Date(meal.date || meal.active_from || '').getFullYear(),
+    day_of_week: meal.day_of_week || new Date(meal.date || meal.active_from || '').getDay() + 1, // 1-7 for Monday-Sunday
     menu_items: meal.menu_items || [] // Required field in DB
   };
 
   const { data, error } = await supabase
     .from('education_meal_menus')
     .insert([mealData])
-    .select()
+    .select(`
+      *,
+      education_schools(name)
+    `)
     .single();
 
   if (error) {
@@ -101,10 +113,14 @@ export const createMealMenu = async (meal: Omit<SchoolMeal, 'id' | 'created_at'>
   return {
     id: data.id,
     school_id: data.school_id,
-    school_name: meal.school_name,
+    school_name: data.education_schools?.name || meal.school_name || '',
     date: data.active_from,
+    active_from: data.active_from,
+    active_until: data.active_until,
     meal_type: data.shift,
+    shift: data.shift,
     description: data.name,
+    name: data.name,
     nutritional_info: data.nutritional_info || '',
     created_at: data.created_at,
     year: data.year,
@@ -118,17 +134,29 @@ export const updateMealMenu = async (id: string, updates: Partial<SchoolMeal>): 
   const updateData: any = {};
   
   if (updates.date) updateData.active_from = updates.date;
+  else if (updates.active_from) updateData.active_from = updates.active_from;
+  
+  if (updates.active_until) updateData.active_until = updates.active_until;
+  
   if (updates.meal_type) updateData.shift = updates.meal_type;
+  else if (updates.shift) updateData.shift = updates.shift;
+  
   if (updates.description) updateData.name = updates.description;
+  else if (updates.name) updateData.name = updates.name;
+  
   if (updates.nutritional_info) updateData.nutritional_info = updates.nutritional_info;
   if (updates.day_of_week) updateData.day_of_week = updates.day_of_week;
   if (updates.menu_items) updateData.menu_items = updates.menu_items;
+  if (updates.year) updateData.year = updates.year;
 
   const { data, error } = await supabase
     .from('education_meal_menus')
     .update(updateData)
     .eq('id', id)
-    .select()
+    .select(`
+      *,
+      education_schools(name)
+    `)
     .single();
 
   if (error) {
@@ -140,10 +168,14 @@ export const updateMealMenu = async (id: string, updates: Partial<SchoolMeal>): 
   return {
     id: data.id,
     school_id: data.school_id,
-    school_name: updates.school_name || '',
+    school_name: data.education_schools?.name || updates.school_name || '',
     date: data.active_from,
+    active_from: data.active_from,
+    active_until: data.active_until,
     meal_type: data.shift,
+    shift: data.shift,
     description: data.name,
+    name: data.name,
     nutritional_info: data.nutritional_info || '',
     created_at: data.created_at,
     year: data.year,
