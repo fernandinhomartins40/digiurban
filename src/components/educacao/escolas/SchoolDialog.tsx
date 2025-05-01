@@ -1,3 +1,4 @@
+
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -453,5 +454,5 @@ export function SchoolDialog({
   );
 }
 
-// Default export for compatibility with existing imports
+// Also export as default for compatibility with existing imports
 export default SchoolDialog;

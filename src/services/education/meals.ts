@@ -1,12 +1,17 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { MealMenu, MealShift, SpecialDiet, MealFeedback, MealRating } from "@/types/education";
+import { 
+  MealMenu, 
+  MealShift, 
+  SpecialDiet,
+  MealFeedback,
+  MealRating
+} from "@/types/education";
 
 /**
- * Fetch meal menus for a school
+ * Get meal menus for a school
  */
 export async function getMealMenus(
-  schoolId: string,
+  schoolId: string, 
   options: {
     isActive?: boolean;
     weekNumber?: number;
@@ -31,11 +36,11 @@ export async function getMealMenus(
   }
 
   if (options.month !== undefined) {
-    query = query.eq("month", options.month);
+    query = query.eq("month", month);
   }
 
   if (options.year !== undefined) {
-    query = query.eq("year", options.year);
+    query = query.eq("year", year);
   }
 
   if (options.isSpecialDiet !== undefined) {
@@ -61,7 +66,7 @@ export async function getMealMenus(
     schoolId: menu.school_id,
     name: menu.name,
     shift: menu.shift as MealShift,
-    dayOfWeek: menu.dayOfWeek,
+    dayOfWeek: menu.day_of_week,
     menuItems: menu.menu_items,
     nutritionalInfo: menu.nutritional_info,
     isSpecialDiet: menu.is_special_diet,
@@ -151,7 +156,7 @@ export async function createMealMenu(menu: Omit<MealMenu, "id" | "createdAt" | "
     shift: data.shift as MealShift,
     dayOfWeek: data.day_of_week,
     menuItems: data.menu_items,
-    nutritionalInfo: data.nutritional_info,
+    nutritionalInfo: data.nutritionalInfo,
     isSpecialDiet: data.is_special_diet,
     forDietaryRestrictions: data.for_dietary_restrictions,
     weekNumber: data.week_number,
@@ -171,7 +176,7 @@ export async function createMealMenu(menu: Omit<MealMenu, "id" | "createdAt" | "
  */
 export async function updateMealMenu(id: string, menu: Partial<Omit<MealMenu, "id" | "createdAt" | "updatedAt">>): Promise<MealMenu> {
   const updateData: any = {};
-  
+
   // Map only the provided fields
   if (menu.name !== undefined) updateData.name = menu.name;
   if (menu.shift !== undefined) updateData.shift = menu.shift;
@@ -292,12 +297,12 @@ export async function createSpecialDiet(diet: Omit<SpecialDiet, "id" | "createdA
     dietType: data.diet_type,
     restrictions: data.restrictions,
     medicalDocumentation: data.medical_documentation,
-    notes: data.notes,
-    startDate: data.start_date,
-    endDate: data.end_date,
-    isActive: data.is_active,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
+    notes: diet.notes,
+    startDate: diet.start_date,
+    endDate: diet.end_date,
+    isActive: diet.is_active,
+    createdAt: diet.created_at,
+    updatedAt: diet.updated_at
   };
 }
 
@@ -430,8 +435,8 @@ export async function submitMealFeedback(feedback: Omit<MealFeedback, "id" | "cr
     parentName: data.parent_name,
     studentName: data.student_name,
     classId: data.class_id,
-    rating: data.rating as MealRating,
-    comments: data.comments,
+    rating: feedback.rating as MealRating,
+    comments: feedback.comments,
     feedbackDate: data.feedback_date,
     createdAt: data.created_at
   };

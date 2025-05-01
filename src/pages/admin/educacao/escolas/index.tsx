@@ -1,12 +1,17 @@
-
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet";
+import { Plus, Edit, Search, AlignJustify, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { School, Plus, Search, FilterX } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { getSchools } from "@/services/education/schools";
 import { School as SchoolType, SchoolType as SchoolTypeEnum } from "@/types/education";
 import { SchoolDialog } from "@/components/educacao/escolas/SchoolDialog";
@@ -110,6 +115,9 @@ export default function EscolasIndex() {
 
   return (
     <div className="container py-6">
+      <Helmet>
+        <title>Escolas e CMEIs</title>
+      </Helmet>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Escolas e CMEIs</h1>

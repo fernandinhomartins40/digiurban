@@ -109,7 +109,8 @@ export async function getOccurrenceById(id: string): Promise<Occurrence> {
     throw error;
   }
 
-  return {
+  // Create the base occurrence object
+  const occurrence: Occurrence = {
     id: data.id,
     studentId: data.student_id,
     schoolId: data.school_id,
@@ -127,22 +128,11 @@ export async function getOccurrenceById(id: string): Promise<Occurrence> {
     parentNotified: data.parent_notified,
     parentNotificationDate: data.parent_notification_date,
     createdAt: data.created_at,
-    updatedAt: data.updated_at,
-    student: data.education_students ? {
-      id: data.education_students.id,
-      name: data.education_students.name,
-      registrationNumber: data.education_students.registration_number
-    } : undefined,
-    class: data.education_classes ? {
-      id: data.education_classes.id,
-      name: data.education_classes.name,
-      grade: data.education_classes.grade
-    } : undefined,
-    school: data.education_schools ? {
-      id: data.education_schools.id,
-      name: data.education_schools.name
-    } : undefined
+    updatedAt: data.updated_at
   };
+
+  // Return the occurrence object
+  return occurrence;
 }
 
 /**

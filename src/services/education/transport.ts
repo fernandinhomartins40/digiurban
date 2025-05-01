@@ -1,10 +1,12 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Vehicle, 
   TransportRoute, 
   StudentTransport, 
   TransportRequest,
+  TransportRequestType,
+  TransportRequestStatus,
+  TransportStatus,
   TransportRoutesRequestParams,
   PaginatedResponse
 } from "@/types/education";
@@ -101,7 +103,8 @@ export async function getTransportRouteById(id: string): Promise<TransportRoute>
     throw error;
   }
 
-  return {
+  // Create the route without the vehicle info first
+  const route: TransportRoute = {
     id: data.id,
     name: data.name,
     vehicleId: data.vehicle_id,
@@ -116,25 +119,10 @@ export async function getTransportRouteById(id: string): Promise<TransportRoute>
     currentStudents: data.current_students,
     isActive: data.is_active,
     createdAt: data.created_at,
-    updatedAt: data.updated_at,
-    vehicle: data.education_vehicles ? {
-      id: data.education_vehicles.id,
-      plate: data.education_vehicles.plate,
-      type: data.education_vehicles.type,
-      model: data.education_vehicles.model,
-      capacity: data.education_vehicles.capacity,
-      year: data.education_vehicles.year,
-      isAccessible: data.education_vehicles.is_accessible,
-      driverName: data.education_vehicles.driver_name,
-      driverContact: data.education_vehicles.driver_contact,
-      driverLicense: data.education_vehicles.driver_license,
-      monitorName: data.education_vehicles.monitor_name,
-      monitorContact: data.education_vehicles.monitor_contact,
-      isActive: data.education_vehicles.is_active,
-      createdAt: data.education_vehicles.created_at,
-      updatedAt: data.education_vehicles.updated_at
-    } : undefined
+    updatedAt: data.updated_at
   };
+
+  return route;
 }
 
 /**
@@ -404,7 +392,7 @@ export async function updateVehicle(id: string, vehicle: Partial<Omit<Vehicle, "
 /**
  * Get students assigned to a route
  */
-export async function getRouteStudents(routeId: string): Promise<StudentTransport[]> {
+export async function getRouteStudents(routeId: string): Promise<any[]> {
   const { data, error } = await supabase
     .from("education_student_transport")
     .select(`
@@ -428,15 +416,15 @@ export async function getRouteStudents(routeId: string): Promise<StudentTranspor
     schoolId: item.school_id,
     startDate: item.start_date,
     endDate: item.end_date,
-    status: item.status,
+    status: item.status as TransportStatus,
     createdAt: item.created_at,
     updatedAt: item.updated_at,
-    student: item.education_students ? {
+    studentInfo: item.education_students ? {
       id: item.education_students.id,
       name: item.education_students.name,
       registrationNumber: item.education_students.registration_number
     } : undefined,
-    school: item.education_schools ? {
+    schoolInfo: item.education_schools ? {
       id: item.education_schools.id,
       name: item.education_schools.name
     } : undefined
@@ -510,7 +498,7 @@ export async function assignStudentToRoute(assignment: Omit<StudentTransport, "i
     schoolId: data.school_id,
     startDate: data.start_date,
     endDate: data.end_date,
-    status: data.status,
+    status: data.status as TransportStatus,
     createdAt: data.created_at,
     updatedAt: data.updated_at
   };
@@ -532,45 +520,65 @@ export async function updateStudentTransport(id: string, assignment: Partial<Omi
 
   // Check if route is being changed
   if (assignment.routeId && assignment.routeId !== currentAssignment.route_id) {
-    // Decrease count in old route
-    const { error: oldRouteError } = await supabase.rpc("decrement_route_students", {
-      route_id: currentAssignment.route_id
-    });
-
-    if (oldRouteError) {
-      throw oldRouteError;
+    // Decrease count in old route manually
+    const { data: oldRouteData } = await supabase
+      .from("education_transport_routes")
+      .select("current_students")
+      .eq("id", currentAssignment.route_id)
+      .single();
+    
+    if (oldRouteData) {
+      await supabase
+        .from("education_transport_routes")
+        .update({ current_students: Math.max(0, oldRouteData.current_students - 1) })
+        .eq("id", currentAssignment.route_id);
     }
 
-    // Increase count in new route
-    const { error: newRouteError } = await supabase.rpc("increment_route_students", {
-      route_id: assignment.routeId
-    });
-
-    if (newRouteError) {
-      throw newRouteError;
+    // Increase count in new route manually
+    const { data: newRouteData } = await supabase
+      .from("education_transport_routes")
+      .select("current_students")
+      .eq("id", assignment.routeId)
+      .single();
+    
+    if (newRouteData) {
+      await supabase
+        .from("education_transport_routes")
+        .update({ current_students: newRouteData.current_students + 1 })
+        .eq("id", assignment.routeId);
     }
   }
 
   // Check if status is changing from active to inactive
   if (currentAssignment.status === 'active' && assignment.status && assignment.status !== 'active') {
-    // Decrease count in route
-    const { error: decrementError } = await supabase.rpc("decrement_route_students", {
-      route_id: currentAssignment.route_id
-    });
-
-    if (decrementError) {
-      throw decrementError;
+    // Decrease count in route manually
+    const { data: routeData } = await supabase
+      .from("education_transport_routes")
+      .select("current_students")
+      .eq("id", currentAssignment.route_id)
+      .single();
+    
+    if (routeData) {
+      await supabase
+        .from("education_transport_routes")
+        .update({ current_students: Math.max(0, routeData.current_students - 1) })
+        .eq("id", currentAssignment.route_id);
     }
   }
   // Check if status is changing from inactive to active
   else if (currentAssignment.status !== 'active' && assignment.status === 'active') {
-    // Increase count in route
-    const { error: incrementError } = await supabase.rpc("increment_route_students", {
-      route_id: assignment.routeId || currentAssignment.route_id
-    });
-
-    if (incrementError) {
-      throw incrementError;
+    // Increase count in route manually
+    const { data: routeData } = await supabase
+      .from("education_transport_routes")
+      .select("current_students")
+      .eq("id", assignment.routeId || currentAssignment.route_id)
+      .single();
+    
+    if (routeData) {
+      await supabase
+        .from("education_transport_routes")
+        .update({ current_students: routeData.current_students + 1 })
+        .eq("id", assignment.routeId || currentAssignment.route_id);
     }
   }
 
@@ -606,7 +614,7 @@ export async function updateStudentTransport(id: string, assignment: Partial<Omi
     schoolId: data.school_id,
     startDate: data.start_date,
     endDate: data.end_date,
-    status: data.status,
+    status: data.status as TransportStatus,
     createdAt: data.created_at,
     updatedAt: data.updated_at
   };
@@ -616,9 +624,10 @@ export async function updateStudentTransport(id: string, assignment: Partial<Omi
  * Create a transport request (new, change, complaint, cancellation)
  */
 export async function createTransportRequest(request: Omit<TransportRequest, "id" | "protocolNumber" | "createdAt" | "updatedAt">): Promise<TransportRequest> {
+  // Note: protocolNumber is set by a database trigger
   const { data, error } = await supabase
     .from("education_transport_requests")
-    .insert([{
+    .insert({
       request_type: request.requestType,
       student_id: request.studentId,
       requester_id: request.requesterId,
@@ -632,7 +641,7 @@ export async function createTransportRequest(request: Omit<TransportRequest, "id
       complaint_type: request.complaintType,
       description: request.description,
       status: request.status
-    }])
+    })
     .select()
     .single();
 
@@ -643,7 +652,7 @@ export async function createTransportRequest(request: Omit<TransportRequest, "id
   return {
     id: data.id,
     protocolNumber: data.protocol_number,
-    requestType: data.request_type,
+    requestType: data.request_type as TransportRequestType,
     studentId: data.student_id,
     requesterId: data.requester_id,
     requesterName: data.requester_name,
@@ -655,7 +664,7 @@ export async function createTransportRequest(request: Omit<TransportRequest, "id
     returnLocation: data.return_location,
     complaintType: data.complaint_type,
     description: data.description,
-    status: data.status,
+    status: data.status as TransportRequestStatus,
     resolvedBy: data.resolved_by,
     resolutionDate: data.resolution_date,
     resolutionNotes: data.resolution_notes,
@@ -669,7 +678,7 @@ export async function createTransportRequest(request: Omit<TransportRequest, "id
  */
 export async function updateTransportRequestStatus(
   id: string,
-  status: TransportRequest['status'],
+  status: TransportRequestStatus,
   resolvedBy: string,
   resolutionNotes?: string
 ): Promise<TransportRequest> {
@@ -693,7 +702,7 @@ export async function updateTransportRequestStatus(
   return {
     id: data.id,
     protocolNumber: data.protocol_number,
-    requestType: data.request_type,
+    requestType: data.request_type as TransportRequestType,
     studentId: data.student_id,
     requesterId: data.requester_id,
     requesterName: data.requester_name,
@@ -705,7 +714,7 @@ export async function updateTransportRequestStatus(
     returnLocation: data.return_location,
     complaintType: data.complaint_type,
     description: data.description,
-    status: data.status,
+    status: data.status as TransportRequestStatus,
     resolvedBy: data.resolved_by,
     resolutionDate: data.resolution_date,
     resolutionNotes: data.resolution_notes,
