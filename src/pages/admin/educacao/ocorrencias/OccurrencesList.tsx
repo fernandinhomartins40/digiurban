@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,9 +55,9 @@ export default function OccurrencesList({
 }: OccurrencesListProps) {
   const [students, setStudents] = useState<Student[]>([]);
   const [schools, setSchools] = useState<School[]>([]);
-  const [selectedStudentId, setSelectedStudentId] = useState("");
-  const [selectedSchoolId, setSelectedSchoolId] = useState("");
-  const [selectedType, setSelectedType] = useState<OccurrenceType | "">("");
+  const [selectedStudentId, setSelectedStudentId] = useState("all");
+  const [selectedSchoolId, setSelectedSchoolId] = useState("all");
+  const [selectedType, setSelectedType] = useState<OccurrenceType | "all">("all");
   const [date, setDate] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
@@ -88,15 +89,15 @@ export default function OccurrencesList({
   const handleSearch = () => {
     const params: OccurrencesRequestParams = {};
     
-    if (selectedStudentId) {
+    if (selectedStudentId && selectedStudentId !== "all") {
       params.studentId = selectedStudentId;
     }
     
-    if (selectedSchoolId) {
+    if (selectedSchoolId && selectedSchoolId !== "all") {
       params.schoolId = selectedSchoolId;
     }
     
-    if (selectedType) {
+    if (selectedType && selectedType !== "all") {
       params.occurrenceType = selectedType;
     }
     
@@ -112,9 +113,9 @@ export default function OccurrencesList({
   };
 
   const handleClearFilters = () => {
-    setSelectedStudentId("");
-    setSelectedSchoolId("");
-    setSelectedType("");
+    setSelectedStudentId("all");
+    setSelectedSchoolId("all");
+    setSelectedType("all");
     setDate({
       from: undefined,
       to: undefined
@@ -176,7 +177,7 @@ export default function OccurrencesList({
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               {students.map((student) => (
                 <SelectItem key={student.id} value={student.id}>
                   {student.name}
@@ -196,7 +197,7 @@ export default function OccurrencesList({
               <SelectValue placeholder="Todas" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
               {schools.map((school) => (
                 <SelectItem key={school.id} value={school.id}>
                   {school.name}
@@ -210,13 +211,13 @@ export default function OccurrencesList({
           <Label htmlFor="type">Tipo de Ocorrência</Label>
           <Select
             value={selectedType}
-            onValueChange={(value) => setSelectedType(value as OccurrenceType | "")}
+            onValueChange={(value) => setSelectedType(value as OccurrenceType | "all")}
           >
             <SelectTrigger id="type">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="discipline">Disciplina</SelectItem>
               <SelectItem value="health">Saúde</SelectItem>
               <SelectItem value="performance">Desempenho</SelectItem>
