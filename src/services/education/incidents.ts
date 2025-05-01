@@ -4,7 +4,7 @@ import { SchoolIncident } from "@/types/education";
 
 export const fetchIncidents = async (schoolId?: string): Promise<SchoolIncident[]> => {
   let query = supabase
-    .from('education_incidents')
+    .from('education_occurrences')
     .select('*')
     .order('created_at', { ascending: false });
 
@@ -19,12 +19,22 @@ export const fetchIncidents = async (schoolId?: string): Promise<SchoolIncident[
     throw error;
   }
 
-  return data as SchoolIncident[];
+  return data.map(item => ({
+    id: item.id,
+    school_id: item.school_id,
+    school_name: '', // This would need to be joined with school data
+    date: item.occurrence_date,
+    incident_type: item.occurrence_type,
+    description: item.description,
+    severity: item.severity || 'medium',
+    status: item.resolution_date ? 'resolved' : 'open',
+    created_at: item.created_at
+  })) as SchoolIncident[];
 };
 
 export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => {
   const { data, error } = await supabase
-    .from('education_incidents')
+    .from('education_occurrences')
     .select('*')
     .eq('id', id)
     .maybeSingle();
@@ -38,13 +48,32 @@ export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => 
     throw new Error('Incident not found');
   }
 
-  return data as SchoolIncident;
+  return {
+    id: data.id,
+    school_id: data.school_id,
+    school_name: '', // This would need to be joined with school data
+    date: data.occurrence_date,
+    incident_type: data.occurrence_type,
+    description: data.description,
+    severity: data.severity || 'medium',
+    status: data.resolution_date ? 'resolved' : 'open',
+    created_at: data.created_at
+  } as SchoolIncident;
 };
 
 export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'created_at'>): Promise<SchoolIncident> => {
+  const occurrenceData = {
+    school_id: incident.school_id,
+    occurrence_date: incident.date,
+    occurrence_type: incident.incident_type,
+    description: incident.description,
+    severity: incident.severity,
+    reported_by_name: 'System', // Default value
+  };
+
   const { data, error } = await supabase
-    .from('education_incidents')
-    .insert([incident])
+    .from('education_occurrences')
+    .insert([occurrenceData])
     .select()
     .single();
 
@@ -53,13 +82,30 @@ export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'crea
     throw error;
   }
 
-  return data as SchoolIncident;
+  return {
+    id: data.id,
+    school_id: data.school_id,
+    school_name: incident.school_name,
+    date: data.occurrence_date,
+    incident_type: data.occurrence_type,
+    description: data.description,
+    severity: data.severity || 'medium',
+    status: 'open',
+    created_at: data.created_at
+  } as SchoolIncident;
 };
 
 export const updateIncident = async (id: string, updates: Partial<SchoolIncident>): Promise<SchoolIncident> => {
+  const updateData: any = {};
+  
+  if (updates.date) updateData.occurrence_date = updates.date;
+  if (updates.incident_type) updateData.occurrence_type = updates.incident_type;
+  if (updates.description) updateData.description = updates.description;
+  if (updates.severity) updateData.severity = updates.severity;
+  
   const { data, error } = await supabase
-    .from('education_incidents')
-    .update(updates)
+    .from('education_occurrences')
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
@@ -69,13 +115,27 @@ export const updateIncident = async (id: string, updates: Partial<SchoolIncident
     throw error;
   }
 
-  return data as SchoolIncident;
+  return {
+    id: data.id,
+    school_id: data.school_id,
+    school_name: updates.school_name || '',
+    date: data.occurrence_date,
+    incident_type: data.occurrence_type,
+    description: data.description,
+    severity: data.severity || 'medium',
+    status: data.resolution_date ? 'resolved' : 'open',
+    created_at: data.created_at
+  } as SchoolIncident;
 };
 
 export const updateIncidentStatus = async (id: string, status: SchoolIncident['status']): Promise<SchoolIncident> => {
+  const updateData: any = {
+    resolution_date: status === 'resolved' ? new Date().toISOString() : null
+  };
+
   const { data, error } = await supabase
-    .from('education_incidents')
-    .update({ status })
+    .from('education_occurrences')
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
@@ -85,5 +145,15 @@ export const updateIncidentStatus = async (id: string, status: SchoolIncident['s
     throw error;
   }
 
-  return data as SchoolIncident;
+  return {
+    id: data.id,
+    school_id: data.school_id,
+    school_name: '',
+    date: data.occurrence_date,
+    incident_type: data.occurrence_type,
+    description: data.description,
+    severity: data.severity || 'medium',
+    status: data.resolution_date ? 'resolved' : 'open',
+    created_at: data.created_at
+  } as SchoolIncident;
 };

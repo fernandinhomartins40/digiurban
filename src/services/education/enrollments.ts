@@ -5,7 +5,7 @@ import { Enrollment } from "@/types/education";
 export const fetchEnrollments = async (): Promise<Enrollment[]> => {
   const { data, error } = await supabase
     .from('education_enrollments')
-    .select('*')
+    .select('*, education_students(name), education_schools(name)')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -13,13 +13,20 @@ export const fetchEnrollments = async (): Promise<Enrollment[]> => {
     throw error;
   }
 
-  return data as Enrollment[];
+  // Transform the data to match our Enrollment type with student_name and school_name
+  const enrollments = data.map(item => ({
+    ...item,
+    student_name: item.education_students?.name || '',
+    school_name: item.education_schools?.name || '',
+  }));
+
+  return enrollments as Enrollment[];
 };
 
 export const fetchEnrollmentById = async (id: string): Promise<Enrollment> => {
   const { data, error } = await supabase
     .from('education_enrollments')
-    .select('*')
+    .select('*, education_students(name), education_schools(name)')
     .eq('id', id)
     .maybeSingle();
 
@@ -32,13 +39,20 @@ export const fetchEnrollmentById = async (id: string): Promise<Enrollment> => {
     throw new Error('Enrollment not found');
   }
 
-  return data as Enrollment;
+  // Transform to include student_name and school_name
+  const enrollment = {
+    ...data,
+    student_name: data.education_students?.name || '',
+    school_name: data.education_schools?.name || '',
+  };
+
+  return enrollment as Enrollment;
 };
 
-export const createEnrollment = async (enrollment: Omit<Enrollment, 'id' | 'protocol_number' | 'created_at'>): Promise<Enrollment> => {
+export const createEnrollment = async (enrollmentData: Omit<Enrollment, 'id' | 'protocol_number' | 'created_at' | 'updated_at' | 'student_name' | 'school_name'>): Promise<Enrollment> => {
   const { data, error } = await supabase
     .from('education_enrollments')
-    .insert([enrollment])
+    .insert([enrollmentData])
     .select()
     .single();
 

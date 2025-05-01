@@ -89,9 +89,9 @@ const PlaceholderCard = ({ type, name }: { type: 'school' | 'cmei', name: string
         <div className="flex items-start gap-4">
           <div className={`p-2 rounded-md ${type === 'school' ? 'bg-blue-100' : 'bg-green-100'}`}>
             {type === 'school' ? (
-              <School className={`h-8 w-8 ${type === 'school' ? 'text-blue-500' : 'text-green-500'}`} />
+              <School className="h-8 w-8 text-blue-500" />
             ) : (
-              <Building className={`h-8 w-8 ${type === 'school' ? 'text-blue-500' : 'text-green-500'}`} />
+              <Building className="h-8 w-8 text-green-500" />
             )}
           </div>
           <div className="space-y-1">

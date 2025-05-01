@@ -39,13 +39,23 @@ export interface Enrollment {
   id: string;
   protocol_number: string;
   student_id: string;
-  student_name: string;
-  school_id: string;
-  school_name: string;
-  grade: string;
+  requested_school_id: string;
+  assigned_school_id?: string;
+  class_id?: string;
   school_year: string;
+  request_date: string;
+  decision_date?: string;
+  decision_by?: string;
+  special_request?: string;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
+  updated_at: string;
+  notes?: string;
+  justification?: string;
+  // Frontend display properties that might be joined from other tables
+  student_name?: string;
+  school_name?: string;
+  grade?: string;
 }
 
 export interface TransportRequest {
