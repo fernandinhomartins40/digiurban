@@ -29,7 +29,7 @@ import ProfilePage from "./pages/admin/profile";
 import FinancasIndexPage from "./pages/admin/financas";
 import ServicosIndexPage from "./pages/admin/servicos";
 import UsersPage from "./pages/admin/administracao/users";
-import MayorDashboard from "./pages/admin/gabinete/Dashboard";
+import GabineteIndexPage from "./pages/admin/gabinete/index";
 import AppointmentScheduler from "./pages/admin/gabinete/AppointmentScheduler";
 import DirectRequests from "./pages/admin/gabinete/DirectRequests";
 import PublicPoliciesPage from "./pages/admin/gabinete/PublicPolicies";
@@ -38,6 +38,7 @@ import MeioAmbienteIndexPage from "./pages/admin/meioambiente";
 import HRRequestsPage from "./pages/admin/administracao/HRRequests";
 import PurchaseRequestsPage from "./pages/admin/financas/PurchaseRequests";
 import MailDocumentsPage from "./pages/admin/correio/MailDocuments";
+import ComprasPage from "./pages/admin/administracao/compras/index";
 
 function App() {
   return (
@@ -61,7 +62,7 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
 
           {/* Gabinete routes */}
-          <Route path="admin/gabinete" element={<MayorDashboard />} />
+          <Route path="admin/gabinete" element={<GabineteIndexPage />} />
           <Route path="admin/gabinete/agendamentos" element={<AppointmentScheduler />} />
           <Route path="admin/gabinete/solicitacoes" element={<DirectRequests />} />
           <Route path="admin/gabinete/politicas" element={<PublicPoliciesPage />} />
@@ -85,6 +86,7 @@ function App() {
           <Route path="admin/administracao" element={<AdministracaoIndexPage />} />
           <Route path="admin/administracao/users" element={<UsersPage />} />
           <Route path="admin/administracao/hr-requests" element={<HRRequestsPage />} />
+          <Route path="admin/administracao/compras" element={<ComprasPage />} />
 
           {/* Serviços routes */}
           <Route path="admin/servicos" element={<ServicosIndexPage />} />
