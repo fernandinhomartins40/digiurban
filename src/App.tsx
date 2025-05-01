@@ -29,7 +29,7 @@ import ProfilePage from "./pages/admin/profile";
 import FinancasIndexPage from "./pages/admin/financas";
 import ServicosIndexPage from "./pages/admin/servicos";
 import UsersPage from "./pages/admin/administracao/users";
-import GabineteIndexPage from "./pages/admin/gabinete/index";
+import MayorDashboard from "./pages/admin/gabinete/Dashboard";
 import AppointmentScheduler from "./pages/admin/gabinete/AppointmentScheduler";
 import DirectRequests from "./pages/admin/gabinete/DirectRequests";
 import PublicPoliciesPage from "./pages/admin/gabinete/PublicPolicies";
@@ -61,7 +61,7 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
 
           {/* Gabinete routes */}
-          <Route path="admin/gabinete" element={<GabineteIndexPage />} />
+          <Route path="admin/gabinete" element={<MayorDashboard />} />
           <Route path="admin/gabinete/agendamentos" element={<AppointmentScheduler />} />
           <Route path="admin/gabinete/solicitacoes" element={<DirectRequests />} />
           <Route path="admin/gabinete/politicas" element={<PublicPoliciesPage />} />
