@@ -6,10 +6,22 @@ export * from './students';
 export * from './teachers';
 export * from './enrollment';
 export * from './transport';
-export * from './meals';
+
+// Export from meals without the conflicting exports that are now in diets
+import * as MealsExports from './meals';
+export const {
+  createMealMenu,
+  getMealMenus,
+  getMealMenuById,
+  updateMealMenu,
+  deleteMealMenu,
+  // Excluding the special diet functions as they're now in diets.ts
+} = MealsExports;
+
+// Explicitly export from other modules
 export * from './occurrences';
 export * from './grades';
-export * from './diets';
+export * from './diets'; // Contains special diet functions
 export * from './feedback';
 export * from './menus';
 
