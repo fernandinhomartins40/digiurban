@@ -4,26 +4,28 @@ import { SchoolIncident } from "@/types/education";
 import { handleServiceError, checkDataExists, mapIncidentFromDB, mapIncidentToDB } from "./utils";
 
 export const fetchIncidents = async (schoolId?: string): Promise<SchoolIncident[]> => {
-  let query = supabase
-    .from('education_occurrences')
-    .select(`
-      *,
-      education_schools!inner(name),
-      education_students!inner(name)
-    `)
-    .order('created_at', { ascending: false });
-  
-  if (schoolId) {
-    query = query.eq('school_id', schoolId);
-  }
+  try {
+    let query = supabase
+      .from('education_occurrences')
+      .select(`
+        *,
+        education_schools!inner(name),
+        education_students!inner(name)
+      `)
+      .order('created_at', { ascending: false });
+    
+    if (schoolId) {
+      query = query.eq('school_id', schoolId);
+    }
 
-  const { data, error } = await query;
+    const { data, error } = await query;
 
-  if (error) {
+    if (error) throw error;
+
+    return data.map(item => mapIncidentFromDB(item));
+  } catch (error) {
     return handleServiceError(error, 'fetching incidents');
   }
-
-  return data.map(item => mapIncidentFromDB(item));
 };
 
 export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => {
@@ -44,7 +46,7 @@ export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => 
   return checkDataExists(mapIncidentFromDB(data), 'Incident');
 };
 
-export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'created_at' | 'updated_at' | 'school_name'>): Promise<SchoolIncident> => {
+export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'created_at' | 'updated_at' | 'school_name' | 'student_name'>): Promise<SchoolIncident> => {
   // Map from our interface to DB structure
   const dbData = mapIncidentToDB(incident);
 
@@ -89,7 +91,7 @@ export const updateIncident = async (id: string, updates: Partial<SchoolIncident
 };
 
 export const updateIncidentStatus = async (id: string, status: SchoolIncident['status'], resolution?: string, resolvedBy?: string): Promise<SchoolIncident> => {
-  const updates: any = {};
+  const updates: Record<string, any> = {};
   
   if (status === 'resolved') {
     updates.resolution_date = new Date().toISOString();

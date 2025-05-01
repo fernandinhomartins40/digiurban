@@ -1,19 +1,18 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Student, Teacher } from "@/types/education";
-import { handleServiceError, checkDataExists, mapTeacherFromDB, mapTeacherToDB } from "./utils";
+import { handleServiceError, checkDataExists, mapTeacherFromDB, mapTeacherToDB, optimizedFetch } from "./utils";
 
 export const fetchStudents = async (): Promise<Student[]> => {
-  const { data, error } = await supabase
-    .from('education_students')
-    .select('*')
-    .order('name');
-
-  if (error) {
+  try {
+    return await optimizedFetch<Student>(
+      'education_students',
+      '*',
+      'name'
+    );
+  } catch (error) {
     return handleServiceError(error, 'fetching students');
   }
-
-  return data as Student[];
 };
 
 export const fetchStudentById = async (id: string): Promise<Student> => {
@@ -61,16 +60,17 @@ export const updateStudent = async (id: string, updates: Partial<Student>): Prom
 };
 
 export const fetchTeachers = async (): Promise<Teacher[]> => {
-  const { data, error } = await supabase
-    .from('education_teachers')
-    .select('*')
-    .order('name');
-
-  if (error) {
+  try {
+    const data = await optimizedFetch<any>(
+      'education_teachers',
+      '*',
+      'name'
+    );
+    
+    return data.map(teacher => mapTeacherFromDB(teacher));
+  } catch (error) {
     return handleServiceError(error, 'fetching teachers');
   }
-
-  return data.map(teacher => mapTeacherFromDB(teacher));
 };
 
 export const fetchTeacherById = async (id: string): Promise<Teacher> => {

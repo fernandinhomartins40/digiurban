@@ -1,28 +1,30 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { SchoolMeal } from "@/types/education";
-import { handleServiceError, checkDataExists, mapMealFromDB, mapMealToDB } from "./utils";
+import { handleServiceError, checkDataExists, mapMealFromDB, mapMealToDB, optimizedFetch } from "./utils";
 
 export const fetchSchoolMeals = async (schoolId?: string): Promise<SchoolMeal[]> => {
-  let query = supabase
-    .from('education_meal_menus')
-    .select(`
-      *,
-      education_schools!inner(name)
-    `)
-    .order('active_from', { ascending: false });
-  
-  if (schoolId) {
-    query = query.eq('school_id', schoolId);
-  }
+  try {
+    let query = supabase
+      .from('education_meal_menus')
+      .select(`
+        *,
+        education_schools!inner(name)
+      `)
+      .order('active_from', { ascending: false });
+    
+    if (schoolId) {
+      query = query.eq('school_id', schoolId);
+    }
 
-  const { data, error } = await query;
+    const { data, error } = await query;
 
-  if (error) {
+    if (error) throw error;
+
+    return data.map(item => mapMealFromDB(item));
+  } catch (error) {
     return handleServiceError(error, 'fetching school meals');
   }
-
-  return data.map(item => mapMealFromDB(item));
 };
 
 export const fetchMealById = async (id: string): Promise<SchoolMeal> => {

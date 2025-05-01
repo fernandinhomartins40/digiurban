@@ -1,19 +1,20 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { School } from "@/types/education";
-import { handleServiceError, checkDataExists, mapSchoolFromDB, mapSchoolToDB } from "./utils";
+import { handleServiceError, checkDataExists, mapSchoolFromDB, mapSchoolToDB, optimizedFetch } from "./utils";
 
 export const fetchSchools = async (): Promise<School[]> => {
-  const { data, error } = await supabase
-    .from('education_schools')
-    .select('*')
-    .order('name');
-
-  if (error) {
+  try {
+    const data = await optimizedFetch<any>(
+      'education_schools',
+      '*',
+      'name'
+    );
+    
+    return data.map(school => mapSchoolFromDB(school));
+  } catch (error) {
     return handleServiceError(error, 'fetching schools');
   }
-
-  return data.map(school => mapSchoolFromDB(school));
 };
 
 export const fetchSchoolById = async (id: string): Promise<School> => {

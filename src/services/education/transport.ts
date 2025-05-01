@@ -4,20 +4,22 @@ import { TransportRequest } from "@/types/education";
 import { handleServiceError, checkDataExists, mapTransportRequestFromDB, mapTransportRequestToDB } from "./utils";
 
 export const fetchTransportRequests = async (): Promise<TransportRequest[]> => {
-  const { data, error } = await supabase
-    .from('education_transport_requests')
-    .select(`
-      *,
-      education_students(name),
-      education_schools(name)
-    `)
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('education_transport_requests')
+      .select(`
+        *,
+        education_students(name),
+        education_schools(name)
+      `)
+      .order('created_at', { ascending: false });
 
-  if (error) {
+    if (error) throw error;
+
+    return data.map(item => mapTransportRequestFromDB(item));
+  } catch (error) {
     return handleServiceError(error, 'fetching transport requests');
   }
-
-  return data.map(item => mapTransportRequestFromDB(item));
 };
 
 export const fetchTransportRequestById = async (id: string): Promise<TransportRequest> => {
