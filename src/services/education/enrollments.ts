@@ -76,10 +76,10 @@ export const createEnrollment = async (enrollmentData: Omit<Enrollment, 'id' | '
     justification: enrollmentData.justification
   };
 
-  // Use insert options parameter to tell the client that protocol_number is handled server-side
+  // Use type assertion for protocol_number which is handled by a database trigger
   const { data, error } = await supabase
     .from('education_enrollments')
-    .insert(dbData, { defaultToNull: false })
+    .insert(dbData as any, { defaultToNull: false })
     .select()
     .single();
 
