@@ -87,6 +87,36 @@ export default function CrasCreasPage() {
     setShowCenterDialog(true);
   };
 
+  const handleDeleteCenter = (centerId: string) => {
+    // Implementation for deleting a center would go here
+    console.log("Delete center:", centerId);
+    toast({
+      title: "Não implementado",
+      description: "A função de excluir centros ainda não foi implementada.",
+      variant: "default",
+    });
+  };
+
+  const handleViewAttendance = (attendanceId: string) => {
+    // Implementation for viewing attendance details would go here
+    console.log("View attendance:", attendanceId);
+    toast({
+      title: "Não implementado",
+      description: "A função de visualizar detalhes de atendimentos ainda não foi implementada.",
+      variant: "default",
+    });
+  };
+
+  const handleEditAttendance = (attendance: SocialAttendance) => {
+    // Implementation for editing attendance would go here
+    console.log("Edit attendance:", attendance);
+    toast({
+      title: "Não implementado",
+      description: "A função de editar atendimentos ainda não foi implementada.",
+      variant: "default",
+    });
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <Helmet>
@@ -132,7 +162,7 @@ export default function CrasCreasPage() {
                 centers={centers}
                 loading={loadingCenters}
                 onEdit={handleEditCenter}
-                onDelete={() => {}}
+                onDelete={(center) => handleDeleteCenter(center.id)}
               />
             </TabsContent>
 
@@ -140,6 +170,8 @@ export default function CrasCreasPage() {
               <AttendancesTable
                 attendances={attendances}
                 loading={loadingAttendances}
+                onView={(attendance) => handleViewAttendance(attendance.id)}
+                onEdit={handleEditAttendance}
               />
             </TabsContent>
           </CardContent>

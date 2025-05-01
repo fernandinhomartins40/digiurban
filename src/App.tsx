@@ -1,18 +1,18 @@
 
 import {
-  createBrowserRouter,
   RouterProvider,
   Route,
   createRoutesFromElements,
+  createBrowserRouter,
 } from "react-router-dom";
-import { MainLayout } from "./components/layout/MainLayout";
-import { AuthLayout } from "./components/layout/AuthLayout";
-import LoginPage from "./pages/auth/Login";
-import RegisterPage from "./pages/auth/Register";
-import ForgotPasswordPage from "./pages/auth/ForgotPassword";
-import ResetPasswordPage from "./pages/auth/ResetPassword";
-import DashboardPage from "./pages/admin/Dashboard";
-import RequireAuth from "./components/auth/RequireAuth";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { AuthLayout } from "@/components/layout/AuthLayout";
+import LoginPage from "@/pages/auth/Login";
+import RegisterPage from "@/pages/auth/Register";
+import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
+import ResetPasswordPage from "@/pages/auth/ResetPassword";
+import DashboardPage from "@/pages/admin/Dashboard";
+import RequireAuth from "@/components/auth/RequireAuth";
 import AssistenciaIndexPage from './pages/admin/assistencia/index';
 import BenefitsPage from './pages/admin/assistencia/beneficios/index';
 import SocialProgramsPage from './pages/admin/assistencia/programas/index';
@@ -22,20 +22,20 @@ import EducacaoIndexPage from "./pages/admin/educacao";
 import SaudeIndexPage from "./pages/admin/saude";
 import AdministracaoIndexPage from "./pages/admin/administracao";
 import TFDIndexPage from "./pages/admin/saude/tfd";
+import ObrasIndexPage from "./pages/admin/obras";
+import CorreioIndexPage from "./pages/admin/correio";
+import ChatIndexPage from "./pages/admin/chat";
+import ProfilePage from "./pages/admin/profile";
+import FinancasIndexPage from "./pages/admin/financas";
+import ServicosIndexPage from "./pages/admin/servicos";
+import UsersPage from "./pages/admin/administracao/users";
 
 // Create placeholder components for the missing imports
 const GabineteIndexPage = () => <div>Gabinete Dashboard</div>;
 const DirectRequests = () => <div>Direct Requests</div>;
 const PublicPoliciesPage = () => <div>Public Policies Page</div>;
 const StrategicProgramsPage = () => <div>Strategic Programs Page</div>;
-const ServicosIndexPage = () => <div>Serviços Dashboard</div>;
-const FinancasIndexPage = () => <div>Finanças Dashboard</div>;
-const ObrasIndexPage = () => <div>Obras Dashboard</div>;
 const MeioAmbienteIndexPage = () => <div>Meio Ambiente Dashboard</div>;
-const CorreioIndexPage = () => <div>Correio Dashboard</div>;
-const ChatIndexPage = () => <div>Chat Dashboard</div>;
-const ProfilePage = () => <div>Profile Page</div>;
-const UsersPage = () => <div>Users Management</div>;
 const PurchaseRequestsPage = () => <div>Purchase Requests</div>;
 const HRRequestsPage = () => <div>HR Requests</div>;
 const MailDocumentsPage = () => <div>Mail Documents</div>;
