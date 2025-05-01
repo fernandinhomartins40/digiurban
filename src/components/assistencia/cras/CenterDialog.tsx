@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,6 +46,8 @@ const formSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 interface CenterDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -63,7 +64,7 @@ export default function CenterDialog({
   const { toast } = useToast();
   const isEditing = !!center;
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: center?.name || "",
@@ -109,7 +110,7 @@ export default function CenterDialog({
     }
   }, [center, form]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     try {
       if (isEditing && center) {
         await updateAssistanceCenter(center.id, values);
@@ -118,7 +119,18 @@ export default function CenterDialog({
           description: "Centro de assistência atualizado com sucesso",
         });
       } else {
-        await createAssistanceCenter(values);
+        await createAssistanceCenter({
+          name: values.name,
+          type: values.type,
+          address: values.address,
+          neighborhood: values.neighborhood,
+          city: values.city,
+          state: values.state,
+          phone: values.phone,
+          email: values.email,
+          coordinator_name: values.coordinator_name,
+          is_active: values.is_active,
+        });
         toast({
           title: "Sucesso",
           description: "Centro de assistência cadastrado com sucesso",

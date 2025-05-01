@@ -1,10 +1,9 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { EmergencyBenefit } from "@/types/assistance";
+import { EmergencyBenefit, BenefitStatus } from "@/types/assistance";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -43,7 +42,7 @@ const formSchema = z.object({
   reason: z.string().min(10, "Motivo deve ter pelo menos 10 caracteres"),
   benefit_type: z.string().min(2, "Tipo de benefício é obrigatório"),
   comments: z.string().optional(),
-  status: z.string(),
+  status: z.enum(['pending', 'approved', 'delivering', 'completed', 'rejected']),
 });
 
 interface BenefitDialogProps {
@@ -119,7 +118,7 @@ export default function BenefitDialog({
           citizen_id: values.citizen_id,
           reason: values.reason,
           benefit_type: values.benefit_type,
-          status: values.status as any,
+          status: values.status,
           comments: values.comments,
           request_date: new Date().toISOString(),
         });

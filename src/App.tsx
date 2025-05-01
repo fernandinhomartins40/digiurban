@@ -1,37 +1,38 @@
+
 import {
   createBrowserRouter,
   RouterProvider,
   Route,
   createRoutesFromElements,
 } from "react-router-dom";
-import { MainLayout } from "./components/layout/MainLayout";
-import { AuthLayout } from "./components/layout/AuthLayout";
-import LoginPage from "./pages/auth/Login";
-import RegisterPage from "./pages/auth/Register";
-import ForgotPasswordPage from "./pages/auth/ForgotPassword";
-import ResetPasswordPage from "./pages/auth/ResetPassword";
-import DashboardPage from "./pages/admin/Dashboard";
-import RequireAuth from "./components/auth/RequireAuth";
-import GabineteIndexPage from "./pages/admin/gabinete";
-import DirectRequests from "./pages/admin/gabinete/DirectRequests";
-import EducacaoIndexPage from "./pages/admin/educacao";
-import SaudeIndexPage from "./pages/admin/saude";
-import AdministracaoIndexPage from "./pages/admin/administracao";
-import ServicosIndexPage from "./pages/admin/servicos";
-import FinancasIndexPage from "./pages/admin/financas";
-import ObrasIndexPage from "./pages/admin/obras";
-import MeioAmbienteIndexPage from "./pages/admin/meioambiente";
-import CorreioIndexPage from "./pages/admin/correio";
-import ChatIndexPage from "./pages/admin/chat";
-import ProfilePage from "./pages/admin/profile";
-import UsersPage from "./pages/admin/administracao/users";
-import PublicPoliciesPage from "./pages/admin/gabinete/PublicPolicies";
-import StrategicProgramsPage from "./pages/admin/gabinete/StrategicPrograms";
-import PurchaseRequestsPage from "./pages/admin/financas/PurchaseRequests";
-import HRRequestsPage from "./pages/admin/administracao/HRRequests";
-import MailDocumentsPage from "./pages/admin/correio/MailDocuments";
-import TFDIndexPage from "./pages/admin/saude/tfd";
-import AssistanceIndexPage from './pages/admin/assistencia/index';
+import { MainLayout } from "@/components/layout/MainLayout";
+import { AuthLayout } from "@/components/layout/AuthLayout";
+import LoginPage from "@/pages/auth/Login";
+import RegisterPage from "@/pages/auth/Register";
+import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
+import ResetPasswordPage from "@/pages/auth/ResetPassword";
+import DashboardPage from "@/pages/admin/Dashboard";
+import RequireAuth from "@/components/auth/RequireAuth";
+import GabineteIndexPage from "@/pages/admin/gabinete";
+import DirectRequests from "@/pages/admin/gabinete/DirectRequests";
+import EducacaoIndexPage from "@/pages/admin/educacao";
+import SaudeIndexPage from "@/pages/admin/saude";
+import AdministracaoIndexPage from "@/pages/admin/administracao";
+import ServicosIndexPage from "@/pages/admin/servicos";
+import FinancasIndexPage from "@/pages/admin/financas";
+import ObrasIndexPage from "@/pages/admin/obras";
+import MeioAmbienteIndexPage from "@/pages/admin/meioambiente";
+import CorreioIndexPage from "@/pages/admin/correio";
+import ChatIndexPage from "@/pages/admin/chat";
+import ProfilePage from "@/pages/admin/profile";
+import UsersPage from "@/pages/admin/administracao/users";
+import PublicPoliciesPage from "@/pages/admin/gabinete/PublicPolicies";
+import StrategicProgramsPage from "@/pages/admin/gabinete/StrategicPrograms";
+import PurchaseRequestsPage from "@/pages/admin/financas/PurchaseRequests";
+import HRRequestsPage from "@/pages/admin/administracao/HRRequests";
+import MailDocumentsPage from "@/pages/admin/correio/MailDocuments";
+import TFDIndexPage from "@/pages/admin/saude/tfd";
+import AssistenciaIndexPage from './pages/admin/assistencia/index';
 import BenefitsPage from './pages/admin/assistencia/beneficios/index';
 import SocialProgramsPage from './pages/admin/assistencia/programas/index';
 import CrasCreasPage from './pages/admin/assistencia/cras/index';

@@ -13,6 +13,8 @@ import {
   FamilyMonitoringPlan,
   FamilyVisit,
   VisitAttachment,
+  BenefitStatus,
+  AttendanceType,
 } from "@/types/assistance";
 
 // Emergency Benefits
