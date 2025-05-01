@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -211,10 +212,10 @@ export default function PendingEnrollmentsTab() {
                 <TableRow key={enrollment.id}>
                   <TableCell>{enrollment.protocolNumber}</TableCell>
                   <TableCell>
-                    {enrollment.studentName || enrollment.studentId}
+                    {enrollment.studentId}
                   </TableCell>
                   <TableCell>
-                    {enrollment.requestedSchoolName || enrollment.requestedSchoolId}
+                    {enrollment.requestedSchoolId}
                   </TableCell>
                   <TableCell>{format(new Date(enrollment.requestDate), 'dd/MM/yyyy')}</TableCell>
                   <TableCell>

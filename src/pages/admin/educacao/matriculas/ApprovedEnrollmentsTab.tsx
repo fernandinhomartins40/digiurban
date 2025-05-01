@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -196,10 +197,10 @@ export default function ApprovedEnrollmentsTab() {
                 <TableRow key={enrollment.id}>
                   <TableCell>{enrollment.protocolNumber}</TableCell>
                   <TableCell>
-                    {enrollment.studentName || enrollment.studentId}
+                    {enrollment.studentId}
                   </TableCell>
                   <TableCell>
-                    {enrollment.assignedSchoolName || enrollment.assignedSchoolId}
+                    {enrollment.assignedSchoolId || "-"}
                   </TableCell>
                   <TableCell>
                     {enrollment.classId || "-"}
