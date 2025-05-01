@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Student, Teacher } from "@/types/education";
-import { handleServiceError, checkDataExists, mapTeacherFromDB, mapTeacherToDB, optimizedFetch } from "./utils";
+import { handleServiceError, checkDataExists, optimizedFetch } from "./utils/common";
+import { mapTeacherFromDB, mapTeacherToDB } from "./utils/peopleMappers";
 
 export const fetchStudents = async (): Promise<Student[]> => {
   try {

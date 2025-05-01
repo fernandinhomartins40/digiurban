@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { SchoolIncident } from "@/types/education";
-import { handleServiceError, checkDataExists, mapIncidentFromDB, mapIncidentToDB } from "./utils";
+import { handleServiceError, checkDataExists } from "./utils/common";
+import { mapIncidentFromDB, mapIncidentToDB } from "./utils/incidentMappers";
 
 export const fetchIncidents = async (schoolId?: string): Promise<SchoolIncident[]> => {
   try {

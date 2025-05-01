@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { TransportRequest } from "@/types/education";
-import { handleServiceError, checkDataExists, mapTransportRequestFromDB, mapTransportRequestToDB } from "./utils";
+import { handleServiceError, checkDataExists } from "./utils/common";
+import { mapTransportRequestFromDB, mapTransportRequestToDB } from "./utils/transportMappers";
 
 export const fetchTransportRequests = async (): Promise<TransportRequest[]> => {
   try {
