@@ -41,7 +41,7 @@ export default function VehiclesTab() {
   // Filters
   const [plateFilter, setPlateFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
-  const [isActiveFilter, setIsActiveFilter] = useState<boolean | "all">("all");
+  const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
   
   const fetchVehicles = async () => {
     setLoading(true);
@@ -63,8 +63,9 @@ export default function VehiclesTab() {
       }
       
       if (isActiveFilter !== "all") {
+        const isActiveValue = isActiveFilter === "true";
         filteredVehicles = filteredVehicles.filter(v => 
-          v.isActive === isActiveFilter
+          v.isActive === isActiveValue
         );
       }
       
@@ -162,7 +163,7 @@ export default function VehiclesTab() {
               <label className="text-sm font-medium">Status</label>
               <Select 
                 value={isActiveFilter} 
-                onValueChange={(value: boolean | "all") => {
+                onValueChange={(value: string) => {
                   setIsActiveFilter(value);
                 }}
               >
@@ -171,8 +172,8 @@ export default function VehiclesTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value={true}>Ativo</SelectItem>
-                  <SelectItem value={false}>Inativo</SelectItem>
+                  <SelectItem value="true">Ativo</SelectItem>
+                  <SelectItem value="false">Inativo</SelectItem>
                 </SelectContent>
               </Select>
             </div>

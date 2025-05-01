@@ -42,7 +42,7 @@ export default function RoutesTab() {
   // Filters
   const [nameFilter, setNameFilter] = useState("");
   const [originFilter, setOriginFilter] = useState("");
-  const [isActiveFilter, setIsActiveFilter] = useState<boolean | "all">("all");
+  const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -57,7 +57,8 @@ export default function RoutesTab() {
       };
       
       if (isActiveFilter !== "all") {
-        filters.isActive = isActiveFilter;
+        const isActiveValue = isActiveFilter === "true";
+        filters.isActive = isActiveValue;
       }
       
       const result = await getTransportRoutes(filters);
@@ -162,7 +163,7 @@ export default function RoutesTab() {
               <label className="text-sm font-medium">Status</label>
               <Select 
                 value={isActiveFilter} 
-                onValueChange={(value: boolean | "all") => {
+                onValueChange={(value: string) => {
                   setIsActiveFilter(value);
                 }}
               >
@@ -171,8 +172,8 @@ export default function RoutesTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value={true}>Ativo</SelectItem>
-                  <SelectItem value={false}>Inativo</SelectItem>
+                  <SelectItem value="true">Ativo</SelectItem>
+                  <SelectItem value="false">Inativo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
