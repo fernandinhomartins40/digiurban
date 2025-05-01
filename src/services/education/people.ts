@@ -108,8 +108,18 @@ export const fetchTeacherById = async (id: string): Promise<Teacher> => {
 export const createTeacher = async (teacher: Omit<Teacher, 'id' | 'created_at' | 'updated_at'>): Promise<Teacher> => {
   // Map from our interface to DB structure
   const dbData = {
-    ...teacher,
-    is_active: teacher.active
+    name: teacher.name,
+    birth_date: teacher.birth_date,
+    address: teacher.address,
+    cpf: teacher.cpf,
+    phone: teacher.phone,
+    email: teacher.email,
+    is_active: teacher.active,
+    education_level: teacher.education_level,
+    registration_number: teacher.registration_number,
+    hiring_date: teacher.hiring_date,
+    specialties: teacher.specialties || [],
+    teaching_areas: teacher.teaching_areas || []
   };
 
   const { data, error } = await supabase
