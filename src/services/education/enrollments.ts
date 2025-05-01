@@ -5,7 +5,11 @@ import { Enrollment } from "@/types/education";
 export const fetchEnrollments = async (): Promise<Enrollment[]> => {
   const { data, error } = await supabase
     .from('education_enrollments')
-    .select('*, education_students(name), education_schools(name)')
+    .select(`
+      *,
+      education_students(name),
+      education_schools!requested_school_id(name)
+    `)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -13,11 +17,12 @@ export const fetchEnrollments = async (): Promise<Enrollment[]> => {
     throw error;
   }
 
-  // Transform the data to match our Enrollment type with student_name and school_name
+  // Transform the data to match our Enrollment type
   const enrollments = data.map(item => ({
     ...item,
     student_name: item.education_students?.name || '',
     school_name: item.education_schools?.name || '',
+    school_year: Number(item.school_year) // Ensure school_year is a number
   }));
 
   return enrollments as Enrollment[];
@@ -26,7 +31,11 @@ export const fetchEnrollments = async (): Promise<Enrollment[]> => {
 export const fetchEnrollmentById = async (id: string): Promise<Enrollment> => {
   const { data, error } = await supabase
     .from('education_enrollments')
-    .select('*, education_students(name), education_schools(name)')
+    .select(`
+      *,
+      education_students(name),
+      education_schools!requested_school_id(name)
+    `)
     .eq('id', id)
     .maybeSingle();
 
@@ -44,15 +53,32 @@ export const fetchEnrollmentById = async (id: string): Promise<Enrollment> => {
     ...data,
     student_name: data.education_students?.name || '',
     school_name: data.education_schools?.name || '',
+    school_year: Number(data.school_year) // Ensure school_year is a number
   };
 
   return enrollment as Enrollment;
 };
 
 export const createEnrollment = async (enrollmentData: Omit<Enrollment, 'id' | 'protocol_number' | 'created_at' | 'updated_at' | 'student_name' | 'school_name'>): Promise<Enrollment> => {
+  // Create a database-compatible object from our input
+  const dbData = {
+    student_id: enrollmentData.student_id,
+    requested_school_id: enrollmentData.requested_school_id,
+    assigned_school_id: enrollmentData.assigned_school_id,
+    class_id: enrollmentData.class_id,
+    school_year: enrollmentData.school_year,
+    request_date: enrollmentData.request_date,
+    decision_date: enrollmentData.decision_date,
+    decision_by: enrollmentData.decision_by,
+    special_request: enrollmentData.special_request,
+    status: enrollmentData.status,
+    notes: enrollmentData.notes,
+    justification: enrollmentData.justification
+  };
+
   const { data, error } = await supabase
     .from('education_enrollments')
-    .insert([enrollmentData])
+    .insert([dbData])
     .select()
     .single();
 
@@ -60,8 +86,12 @@ export const createEnrollment = async (enrollmentData: Omit<Enrollment, 'id' | '
     console.error('Error creating enrollment:', error);
     throw error;
   }
-
-  return data as Enrollment;
+  
+  // Return with necessary type transformation
+  return {
+    ...data,
+    school_year: Number(data.school_year) // Ensure school_year is a number
+  } as Enrollment;
 };
 
 export const updateEnrollmentStatus = async (id: string, status: Enrollment['status']): Promise<Enrollment> => {
@@ -77,5 +107,9 @@ export const updateEnrollmentStatus = async (id: string, status: Enrollment['sta
     throw error;
   }
 
-  return data as Enrollment;
+  // Return with necessary type transformation
+  return {
+    ...data,
+    school_year: Number(data.school_year) // Ensure school_year is a number
+  } as Enrollment;
 };

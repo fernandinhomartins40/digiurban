@@ -4,9 +4,12 @@ import { SchoolMeal } from "@/types/education";
 
 export const fetchSchoolMeals = async (schoolId?: string): Promise<SchoolMeal[]> => {
   let query = supabase
-    .from('education_school_meals')
-    .select('*')
-    .order('date', { ascending: false });
+    .from('education_meal_menus')
+    .select(`
+      *,
+      education_schools(name)
+    `)
+    .order('active_from', { ascending: false });
 
   if (schoolId) {
     query = query.eq('school_id', schoolId);
@@ -19,13 +22,26 @@ export const fetchSchoolMeals = async (schoolId?: string): Promise<SchoolMeal[]>
     throw error;
   }
 
-  return data as SchoolMeal[];
+  // Transform to match our SchoolMeal interface
+  return data.map(item => ({
+    id: item.id,
+    school_id: item.school_id,
+    school_name: item.education_schools?.name || '',
+    date: item.active_from,
+    meal_type: item.shift || 'lunch',
+    description: item.name,
+    nutritional_info: item.nutritional_info || '',
+    created_at: item.created_at
+  })) as SchoolMeal[];
 };
 
 export const fetchMealById = async (id: string): Promise<SchoolMeal> => {
   const { data, error } = await supabase
-    .from('education_school_meals')
-    .select('*')
+    .from('education_meal_menus')
+    .select(`
+      *,
+      education_schools(name)
+    `)
     .eq('id', id)
     .maybeSingle();
 
@@ -38,13 +54,34 @@ export const fetchMealById = async (id: string): Promise<SchoolMeal> => {
     throw new Error('Meal not found');
   }
 
-  return data as SchoolMeal;
+  // Transform to match our SchoolMeal interface
+  return {
+    id: data.id,
+    school_id: data.school_id,
+    school_name: data.education_schools?.name || '',
+    date: data.active_from,
+    meal_type: data.shift || 'lunch',
+    description: data.name,
+    nutritional_info: data.nutritional_info || '',
+    created_at: data.created_at
+  } as SchoolMeal;
 };
 
 export const createMealMenu = async (meal: Omit<SchoolMeal, 'id' | 'created_at'>): Promise<SchoolMeal> => {
+  // Convert from our interface to DB structure
+  const mealData = {
+    school_id: meal.school_id,
+    name: meal.description,
+    shift: meal.meal_type,
+    nutritional_info: meal.nutritional_info,
+    active_from: meal.date,
+    year: new Date(meal.date).getFullYear(),
+    menu_items: [] // Required field in DB
+  };
+
   const { data, error } = await supabase
-    .from('education_school_meals')
-    .insert([meal])
+    .from('education_meal_menus')
+    .insert([mealData])
     .select()
     .single();
 
@@ -53,13 +90,31 @@ export const createMealMenu = async (meal: Omit<SchoolMeal, 'id' | 'created_at'>
     throw error;
   }
 
-  return data as SchoolMeal;
+  // Transform back to our interface structure
+  return {
+    id: data.id,
+    school_id: data.school_id,
+    school_name: meal.school_name,
+    date: data.active_from,
+    meal_type: data.shift,
+    description: data.name,
+    nutritional_info: data.nutritional_info || '',
+    created_at: data.created_at
+  } as SchoolMeal;
 };
 
 export const updateMealMenu = async (id: string, updates: Partial<SchoolMeal>): Promise<SchoolMeal> => {
+  // Convert from our interface to DB structure
+  const updateData: any = {};
+  
+  if (updates.date) updateData.active_from = updates.date;
+  if (updates.meal_type) updateData.shift = updates.meal_type;
+  if (updates.description) updateData.name = updates.description;
+  if (updates.nutritional_info) updateData.nutritional_info = updates.nutritional_info;
+
   const { data, error } = await supabase
-    .from('education_school_meals')
-    .update(updates)
+    .from('education_meal_menus')
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
@@ -69,5 +124,15 @@ export const updateMealMenu = async (id: string, updates: Partial<SchoolMeal>): 
     throw error;
   }
 
-  return data as SchoolMeal;
+  // Transform back to our interface structure
+  return {
+    id: data.id,
+    school_id: data.school_id,
+    school_name: updates.school_name || '',
+    date: data.active_from,
+    meal_type: data.shift,
+    description: data.name,
+    nutritional_info: data.nutritional_info || '',
+    created_at: data.created_at
+  } as SchoolMeal;
 };

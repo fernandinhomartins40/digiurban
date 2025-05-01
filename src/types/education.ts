@@ -42,7 +42,7 @@ export interface Enrollment {
   requested_school_id: string;
   assigned_school_id?: string;
   class_id?: string;
-  school_year: string;
+  school_year: number; // Changed to number to match DB
   request_date: string;
   decision_date?: string;
   decision_by?: string;
@@ -52,7 +52,7 @@ export interface Enrollment {
   updated_at: string;
   notes?: string;
   justification?: string;
-  // Frontend display properties that might be joined from other tables
+  // Frontend display properties
   student_name?: string;
   school_name?: string;
   grade?: string;

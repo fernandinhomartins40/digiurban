@@ -5,7 +5,10 @@ import { SchoolIncident } from "@/types/education";
 export const fetchIncidents = async (schoolId?: string): Promise<SchoolIncident[]> => {
   let query = supabase
     .from('education_occurrences')
-    .select('*')
+    .select(`
+      *,
+      education_schools(name)
+    `)
     .order('created_at', { ascending: false });
 
   if (schoolId) {
@@ -19,10 +22,11 @@ export const fetchIncidents = async (schoolId?: string): Promise<SchoolIncident[
     throw error;
   }
 
+  // Transform to match SchoolIncident type
   return data.map(item => ({
     id: item.id,
     school_id: item.school_id,
-    school_name: '', // This would need to be joined with school data
+    school_name: item.education_schools?.name || '',
     date: item.occurrence_date,
     incident_type: item.occurrence_type,
     description: item.description,
@@ -35,7 +39,10 @@ export const fetchIncidents = async (schoolId?: string): Promise<SchoolIncident[
 export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => {
   const { data, error } = await supabase
     .from('education_occurrences')
-    .select('*')
+    .select(`
+      *,
+      education_schools(name)
+    `)
     .eq('id', id)
     .maybeSingle();
 
@@ -48,10 +55,11 @@ export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => 
     throw new Error('Incident not found');
   }
 
+  // Transform to match SchoolIncident type
   return {
     id: data.id,
     school_id: data.school_id,
-    school_name: '', // This would need to be joined with school data
+    school_name: data.education_schools?.name || '',
     date: data.occurrence_date,
     incident_type: data.occurrence_type,
     description: data.description,
@@ -62,13 +70,16 @@ export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => 
 };
 
 export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'created_at'>): Promise<SchoolIncident> => {
+  // Convert from our interface to DB structure
   const occurrenceData = {
     school_id: incident.school_id,
     occurrence_date: incident.date,
     occurrence_type: incident.incident_type,
     description: incident.description,
     severity: incident.severity,
-    reported_by_name: 'System', // Default value
+    reported_by: 'System', // Default required field
+    student_id: 'placeholder', // Required field, should be provided in a real app
+    reported_by_name: incident.school_name || 'System Reporter' // Optional but useful
   };
 
   const { data, error } = await supabase
@@ -82,6 +93,7 @@ export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'crea
     throw error;
   }
 
+  // Transform back to our interface structure
   return {
     id: data.id,
     school_id: data.school_id,
@@ -96,6 +108,7 @@ export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'crea
 };
 
 export const updateIncident = async (id: string, updates: Partial<SchoolIncident>): Promise<SchoolIncident> => {
+  // Convert from our interface to DB structure
   const updateData: any = {};
   
   if (updates.date) updateData.occurrence_date = updates.date;
@@ -115,6 +128,7 @@ export const updateIncident = async (id: string, updates: Partial<SchoolIncident
     throw error;
   }
 
+  // Transform back to our interface structure
   return {
     id: data.id,
     school_id: data.school_id,
@@ -129,6 +143,7 @@ export const updateIncident = async (id: string, updates: Partial<SchoolIncident
 };
 
 export const updateIncidentStatus = async (id: string, status: SchoolIncident['status']): Promise<SchoolIncident> => {
+  // Convert from our interface status to DB structure
   const updateData: any = {
     resolution_date: status === 'resolved' ? new Date().toISOString() : null
   };
@@ -145,6 +160,7 @@ export const updateIncidentStatus = async (id: string, status: SchoolIncident['s
     throw error;
   }
 
+  // Transform back to our interface structure
   return {
     id: data.id,
     school_id: data.school_id,
