@@ -10,7 +10,7 @@ export const getGabineteItem = (): SidebarItemProps => ({
   children: [
     {
       title: "Dashboard",
-      path: "/admin/gabinete/dashboard",
+      path: "/admin/gabinete",
     },
     {
       title: "Agendamentos",

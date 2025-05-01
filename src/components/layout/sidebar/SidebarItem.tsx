@@ -22,7 +22,11 @@ interface SidebarItemProps {
 export const SidebarItem = ({ icon, title, path, children, moduleId, badge }: SidebarItemProps) => {
   const { hasPermission } = useAuth();
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    // Auto-open submenu if any child path is active
+    return children?.some(child => location.pathname === child.path) || false;
+  });
+  
   const isActive = path ? location.pathname === path : children?.some(child => location.pathname === child.path);
   const hasChildren = children && children.length > 0;
 

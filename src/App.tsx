@@ -29,16 +29,12 @@ import ProfilePage from "./pages/admin/profile";
 import FinancasIndexPage from "./pages/admin/financas";
 import ServicosIndexPage from "./pages/admin/servicos";
 import UsersPage from "./pages/admin/administracao/users";
-
-// Create placeholder components for the missing imports
-const GabineteIndexPage = () => <div>Gabinete Dashboard</div>;
-const DirectRequests = () => <div>Direct Requests</div>;
-const PublicPoliciesPage = () => <div>Public Policies Page</div>;
-const StrategicProgramsPage = () => <div>Strategic Programs Page</div>;
-const MeioAmbienteIndexPage = () => <div>Meio Ambiente Dashboard</div>;
-const PurchaseRequestsPage = () => <div>Purchase Requests</div>;
-const HRRequestsPage = () => <div>HR Requests</div>;
-const MailDocumentsPage = () => <div>Mail Documents</div>;
+import GabineteIndexPage from "./pages/admin/gabinete/index";
+import AppointmentScheduler from "./pages/admin/gabinete/AppointmentScheduler";
+import DirectRequests from "./pages/admin/gabinete/DirectRequests";
+import PublicPoliciesPage from "./pages/admin/gabinete/PublicPolicies";
+import StrategicProgramsPage from "./pages/admin/gabinete/StrategicPrograms";
+import MeioAmbienteIndexPage from "./pages/admin/meioambiente";
 
 function App() {
   return (
@@ -63,9 +59,10 @@ function App() {
 
           {/* Gabinete routes */}
           <Route path="admin/gabinete" element={<GabineteIndexPage />} />
+          <Route path="admin/gabinete/agendamentos" element={<AppointmentScheduler />} />
           <Route path="admin/gabinete/solicitacoes" element={<DirectRequests />} />
-          <Route path="admin/gabinete/politicas-publicas" element={<PublicPoliciesPage />} />
-          <Route path="admin/gabinete/programas-estrategicos" element={<StrategicProgramsPage />} />
+          <Route path="admin/gabinete/politicas" element={<PublicPoliciesPage />} />
+          <Route path="admin/gabinete/programas" element={<StrategicProgramsPage />} />
 
           {/* Educação routes */}
           <Route path="admin/educacao" element={<EducacaoIndexPage />} />
