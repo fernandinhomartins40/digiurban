@@ -177,7 +177,7 @@ export default function EscolasIndex() {
                   <SelectValue placeholder="Todos os tipos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os tipos</SelectItem>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
                   <SelectItem value="school">Escola</SelectItem>
                   <SelectItem value="cmei">CMEI</SelectItem>
                   <SelectItem value="eja">EJA</SelectItem>
@@ -197,7 +197,7 @@ export default function EscolasIndex() {
               <Select 
                 value={String(isActiveFilter)} 
                 onValueChange={(value) => {
-                  if (value === "") {
+                  if (value === "all") {
                     setIsActiveFilter("");
                   } else {
                     setIsActiveFilter(value === "true");
@@ -208,7 +208,7 @@ export default function EscolasIndex() {
                   <SelectValue placeholder="Todos os status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="true">Ativo</SelectItem>
                   <SelectItem value="false">Inativo</SelectItem>
                 </SelectContent>
