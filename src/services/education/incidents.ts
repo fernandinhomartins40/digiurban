@@ -32,7 +32,10 @@ export const fetchIncidents = async (schoolId?: string): Promise<SchoolIncident[
     description: item.description,
     severity: item.severity || 'medium',
     status: item.resolution_date ? 'resolved' : 'open',
-    created_at: item.created_at
+    created_at: item.created_at,
+    reported_by: item.reported_by,
+    student_id: item.student_id,
+    reported_by_name: item.reported_by_name
   })) as SchoolIncident[];
 };
 
@@ -65,7 +68,10 @@ export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => 
     description: data.description,
     severity: data.severity || 'medium',
     status: data.resolution_date ? 'resolved' : 'open',
-    created_at: data.created_at
+    created_at: data.created_at,
+    reported_by: data.reported_by,
+    student_id: data.student_id,
+    reported_by_name: data.reported_by_name
   } as SchoolIncident;
 };
 
@@ -77,9 +83,9 @@ export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'crea
     occurrence_type: incident.incident_type,
     description: incident.description,
     severity: incident.severity,
-    reported_by: 'System', // Default required field
-    student_id: 'placeholder', // Required field, should be provided in a real app
-    reported_by_name: incident.school_name || 'System Reporter' // Optional but useful
+    reported_by: incident.reported_by,
+    student_id: incident.student_id,
+    reported_by_name: incident.reported_by_name || 'System Reporter'
   };
 
   const { data, error } = await supabase
@@ -103,7 +109,10 @@ export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'crea
     description: data.description,
     severity: data.severity || 'medium',
     status: 'open',
-    created_at: data.created_at
+    created_at: data.created_at,
+    reported_by: data.reported_by,
+    student_id: data.student_id,
+    reported_by_name: data.reported_by_name
   } as SchoolIncident;
 };
 
@@ -115,6 +124,8 @@ export const updateIncident = async (id: string, updates: Partial<SchoolIncident
   if (updates.incident_type) updateData.occurrence_type = updates.incident_type;
   if (updates.description) updateData.description = updates.description;
   if (updates.severity) updateData.severity = updates.severity;
+  if (updates.reported_by) updateData.reported_by = updates.reported_by;
+  if (updates.reported_by_name) updateData.reported_by_name = updates.reported_by_name;
   
   const { data, error } = await supabase
     .from('education_occurrences')
@@ -138,7 +149,10 @@ export const updateIncident = async (id: string, updates: Partial<SchoolIncident
     description: data.description,
     severity: data.severity || 'medium',
     status: data.resolution_date ? 'resolved' : 'open',
-    created_at: data.created_at
+    created_at: data.created_at,
+    reported_by: data.reported_by,
+    student_id: data.student_id,
+    reported_by_name: data.reported_by_name
   } as SchoolIncident;
 };
 
@@ -170,6 +184,9 @@ export const updateIncidentStatus = async (id: string, status: SchoolIncident['s
     description: data.description,
     severity: data.severity || 'medium',
     status: data.resolution_date ? 'resolved' : 'open',
-    created_at: data.created_at
+    created_at: data.created_at,
+    reported_by: data.reported_by,
+    student_id: data.student_id,
+    reported_by_name: data.reported_by_name
   } as SchoolIncident;
 };

@@ -23,9 +23,9 @@ export const fetchEnrollments = async (): Promise<Enrollment[]> => {
     student_name: item.education_students?.name || '',
     school_name: item.education_schools?.name || '',
     school_year: Number(item.school_year) // Ensure school_year is a number
-  }));
+  })) as Enrollment[];
 
-  return enrollments as Enrollment[];
+  return enrollments;
 };
 
 export const fetchEnrollmentById = async (id: string): Promise<Enrollment> => {
@@ -54,9 +54,9 @@ export const fetchEnrollmentById = async (id: string): Promise<Enrollment> => {
     student_name: data.education_students?.name || '',
     school_name: data.education_schools?.name || '',
     school_year: Number(data.school_year) // Ensure school_year is a number
-  };
+  } as Enrollment;
 
-  return enrollment as Enrollment;
+  return enrollment;
 };
 
 export const createEnrollment = async (enrollmentData: Omit<Enrollment, 'id' | 'protocol_number' | 'created_at' | 'updated_at' | 'student_name' | 'school_name'>): Promise<Enrollment> => {

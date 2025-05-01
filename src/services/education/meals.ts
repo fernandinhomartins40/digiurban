@@ -31,7 +31,10 @@ export const fetchSchoolMeals = async (schoolId?: string): Promise<SchoolMeal[]>
     meal_type: item.shift || 'lunch',
     description: item.name,
     nutritional_info: item.nutritional_info || '',
-    created_at: item.created_at
+    created_at: item.created_at,
+    year: item.year,
+    day_of_week: item.day_of_week,
+    menu_items: item.menu_items
   })) as SchoolMeal[];
 };
 
@@ -63,7 +66,10 @@ export const fetchMealById = async (id: string): Promise<SchoolMeal> => {
     meal_type: data.shift || 'lunch',
     description: data.name,
     nutritional_info: data.nutritional_info || '',
-    created_at: data.created_at
+    created_at: data.created_at,
+    year: data.year,
+    day_of_week: data.day_of_week,
+    menu_items: data.menu_items
   } as SchoolMeal;
 };
 
@@ -75,8 +81,9 @@ export const createMealMenu = async (meal: Omit<SchoolMeal, 'id' | 'created_at'>
     shift: meal.meal_type,
     nutritional_info: meal.nutritional_info,
     active_from: meal.date,
-    year: new Date(meal.date).getFullYear(),
-    menu_items: [] // Required field in DB
+    year: meal.year || new Date(meal.date).getFullYear(),
+    day_of_week: meal.day_of_week || new Date(meal.date).getDay() + 1, // 1-7 for Monday-Sunday
+    menu_items: meal.menu_items || [] // Required field in DB
   };
 
   const { data, error } = await supabase
@@ -99,7 +106,10 @@ export const createMealMenu = async (meal: Omit<SchoolMeal, 'id' | 'created_at'>
     meal_type: data.shift,
     description: data.name,
     nutritional_info: data.nutritional_info || '',
-    created_at: data.created_at
+    created_at: data.created_at,
+    year: data.year,
+    day_of_week: data.day_of_week,
+    menu_items: data.menu_items
   } as SchoolMeal;
 };
 
@@ -111,6 +121,8 @@ export const updateMealMenu = async (id: string, updates: Partial<SchoolMeal>): 
   if (updates.meal_type) updateData.shift = updates.meal_type;
   if (updates.description) updateData.name = updates.description;
   if (updates.nutritional_info) updateData.nutritional_info = updates.nutritional_info;
+  if (updates.day_of_week) updateData.day_of_week = updates.day_of_week;
+  if (updates.menu_items) updateData.menu_items = updates.menu_items;
 
   const { data, error } = await supabase
     .from('education_meal_menus')
@@ -133,6 +145,9 @@ export const updateMealMenu = async (id: string, updates: Partial<SchoolMeal>): 
     meal_type: data.shift,
     description: data.name,
     nutritional_info: data.nutritional_info || '',
-    created_at: data.created_at
+    created_at: data.created_at,
+    year: data.year,
+    day_of_week: data.day_of_week,
+    menu_items: data.menu_items
   } as SchoolMeal;
 };

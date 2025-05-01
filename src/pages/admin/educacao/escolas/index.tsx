@@ -81,7 +81,6 @@ export default function EscolasPage() {
   );
 }
 
-// Fixed the type comparison issue by using proper string type comparison
 const PlaceholderCard = ({ type, name }: { type: 'school' | 'cmei', name: string }) => {
   return (
     <Card className="overflow-hidden">
