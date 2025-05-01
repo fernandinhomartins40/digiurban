@@ -87,9 +87,10 @@ export default function CrasCreasPage() {
     setShowCenterDialog(true);
   };
 
-  const handleDeleteCenter = (centerId: string) => {
+  // Updated to accept AssistanceCenter instead of string to match the expected prop type
+  const handleDeleteCenter = (center: AssistanceCenter) => {
     // Implementation for deleting a center would go here
-    console.log("Delete center:", centerId);
+    console.log("Delete center:", center.id);
     toast({
       title: "Não implementado",
       description: "A função de excluir centros ainda não foi implementada.",
@@ -97,9 +98,10 @@ export default function CrasCreasPage() {
     });
   };
 
-  const handleViewAttendance = (attendanceId: string) => {
+  // Updated to accept SocialAttendance instead of string to match the expected prop type
+  const handleViewAttendance = (attendance: SocialAttendance) => {
     // Implementation for viewing attendance details would go here
-    console.log("View attendance:", attendanceId);
+    console.log("View attendance:", attendance.id);
     toast({
       title: "Não implementado",
       description: "A função de visualizar detalhes de atendimentos ainda não foi implementada.",
@@ -162,7 +164,6 @@ export default function CrasCreasPage() {
                 centers={centers}
                 loading={loadingCenters}
                 onEdit={handleEditCenter}
-                // Fix the prop name to match what CentersTable expects
                 onDelete={handleDeleteCenter}
               />
             </TabsContent>
