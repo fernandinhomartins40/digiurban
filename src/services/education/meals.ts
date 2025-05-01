@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { MealMenu, MealShift, SpecialDiet, MealFeedback, MealRating } from '@/types/education';
 
@@ -345,7 +346,7 @@ export async function updateSpecialDiet(id: string, specialDiet: Partial<Special
 export async function getMealFeedbacks(schoolId: string): Promise<MealFeedback[]> {
   try {
     const { data, error } = await supabase
-      .from('education_meal_feedbacks')
+      .from('education_meal_feedback')
       .select('*')
       .eq('school_id', schoolId);
 
@@ -376,7 +377,7 @@ export async function getMealFeedbacks(schoolId: string): Promise<MealFeedback[]
 export async function createMealFeedback(mealFeedback: Omit<MealFeedback, 'id' | 'createdAt'>): Promise<MealFeedback> {
   try {
     const { data, error } = await supabase
-      .from('education_meal_feedbacks')
+      .from('education_meal_feedback')
       .insert({
         school_id: mealFeedback.schoolId,
         meal_menu_id: mealFeedback.mealMenuId,
