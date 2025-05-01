@@ -40,8 +40,8 @@ export default function RequestsTab() {
   
   // Filters
   const [protocolFilter, setProtocolFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState<TransportRequestType | "">("");
-  const [statusFilter, setStatusFilter] = useState<TransportRequestStatus | "">("");
+  const [typeFilter, setTypeFilter] = useState<TransportRequestType | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<TransportRequestStatus | "all">("all");
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -52,11 +52,11 @@ export default function RequestsTab() {
     try {
       const filters: any = {};
       
-      if (typeFilter) {
+      if (typeFilter !== "all") {
         filters.requestType = typeFilter;
       }
       
-      if (statusFilter) {
+      if (statusFilter !== "all") {
         filters.status = statusFilter;
       }
       
@@ -94,8 +94,8 @@ export default function RequestsTab() {
 
   const handleResetFilters = () => {
     setProtocolFilter("");
-    setTypeFilter("");
-    setStatusFilter("");
+    setTypeFilter("all");
+    setStatusFilter("all");
     setPage(1);
     fetchRequests();
   };
@@ -234,13 +234,13 @@ export default function RequestsTab() {
               <label className="text-sm font-medium">Tipo</label>
               <Select 
                 value={typeFilter} 
-                onValueChange={(value: TransportRequestType | "") => setTypeFilter(value)}
+                onValueChange={(value: TransportRequestType | "all") => setTypeFilter(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os tipos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="new">Nova Solicitação</SelectItem>
                   <SelectItem value="change">Alteração</SelectItem>
                   <SelectItem value="complaint">Reclamação</SelectItem>
@@ -252,13 +252,13 @@ export default function RequestsTab() {
               <label className="text-sm font-medium">Status</label>
               <Select 
                 value={statusFilter} 
-                onValueChange={(value: TransportRequestStatus | "") => setStatusFilter(value)}
+                onValueChange={(value: TransportRequestStatus | "all") => setStatusFilter(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="pending">Pendente</SelectItem>
                   <SelectItem value="in_analysis">Em Análise</SelectItem>
                   <SelectItem value="approved">Aprovada</SelectItem>

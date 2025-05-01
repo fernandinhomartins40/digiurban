@@ -76,6 +76,7 @@ export default function StudentTransportDialog({
 
   const onSubmit = async (values: StudentTransportFormValues) => {
     try {
+      setLoading(true);
       if (isEditing && transport) {
         await updateStudentTransport(transport.id, {
           studentId: values.studentId,
@@ -118,6 +119,8 @@ export default function StudentTransportDialog({
         description: "Erro ao salvar transporte de aluno",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 

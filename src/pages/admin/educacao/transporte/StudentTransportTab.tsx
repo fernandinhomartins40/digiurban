@@ -41,7 +41,7 @@ export default function StudentTransportTab() {
   // Filters
   const [studentNameFilter, setStudentNameFilter] = useState("");
   const [schoolFilter, setSchoolFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState<TransportStatus | "">("");
+  const [statusFilter, setStatusFilter] = useState<TransportStatus | "all">("all");
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -56,7 +56,7 @@ export default function StudentTransportTab() {
         filters.schoolId = schoolFilter;
       }
       
-      if (statusFilter) {
+      if (statusFilter && statusFilter !== "all") {
         filters.status = statusFilter;
       }
       
@@ -95,7 +95,7 @@ export default function StudentTransportTab() {
   const handleResetFilters = () => {
     setStudentNameFilter("");
     setSchoolFilter("");
-    setStatusFilter("");
+    setStatusFilter("all");
     setPage(1);
     fetchTransports();
   };
@@ -188,13 +188,13 @@ export default function StudentTransportTab() {
               <label className="text-sm font-medium">Status</label>
               <Select 
                 value={statusFilter} 
-                onValueChange={(value: TransportStatus | "") => setStatusFilter(value)}
+                onValueChange={(value: TransportStatus | "all") => setStatusFilter(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="active">Ativo</SelectItem>
                   <SelectItem value="inactive">Inativo</SelectItem>
                   <SelectItem value="pending">Pendente</SelectItem>

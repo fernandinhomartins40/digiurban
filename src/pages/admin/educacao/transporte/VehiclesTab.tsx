@@ -41,7 +41,7 @@ export default function VehiclesTab() {
   // Filters
   const [plateFilter, setPlateFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
-  const [isActiveFilter, setIsActiveFilter] = useState<boolean | null>(null);
+  const [isActiveFilter, setIsActiveFilter] = useState<boolean | "all">("all");
   
   const fetchVehicles = async () => {
     setLoading(true);
@@ -62,7 +62,7 @@ export default function VehiclesTab() {
         );
       }
       
-      if (isActiveFilter !== null) {
+      if (isActiveFilter !== "all") {
         filteredVehicles = filteredVehicles.filter(v => 
           v.isActive === isActiveFilter
         );
@@ -92,7 +92,7 @@ export default function VehiclesTab() {
   const handleResetFilters = () => {
     setPlateFilter("");
     setTypeFilter("");
-    setIsActiveFilter(null);
+    setIsActiveFilter("all");
     fetchVehicles();
   };
 
@@ -161,13 +161,9 @@ export default function VehiclesTab() {
             <div>
               <label className="text-sm font-medium">Status</label>
               <Select 
-                value={isActiveFilter === null ? "all" : String(isActiveFilter)} 
-                onValueChange={(value) => {
-                  if (value === "all") {
-                    setIsActiveFilter(null);
-                  } else {
-                    setIsActiveFilter(value === "true");
-                  }
+                value={isActiveFilter} 
+                onValueChange={(value: boolean | "all") => {
+                  setIsActiveFilter(value);
                 }}
               >
                 <SelectTrigger>
@@ -175,8 +171,8 @@ export default function VehiclesTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="true">Ativo</SelectItem>
-                  <SelectItem value="false">Inativo</SelectItem>
+                  <SelectItem value={true}>Ativo</SelectItem>
+                  <SelectItem value={false}>Inativo</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -42,7 +42,7 @@ export default function RoutesTab() {
   // Filters
   const [nameFilter, setNameFilter] = useState("");
   const [originFilter, setOriginFilter] = useState("");
-  const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
+  const [isActiveFilter, setIsActiveFilter] = useState<boolean | "all">("all");
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -51,11 +51,16 @@ export default function RoutesTab() {
   const fetchRoutes = async () => {
     setLoading(true);
     try {
-      const result = await getTransportRoutes({
+      const filters: any = {
         name: nameFilter || undefined,
         origin: originFilter || undefined,
-        isActive: isActiveFilter
-      });
+      };
+      
+      if (isActiveFilter !== "all") {
+        filters.isActive = isActiveFilter;
+      }
+      
+      const result = await getTransportRoutes(filters);
       
       setRoutes(result);
       setTotalCount(result.length);
@@ -83,7 +88,7 @@ export default function RoutesTab() {
   const handleResetFilters = () => {
     setNameFilter("");
     setOriginFilter("");
-    setIsActiveFilter(undefined);
+    setIsActiveFilter("all");
     setPage(1);
     fetchRoutes();
   };
@@ -156,13 +161,9 @@ export default function RoutesTab() {
             <div>
               <label className="text-sm font-medium">Status</label>
               <Select 
-                value={isActiveFilter === undefined ? "all" : String(isActiveFilter)} 
-                onValueChange={(value) => {
-                  if (value === "all") {
-                    setIsActiveFilter(undefined);
-                  } else {
-                    setIsActiveFilter(value === "true");
-                  }
+                value={isActiveFilter} 
+                onValueChange={(value: boolean | "all") => {
+                  setIsActiveFilter(value);
                 }}
               >
                 <SelectTrigger>
@@ -170,8 +171,8 @@ export default function RoutesTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="true">Ativo</SelectItem>
-                  <SelectItem value="false">Inativo</SelectItem>
+                  <SelectItem value={true}>Ativo</SelectItem>
+                  <SelectItem value={false}>Inativo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
