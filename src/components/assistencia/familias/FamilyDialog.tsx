@@ -1,4 +1,3 @@
-
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -28,20 +27,19 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { VulnerableFamily } from "@/types/assistance";
-import { createVulnerableFamily, updateVulnerableFamily } from "@/services/assistance";
 import { Checkbox } from "@/components/ui/checkbox";
+import { VulnerableFamily, VulnerabilityCriteria } from "@/types/assistance";
+import { createVulnerableFamily, updateVulnerableFamily } from "@/services/assistance";
 
 const vulnerabilityCriteriaOptions = [
-  { id: "income", label: "Baixa Renda" },
-  { id: "housing", label: "Problemas de Habitação" },
-  { id: "education", label: "Baixa Escolaridade" },
-  { id: "domestic_violence", label: "Violência Doméstica" },
-  { id: "health", label: "Problemas de Saúde" },
-  { id: "unemployment", label: "Desemprego" },
-  { id: "food_insecurity", label: "Insegurança Alimentar" },
-  { id: "other", label: "Outros" },
+  { id: "income" as VulnerabilityCriteria, label: "Baixa Renda" },
+  { id: "housing" as VulnerabilityCriteria, label: "Problemas de Habitação" },
+  { id: "education" as VulnerabilityCriteria, label: "Baixa Escolaridade" },
+  { id: "domestic_violence" as VulnerabilityCriteria, label: "Violência Doméstica" },
+  { id: "health" as VulnerabilityCriteria, label: "Problemas de Saúde" },
+  { id: "unemployment" as VulnerabilityCriteria, label: "Desemprego" },
+  { id: "food_insecurity" as VulnerabilityCriteria, label: "Insegurança Alimentar" },
+  { id: "other" as VulnerabilityCriteria, label: "Outros" },
 ];
 
 const statusOptions = [
@@ -59,7 +57,10 @@ const familySchema = z.object({
   city: z.string().min(1, { message: "Cidade é obrigatória" }),
   state: z.string().min(1, { message: "Estado é obrigatório" }),
   family_status: z.string().optional(),
-  vulnerability_criteria: z.array(z.string()).min(1, { message: "Selecione pelo menos um critério de vulnerabilidade" }),
+  vulnerability_criteria: z
+    .array(z.string())
+    .min(1, { message: "Selecione pelo menos um critério de vulnerabilidade" })
+    .transform((values) => values as VulnerabilityCriteria[]), // Transform string[] to VulnerabilityCriteria[]
 });
 
 type FamilyFormValues = z.infer<typeof familySchema>;
@@ -91,13 +92,13 @@ export function FamilyDialog({ open, onClose, onSave, family }: FamilyDialogProp
   const onSubmit = async (values: FamilyFormValues) => {
     try {
       if (isEditing && family) {
-        await updateVulnerableFamily(family.id, values);
+        await updateVulnerableFamily(family.id, values as any);
         toast({
           title: "Família atualizada",
           description: "Os dados da família foram atualizados com sucesso.",
         });
       } else {
-        await createVulnerableFamily(values);
+        await createVulnerableFamily(values as any);
         toast({
           title: "Família cadastrada",
           description: "Nova família cadastrada com sucesso.",

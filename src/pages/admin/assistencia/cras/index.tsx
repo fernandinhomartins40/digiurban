@@ -15,7 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { AssistanceCenter, SocialAttendance } from "@/types/assistance";
 import {
   getAssistanceCenters,
-  getSocialAttendances
+  getSocialAttendances,
+  deleteAssistanceCenter
 } from "@/services/assistance";
 import CentersTable from "@/components/assistencia/cras/CentersTable";
 import AttendancesTable from "@/components/assistencia/cras/AttendancesTable";
@@ -90,14 +91,22 @@ export default function CrasCreasPage() {
     setShowCenterDialog(true);
   };
 
-  const handleDeleteCenter = (center: AssistanceCenter) => {
-    // Implementation for deleting a center would go here
-    console.log("Delete center:", center.id);
-    toast({
-      title: "Não implementado",
-      description: "A função de excluir centros ainda não foi implementada.",
-      variant: "default",
-    });
+  const handleDeleteCenter = async (center: AssistanceCenter) => {
+    try {
+      await deleteAssistanceCenter(center.id);
+      toast({
+        title: "Centro removido",
+        description: "O centro foi removido com sucesso.",
+      });
+      fetchCenters();
+    } catch (error) {
+      console.error("Error deleting center:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover o centro.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddAttendance = () => {
@@ -111,13 +120,8 @@ export default function CrasCreasPage() {
   };
 
   const handleEditAttendance = (attendance: SocialAttendance) => {
-    // Implementation for editing attendance would go here
-    console.log("Edit attendance:", attendance);
-    toast({
-      title: "Não implementado",
-      description: "A função de editar atendimentos ainda não foi implementada.",
-      variant: "default",
-    });
+    setSelectedAttendance(attendance);
+    setShowAttendanceDialog(true);
   };
 
   return (
