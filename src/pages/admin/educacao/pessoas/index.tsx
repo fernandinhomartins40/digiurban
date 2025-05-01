@@ -1,26 +1,19 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserCog, UserPlus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { fetchStudents, fetchTeachers } from "@/services/education";
 import { useQuery } from "@tanstack/react-query";
+import { fetchStudents, fetchTeachers } from "@/services/education";
 
 export default function PessoasPage() {
-  const navigate = useNavigate();
-  
-  const { data: students, isLoading: studentsLoading } = useQuery({
+  const { data: students, isLoading: loadingStudents } = useQuery({
     queryKey: ['education-students'],
-    queryFn: () => fetchStudents({}),
+    queryFn: () => fetchStudents(),
   });
   
-  const { data: teachers, isLoading: teachersLoading } = useQuery({
+  const { data: teachers, isLoading: loadingTeachers } = useQuery({
     queryKey: ['education-teachers'],
-    queryFn: () => fetchTeachers({}),
+    queryFn: () => fetchTeachers(),
   });
-  
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -56,7 +49,7 @@ export default function PessoasPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {studentsLoading ? "Carregando..." : students?.length || 0}
+                  {loadingStudents ? "Carregando..." : students?.length || 0}
                 </div>
               </CardContent>
             </Card>
@@ -66,7 +59,7 @@ export default function PessoasPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {studentsLoading 
+                  {loadingStudents 
                     ? "Carregando..." 
                     : students?.filter(s => s.is_active).length || 0}
                 </div>
@@ -78,7 +71,7 @@ export default function PessoasPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {studentsLoading 
+                  {loadingStudents 
                     ? "Carregando..." 
                     : students?.filter(s => s.special_needs).length || 0}
                 </div>
@@ -90,7 +83,7 @@ export default function PessoasPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {studentsLoading ? "Carregando..." : "24"}
+                  {loadingStudents ? "Carregando..." : "24"}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Últimos 30 dias
@@ -108,7 +101,7 @@ export default function PessoasPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {studentsLoading ? (
+              {loadingStudents ? (
                 <div className="flex justify-center p-4">Carregando...</div>
               ) : (
                 <p>Tabela completa de alunos será implementada aqui.</p>
@@ -125,7 +118,7 @@ export default function PessoasPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {teachersLoading ? "Carregando..." : teachers?.length || 0}
+                  {loadingTeachers ? "Carregando..." : teachers?.length || 0}
                 </div>
               </CardContent>
             </Card>
@@ -135,7 +128,7 @@ export default function PessoasPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {teachersLoading 
+                  {loadingTeachers 
                     ? "Carregando..." 
                     : teachers?.filter(t => t.is_active).length || 0}
                 </div>
@@ -147,17 +140,17 @@ export default function PessoasPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {teachersLoading ? "Carregando..." : "12"}
+                  {loadingTeachers ? "Carregando..." : "12"}
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Contratações Recentes</CardTitle>
+                <CardTitle className="text-sm font-medium">Contrataç��es Recentes</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {teachersLoading ? "Carregando..." : "5"}
+                  {loadingTeachers ? "Carregando..." : "5"}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Últimos 30 dias
@@ -175,7 +168,7 @@ export default function PessoasPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {teachersLoading ? (
+              {loadingTeachers ? (
                 <div className="flex justify-center p-4">Carregando...</div>
               ) : (
                 <p>Tabela completa de professores será implementada aqui.</p>

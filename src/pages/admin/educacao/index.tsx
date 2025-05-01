@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { School, BookOpen, Users, Calendar, MessageSquare, Book, FileText } from "lucide-react";
+import { School, BookOpen, Users, Calendar, MessageSquare, Book, FileText, Utensils, ClipboardList } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSchools, fetchStudents, fetchTeachers, fetchEnrollments } from "@/services/education";
 import { InsightsChart } from "@/components/dashboard/InsightsChart";
@@ -13,22 +13,22 @@ export default function EducacaoIndex() {
   
   const { data: schools } = useQuery({
     queryKey: ['education-schools'],
-    queryFn: () => fetchSchools({}),
+    queryFn: () => fetchSchools(),
   });
   
   const { data: students } = useQuery({
     queryKey: ['education-students'],
-    queryFn: () => fetchStudents({}),
+    queryFn: () => fetchStudents(),
   });
   
   const { data: teachers } = useQuery({
     queryKey: ['education-teachers'],
-    queryFn: () => fetchTeachers({}),
+    queryFn: () => fetchTeachers(),
   });
   
   const { data: enrollments } = useQuery({
     queryKey: ['education-enrollments'],
-    queryFn: () => fetchEnrollments({}),
+    queryFn: () => fetchEnrollments(),
   });
 
   // Métricas para o painel
@@ -94,6 +94,22 @@ export default function EducacaoIndex() {
       path: "/admin/educacao/comunicacao",
       metric: "14",
       metricLabel: "mensagens novas"
+    },
+    { 
+      title: "Merenda Escolar", 
+      description: "Gestão da alimentação escolar", 
+      icon: Utensils, 
+      path: "/admin/educacao/merenda",
+      metric: "12",
+      metricLabel: "cardápios ativos"
+    },
+    { 
+      title: "Ocorrências", 
+      description: "Registro de ocorrências escolares", 
+      icon: ClipboardList, 
+      path: "/admin/educacao/ocorrencias",
+      metric: "5",
+      metricLabel: "ocorrências abertas"
     }
   ];
 
