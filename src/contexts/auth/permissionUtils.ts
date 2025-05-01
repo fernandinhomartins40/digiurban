@@ -1,5 +1,5 @@
 
-import { User } from "@/types/auth";
+import { User, AdminUser, CitizenUser, isAdminUser } from "@/types/auth";
 
 /**
  * Permission checking utilities
@@ -15,8 +15,8 @@ export function createPermissionUtils(user: User | null) {
     // This ensures modules don't disappear from sidebar due to permission issues
     if (process.env.NODE_ENV === 'development') return true;
     
-    // Check specific permissions if they exist
-    if (user.permissions) {
+    // Check if user is admin type and has permissions
+    if (isAdminUser(user) && user.permissions) {
       return user.permissions.some(
         (permission) => 
           (permission.moduleId === "all" || permission.moduleId === moduleId) && 
@@ -24,6 +24,7 @@ export function createPermissionUtils(user: User | null) {
       );
     }
     
+    // Citizen users don't have admin permissions
     return false;
   };
 
