@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import {
   StudentTransport,
@@ -19,7 +20,7 @@ import {
 export async function getVehicles(): Promise<Vehicle[]> {
   try {
     const { data, error } = await supabase
-      .from('education_transport_vehicles')
+      .from('education_vehicles')
       .select('*');
 
     if (error) throw error;
@@ -54,7 +55,7 @@ export async function getVehicles(): Promise<Vehicle[]> {
 export async function getVehicleById(id: string): Promise<Vehicle | null> {
   try {
     const { data, error } = await supabase
-      .from('education_transport_vehicles')
+      .from('education_vehicles')
       .select('*')
       .eq('id', id)
       .single();
@@ -92,7 +93,7 @@ export async function getVehicleById(id: string): Promise<Vehicle | null> {
 export async function createVehicle(vehicle: Omit<Vehicle, "id" | "createdAt" | "updatedAt">): Promise<Vehicle> {
   try {
     const { data, error } = await supabase
-      .from('education_transport_vehicles')
+      .from('education_vehicles')
       .insert({
         plate: vehicle.plate,
         type: vehicle.type,
@@ -143,7 +144,7 @@ export async function createVehicle(vehicle: Omit<Vehicle, "id" | "createdAt" | 
 export async function updateVehicle(id: string, vehicle: Partial<Vehicle>): Promise<Vehicle> {
   try {
     const { data, error } = await supabase
-      .from('education_transport_vehicles')
+      .from('education_vehicles')
       .update({
         plate: vehicle.plate,
         type: vehicle.type,
