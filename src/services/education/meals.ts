@@ -52,7 +52,7 @@ export const createMealMenu = async (meal: Omit<SchoolMeal, 'id' | 'created_at' 
 
   const { data, error } = await supabase
     .from('education_meal_menus')
-    .insert([dbData])
+    .insert(dbData) // Fixed: removed array wrapping
     .select(`
       *,
       education_schools(name)

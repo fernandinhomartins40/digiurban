@@ -50,7 +50,7 @@ export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'crea
 
   const { data, error } = await supabase
     .from('education_occurrences')
-    .insert([dbData])
+    .insert(dbData) // Fixed: removed array wrapping
     .select(`
       *,
       education_schools(name),

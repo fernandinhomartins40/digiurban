@@ -33,7 +33,7 @@ export const fetchStudentById = async (id: string): Promise<Student> => {
 export const createStudent = async (student: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Promise<Student> => {
   const { data, error } = await supabase
     .from('education_students')
-    .insert([student])
+    .insert(student) // Fixed: removed array wrapping
     .select()
     .single();
 
@@ -96,7 +96,7 @@ export const createTeacher = async (teacher: Omit<Teacher, 'id' | 'created_at' |
 
   const { data, error } = await supabase
     .from('education_teachers')
-    .insert([dbData])
+    .insert(dbData) // Fixed: removed array wrapping
     .select()
     .single();
 

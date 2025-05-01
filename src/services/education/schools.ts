@@ -36,7 +36,7 @@ export const createSchool = async (school: Omit<School, 'id' | 'created_at' | 'u
 
   const { data, error } = await supabase
     .from('education_schools')
-    .insert([dbData])
+    .insert(dbData) // Fixed: removed array wrapping
     .select()
     .single();
 
