@@ -1,33 +1,33 @@
 
-import { SidebarItemProps } from "@/types/sidebar";
+import React from "react";
 import {
-  getDashboardItem,
-  getCorreioItem,
-  getChatItem,
-  getGabineteItem,
   getAdministracaoItem,
-  getSaudeItem,
-  getEducacaoItem,
   getAssistenciaItem,
+  getChatItem,
+  getCorreioItem,
+  getDashboardItem,
+  getEducacaoItem,
+  getFinancasItem,
+  getGabineteItem,
   getMeioAmbienteItem,
   getObrasItem,
+  getSaudeItem,
   getServicosItem,
-  getFinancasItem
 } from "./items";
 
-export function getSidebarItems(unreadMailCount?: number): SidebarItemProps[] {
-  return [
-    getDashboardItem(),
-    getCorreioItem(unreadMailCount),
-    getChatItem(),
-    getGabineteItem(),
-    getAdministracaoItem(),
-    getSaudeItem(),
-    getEducacaoItem(),
-    getAssistenciaItem(),
-    getMeioAmbienteItem(),
-    getObrasItem(),
-    getServicosItem(),
-    getFinancasItem(),
-  ];
-}
+const sidebarItems = [
+  getDashboardItem(),
+  getGabineteItem(),
+  getEducacaoItem(),
+  getSaudeItem(),
+  getAssistenciaItem(),
+  getAdministracaoItem(),
+  getServicosItem(),
+  getFinancasItem(),
+  getObrasItem(),
+  getMeioAmbienteItem(),
+  getCorreioItem(),
+  getChatItem(),
+];
+
+export default sidebarItems;

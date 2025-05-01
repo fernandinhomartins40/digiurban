@@ -86,6 +86,136 @@ export type Database = {
         }
         Relationships: []
       }
+      assistance_centers: {
+        Row: {
+          address: string
+          city: string
+          coordinator_name: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          neighborhood: string
+          phone: string | null
+          state: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          address: string
+          city: string
+          coordinator_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          neighborhood: string
+          phone?: string | null
+          state: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string
+          coordinator_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          neighborhood?: string
+          phone?: string | null
+          state?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      attendance_attachments: {
+        Row: {
+          attendance_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          uploaded_at: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          attendance_id?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          attendance_id?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_attachments_attendance_id_fkey"
+            columns: ["attendance_id"]
+            isOneToOne: false
+            referencedRelation: "social_attendances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      benefit_attachments: {
+        Row: {
+          benefit_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          uploaded_at: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          benefit_id?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          benefit_id?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "benefit_attachments_benefit_id_fkey"
+            columns: ["benefit_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_benefits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       citizen_profiles: {
         Row: {
           city: string | null
@@ -1236,6 +1366,225 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_benefits: {
+        Row: {
+          benefit_type: string
+          citizen_id: string | null
+          comments: string | null
+          created_at: string | null
+          delivery_date: string | null
+          id: string
+          protocol_number: string
+          reason: string
+          receiver_signature: string | null
+          request_date: string | null
+          responsible_id: string | null
+          status: Database["public"]["Enums"]["benefit_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          benefit_type: string
+          citizen_id?: string | null
+          comments?: string | null
+          created_at?: string | null
+          delivery_date?: string | null
+          id?: string
+          protocol_number: string
+          reason: string
+          receiver_signature?: string | null
+          request_date?: string | null
+          responsible_id?: string | null
+          status?: Database["public"]["Enums"]["benefit_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          benefit_type?: string
+          citizen_id?: string | null
+          comments?: string | null
+          created_at?: string | null
+          delivery_date?: string | null
+          id?: string
+          protocol_number?: string
+          reason?: string
+          receiver_signature?: string | null
+          request_date?: string | null
+          responsible_id?: string | null
+          status?: Database["public"]["Enums"]["benefit_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_benefits_citizen_id_fkey"
+            columns: ["citizen_id"]
+            isOneToOne: false
+            referencedRelation: "citizen_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_benefits_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_members: {
+        Row: {
+          citizen_id: string | null
+          created_at: string | null
+          family_id: string | null
+          id: string
+          is_dependent: boolean | null
+          relationship: string
+          updated_at: string | null
+        }
+        Insert: {
+          citizen_id?: string | null
+          created_at?: string | null
+          family_id?: string | null
+          id?: string
+          is_dependent?: boolean | null
+          relationship: string
+          updated_at?: string | null
+        }
+        Update: {
+          citizen_id?: string | null
+          created_at?: string | null
+          family_id?: string | null
+          id?: string
+          is_dependent?: boolean | null
+          relationship?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_citizen_id_fkey"
+            columns: ["citizen_id"]
+            isOneToOne: false
+            referencedRelation: "citizen_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_members_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "vulnerable_families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_monitoring_plans: {
+        Row: {
+          actions: string[]
+          contact_frequency: string
+          created_at: string | null
+          end_date: string | null
+          family_id: string | null
+          id: string
+          objectives: string
+          responsible_id: string | null
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          actions: string[]
+          contact_frequency: string
+          created_at?: string | null
+          end_date?: string | null
+          family_id?: string | null
+          id?: string
+          objectives: string
+          responsible_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          actions?: string[]
+          contact_frequency?: string
+          created_at?: string | null
+          end_date?: string | null
+          family_id?: string | null
+          id?: string
+          objectives?: string
+          responsible_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_monitoring_plans_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "vulnerable_families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_monitoring_plans_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_visits: {
+        Row: {
+          created_at: string | null
+          evolution: string | null
+          family_id: string | null
+          id: string
+          next_visit_date: string | null
+          observations: string
+          professional_id: string | null
+          situation: string
+          updated_at: string | null
+          visit_date: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          evolution?: string | null
+          family_id?: string | null
+          id?: string
+          next_visit_date?: string | null
+          observations: string
+          professional_id?: string | null
+          situation: string
+          updated_at?: string | null
+          visit_date?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          evolution?: string | null
+          family_id?: string | null
+          id?: string
+          next_visit_date?: string | null
+          observations?: string
+          professional_id?: string | null
+          situation?: string
+          updated_at?: string | null
+          visit_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_visits_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "vulnerable_families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_visits_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       health_program_activities: {
         Row: {
           actual_participants: number | null
@@ -2138,6 +2487,60 @@ export type Database = {
           },
         ]
       }
+      program_beneficiaries: {
+        Row: {
+          citizen_id: string | null
+          created_at: string | null
+          entry_date: string
+          exit_date: string | null
+          id: string
+          is_active: boolean | null
+          last_update_date: string | null
+          nis_number: string | null
+          program_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          citizen_id?: string | null
+          created_at?: string | null
+          entry_date?: string
+          exit_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_update_date?: string | null
+          nis_number?: string | null
+          program_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          citizen_id?: string | null
+          created_at?: string | null
+          entry_date?: string
+          exit_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_update_date?: string | null
+          nis_number?: string | null
+          program_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_beneficiaries_citizen_id_fkey"
+            columns: ["citizen_id"]
+            isOneToOne: false
+            referencedRelation: "citizen_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_beneficiaries_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "social_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_policies: {
         Row: {
           created_at: string | null
@@ -2385,6 +2788,112 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      social_attendances: {
+        Row: {
+          attendance_date: string | null
+          attendance_type: Database["public"]["Enums"]["attendance_type"]
+          center_id: string | null
+          citizen_id: string | null
+          created_at: string | null
+          description: string
+          follow_up_date: string | null
+          follow_up_required: boolean | null
+          id: string
+          professional_id: string | null
+          protocol_number: string
+          referrals: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attendance_date?: string | null
+          attendance_type: Database["public"]["Enums"]["attendance_type"]
+          center_id?: string | null
+          citizen_id?: string | null
+          created_at?: string | null
+          description: string
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          professional_id?: string | null
+          protocol_number: string
+          referrals?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attendance_date?: string | null
+          attendance_type?: Database["public"]["Enums"]["attendance_type"]
+          center_id?: string | null
+          citizen_id?: string | null
+          created_at?: string | null
+          description?: string
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          professional_id?: string | null
+          protocol_number?: string
+          referrals?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_attendances_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "assistance_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_attendances_citizen_id_fkey"
+            columns: ["citizen_id"]
+            isOneToOne: false
+            referencedRelation: "citizen_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_attendances_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_programs: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          scope: string
+          start_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          scope: string
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          scope?: string
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       strategic_program_documents: {
         Row: {
@@ -2686,6 +3195,107 @@ export type Database = {
         }
         Relationships: []
       }
+      visit_attachments: {
+        Row: {
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          uploaded_at: string | null
+          uploaded_by: string
+          visit_id: string | null
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by: string
+          visit_id?: string | null
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_attachments_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "family_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vulnerable_families: {
+        Row: {
+          address: string
+          city: string
+          created_at: string | null
+          family_name: string
+          family_status: Database["public"]["Enums"]["family_status"] | null
+          id: string
+          neighborhood: string
+          reference_person_id: string | null
+          responsible_id: string | null
+          state: string
+          updated_at: string | null
+          vulnerability_criteria: Database["public"]["Enums"]["vulnerability_criteria"][]
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string | null
+          family_name: string
+          family_status?: Database["public"]["Enums"]["family_status"] | null
+          id?: string
+          neighborhood: string
+          reference_person_id?: string | null
+          responsible_id?: string | null
+          state: string
+          updated_at?: string | null
+          vulnerability_criteria: Database["public"]["Enums"]["vulnerability_criteria"][]
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string | null
+          family_name?: string
+          family_status?: Database["public"]["Enums"]["family_status"] | null
+          id?: string
+          neighborhood?: string
+          reference_person_id?: string | null
+          responsible_id?: string | null
+          state?: string
+          updated_at?: string | null
+          vulnerability_criteria?: Database["public"]["Enums"]["vulnerability_criteria"][]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vulnerable_families_reference_person_id_fkey"
+            columns: ["reference_person_id"]
+            isOneToOne: false
+            referencedRelation: "citizen_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vulnerable_families_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2698,6 +3308,14 @@ export type Database = {
       calculate_school_students: {
         Args: { school_id: string }
         Returns: number
+      }
+      generate_attendance_protocol: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_benefit_protocol: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       generate_enrollment_protocol: {
         Args: Record<PropertyKey, never>
@@ -2736,6 +3354,25 @@ export type Database = {
       }
     }
     Enums: {
+      attendance_type:
+        | "reception"
+        | "qualified_listening"
+        | "referral"
+        | "guidance"
+        | "follow_up"
+        | "other"
+      benefit_status:
+        | "pending"
+        | "approved"
+        | "delivering"
+        | "completed"
+        | "rejected"
+      family_status:
+        | "monitoring"
+        | "stable"
+        | "critical"
+        | "improved"
+        | "completed"
       hr_document_status: "pending" | "approved" | "rejected"
       hr_request_status: "pending" | "in_progress" | "approved" | "rejected"
       mail_document_status: "pending" | "forwarded" | "responded" | "completed"
@@ -2749,6 +3386,15 @@ export type Database = {
         | "completed"
         | "rejected"
       user_role: "prefeito" | "admin" | "citizen"
+      vulnerability_criteria:
+        | "income"
+        | "housing"
+        | "education"
+        | "domestic_violence"
+        | "health"
+        | "unemployment"
+        | "food_insecurity"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2864,6 +3510,28 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      attendance_type: [
+        "reception",
+        "qualified_listening",
+        "referral",
+        "guidance",
+        "follow_up",
+        "other",
+      ],
+      benefit_status: [
+        "pending",
+        "approved",
+        "delivering",
+        "completed",
+        "rejected",
+      ],
+      family_status: [
+        "monitoring",
+        "stable",
+        "critical",
+        "improved",
+        "completed",
+      ],
       hr_document_status: ["pending", "approved", "rejected"],
       hr_request_status: ["pending", "in_progress", "approved", "rejected"],
       mail_document_status: ["pending", "forwarded", "responded", "completed"],
@@ -2878,6 +3546,16 @@ export const Constants = {
         "rejected",
       ],
       user_role: ["prefeito", "admin", "citizen"],
+      vulnerability_criteria: [
+        "income",
+        "housing",
+        "education",
+        "domestic_violence",
+        "health",
+        "unemployment",
+        "food_insecurity",
+        "other",
+      ],
     },
   },
 } as const
