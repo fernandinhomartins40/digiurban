@@ -34,7 +34,7 @@ export default function PendingEnrollmentsTab() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(false);
   const [schools, setSchools] = useState<School[]>([]);
-  const [selectedSchoolId, setSelectedSchoolId] = useState("");
+  const [selectedSchoolId, setSelectedSchoolId] = useState("all");
   const [protocolNumber, setProtocolNumber] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -95,7 +95,7 @@ export default function PendingEnrollmentsTab() {
       schoolYear: currentYear
     };
     
-    if (selectedSchoolId) {
+    if (selectedSchoolId && selectedSchoolId !== "all") {
       params.schoolId = selectedSchoolId;
     }
     
@@ -109,7 +109,7 @@ export default function PendingEnrollmentsTab() {
   };
 
   const handleClearFilters = () => {
-    setSelectedSchoolId("");
+    setSelectedSchoolId("all");
     setProtocolNumber("");
     fetchEnrollments({ status: "pending", page: 1, schoolYear: currentYear });
     setPage(1);
@@ -147,7 +147,7 @@ export default function PendingEnrollmentsTab() {
               <SelectValue placeholder="Todas" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
               {schools.map((school) => (
                 <SelectItem key={school.id} value={school.id}>
                   {school.name}

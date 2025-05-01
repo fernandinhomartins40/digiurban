@@ -126,14 +126,14 @@ export default function EnrollmentStatusTab() {
       <div className="space-y-2 max-w-md">
         <Label htmlFor="school">Escola</Label>
         <Select
-          value={selectedSchoolId || ""}
-          onValueChange={(value) => setSelectedSchoolId(value || null)}
+          value={selectedSchoolId || "all"}
+          onValueChange={(value) => setSelectedSchoolId(value === "all" ? null : value)}
         >
           <SelectTrigger id="school">
             <SelectValue placeholder="Todas as Escolas" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as Escolas</SelectItem>
+            <SelectItem value="all">Todas as Escolas</SelectItem>
             {schools.map((school) => (
               <SelectItem key={school.id} value={school.id}>
                 {school.name}

@@ -32,7 +32,7 @@ export default function ApprovedEnrollmentsTab() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(false);
   const [schools, setSchools] = useState<School[]>([]);
-  const [selectedSchoolId, setSelectedSchoolId] = useState("");
+  const [selectedSchoolId, setSelectedSchoolId] = useState("all");
   const [protocolNumber, setProtocolNumber] = useState("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
@@ -92,7 +92,7 @@ export default function ApprovedEnrollmentsTab() {
       schoolYear: currentYear
     };
     
-    if (selectedSchoolId) {
+    if (selectedSchoolId && selectedSchoolId !== "all") {
       params.schoolId = selectedSchoolId;
     }
     
@@ -106,7 +106,7 @@ export default function ApprovedEnrollmentsTab() {
   };
 
   const handleClearFilters = () => {
-    setSelectedSchoolId("");
+    setSelectedSchoolId("all");
     setProtocolNumber("");
     fetchEnrollments({ status: "approved", page: 1, schoolYear: currentYear });
     setPage(1);
@@ -135,7 +135,7 @@ export default function ApprovedEnrollmentsTab() {
               <SelectValue placeholder="Todas" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
               {schools.map((school) => (
                 <SelectItem key={school.id} value={school.id}>
                   {school.name}
