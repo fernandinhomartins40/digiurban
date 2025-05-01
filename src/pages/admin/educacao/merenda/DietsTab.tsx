@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +18,9 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Search } from "lucide-react";
+import { PlusCircle, Search, Eye, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getSpecialDiets } from "@/services/education/meals";
+import { getSpecialDiets } from "@/services/education/diets";
 import { SpecialDiet } from "@/types/education";
 import { getStudents } from "@/services/education/students";
 import { Student } from "@/types/education";
@@ -29,6 +28,7 @@ import DietDialog from "./dialogs/DietDialog";
 import { getSchools } from "@/services/education/schools";
 import { School } from "@/types/education";
 import PaginationComponent from "@/components/educacao/PaginationComponent";
+import { DietDetailDialog } from "./dialogs/DietDetailDialog";
 
 export default function DietsTab() {
   const { toast } = useToast();
@@ -41,8 +41,8 @@ export default function DietsTab() {
   const [editDiet, setEditDiet] = useState<SpecialDiet | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const itemsPerPage = 10;
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   // Load students and schools when component mounts
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function DietsTab() {
     try {
       const result = await getSpecialDiets(studentId);
       setDiets(result);
-      setTotalItems(result.length);
+      setTotalCount(result.length);
     } catch (error) {
       console.error("Error fetching diets:", error);
       toast({
@@ -233,7 +233,7 @@ export default function DietsTab() {
               </TableRow>
             ) : (
               diets
-                .slice((page - 1) * itemsPerPage, page * itemsPerPage)
+                .slice((page - 1) * pageSize, page * pageSize)
                 .map((diet) => (
                 <TableRow key={diet.id}>
                   <TableCell>{diet.dietType}</TableCell>
@@ -278,8 +278,8 @@ export default function DietsTab() {
       {diets.length > 0 && (
         <PaginationComponent 
           currentPage={page} 
-          totalItems={totalItems} 
-          pageSize={itemsPerPage} 
+          totalCount={totalCount} 
+          pageSize={pageSize} 
           onPageChange={setPage}
         />
       )}

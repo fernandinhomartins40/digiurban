@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +24,7 @@ import { getStudents } from "@/services/education/students";
 import { getSchools } from "@/services/education/schools";
 import { Student, School } from "@/types/education";
 import { format } from "date-fns";
-import PaginationComponent from "@/components/educacao/PaginationComponent";
+import { PaginationComponent } from "@/components/educacao/PaginationComponent";
 import { DatePickerWithRange } from "./components/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
@@ -320,7 +319,7 @@ export default function OccurrencesList({
 
       <PaginationComponent 
         currentPage={currentPage} 
-        totalItems={totalItems} 
+        totalCount={totalItems} 
         pageSize={10} 
         onPageChange={onPageChange}
       />

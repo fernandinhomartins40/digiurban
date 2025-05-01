@@ -1,7 +1,10 @@
-
 import React, { useState, useEffect } from "react";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  AlertTriangle, // Change Alert to AlertTriangle 
+  ClipboardList
+} from "lucide-react";
 import { Alert } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import OccurrencesList from "./OccurrencesList";
 import OccurrenceDialog from "./dialogs/OccurrenceDialog";
 import OccurrenceDetailDialog from "./dialogs/OccurrenceDetailDialog";
@@ -80,8 +83,8 @@ export default function OcorrenciasIndex() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Alert className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Ocorrências</h1>
+          <AlertTriangle className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold">Ocorrências Escolares</h1>
         </div>
       </div>
 

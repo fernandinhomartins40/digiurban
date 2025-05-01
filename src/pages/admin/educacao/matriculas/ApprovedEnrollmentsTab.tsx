@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +23,7 @@ import { getEnrollments } from "@/services/education/enrollment";
 import { getSchools } from "@/services/education/schools";
 import { Enrollment, School } from "@/types/education";
 import { format } from "date-fns";
-import PaginationComponent from "@/components/educacao/PaginationComponent";
+import { PaginationComponent } from "@/components/educacao/PaginationComponent";
 import EnrollmentDetailDialog from "./dialogs/EnrollmentDetailDialog";
 
 export default function ApprovedEnrollmentsTab() {
@@ -197,10 +196,10 @@ export default function ApprovedEnrollmentsTab() {
                 <TableRow key={enrollment.id}>
                   <TableCell>{enrollment.protocolNumber}</TableCell>
                   <TableCell>
-                    {enrollment.studentInfo?.name || enrollment.studentId}
+                    {enrollment.studentName || enrollment.studentId}
                   </TableCell>
                   <TableCell>
-                    {enrollment.assignedSchoolInfo?.name || enrollment.assignedSchoolId}
+                    {enrollment.assignedSchoolName || enrollment.assignedSchoolId}
                   </TableCell>
                   <TableCell>
                     {enrollment.classId || "-"}
@@ -220,7 +219,7 @@ export default function ApprovedEnrollmentsTab() {
 
       <PaginationComponent 
         currentPage={page} 
-        totalItems={totalItems} 
+        totalCount={totalItems} 
         pageSize={itemsPerPage} 
         onPageChange={setPage}
       />

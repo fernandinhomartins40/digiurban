@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +24,7 @@ import { getEnrollments } from "@/services/education/enrollment";
 import { getSchools } from "@/services/education/schools";
 import { Enrollment, School } from "@/types/education";
 import { format } from "date-fns";
-import PaginationComponent from "@/components/educacao/PaginationComponent";
+import { PaginationComponent } from "@/components/educacao/PaginationComponent";
 import EnrollmentDialog from "./dialogs/EnrollmentDialog";
 import EnrollmentDetailDialog from "./dialogs/EnrollmentDetailDialog";
 
@@ -212,10 +211,10 @@ export default function PendingEnrollmentsTab() {
                 <TableRow key={enrollment.id}>
                   <TableCell>{enrollment.protocolNumber}</TableCell>
                   <TableCell>
-                    {enrollment.studentInfo?.name || enrollment.studentId}
+                    {enrollment.studentName || enrollment.studentId}
                   </TableCell>
                   <TableCell>
-                    {enrollment.requestedSchoolInfo?.name || enrollment.requestedSchoolId}
+                    {enrollment.requestedSchoolName || enrollment.requestedSchoolId}
                   </TableCell>
                   <TableCell>{format(new Date(enrollment.requestDate), 'dd/MM/yyyy')}</TableCell>
                   <TableCell>
@@ -243,7 +242,7 @@ export default function PendingEnrollmentsTab() {
 
       <PaginationComponent 
         currentPage={page} 
-        totalItems={totalItems} 
+        totalCount={totalItems} 
         pageSize={itemsPerPage} 
         onPageChange={setPage}
       />

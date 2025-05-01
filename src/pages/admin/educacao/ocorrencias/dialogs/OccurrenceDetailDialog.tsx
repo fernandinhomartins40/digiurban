@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { getOccurrenceById, getOccurrenceAttachments, notifyParentAboutOccurrence, getAttachmentDownloadUrl, uploadOccurrenceAttachment, deleteOccurrenceAttachment } from "@/services/education/occurrences";
 import { Occurrence, OccurrenceAttachment, OccurrenceType, OccurrenceSeverity } from "@/types/education";
 import { format } from "date-fns";
-import { FileUpload, Download, Trash2, BellRing, Loader2 } from "lucide-react";
+import { Eye, Download, Trash2, Upload, BellRing, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -154,7 +153,7 @@ export default function OccurrenceDetailDialog({
     }
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleAttachFile = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!selectedFile || !occurrenceId) return;
@@ -244,7 +243,7 @@ export default function OccurrenceDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Detalhes da Ocorrência</DialogTitle>
         </DialogHeader>
@@ -392,7 +391,7 @@ export default function OccurrenceDetailDialog({
                   </div>
                 )}
 
-                <form onSubmit={handleUpload} className="space-y-2 pt-4">
+                <form onSubmit={handleAttachFile} className="space-y-2 pt-4">
                   <Label htmlFor="fileInput">Adicionar Anexo</Label>
                   <div className="flex gap-2">
                     <Input 
@@ -408,7 +407,7 @@ export default function OccurrenceDetailDialog({
                       {uploadLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <FileUpload className="h-4 w-4" />
+                        <Upload className="mr-2 h-4 w-4" />
                       )}
                     </Button>
                   </div>
