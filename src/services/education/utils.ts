@@ -90,7 +90,6 @@ export const mapMealFromDB = (dbData: any): SchoolMeal => {
     menu_items: dbData.menu_items,
     nutritional_info: dbData.nutritional_info,
     year: dbData.year,
-    is_active: dbData.is_active,
     created_at: dbData.created_at,
     created_by: dbData.created_by,
     // Map to our application type
