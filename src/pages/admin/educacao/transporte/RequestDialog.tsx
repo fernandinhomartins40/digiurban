@@ -91,14 +91,42 @@ export default function RequestDialog({
   const onSubmit = async (values: RequestFormValues) => {
     try {
       if (isEditing && request) {
-        await updateTransportRequest(request.id, values);
+        await updateTransportRequest(request.id, {
+          requestType: values.requestType,
+          requesterName: values.requesterName,
+          requesterContact: values.requesterContact,
+          description: values.description,
+          studentId: values.studentId || undefined,
+          schoolId: values.schoolId || undefined,
+          currentRouteId: values.currentRouteId || undefined,
+          requestedRouteId: values.requestedRouteId || undefined,
+          pickupLocation: values.pickupLocation || undefined,
+          returnLocation: values.returnLocation || undefined,
+          complaintType: values.complaintType || undefined,
+          status: values.status,
+          resolutionNotes: values.resolutionNotes || undefined
+        });
         toast({
           title: "Sucesso",
           description: "Solicitação atualizada com sucesso",
         });
         onUpdated();
       } else {
-        await createTransportRequest(values);
+        await createTransportRequest({
+          requestType: values.requestType,
+          requesterName: values.requesterName,
+          requesterContact: values.requesterContact,
+          description: values.description,
+          studentId: values.studentId || undefined,
+          schoolId: values.schoolId || undefined,
+          currentRouteId: values.currentRouteId || undefined,
+          requestedRouteId: values.requestedRouteId || undefined,
+          pickupLocation: values.pickupLocation || undefined,
+          returnLocation: values.returnLocation || undefined,
+          complaintType: values.complaintType || undefined,
+          status: values.status,
+          resolutionNotes: values.resolutionNotes || undefined
+        });
         toast({
           title: "Sucesso", 
           description: "Solicitação criada com sucesso"

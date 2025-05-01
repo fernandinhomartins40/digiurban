@@ -114,16 +114,38 @@ export default function RouteDialog({
   const onSubmit = async (values: RouteFormValues) => {
     try {
       if (isEditing && route) {
-        await updateTransportRoute(route.id, values);
+        await updateTransportRoute(route.id, {
+          name: values.name,
+          vehicleId: values.vehicleId,
+          origin: values.origin,
+          destination: values.destination,
+          schoolIds: values.schoolIds,
+          departureTime: values.departureTime,
+          returnTime: values.returnTime,
+          distance: values.distance,
+          averageDuration: values.averageDuration,
+          maxCapacity: values.maxCapacity,
+          isActive: values.isActive,
+          currentStudents: route.currentStudents // Mantém o valor atual
+        });
         toast({
           title: "Sucesso",
           description: "Rota atualizada com sucesso",
         });
         onUpdated();
       } else {
-        // For simplicity in this example, we're setting currentStudents to 0
         const newRoute = {
-          ...values,
+          name: values.name,
+          vehicleId: values.vehicleId,
+          origin: values.origin,
+          destination: values.destination,
+          schoolIds: values.schoolIds,
+          departureTime: values.departureTime,
+          returnTime: values.returnTime,
+          distance: values.distance,
+          averageDuration: values.averageDuration,
+          maxCapacity: values.maxCapacity,
+          isActive: values.isActive,
           currentStudents: 0
         };
         await createTransportRoute(newRoute);
@@ -310,8 +332,8 @@ export default function RouteDialog({
               />
             </div>
             
-            {/* For simplicity, we're using a hidden field for schoolIds.
-                In a real application, you would implement a proper multi-select for schools */}
+            {/* Para simplificar, estamos usando um campo oculto para schoolIds.
+                Em uma aplicação real, você implementaria um multi-select para escolas */}
             <FormField
               control={form.control}
               name="schoolIds"

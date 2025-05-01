@@ -77,14 +77,32 @@ export default function StudentTransportDialog({
   const onSubmit = async (values: StudentTransportFormValues) => {
     try {
       if (isEditing && transport) {
-        await updateStudentTransport(transport.id, values);
+        await updateStudentTransport(transport.id, {
+          studentId: values.studentId,
+          routeId: values.routeId,
+          pickupLocation: values.pickupLocation,
+          returnLocation: values.returnLocation,
+          schoolId: values.schoolId,
+          startDate: values.startDate,
+          endDate: values.endDate,
+          status: values.status
+        });
         toast({
           title: "Sucesso",
           description: "Transporte de aluno atualizado com sucesso",
         });
         onUpdated();
       } else {
-        await createStudentTransport(values);
+        await createStudentTransport({
+          studentId: values.studentId,
+          routeId: values.routeId,
+          pickupLocation: values.pickupLocation,
+          returnLocation: values.returnLocation,
+          schoolId: values.schoolId,
+          startDate: values.startDate,
+          endDate: values.endDate,
+          status: values.status
+        });
         toast({
           title: "Sucesso", 
           description: "Aluno adicionado ao transporte com sucesso"

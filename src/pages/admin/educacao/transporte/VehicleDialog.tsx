@@ -82,14 +82,42 @@ export default function VehicleDialog({
   const onSubmit = async (values: VehicleFormValues) => {
     try {
       if (isEditing && vehicle) {
-        await updateVehicle(vehicle.id, values);
+        // Para update, garantimos que todos os campos estejam presentes
+        await updateVehicle(vehicle.id, {
+          plate: values.plate,
+          type: values.type,
+          model: values.model,
+          capacity: values.capacity,
+          year: values.year,
+          isAccessible: values.isAccessible,
+          driverName: values.driverName,
+          driverContact: values.driverContact,
+          driverLicense: values.driverLicense,
+          monitorName: values.monitorName,
+          monitorContact: values.monitorContact,
+          isActive: values.isActive
+        });
         toast({
           title: "Sucesso",
           description: "Veículo atualizado com sucesso",
         });
         onUpdated();
       } else {
-        await createVehicle(values);
+        // Para criação, garantimos que todos os campos obrigatórios estejam presentes
+        await createVehicle({
+          plate: values.plate,
+          type: values.type,
+          model: values.model,
+          capacity: values.capacity,
+          year: values.year,
+          isAccessible: values.isAccessible,
+          driverName: values.driverName,
+          driverContact: values.driverContact,
+          driverLicense: values.driverLicense,
+          monitorName: values.monitorName,
+          monitorContact: values.monitorContact,
+          isActive: values.isActive
+        });
         toast({
           title: "Sucesso", 
           description: "Veículo cadastrado com sucesso"
