@@ -34,9 +34,10 @@ export const createSchool = async (school: Omit<School, 'id' | 'created_at' | 'u
   // Map from our interface to DB structure
   const dbData = mapSchoolToDB(school);
 
+  // Use type assertion to ensure TypeScript understands this is valid for the database table
   const { data, error } = await supabase
     .from('education_schools')
-    .insert(dbData) // Fixed: removed array wrapping
+    .insert(dbData as any)
     .select()
     .single();
 

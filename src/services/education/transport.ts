@@ -42,6 +42,7 @@ export const createTransportRequest = async (request: Omit<TransportRequest, 'id
   // Map from our interface to DB structure
   const dbData = mapTransportRequestToDB(request);
 
+  // Use explicit type assertion with defaultToNull option
   const { data, error } = await supabase
     .from('education_transport_requests')
     .insert(dbData as any, { defaultToNull: false })

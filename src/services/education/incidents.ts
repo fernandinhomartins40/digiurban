@@ -48,9 +48,10 @@ export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'crea
   // Map from our interface to DB structure
   const dbData = mapIncidentToDB(incident);
 
+  // Use type assertion to ensure TypeScript understands this is valid for the database table
   const { data, error } = await supabase
     .from('education_occurrences')
-    .insert(dbData) // Fixed: removed array wrapping
+    .insert(dbData as any)
     .select(`
       *,
       education_schools(name),

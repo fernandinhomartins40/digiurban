@@ -31,9 +31,10 @@ export const fetchStudentById = async (id: string): Promise<Student> => {
 };
 
 export const createStudent = async (student: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Promise<Student> => {
+  // Use type assertion to ensure TypeScript understands this is valid for the database table
   const { data, error } = await supabase
     .from('education_students')
-    .insert(student) // Fixed: removed array wrapping
+    .insert(student as any)
     .select()
     .single();
 
@@ -94,9 +95,10 @@ export const createTeacher = async (teacher: Omit<Teacher, 'id' | 'created_at' |
   // Map from our interface to DB structure
   const dbData = mapTeacherToDB(teacher);
 
+  // Use type assertion to ensure TypeScript understands this is valid for the database table
   const { data, error } = await supabase
     .from('education_teachers')
-    .insert(dbData) // Fixed: removed array wrapping
+    .insert(dbData as any)
     .select()
     .single();
 

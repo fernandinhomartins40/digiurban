@@ -50,9 +50,10 @@ export const createMealMenu = async (meal: Omit<SchoolMeal, 'id' | 'created_at' 
   // Map from our interface to DB structure
   const dbData = mapMealToDB(meal);
 
+  // Use type assertion to ensure TypeScript understands this is valid for the database table
   const { data, error } = await supabase
     .from('education_meal_menus')
-    .insert(dbData) // Fixed: removed array wrapping
+    .insert(dbData as any)
     .select(`
       *,
       education_schools(name)
