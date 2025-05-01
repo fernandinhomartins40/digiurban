@@ -1,4 +1,3 @@
-
 // Education Module Types
 
 // School Types
@@ -184,6 +183,16 @@ export interface StudentTransport {
   status: TransportStatus;
   createdAt: string;
   updatedAt: string;
+  studentInfo?: {
+    id: string;
+    name: string;
+    registrationNumber: string;
+  };
+  schoolInfo?: {
+    id: string;
+    name: string;
+    type: string;
+  };
 }
 
 export type TransportRequestType = 'new' | 'change' | 'complaint' | 'cancellation';

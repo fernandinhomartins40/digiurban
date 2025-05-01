@@ -415,8 +415,8 @@ export async function getStudentTransports(
     let query = supabase.from('education_student_transports')
       .select(`
         *,
-        education_students!student_id(id, name, registration_number),
-        education_schools!school_id(id, name, type)
+        education_students(id, name, registration_number),
+        education_schools(id, name, type)
       `);
     
     if (filters.studentId) {
@@ -478,8 +478,8 @@ export async function getStudentTransportById(id: string): Promise<StudentTransp
       .from('education_student_transports')
       .select(`
         *,
-        education_students!student_id(id, name, registration_number),
-        education_schools!school_id(id, name, type)
+        education_students(id, name, registration_number),
+        education_schools(id, name, type)
       `)
       .eq('id', id)
       .single();
@@ -520,7 +520,7 @@ export async function getStudentTransportById(id: string): Promise<StudentTransp
  * Create a new student transport
  * @param transport
   */
-export async function createStudentTransport(transport: Omit<StudentTransport, "id" | "createdAt" | "updatedAt">): Promise<StudentTransport> {
+export async function createStudentTransport(transport: Omit<StudentTransport, "id" | "createdAt" | "updatedAt" | "studentInfo" | "schoolInfo">): Promise<StudentTransport> {
   try {
     // First insert the transport record
     const { data, error } = await supabase
@@ -540,11 +540,11 @@ export async function createStudentTransport(transport: Omit<StudentTransport, "
 
     if (error) throw error;
 
-    // Then update the route's current students count directly
+    // Then update the route's current students count
     await supabase
       .from('education_transport_routes')
       .update({
-        current_students: supabase.raw('current_students + 1')
+        current_students: supabase.rpc('calculate_route_students', { route_id: transport.routeId })
       })
       .eq('id', transport.routeId);
 
@@ -617,12 +617,32 @@ export async function updateStudentTransport(id: string, transport: Partial<Stud
  */
 export async function deleteStudentTransport(id: string): Promise<void> {
   try {
+    // First get the transport to know the route ID
+    const { data: transportData } = await supabase
+      .from('education_student_transports')
+      .select('route_id')
+      .eq('id', id)
+      .single();
+      
+    const routeId = transportData?.route_id;
+    
+    // Delete the transport
     const { error } = await supabase
       .from('education_student_transports')
       .delete()
       .eq('id', id);
 
     if (error) throw error;
+    
+    // Update the route's current students count if we have a route ID
+    if (routeId) {
+      await supabase
+        .from('education_transport_routes')
+        .update({
+          current_students: supabase.rpc('calculate_route_students', { route_id: routeId })
+        })
+        .eq('id', routeId);
+    }
   } catch (error) {
     console.error('Error deleting student transport:', error);
     throw error;
