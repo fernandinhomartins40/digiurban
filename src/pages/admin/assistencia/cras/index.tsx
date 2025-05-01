@@ -162,7 +162,8 @@ export default function CrasCreasPage() {
                 centers={centers}
                 loading={loadingCenters}
                 onEdit={handleEditCenter}
-                onDelete={(center) => handleDeleteCenter(center.id)}
+                // Fix the prop name to match what CentersTable expects
+                onDelete={handleDeleteCenter}
               />
             </TabsContent>
 
@@ -170,7 +171,7 @@ export default function CrasCreasPage() {
               <AttendancesTable
                 attendances={attendances}
                 loading={loadingAttendances}
-                onView={(attendance) => handleViewAttendance(attendance.id)}
+                onView={handleViewAttendance}
                 onEdit={handleEditAttendance}
               />
             </TabsContent>
