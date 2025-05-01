@@ -78,11 +78,12 @@ export const createTransportRequest = async (request: Omit<TransportRequest, 'id
     resolution_notes: request.resolution_notes,
     resolution_date: request.resolution_date,
     resolved_by: request.resolved_by
+    // protocol_number is handled by a database trigger
   };
 
   const { data, error } = await supabase
     .from('education_transport_requests')
-    .insert([dbData])
+    .insert(dbData)
     .select(`
       *,
       education_students(name),
