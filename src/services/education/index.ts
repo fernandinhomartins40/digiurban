@@ -14,8 +14,7 @@ export const {
   getMealMenus,
   getMealMenuById,
   updateMealMenu,
-  deleteMealMenu,
-  // Excluding the special diet functions as they're now in diets.ts
+  // deleteMealMenu is not defined in meals.ts, so we're removing it
 } = MealsExports;
 
 // Explicitly export from other modules
