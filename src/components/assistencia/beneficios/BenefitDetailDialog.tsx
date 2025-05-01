@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { EmergencyBenefit, BenefitAttachment } from "@/types/assistance";
-import { getBenefitAttachments } from "@/services/assistance/index";
+import { getBenefitAttachments } from "@/services/assistance";
 import {
   Dialog,
   DialogContent,

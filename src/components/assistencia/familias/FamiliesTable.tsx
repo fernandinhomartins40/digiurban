@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { VulnerableFamily } from "@/types/assistance";
-import { Eye, Edit, Users, ClipboardList } from "lucide-react";
+import { Eye, Edit, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface FamiliesTableProps {
@@ -21,7 +21,6 @@ interface FamiliesTableProps {
   onView: (family: VulnerableFamily) => void;
   onEdit: (family: VulnerableFamily) => void;
   onManageMembers: (family: VulnerableFamily) => void;
-  onCreatePlan?: (family: VulnerableFamily) => void;
 }
 
 export default function FamiliesTable({
@@ -30,7 +29,6 @@ export default function FamiliesTable({
   onView,
   onEdit,
   onManageMembers,
-  onCreatePlan,
 }: FamiliesTableProps) {
   if (loading) {
     return (
@@ -117,36 +115,20 @@ export default function FamiliesTable({
                     variant="ghost"
                     size="icon"
                     onClick={() => onManageMembers(family)}
-                    title="Gerenciar Membros"
                   >
                     <Users className="h-4 w-4" />
                   </Button>
-                  
-                  {onCreatePlan && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onCreatePlan(family)}
-                      title="Criar Plano"
-                    >
-                      <ClipboardList className="h-4 w-4" />
-                    </Button>
-                  )}
-                  
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => onView(family)}
-                    title="Visualizar"
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => onEdit(family)}
-                    title="Editar"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>

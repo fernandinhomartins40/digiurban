@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +32,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   getProgramBeneficiaries,
   createProgramBeneficiary,
-} from "@/services/assistance/index";
+} from "@/services/assistance";
 import {
   Form,
   FormControl,

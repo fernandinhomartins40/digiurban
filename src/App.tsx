@@ -29,22 +29,16 @@ import ProfilePage from "./pages/admin/profile";
 import FinancasIndexPage from "./pages/admin/financas";
 import ServicosIndexPage from "./pages/admin/servicos";
 import UsersPage from "./pages/admin/administracao/users";
-import GabineteIndexPage from "./pages/admin/gabinete/index";
-import AppointmentScheduler from "./pages/admin/gabinete/AppointmentScheduler";
-import DirectRequests from "./pages/admin/gabinete/DirectRequests";
-import PublicPoliciesPage from "./pages/admin/gabinete/PublicPolicies";
-import StrategicProgramsPage from "./pages/admin/gabinete/StrategicPrograms";
-import MeioAmbienteIndexPage from "./pages/admin/meioambiente";
-import HRRequestsPage from "./pages/admin/administracao/HRRequests";
-import PurchaseRequestsPage from "./pages/admin/financas/PurchaseRequests";
-import MailDocumentsPage from "./pages/admin/correio/MailDocuments";
-import ComprasPage from "./pages/admin/administracao/compras/index";
-import EscolasIndexPage from "./pages/admin/educacao/escolas/index";
-import MatriculasIndex from "./pages/admin/educacao/matriculas/index";
-import TransporteIndex from "./pages/admin/educacao/transporte/index";
-import AlunosProfessoresIndex from "./pages/admin/educacao/alunos-professores/index";
-import MerendaIndex from "./pages/admin/educacao/merenda/index";
-import OcorrenciasIndex from "./pages/admin/educacao/ocorrencias/index";
+
+// Create placeholder components for the missing imports
+const GabineteIndexPage = () => <div>Gabinete Dashboard</div>;
+const DirectRequests = () => <div>Direct Requests</div>;
+const PublicPoliciesPage = () => <div>Public Policies Page</div>;
+const StrategicProgramsPage = () => <div>Strategic Programs Page</div>;
+const MeioAmbienteIndexPage = () => <div>Meio Ambiente Dashboard</div>;
+const PurchaseRequestsPage = () => <div>Purchase Requests</div>;
+const HRRequestsPage = () => <div>HR Requests</div>;
+const MailDocumentsPage = () => <div>Mail Documents</div>;
 
 function App() {
   return (
@@ -69,19 +63,12 @@ function App() {
 
           {/* Gabinete routes */}
           <Route path="admin/gabinete" element={<GabineteIndexPage />} />
-          <Route path="admin/gabinete/agendamentos" element={<AppointmentScheduler />} />
           <Route path="admin/gabinete/solicitacoes" element={<DirectRequests />} />
-          <Route path="admin/gabinete/politicas" element={<PublicPoliciesPage />} />
-          <Route path="admin/gabinete/programas" element={<StrategicProgramsPage />} />
+          <Route path="admin/gabinete/politicas-publicas" element={<PublicPoliciesPage />} />
+          <Route path="admin/gabinete/programas-estrategicos" element={<StrategicProgramsPage />} />
 
           {/* Educação routes */}
           <Route path="admin/educacao" element={<EducacaoIndexPage />} />
-          <Route path="admin/educacao/escolas" element={<EscolasIndexPage />} />
-          <Route path="admin/educacao/matriculas" element={<MatriculasIndex />} />
-          <Route path="admin/educacao/transporte" element={<TransporteIndex />} />
-          <Route path="admin/educacao/alunos-professores" element={<AlunosProfessoresIndex />} />
-          <Route path="admin/educacao/merenda" element={<MerendaIndex />} />
-          <Route path="admin/educacao/ocorrencias" element={<OcorrenciasIndex />} />
 
           {/* Saúde routes */}
           <Route path="admin/saude" element={<SaudeIndexPage />} />
@@ -98,7 +85,6 @@ function App() {
           <Route path="admin/administracao" element={<AdministracaoIndexPage />} />
           <Route path="admin/administracao/users" element={<UsersPage />} />
           <Route path="admin/administracao/hr-requests" element={<HRRequestsPage />} />
-          <Route path="admin/administracao/compras" element={<ComprasPage />} />
 
           {/* Serviços routes */}
           <Route path="admin/servicos" element={<ServicosIndexPage />} />

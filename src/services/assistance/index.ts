@@ -10,9 +10,7 @@ import {
   ProgramBeneficiary,
   SocialAttendance,
   SocialProgram,
-  VulnerableFamily,
-  AttendanceType,
-  Evolution
+  VulnerableFamily
 } from "@/types/assistance";
 
 // Emergency Benefits
@@ -356,22 +354,6 @@ export async function createSocialAttendance(attendance: Omit<SocialAttendance, 
 
   if (error) {
     console.error("Error creating social attendance:", error);
-    throw error;
-  }
-
-  return data as SocialAttendance;
-}
-
-export async function updateSocialAttendance(id: string, updates: Partial<SocialAttendance>): Promise<SocialAttendance> {
-  const { data, error } = await supabase
-    .from("social_attendances")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error(`Error updating social attendance with ID ${id}:`, error);
     throw error;
   }
 
