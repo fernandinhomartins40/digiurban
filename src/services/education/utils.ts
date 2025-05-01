@@ -89,9 +89,7 @@ export const mapMealFromDB = (dbData: any): SchoolMeal => {
     shift: dbData.shift,
     menu_items: dbData.menu_items,
     nutritional_info: dbData.nutritional_info,
-    month: dbData.month,
     year: dbData.year,
-    week_number: dbData.week_number,
     is_active: dbData.is_active,
     created_at: dbData.created_at,
     created_by: dbData.created_by,
@@ -130,7 +128,6 @@ export const mapIncidentFromDB = (dbData: any): SchoolIncident => {
     school_id: dbData.school_id,
     school_name: dbData.education_schools?.name,
     student_id: dbData.student_id,
-    student_name: dbData.education_students?.name,
     class_id: dbData.class_id,
     reported_by: dbData.reported_by,
     reported_by_name: dbData.reported_by_name,
@@ -287,7 +284,7 @@ export async function optimizedFetch<T>(
   filters?: Record<string, any>
 ): Promise<T[]> {
   let query = supabase
-    .from(tableName)
+    .from(tableName as any)
     .select(selector);
   
   // Apply any filters if provided
