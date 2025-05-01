@@ -9,6 +9,10 @@ export const getEducacaoItem = (): SidebarItemProps => ({
   moduleId: "educacao",
   children: [
     {
+      title: "Painel Educacional",
+      path: "/admin/educacao",
+    },
+    {
       title: "Escolas e CMEIs",
       path: "/admin/educacao/escolas",
     },
@@ -23,6 +27,22 @@ export const getEducacaoItem = (): SidebarItemProps => ({
     {
       title: "Alunos e Professores",
       path: "/admin/educacao/pessoas",
+    },
+    {
+      title: "Gerenciamento de Aulas",
+      path: "/admin/educacao/aulas",
+    },
+    {
+      title: "Frequência e Notas",
+      path: "/admin/educacao/desempenho",
+    },
+    {
+      title: "Calendário Escolar",
+      path: "/admin/educacao/calendario",
+    },
+    {
+      title: "Comunicação com Pais",
+      path: "/admin/educacao/comunicacao",
     },
     {
       title: "Merenda Escolar",

@@ -1,123 +1,176 @@
 
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SchoolIcon, BookOpen, Users, Bus, UtensilsCrossed, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { School, BookOpen, Users, Calendar, MessageSquare, Book, FileText } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchSchools, fetchStudents, fetchTeachers, fetchEnrollments } from "@/services/education";
+import { InsightsChart } from "@/components/dashboard/InsightsChart";
 
-export default function EducacaoIndexPage() {
+export default function EducacaoIndex() {
+  const navigate = useNavigate();
+  
+  const { data: schools } = useQuery({
+    queryKey: ['education-schools'],
+    queryFn: () => fetchSchools({}),
+  });
+  
+  const { data: students } = useQuery({
+    queryKey: ['education-students'],
+    queryFn: () => fetchStudents({}),
+  });
+  
+  const { data: teachers } = useQuery({
+    queryKey: ['education-teachers'],
+    queryFn: () => fetchTeachers({}),
+  });
+  
+  const { data: enrollments } = useQuery({
+    queryKey: ['education-enrollments'],
+    queryFn: () => fetchEnrollments({}),
+  });
+
+  // Métricas para o painel
+  const activeSchools = schools?.filter(school => school.is_active)?.length || 0;
+  const totalStudents = students?.length || 0;
+  const totalTeachers = teachers?.length || 0;
+  const pendingEnrollments = enrollments?.filter(e => e.status === 'pending')?.length || 0;
+  
+  // Módulos do sistema educacional
+  const modules = [
+    { 
+      title: "Escolas", 
+      description: "Gerenciar escolas e CMEIs", 
+      icon: School, 
+      path: "/admin/educacao/escolas",
+      metric: activeSchools,
+      metricLabel: "unidades ativas"
+    },
+    { 
+      title: "Matrícula Escolar", 
+      description: "Processar matrículas dos alunos", 
+      icon: FileText, 
+      path: "/admin/educacao/matricula",
+      metric: pendingEnrollments,
+      metricLabel: "matrículas pendentes"
+    },
+    { 
+      title: "Alunos e Professores", 
+      description: "Gerenciar registros de pessoas", 
+      icon: Users, 
+      path: "/admin/educacao/pessoas",
+      metric: totalStudents + totalTeachers,
+      metricLabel: "pessoas cadastradas"
+    },
+    { 
+      title: "Calendário Escolar", 
+      description: "Eventos e datas importantes", 
+      icon: Calendar, 
+      path: "/admin/educacao/calendario",
+      metric: "8",
+      metricLabel: "eventos próximos"
+    },
+    { 
+      title: "Gerenciamento de Aulas", 
+      description: "Horários e planejamento", 
+      icon: BookOpen, 
+      path: "/admin/educacao/aulas",
+      metric: "24",
+      metricLabel: "aulas hoje"
+    },
+    { 
+      title: "Frequência e Notas", 
+      description: "Registrar frequência e avaliações", 
+      icon: Book, 
+      path: "/admin/educacao/desempenho",
+      metric: "95%",
+      metricLabel: "frequência média"
+    },
+    { 
+      title: "Portal de Comunicação", 
+      description: "Comunicação com pais e responsáveis", 
+      icon: MessageSquare, 
+      path: "/admin/educacao/comunicacao",
+      metric: "14",
+      metricLabel: "mensagens novas"
+    }
+  ];
+
   return (
-    <div className="container mx-auto py-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Educação</h1>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Painel Educacional</h2>
         <p className="text-muted-foreground">
-          Gerenciamento do sistema educacional municipal
+          Gerencie o sistema educacional municipal com acesso a todas as ferramentas e métricas.
         </p>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="stats">Estatísticas</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Escolas e CMEIs</CardTitle>
-                <SchoolIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">Gerenciar</div>
-                <p className="text-xs text-muted-foreground">
-                  Cadastro e gestão de unidades escolares
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Matrícula Escolar</CardTitle>
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">Gerenciar</div>
-                <p className="text-xs text-muted-foreground">
-                  Cadastro e acompanhamento de matrículas
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Transporte Escolar</CardTitle>
-                <Bus className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">Gerenciar</div>
-                <p className="text-xs text-muted-foreground">
-                  Solicitações e rotas de transporte escolar
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Alunos e Professores</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">Gerenciar</div>
-                <p className="text-xs text-muted-foreground">
-                  Cadastro e gestão de alunos e professores
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Merenda Escolar</CardTitle>
-                <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">Gerenciar</div>
-                <p className="text-xs text-muted-foreground">
-                  Cardápios e gestão da merenda escolar
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Ocorrências</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">Gerenciar</div>
-                <p className="text-xs text-muted-foreground">
-                  Registro e acompanhamento de ocorrências escolares
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="stats">
-          <Card>
-            <CardHeader>
-              <CardTitle>Estatísticas do Sistema Educacional</CardTitle>
-              <CardDescription>
-                Visão geral de estatísticas e métricas do sistema educacional
-              </CardDescription>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Escolas Ativas</CardTitle>
+            <School className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeSchools}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Alunos Matriculados</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalStudents}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Professores</CardTitle>
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalTeachers}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Índice de Frequência</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">94,7%</div>
+            <p className="text-xs text-muted-foreground">+2% em relação ao mês anterior</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <InsightsChart className="mt-6" />
+
+      <h3 className="text-2xl font-semibold mt-8 mb-4">Módulos Educacionais</h3>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {modules.map((module) => (
+          <Card key={module.title} className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg font-medium">{module.title}</CardTitle>
+                <module.icon className="h-5 w-5 text-primary" />
+              </div>
+              <CardDescription>{module.description}</CardDescription>
             </CardHeader>
-            <CardContent className="pl-2">
-              <p className="text-sm text-muted-foreground">
-                As estatísticas detalhadas serão implementadas em breve.
-              </p>
+            <CardContent>
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="text-2xl font-bold">{module.metric}</div>
+                  <p className="text-xs text-muted-foreground">{module.metricLabel}</p>
+                </div>
+                <Button onClick={() => navigate(module.path)}>Acessar</Button>
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        ))}
+      </div>
     </div>
   );
 }

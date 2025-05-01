@@ -54,6 +54,12 @@ import EducacaoIndex from "@/pages/admin/educacao/index";
 import EscolasPage from "@/pages/admin/educacao/escolas/index";
 import MatriculaPage from "@/pages/admin/educacao/matricula/index";
 import TransportePage from "@/pages/admin/educacao/transporte/index";
+import PessoasPage from "@/pages/admin/educacao/pessoas/index";
+// Novos imports para o módulo educacional
+import AulasPage from "@/pages/admin/educacao/aulas/index";
+import DesempenhoPage from "@/pages/admin/educacao/desempenho/index";
+import CalendarioPage from "@/pages/admin/educacao/calendario/index";
+import ComunicacaoPage from "@/pages/admin/educacao/comunicacao/index";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -114,6 +120,15 @@ function App() {
                   <Route path="educacao/escolas" element={<EscolasPage />} />
                   <Route path="educacao/matricula" element={<MatriculaPage />} />
                   <Route path="educacao/transporte" element={<TransportePage />} />
+                  <Route path="educacao/pessoas" element={<PessoasPage />} />
+                  <Route path="educacao/merenda" element={<EducacaoIndex />} />
+                  <Route path="educacao/ocorrencias" element={<EducacaoIndex />} />
+                  
+                  {/* Novas rotas para o módulo educacional */}
+                  <Route path="educacao/aulas" element={<AulasPage />} />
+                  <Route path="educacao/desempenho" element={<DesempenhoPage />} />
+                  <Route path="educacao/calendario" element={<CalendarioPage />} />
+                  <Route path="educacao/comunicacao" element={<ComunicacaoPage />} />
                 </Route>
 
                 {/* Citizen Routes */}
