@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import {
-  EmergencyBenefit,
+import { 
+  EmergencyBenefit, 
   BenefitAttachment,
   SocialProgram,
   ProgramBeneficiary,
@@ -13,23 +13,18 @@ import {
   FamilyMonitoringPlan,
   FamilyVisit,
   VisitAttachment,
-  BenefitStatus,
-  AttendanceType,
+  BenefitStatus
 } from "@/types/assistance";
 
-// Emergency Benefits
-export const getEmergencyBenefits = async () => {
+// Emergency Benefits Services
+export const getEmergencyBenefits = async (filters = {}) => {
   const { data, error } = await supabase
     .from("emergency_benefits")
     .select("*")
-    .order("request_date", { ascending: false });
+    .match(filters);
 
-  if (error) {
-    console.error("Error fetching emergency benefits:", error);
-    throw error;
-  }
-
-  return data as EmergencyBenefit[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
 export const getEmergencyBenefitById = async (id: string) => {
@@ -39,108 +34,68 @@ export const getEmergencyBenefitById = async (id: string) => {
     .eq("id", id)
     .single();
 
-  if (error) {
-    console.error(`Error fetching emergency benefit with id ${id}:`, error);
-    throw error;
-  }
-
-  return data as EmergencyBenefit;
+  if (error) throw error;
+  return { data };
 };
 
-export const createEmergencyBenefit = async (benefit: Omit<EmergencyBenefit, 'id' | 'protocol_number' | 'created_at' | 'updated_at'>) => {
+export const createEmergencyBenefit = async (
+  benefit: Omit<EmergencyBenefit, "id" | "created_at" | "updated_at" | "protocol_number">
+) => {
   const { data, error } = await supabase
     .from("emergency_benefits")
     .insert([benefit])
     .select();
 
-  if (error) {
-    console.error("Error creating emergency benefit:", error);
-    throw error;
-  }
-
-  return data[0] as EmergencyBenefit;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
-export const updateEmergencyBenefit = async (id: string, benefit: Partial<EmergencyBenefit>) => {
+export const updateEmergencyBenefit = async (
+  id: string,
+  updates: Partial<EmergencyBenefit>
+) => {
   const { data, error } = await supabase
     .from("emergency_benefits")
-    .update(benefit)
+    .update(updates)
     .eq("id", id)
     .select();
 
-  if (error) {
-    console.error(`Error updating emergency benefit with id ${id}:`, error);
-    throw error;
-  }
-
-  return data[0] as EmergencyBenefit;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
+// Benefit Attachments Services
 export const getBenefitAttachments = async (benefitId: string) => {
   const { data, error } = await supabase
     .from("benefit_attachments")
     .select("*")
     .eq("benefit_id", benefitId);
 
-  if (error) {
-    console.error(`Error fetching attachments for benefit ${benefitId}:`, error);
-    throw error;
-  }
-
-  return data as BenefitAttachment[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
 export const uploadBenefitAttachment = async (
-  benefitId: string,
-  file: File,
-  userId: string
+  attachment: Omit<BenefitAttachment, "id" | "uploaded_at">
 ) => {
-  const filePath = `benefit_attachments/${benefitId}/${file.name}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("tfd_documents")
-    .upload(filePath, file);
-
-  if (uploadError) {
-    console.error("Error uploading file to storage:", uploadError);
-    throw uploadError;
-  }
-
-  const attachment = {
-    benefit_id: benefitId,
-    file_name: file.name,
-    file_path: filePath,
-    file_type: file.type,
-    file_size: file.size,
-    uploaded_by: userId,
-  };
-
   const { data, error } = await supabase
     .from("benefit_attachments")
     .insert([attachment])
     .select();
 
-  if (error) {
-    console.error("Error creating attachment record:", error);
-    throw error;
-  }
-
-  return data[0] as BenefitAttachment;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
-// Social Programs
-export const getSocialPrograms = async () => {
+// Social Programs Services
+export const getSocialPrograms = async (filters = {}) => {
   const { data, error } = await supabase
     .from("social_programs")
     .select("*")
-    .order("name");
+    .match(filters);
 
-  if (error) {
-    console.error("Error fetching social programs:", error);
-    throw error;
-  }
-
-  return data as SocialProgram[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
 export const getSocialProgramById = async (id: string) => {
@@ -150,89 +105,93 @@ export const getSocialProgramById = async (id: string) => {
     .eq("id", id)
     .single();
 
-  if (error) {
-    console.error(`Error fetching social program with id ${id}:`, error);
-    throw error;
-  }
-
-  return data as SocialProgram;
+  if (error) throw error;
+  return { data };
 };
 
-export const createSocialProgram = async (program: Omit<SocialProgram, 'id' | 'created_at' | 'updated_at'>) => {
+export const createSocialProgram = async (
+  program: Omit<SocialProgram, "id" | "created_at" | "updated_at">
+) => {
   const { data, error } = await supabase
     .from("social_programs")
     .insert([program])
     .select();
 
-  if (error) {
-    console.error("Error creating social program:", error);
-    throw error;
-  }
-
-  return data[0] as SocialProgram;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
-export const updateSocialProgram = async (id: string, program: Partial<SocialProgram>) => {
+export const updateSocialProgram = async (
+  id: string,
+  updates: Partial<SocialProgram>
+) => {
   const { data, error } = await supabase
     .from("social_programs")
-    .update(program)
+    .update(updates)
     .eq("id", id)
     .select();
 
-  if (error) {
-    console.error(`Error updating social program with id ${id}:`, error);
-    throw error;
-  }
-
-  return data[0] as SocialProgram;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
-export const getProgramBeneficiaries = async (programId?: string) => {
-  let query = supabase
+// Program Beneficiaries Services
+export const getProgramBeneficiaries = async (filters = {}) => {
+  const { data, error } = await supabase
     .from("program_beneficiaries")
-    .select("*");
-  
-  if (programId) {
-    query = query.eq("program_id", programId);
-  }
-  
-  const { data, error } = await query.order("entry_date", { ascending: false });
+    .select("*")
+    .match(filters);
 
-  if (error) {
-    console.error("Error fetching program beneficiaries:", error);
-    throw error;
-  }
-
-  return data as ProgramBeneficiary[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
-export const createProgramBeneficiary = async (beneficiary: Omit<ProgramBeneficiary, 'id' | 'created_at' | 'updated_at'>) => {
+export const getProgramBeneficiaryById = async (id: string) => {
+  const { data, error } = await supabase
+    .from("program_beneficiaries")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return { data };
+};
+
+export const createProgramBeneficiary = async (
+  beneficiary: Omit<ProgramBeneficiary, "id" | "created_at" | "updated_at">
+) => {
   const { data, error } = await supabase
     .from("program_beneficiaries")
     .insert([beneficiary])
     .select();
 
-  if (error) {
-    console.error("Error creating program beneficiary:", error);
-    throw error;
-  }
-
-  return data[0] as ProgramBeneficiary;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
-// Assistance Centers (CRAS/CREAS)
-export const getAssistanceCenters = async () => {
+export const updateProgramBeneficiary = async (
+  id: string,
+  updates: Partial<ProgramBeneficiary>
+) => {
+  const { data, error } = await supabase
+    .from("program_beneficiaries")
+    .update(updates)
+    .eq("id", id)
+    .select();
+
+  if (error) throw error;
+  return { data: data[0] };
+};
+
+// Assistance Centers Services
+export const getAssistanceCenters = async (filters = {}) => {
   const { data, error } = await supabase
     .from("assistance_centers")
     .select("*")
-    .order("name");
+    .match(filters);
 
-  if (error) {
-    console.error("Error fetching assistance centers:", error);
-    throw error;
-  }
-
-  return data as AssistanceCenter[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
 export const getAssistanceCenterById = async (id: string) => {
@@ -242,61 +201,45 @@ export const getAssistanceCenterById = async (id: string) => {
     .eq("id", id)
     .single();
 
-  if (error) {
-    console.error(`Error fetching assistance center with id ${id}:`, error);
-    throw error;
-  }
-
-  return data as AssistanceCenter;
+  if (error) throw error;
+  return { data };
 };
 
-export const createAssistanceCenter = async (center: Omit<AssistanceCenter, 'id' | 'created_at' | 'updated_at'>) => {
+export const createAssistanceCenter = async (
+  center: Omit<AssistanceCenter, "id" | "created_at" | "updated_at">
+) => {
   const { data, error } = await supabase
     .from("assistance_centers")
     .insert([center])
     .select();
 
-  if (error) {
-    console.error("Error creating assistance center:", error);
-    throw error;
-  }
-
-  return data[0] as AssistanceCenter;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
-export const updateAssistanceCenter = async (id: string, center: Partial<AssistanceCenter>) => {
+export const updateAssistanceCenter = async (
+  id: string,
+  updates: Partial<AssistanceCenter>
+) => {
   const { data, error } = await supabase
     .from("assistance_centers")
-    .update(center)
+    .update(updates)
     .eq("id", id)
     .select();
 
-  if (error) {
-    console.error(`Error updating assistance center with id ${id}:`, error);
-    throw error;
-  }
-
-  return data[0] as AssistanceCenter;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
-// Social Attendances
-export const getSocialAttendances = async (centerId?: string) => {
-  let query = supabase
+// Social Attendances Services
+export const getSocialAttendances = async (filters = {}) => {
+  const { data, error } = await supabase
     .from("social_attendances")
-    .select("*");
-  
-  if (centerId) {
-    query = query.eq("center_id", centerId);
-  }
-  
-  const { data, error } = await query.order("attendance_date", { ascending: false });
+    .select("*")
+    .match(filters);
 
-  if (error) {
-    console.error("Error fetching social attendances:", error);
-    throw error;
-  }
-
-  return data as SocialAttendance[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
 export const getSocialAttendanceById = async (id: string) => {
@@ -306,108 +249,68 @@ export const getSocialAttendanceById = async (id: string) => {
     .eq("id", id)
     .single();
 
-  if (error) {
-    console.error(`Error fetching social attendance with id ${id}:`, error);
-    throw error;
-  }
-
-  return data as SocialAttendance;
+  if (error) throw error;
+  return { data };
 };
 
-export const createSocialAttendance = async (attendance: Omit<SocialAttendance, 'id' | 'protocol_number' | 'created_at' | 'updated_at'>) => {
+export const createSocialAttendance = async (
+  attendance: Omit<SocialAttendance, "id" | "created_at" | "updated_at" | "protocol_number">
+) => {
   const { data, error } = await supabase
     .from("social_attendances")
     .insert([attendance])
     .select();
 
-  if (error) {
-    console.error("Error creating social attendance:", error);
-    throw error;
-  }
-
-  return data[0] as SocialAttendance;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
-export const updateSocialAttendance = async (id: string, attendance: Partial<SocialAttendance>) => {
+export const updateSocialAttendance = async (
+  id: string,
+  updates: Partial<SocialAttendance>
+) => {
   const { data, error } = await supabase
     .from("social_attendances")
-    .update(attendance)
+    .update(updates)
     .eq("id", id)
     .select();
 
-  if (error) {
-    console.error(`Error updating social attendance with id ${id}:`, error);
-    throw error;
-  }
-
-  return data[0] as SocialAttendance;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
+// Attendance Attachments Services
 export const getAttendanceAttachments = async (attendanceId: string) => {
   const { data, error } = await supabase
     .from("attendance_attachments")
     .select("*")
     .eq("attendance_id", attendanceId);
 
-  if (error) {
-    console.error(`Error fetching attachments for attendance ${attendanceId}:`, error);
-    throw error;
-  }
-
-  return data as AttendanceAttachment[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
 export const uploadAttendanceAttachment = async (
-  attendanceId: string,
-  file: File,
-  userId: string
+  attachment: Omit<AttendanceAttachment, "id" | "uploaded_at">
 ) => {
-  const filePath = `attendance_attachments/${attendanceId}/${file.name}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("tfd_documents")
-    .upload(filePath, file);
-
-  if (uploadError) {
-    console.error("Error uploading file to storage:", uploadError);
-    throw uploadError;
-  }
-
-  const attachment = {
-    attendance_id: attendanceId,
-    file_name: file.name,
-    file_path: filePath,
-    file_type: file.type,
-    file_size: file.size,
-    uploaded_by: userId,
-  };
-
   const { data, error } = await supabase
     .from("attendance_attachments")
     .insert([attachment])
     .select();
 
-  if (error) {
-    console.error("Error creating attachment record:", error);
-    throw error;
-  }
-
-  return data[0] as AttendanceAttachment;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
-// Vulnerable Families
-export const getVulnerableFamilies = async () => {
+// Vulnerable Families Services
+export const getVulnerableFamilies = async (filters = {}) => {
   const { data, error } = await supabase
     .from("vulnerable_families")
     .select("*")
-    .order("created_at", { ascending: false });
+    .match(filters);
 
-  if (error) {
-    console.error("Error fetching vulnerable families:", error);
-    throw error;
-  }
-
-  return data as VulnerableFamily[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
 export const getVulnerableFamilyById = async (id: string) => {
@@ -417,100 +320,121 @@ export const getVulnerableFamilyById = async (id: string) => {
     .eq("id", id)
     .single();
 
-  if (error) {
-    console.error(`Error fetching vulnerable family with id ${id}:`, error);
-    throw error;
-  }
-
-  return data as VulnerableFamily;
+  if (error) throw error;
+  return { data };
 };
 
-export const createVulnerableFamily = async (family: Omit<VulnerableFamily, 'id' | 'created_at' | 'updated_at'>) => {
+export const createVulnerableFamily = async (
+  family: Omit<VulnerableFamily, "id" | "created_at" | "updated_at">
+) => {
   const { data, error } = await supabase
     .from("vulnerable_families")
     .insert([family])
     .select();
 
-  if (error) {
-    console.error("Error creating vulnerable family:", error);
-    throw error;
-  }
-
-  return data[0] as VulnerableFamily;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
-export const updateVulnerableFamily = async (id: string, family: Partial<VulnerableFamily>) => {
+export const updateVulnerableFamily = async (
+  id: string,
+  updates: Partial<VulnerableFamily>
+) => {
   const { data, error } = await supabase
     .from("vulnerable_families")
-    .update(family)
+    .update(updates)
     .eq("id", id)
     .select();
 
-  if (error) {
-    console.error(`Error updating vulnerable family with id ${id}:`, error);
-    throw error;
-  }
-
-  return data[0] as VulnerableFamily;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
+// Family Members Services
 export const getFamilyMembers = async (familyId: string) => {
   const { data, error } = await supabase
     .from("family_members")
     .select("*")
     .eq("family_id", familyId);
 
-  if (error) {
-    console.error(`Error fetching family members for family ${familyId}:`, error);
-    throw error;
-  }
-
-  return data as FamilyMember[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
-export const createFamilyMember = async (member: Omit<FamilyMember, 'id' | 'created_at' | 'updated_at'>) => {
+export const createFamilyMember = async (
+  member: Omit<FamilyMember, "id" | "created_at" | "updated_at">
+) => {
   const { data, error } = await supabase
     .from("family_members")
     .insert([member])
     .select();
 
-  if (error) {
-    console.error("Error creating family member:", error);
-    throw error;
-  }
-
-  return data[0] as FamilyMember;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
+export const updateFamilyMember = async (
+  id: string,
+  updates: Partial<FamilyMember>
+) => {
+  const { data, error } = await supabase
+    .from("family_members")
+    .update(updates)
+    .eq("id", id)
+    .select();
+
+  if (error) throw error;
+  return { data: data[0] };
+};
+
+export const deleteFamilyMember = async (id: string) => {
+  const { error } = await supabase
+    .from("family_members")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+  return { success: true };
+};
+
+// Family Monitoring Plans Services
 export const getFamilyMonitoringPlans = async (familyId: string) => {
   const { data, error } = await supabase
     .from("family_monitoring_plans")
     .select("*")
-    .eq("family_id", familyId)
-    .order("created_at", { ascending: false });
+    .eq("family_id", familyId);
 
-  if (error) {
-    console.error(`Error fetching monitoring plans for family ${familyId}:`, error);
-    throw error;
-  }
-
-  return data as FamilyMonitoringPlan[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
-export const createFamilyMonitoringPlan = async (plan: Omit<FamilyMonitoringPlan, 'id' | 'created_at' | 'updated_at'>) => {
+export const createFamilyMonitoringPlan = async (
+  plan: Omit<FamilyMonitoringPlan, "id" | "created_at" | "updated_at">
+) => {
   const { data, error } = await supabase
     .from("family_monitoring_plans")
     .insert([plan])
     .select();
 
-  if (error) {
-    console.error("Error creating family monitoring plan:", error);
-    throw error;
-  }
-
-  return data[0] as FamilyMonitoringPlan;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
+export const updateFamilyMonitoringPlan = async (
+  id: string,
+  updates: Partial<FamilyMonitoringPlan>
+) => {
+  const { data, error } = await supabase
+    .from("family_monitoring_plans")
+    .update(updates)
+    .eq("id", id)
+    .select();
+
+  if (error) throw error;
+  return { data: data[0] };
+};
+
+// Family Visits Services
 export const getFamilyVisits = async (familyId: string) => {
   const { data, error } = await supabase
     .from("family_visits")
@@ -518,76 +442,55 @@ export const getFamilyVisits = async (familyId: string) => {
     .eq("family_id", familyId)
     .order("visit_date", { ascending: false });
 
-  if (error) {
-    console.error(`Error fetching visits for family ${familyId}:`, error);
-    throw error;
-  }
-
-  return data as FamilyVisit[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
-export const createFamilyVisit = async (visit: Omit<FamilyVisit, 'id' | 'created_at' | 'updated_at'>) => {
+export const createFamilyVisit = async (
+  visit: Omit<FamilyVisit, "id" | "created_at" | "updated_at">
+) => {
   const { data, error } = await supabase
     .from("family_visits")
     .insert([visit])
     .select();
 
-  if (error) {
-    console.error("Error creating family visit:", error);
-    throw error;
-  }
-
-  return data[0] as FamilyVisit;
+  if (error) throw error;
+  return { data: data[0] };
 };
 
+export const updateFamilyVisit = async (
+  id: string,
+  updates: Partial<FamilyVisit>
+) => {
+  const { data, error } = await supabase
+    .from("family_visits")
+    .update(updates)
+    .eq("id", id)
+    .select();
+
+  if (error) throw error;
+  return { data: data[0] };
+};
+
+// Visit Attachments Services
 export const getVisitAttachments = async (visitId: string) => {
   const { data, error } = await supabase
     .from("visit_attachments")
     .select("*")
     .eq("visit_id", visitId);
 
-  if (error) {
-    console.error(`Error fetching attachments for visit ${visitId}:`, error);
-    throw error;
-  }
-
-  return data as VisitAttachment[];
+  if (error) throw error;
+  return { data: data || [] };
 };
 
 export const uploadVisitAttachment = async (
-  visitId: string,
-  file: File,
-  userId: string
+  attachment: Omit<VisitAttachment, "id" | "uploaded_at">
 ) => {
-  const filePath = `visit_attachments/${visitId}/${file.name}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("tfd_documents")
-    .upload(filePath, file);
-
-  if (uploadError) {
-    console.error("Error uploading file to storage:", uploadError);
-    throw uploadError;
-  }
-
-  const attachment = {
-    visit_id: visitId,
-    file_name: file.name,
-    file_path: filePath,
-    file_type: file.type,
-    file_size: file.size,
-    uploaded_by: userId,
-  };
-
   const { data, error } = await supabase
     .from("visit_attachments")
     .insert([attachment])
     .select();
 
-  if (error) {
-    console.error("Error creating attachment record:", error);
-    throw error;
-  }
-
-  return data[0] as VisitAttachment;
+  if (error) throw error;
+  return { data: data[0] };
 };

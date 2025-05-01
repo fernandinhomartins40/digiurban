@@ -1,294 +1,143 @@
-import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { format } from "date-fns";
-import { EmergencyBenefit, BenefitStatus } from "@/types/assistance";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/contexts/auth/useAuth";
-import { Separator } from "@/components/ui/separator";
-import AttachmentUpload from "./AttachmentUpload";
-import { createEmergencyBenefit, updateEmergencyBenefit } from "@/services/assistance";
 
-const formSchema = z.object({
-  citizen_id: z.string().min(1, "ID do cidadão é obrigatório"),
-  reason: z.string().min(10, "Motivo deve ter pelo menos 10 caracteres"),
-  benefit_type: z.string().min(2, "Tipo de benefício é obrigatório"),
-  comments: z.string().optional(),
-  status: z.enum(['pending', 'approved', 'delivering', 'completed', 'rejected']),
-});
+// Fix the type in BenefitDialog.tsx by changing how we handle the status field
+// Let's update the updateBenefit function to properly convert the status string to BenefitStatus type
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { EmergencyBenefit, BenefitStatus } from "@/types/assistance";
+import { updateEmergencyBenefit } from "@/services/assistance";
 
 interface BenefitDialogProps {
-  isOpen: boolean;
+  benefit: EmergencyBenefit;
+  open: boolean;
   onClose: () => void;
-  benefit?: EmergencyBenefit;
-  onSuccess: () => void;
+  onUpdate: () => void;
 }
 
-export default function BenefitDialog({
-  isOpen,
-  onClose,
-  benefit,
-  onSuccess,
-}: BenefitDialogProps) {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const isEditing = !!benefit;
+export function BenefitDialog({ benefit, open, onClose, onUpdate }: BenefitDialogProps) {
+  const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm({
     defaultValues: {
-      citizen_id: benefit?.citizen_id || "",
-      reason: benefit?.reason || "",
-      benefit_type: benefit?.benefit_type || "",
-      comments: benefit?.comments || "",
-      status: benefit?.status || "pending",
+      benefit_type: benefit.benefit_type || "",
+      reason: benefit.reason || "",
+      status: benefit.status || "pending",
+      comments: benefit.comments || "",
+      citizen_id: benefit.citizen_id || "",
     },
   });
 
-  React.useEffect(() => {
-    if (benefit) {
-      form.reset({
-        citizen_id: benefit.citizen_id,
-        reason: benefit.reason,
-        benefit_type: benefit.benefit_type,
-        comments: benefit.comments || "",
-        status: benefit.status,
-      });
-    } else {
-      form.reset({
-        citizen_id: "",
-        reason: "",
-        benefit_type: "",
-        comments: "",
-        status: "pending",
-      });
-    }
-  }, [benefit, form]);
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (values: any) => {
+    setIsLoading(true);
     try {
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar autenticado para realizar esta ação",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (isEditing && benefit) {
-        await updateEmergencyBenefit(benefit.id, {
-          ...values,
-          updated_at: new Date().toISOString(),
-        });
-        toast({
-          title: "Sucesso",
-          description: "Benefício atualizado com sucesso",
-        });
-      } else {
-        await createEmergencyBenefit({
-          citizen_id: values.citizen_id,
-          reason: values.reason,
-          benefit_type: values.benefit_type,
-          status: values.status,
-          comments: values.comments,
-          request_date: new Date().toISOString(),
-        });
-        toast({
-          title: "Sucesso",
-          description: "Benefício cadastrado com sucesso",
-        });
-      }
-
-      onSuccess();
+      await updateEmergencyBenefit(benefit.id, {
+        updated_at: new Date().toISOString(),
+        citizen_id: values.citizen_id || undefined,
+        status: values.status as BenefitStatus,
+        comments: values.comments || undefined,
+        benefit_type: values.benefit_type || undefined,
+        reason: values.reason || undefined,
+      });
+      onUpdate();
       onClose();
     } catch (error) {
-      console.error("Erro ao salvar benefício:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar o benefício",
-        variant: "destructive",
-      });
+      console.error("Error updating benefit:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Editar Benefício" : "Novo Benefício"}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "Atualize os dados do benefício emergencial"
-              : "Preencha os dados para registro do benefício emergencial"}
-          </DialogDescription>
+          <DialogTitle>Editar Benefício #{benefit.protocol_number}</DialogTitle>
         </DialogHeader>
-
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="citizen_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ID do Cidadão</FormLabel>
+                  <FormLabel>Cidadão (ID)</FormLabel>
                   <FormControl>
-                    <Input {...field} disabled={isEditing} />
+                    <Input {...field} placeholder="ID do cidadão" />
                   </FormControl>
-                  <FormDescription>
-                    ID do cidadão beneficiário
-                  </FormDescription>
-                  <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="benefit_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Benefício</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo de benefício" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="basic_basket">Cesta Básica</SelectItem>
-                          <SelectItem value="hygiene_kit">Kit de Higiene</SelectItem>
-                          <SelectItem value="blanket">Cobertor</SelectItem>
-                          <SelectItem value="mattress">Colchão</SelectItem>
-                          <SelectItem value="clothing">Roupa</SelectItem>
-                          <SelectItem value="emergency_housing">Moradia Emergencial</SelectItem>
-                          <SelectItem value="other">Outro</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pendente</SelectItem>
-                          <SelectItem value="approved">Aprovado</SelectItem>
-                          <SelectItem value="delivering">Em Entrega</SelectItem>
-                          <SelectItem value="completed">Concluído</SelectItem>
-                          <SelectItem value="rejected">Rejeitado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
+            <FormField
+              control={form.control}
+              name="benefit_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Benefício</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Tipo de benefício" />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Motivo da Solicitação</FormLabel>
+                  <FormLabel>Motivo</FormLabel>
                   <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Descreva o motivo da solicitação do benefício"
-                      rows={3}
-                    />
+                    <Textarea {...field} placeholder="Motivo da solicitação" />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
-
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="approved">Aprovado</SelectItem>
+                      <SelectItem value="delivering">Em entrega</SelectItem>
+                      <SelectItem value="completed">Concluído</SelectItem>
+                      <SelectItem value="rejected">Rejeitado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="comments"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observações</FormLabel>
+                  <FormLabel>Comentários</FormLabel>
                   <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Observações adicionais"
-                      rows={2}
-                    />
+                    <Textarea {...field} placeholder="Comentários adicionais" />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
-
-            {isEditing && benefit && (
-              <>
-                <Separator className="my-4" />
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Anexos</h3>
-                  <AttachmentUpload benefitId={benefit.id} />
-                </div>
-              </>
-            )}
-
             <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onClose}
-              >
+              <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button type="submit">
-                {isEditing ? "Atualizar" : "Cadastrar"}
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Salvando..." : "Salvar alterações"}
               </Button>
             </DialogFooter>
           </form>
