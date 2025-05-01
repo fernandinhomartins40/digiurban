@@ -83,7 +83,7 @@ export const createTransportRequest = async (request: Omit<TransportRequest, 'id
 
   const { data, error } = await supabase
     .from('education_transport_requests')
-    .insert(dbData)
+    .insert(dbData, { defaultToNull: false })
     .select(`
       *,
       education_students(name),
