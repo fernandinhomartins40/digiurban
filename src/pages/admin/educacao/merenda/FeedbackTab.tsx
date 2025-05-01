@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -12,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Eye, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getFeedbacks } from "@/services/education/feedback";
-import { MenuFeedback } from "@/types/education";
+import { MealFeedback } from "@/types/education";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { PaginationComponent } from "@/components/educacao/PaginationComponent";
@@ -20,13 +21,13 @@ import { FeedbackDetailDialog } from "./dialogs/FeedbackDetailDialog";
 
 export default function FeedbackTab() {
   const { toast } = useToast();
-  const [feedbacks, setFeedbacks] = useState<MenuFeedback[]>([]);
+  const [feedbacks, setFeedbacks] = useState<MealFeedback[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
-  const [selectedFeedback, setSelectedFeedback] = useState<MenuFeedback | null>(null);
+  const [selectedFeedback, setSelectedFeedback] = useState<MealFeedback | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export default function FeedbackTab() {
     setPage(1); // Reset to first page when searching
   };
 
-  const handleViewDetails = (feedback: MenuFeedback) => {
+  const handleViewDetails = (feedback: MealFeedback) => {
     setSelectedFeedback(feedback);
     setDetailDialogOpen(true);
   };
@@ -68,6 +69,19 @@ export default function FeedbackTab() {
   const handleDeleteFeedback = async (id: string) => {
     // Implement delete logic here
     console.log("Delete feedback with ID:", id);
+  };
+  
+  const getRatingBadge = (rating: string) => {
+    switch (rating) {
+      case "satisfactory":
+        return <Badge className="bg-green-100 text-green-800">Satisfatório</Badge>;
+      case "insufficient":
+        return <Badge className="bg-yellow-100 text-yellow-800">Insuficiente</Badge>;
+      case "problems":
+        return <Badge className="bg-red-100 text-red-800">Problemas</Badge>;
+      default:
+        return <Badge variant="outline">{rating}</Badge>;
+    }
   };
   
   return (
@@ -109,10 +123,12 @@ export default function FeedbackTab() {
               feedbacks.map((feedback) => (
                 <TableRow key={feedback.id}>
                   <TableCell>{format(new Date(feedback.createdAt), 'dd/MM/yyyy')}</TableCell>
-                  <TableCell>{feedback.userId}</TableCell>
-                  <TableCell>{feedback.comment}</TableCell>
+                  <TableCell>{feedback.parentName}</TableCell>
+                  <TableCell className="max-w-xs truncate">
+                    {feedback.comments || "Sem comentários"}
+                  </TableCell>
                   <TableCell>
-                    <Badge>{feedback.rating}</Badge>
+                    {getRatingBadge(feedback.rating)}
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" onClick={() => handleViewDetails(feedback)}>

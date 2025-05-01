@@ -24,7 +24,7 @@ import { getSchools } from "@/services/education/schools";
 import { Enrollment, School } from "@/types/education";
 import { format } from "date-fns";
 import { PaginationComponent } from "@/components/educacao/PaginationComponent";
-import EnrollmentDetailDialog from "./dialogs/EnrollmentDetailDialog";
+import { EnrollmentDetailDialog } from "./dialogs/EnrollmentDetailDialog";
 
 export default function ApprovedEnrollmentsTab() {
   const { toast } = useToast();

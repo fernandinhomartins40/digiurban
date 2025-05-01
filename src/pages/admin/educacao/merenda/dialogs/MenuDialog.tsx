@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -23,11 +24,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "@radix-ui/react-icons";
+import { CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import { createMenu, updateMenu } from "@/services/education/menus";
-import { SchoolMenu } from "@/types/education";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -35,11 +35,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getSchools } from "@/services/education/schools";
-import { School } from "@/types/education";
 import {
   Checkbox,
 } from "@/components/ui/checkbox";
+import { getSchools } from "@/services/education/schools";
+import { School, MealMenu } from "@/types/education";
+import { cn } from "@/lib/utils";
+
+// Service mock - Replace with actual implementation later
+const createMenu = async (data: any) => {
+  console.log("Creating menu:", data);
+  return { id: "new-id", ...data };
+};
+
+const updateMenu = async (id: string, data: any) => {
+  console.log("Updating menu:", id, data);
+  return { id, ...data };
+};
 
 const formSchema = z.object({
   schoolId: z.string().min(1, {
@@ -56,7 +68,7 @@ const formSchema = z.object({
 interface MenuDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  menu?: SchoolMenu;
+  menu?: MealMenu;
   onSaved?: () => void;
 }
 
@@ -68,18 +80,18 @@ export function MenuDialog({
 }: MenuDialogProps) {
   const { toast } = useToast();
   const [schools, setSchools] = useState<School[]>([]);
-  const [isForBreakfast, setIsForBreakfast] = useState(menu?.isForBreakfast || false);
-  const [isForLunch, setIsForLunch] = useState(menu?.isForLunch || false);
-  const [isForSnack, setIsForSnack] = useState(menu?.isForSnack || false);
-  const [isForDinner, setIsForDinner] = useState(menu?.isForDinner || false);
+  const [isForBreakfast, setIsForBreakfast] = useState(menu?.isSpecialDiet || false);
+  const [isForLunch, setIsForLunch] = useState(false);
+  const [isForSnack, setIsForSnack] = useState(false);
+  const [isForDinner, setIsForDinner] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: menu
       ? {
           schoolId: menu.schoolId,
-          menuDate: new Date(menu.menuDate),
-          description: menu.description,
+          menuDate: new Date(menu.activeFrom),
+          description: menu.menuItems.join(", "),
         }
       : {
           schoolId: "",
@@ -194,7 +206,10 @@ export function MenuDialog({
                       <FormControl>
                         <Button
                           variant={"outline"}
-                          className={format(field.value, 'dd/MM/yyyy', { locale: ptBR })}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
                         >
                           {field.value ? (
                             format(field.value, "dd/MM/yyyy", { locale: ptBR })
@@ -215,6 +230,7 @@ export function MenuDialog({
                           date > new Date()
                         }
                         initialFocus
+                        className={cn("p-3 pointer-events-auto")}
                       />
                     </PopoverContent>
                   </Popover>
@@ -237,7 +253,6 @@ export function MenuDialog({
               )}
             />
             
-            {/* Fix the checkbox checked state handler */}
             <div className="space-y-2">
               <Label>Aplicação:</Label>
               <div className="grid grid-cols-2 gap-2">

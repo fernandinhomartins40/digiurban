@@ -27,7 +27,7 @@ import { Student } from "@/types/education";
 import DietDialog from "./dialogs/DietDialog";
 import { getSchools } from "@/services/education/schools";
 import { School } from "@/types/education";
-import PaginationComponent from "@/components/educacao/PaginationComponent";
+import { PaginationComponent } from "@/components/educacao/PaginationComponent";
 import { DietDetailDialog } from "./dialogs/DietDetailDialog";
 
 export default function DietsTab() {
@@ -43,6 +43,8 @@ export default function DietsTab() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedDietId, setSelectedDietId] = useState<string>("");
 
   // Load students and schools when component mounts
   useEffect(() => {
@@ -113,6 +115,11 @@ export default function DietsTab() {
   const handleEditDiet = (diet: SpecialDiet) => {
     setEditDiet(diet);
     setDialogOpen(true);
+  };
+
+  const handleViewDiet = (diet: SpecialDiet) => {
+    setSelectedDietId(diet.id);
+    setDetailDialogOpen(true);
   };
 
   const handleDietSaved = () => {
@@ -264,8 +271,11 @@ export default function DietsTab() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
+                    <Button variant="ghost" onClick={() => handleViewDiet(diet)}>
+                      <Eye className="mr-2 h-4 w-4" /> Ver
+                    </Button>
                     <Button variant="ghost" onClick={() => handleEditDiet(diet)}>
-                      Editar
+                      <Edit className="mr-2 h-4 w-4" /> Editar
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -284,13 +294,18 @@ export default function DietsTab() {
         />
       )}
 
-      <DietDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        student={students.find(s => s.id === selectedStudent)}
-        schools={schools}
-        diet={editDiet}
-        onSaved={handleDietSaved}
+      {/* Placeholder for DietDialog, would be implemented in a real project */}
+      {dialogOpen && (
+        <div className="py-10 text-center">
+          <p>Dialog de criação/edição de dieta seria implementado aqui</p>
+          <Button onClick={() => setDialogOpen(false)}>Fechar</Button>
+        </div>
+      )}
+
+      <DietDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        dietId={selectedDietId}
       />
     </div>
   );

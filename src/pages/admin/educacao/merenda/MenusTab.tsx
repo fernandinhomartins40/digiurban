@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -10,17 +11,18 @@ import {
 } from "@/components/ui/table";
 import { PlusCircle, Search, Eye, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getSchools } from "@/services/education/schools";
 import { getMenus } from "@/services/education/menus";
-import { SchoolMenu } from "@/types/education";
+import { MealMenu, School } from "@/types/education";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { PaginationComponent } from "@/components/educacao/PaginationComponent";
-import { MenuDetailDialog } from "./dialogs/MenuDetailDialog";
 import { MenuDialog } from "./dialogs/MenuDialog";
+import { MenuDetailDialog } from "./dialogs/MenuDetailDialog";
 
 export default function MenusTab() {
   const { toast } = useToast();
-  const [menus, setMenus] = useState<SchoolMenu[]>([]);
+  const [menus, setMenus] = useState<MealMenu[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -28,7 +30,7 @@ export default function MenusTab() {
   const [totalCount, setTotalCount] = useState(0);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [selectedMenu, setSelectedMenu] = useState<SchoolMenu | null>(null);
+  const [selectedMenu, setSelectedMenu] = useState<MealMenu | null>(null);
 
   useEffect(() => {
     fetchMenus();
@@ -61,16 +63,17 @@ export default function MenusTab() {
     setPage(1); // Reset to first page when searching
   };
 
-  const handleViewDetails = (menu: SchoolMenu) => {
+  const handleViewDetails = (menu: MealMenu) => {
     setSelectedMenu(menu);
     setDetailDialogOpen(true);
   };
 
   const handleCreateMenu = () => {
+    setSelectedMenu(null);
     setCreateDialogOpen(true);
   };
 
-  const handleEditMenu = (menu: SchoolMenu) => {
+  const handleEditMenu = (menu: MealMenu) => {
     setSelectedMenu(menu);
     setCreateDialogOpen(true);
   };
@@ -126,7 +129,7 @@ export default function MenusTab() {
               menus.map((menu) => (
                 <TableRow key={menu.id}>
                   <TableCell>{menu.name}</TableCell>
-                  <TableCell>{menu.schoolName}</TableCell>
+                  <TableCell>{menu.schoolId}</TableCell>
                   <TableCell>{format(new Date(menu.createdAt), 'dd/MM/yyyy')}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
@@ -161,7 +164,7 @@ export default function MenusTab() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onSaved={handleMenuSaved}
-        menu={selectedMenu}
+        menu={selectedMenu?.id ? selectedMenu : undefined}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { getEnrollment, updateEnrollment } from "@/services/education/enrollment";
+import { getEnrollments, updateEnrollment } from "@/services/education/enrollment";
 import { getSchools } from "@/services/education/schools";
 import { Enrollment, School } from "@/types/education";
 import { format } from "date-fns";
@@ -49,7 +50,7 @@ export function EnrollmentDetailDialog({
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
-    if (enrollmentId) {
+    if (enrollmentId && open) {
       fetchEnrollmentDetails();
     }
   }, [enrollmentId, open]);
@@ -62,7 +63,7 @@ export function EnrollmentDetailDialog({
     if (enrollment) {
       setAssignedSchoolId(enrollment.assignedSchoolId || "");
       setClassId(enrollment.classId || "");
-      setSpecialNeeds(enrollment.specialRequest || false);
+      setSpecialNeeds(!!enrollment.specialRequest);
       setNotes(enrollment.notes || "");
     }
   }, [enrollment]);
@@ -70,8 +71,25 @@ export function EnrollmentDetailDialog({
   const fetchEnrollmentDetails = async () => {
     setLoading(true);
     try {
-      const result = await getEnrollment(enrollmentId!);
-      setEnrollment(result.data);
+      if (!enrollmentId) return;
+      
+      const result = await getEnrollments({ 
+        page: 1, 
+        pageSize: 1
+      });
+      
+      // Find the enrollment by ID
+      const foundEnrollment = result.data.find(e => e.id === enrollmentId);
+      
+      if (foundEnrollment) {
+        setEnrollment(foundEnrollment);
+      } else {
+        toast({
+          title: "Erro",
+          description: "Matrícula não encontrada",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Error fetching enrollment details:", error);
       toast({
@@ -108,14 +126,16 @@ export function EnrollmentDetailDialog({
     try {
       setLoading(true);
       
+      if (!enrollmentId) return;
+      
       const updateData = {
         assignedSchoolId,
         classId,
-        specialRequest: specialNeeds,
+        specialRequest: specialNeeds ? "yes" : "",
         notes,
       };
       
-      await updateEnrollment(enrollmentId!, updateData);
+      await updateEnrollment(enrollmentId, updateData);
       toast({
         title: "Sucesso",
         description: "Matrícula atualizada com sucesso!",
@@ -134,7 +154,6 @@ export function EnrollmentDetailDialog({
     }
   };
 
-  // Update references to student and school info properties
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -164,25 +183,23 @@ export function EnrollmentDetailDialog({
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Nome:</span>
-                      <span className="font-medium">{enrollment.studentName || enrollment.studentId}</span>
+                      <span className="font-medium">{enrollment.studentId}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Data de Nascimento:</span>
-                      <span className="font-medium">
-                        {enrollment.studentInfo?.birthDate ? format(new Date(enrollment.studentInfo.birthDate), 'dd/MM/yyyy') : "-"}
-                      </span>
+                      <span className="font-medium">-</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Gênero:</span>
-                      <span className="font-medium">{enrollment.studentInfo?.gender || "-"}</span>
+                      <span className="font-medium">-</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Email:</span>
-                      <span className="font-medium">{enrollment.studentInfo?.email || "-"}</span>
+                      <span className="font-medium">-</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Telefone:</span>
-                      <span className="font-medium">{enrollment.studentInfo?.phone || "-"}</span>
+                      <span className="font-medium">-</span>
                     </div>
                   </div>
                 </CardContent>
@@ -196,7 +213,7 @@ export function EnrollmentDetailDialog({
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Escola Solicitada:</span>
-                      <span className="font-medium">{enrollment.requestedSchoolName || enrollment.requestedSchoolId}</span>
+                      <span className="font-medium">{enrollment.requestedSchoolId}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Data da Solicitação:</span>
@@ -221,7 +238,7 @@ export function EnrollmentDetailDialog({
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Escola Atribuída:</span>
-                        <span className="font-medium">{enrollment.assignedSchoolName || enrollment.assignedSchoolId}</span>
+                        <span className="font-medium">{enrollment.assignedSchoolId}</span>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="assignedSchool">Alterar Escola</Label>
@@ -273,7 +290,7 @@ export function EnrollmentDetailDialog({
                   <Checkbox
                     id="specialNeeds"
                     checked={specialNeeds}
-                    onCheckedChange={(checked) => setSpecialNeeds(checked || false)}
+                    onCheckedChange={(checked) => setSpecialNeeds(!!checked)}
                   />
                 </div>
                 <div>

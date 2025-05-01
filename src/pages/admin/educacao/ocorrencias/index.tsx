@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from "react";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { 
-  AlertTriangle, // Change Alert to AlertTriangle 
+  AlertTriangle,
   ClipboardList
 } from "lucide-react";
-import { Alert } from "lucide-react";
 import OccurrencesList from "./OccurrencesList";
 import OccurrenceDialog from "./dialogs/OccurrenceDialog";
 import OccurrenceDetailDialog from "./dialogs/OccurrenceDetailDialog";
