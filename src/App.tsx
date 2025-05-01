@@ -35,6 +35,9 @@ import DirectRequests from "./pages/admin/gabinete/DirectRequests";
 import PublicPoliciesPage from "./pages/admin/gabinete/PublicPolicies";
 import StrategicProgramsPage from "./pages/admin/gabinete/StrategicPrograms";
 import MeioAmbienteIndexPage from "./pages/admin/meioambiente";
+import HRRequestsPage from "./pages/admin/administracao/HRRequests";
+import PurchaseRequestsPage from "./pages/admin/financas/PurchaseRequests";
+import MailDocumentsPage from "./pages/admin/correio/MailDocuments";
 
 function App() {
   return (
