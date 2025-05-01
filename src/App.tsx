@@ -52,6 +52,7 @@ import ACSPage from "@/pages/admin/saude/acs/index";
 // Education Module
 import EducacaoIndex from "@/pages/admin/educacao/index";
 import EscolasIndex from "@/pages/admin/educacao/escolas/index";
+import TransporteIndex from "@/pages/admin/educacao/transporte/index";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -110,11 +111,11 @@ function App() {
                   {/* Education Module Routes */}
                   <Route path="educacao" element={<EducacaoIndex />} />
                   <Route path="educacao/escolas" element={<EscolasIndex />} />
-                  <Route path="educacao/matriculas" element={<EducacaoIndex />} /> {/* Placeholder */}
-                  <Route path="educacao/transporte" element={<EducacaoIndex />} /> {/* Placeholder */}
-                  <Route path="educacao/alunos-professores" element={<EducacaoIndex />} /> {/* Placeholder */}
-                  <Route path="educacao/merenda" element={<EducacaoIndex />} /> {/* Placeholder */}
-                  <Route path="educacao/ocorrencias" element={<EducacaoIndex />} /> {/* Placeholder */}
+                  <Route path="educacao/matriculas" element={<EducacaoIndex />} /> {/* Placeholder - To be implemented */}
+                  <Route path="educacao/transporte" element={<TransporteIndex />} />
+                  <Route path="educacao/alunos-professores" element={<EducacaoIndex />} /> {/* Placeholder - To be implemented */}
+                  <Route path="educacao/merenda" element={<EducacaoIndex />} /> {/* Placeholder - To be implemented */}
+                  <Route path="educacao/ocorrencias" element={<EducacaoIndex />} /> {/* Placeholder - To be implemented */}
                 </Route>
 
                 {/* Citizen Routes */}
