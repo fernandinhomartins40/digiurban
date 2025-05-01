@@ -2,7 +2,7 @@
 import React from "react";
 import { SidebarItem } from "./sidebar/SidebarItem";
 import { UserSection } from "./sidebar/UserSection";
-import sidebarItems from "./sidebar/sidebarItems";
+import { getSidebarItems } from "./sidebar/sidebarItems";
 import { useSidebarMail } from "./sidebar/useSidebarMail";
 
 interface AdminSidebarProps {
@@ -11,6 +11,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ ready = false }: AdminSidebarProps) {
   const { unreadCount } = useSidebarMail(ready);
+  const sidebarItems = getSidebarItems(unreadCount);
 
   return (
     <aside className="flex flex-col h-full w-64 bg-white border-r">

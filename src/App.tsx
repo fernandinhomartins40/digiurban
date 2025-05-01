@@ -1,113 +1,126 @@
 
-import {
-  Route,
-  createRoutesFromElements,
-  createBrowserRouter,
-  Routes,
-} from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { AuthLayout } from "@/components/layout/AuthLayout";
-import LoginPage from "@/pages/auth/Login";
-import RegisterPage from "@/pages/auth/Register";
-import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
-import ResetPasswordPage from "@/pages/auth/ResetPassword";
-import DashboardPage from "@/pages/admin/Dashboard";
-import RequireAuth from "@/components/auth/RequireAuth";
-import AssistenciaIndexPage from './pages/admin/assistencia/index';
-import BenefitsPage from './pages/admin/assistencia/beneficios/index';
-import SocialProgramsPage from './pages/admin/assistencia/programas/index';
-import CrasCreasPage from './pages/admin/assistencia/cras/index';
-import VulnerableFamiliesPage from './pages/admin/assistencia/familias/index';
-import EducacaoIndexPage from "./pages/admin/educacao";
-import SaudeIndexPage from "./pages/admin/saude";
-import AdministracaoIndexPage from "./pages/admin/administracao";
-import TFDIndexPage from "./pages/admin/saude/tfd";
-import ObrasIndexPage from "./pages/admin/obras";
-import CorreioIndexPage from "./pages/admin/correio";
-import ChatIndexPage from "./pages/admin/chat";
-import ProfilePage from "./pages/admin/profile";
-import FinancasIndexPage from "./pages/admin/financas";
-import ServicosIndexPage from "./pages/admin/servicos";
-import UsersPage from "./pages/admin/administracao/users";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/contexts/AuthContext"; // Ensure this import is correct
+import { Toaster } from "@/components/ui/toaster";
+import { NewChatPanel } from "@/components/chat/NewChatPanel"; // Updated import
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ChatProvider } from "@/contexts/ChatContext"; // Add ChatProvider import
 
-// Create placeholder components for the missing imports
-const GabineteIndexPage = () => <div>Gabinete Dashboard</div>;
-const DirectRequests = () => <div>Direct Requests</div>;
-const PublicPoliciesPage = () => <div>Public Policies Page</div>;
-const StrategicProgramsPage = () => <div>Strategic Programs Page</div>;
-const MeioAmbienteIndexPage = () => <div>Meio Ambiente Dashboard</div>;
-const PurchaseRequestsPage = () => <div>Purchase Requests</div>;
-const HRRequestsPage = () => <div>HR Requests</div>;
-const MailDocumentsPage = () => <div>Mail Documents</div>;
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
+import AdminRegister from "@/pages/auth/AdminRegister";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
+import ResetPassword from "@/pages/auth/ResetPassword";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { CitizenLayout } from "@/components/layout/CitizenLayout";
+
+import AdminDashboard from "@/pages/admin/Dashboard";
+import CitizenDashboard from "@/pages/citizen/Dashboard";
+import UserManagement from "@/pages/admin/users/UserManagement";
+
+// Correio Interno (Internal Mail) Module
+import MailDashboard from "@/pages/admin/correio/MailDashboard";
+import OficioDigital from "@/pages/admin/correio/OficioDigital";
+import TemplateCreator from "@/pages/admin/correio/TemplateCreator";
+
+// Chat Module
+import AdminChatPage from "@/pages/admin/chat/ChatPage";
+import CitizenChatPage from "@/pages/citizen/chat/ChatPage";
+
+// Gabinete do Prefeito Module
+import MayorDashboard from "@/pages/admin/gabinete/Dashboard";
+import AppointmentScheduler from "@/pages/admin/gabinete/AppointmentScheduler";
+import DirectRequests from "@/pages/admin/gabinete/DirectRequests";
+import PublicPolicies from "@/pages/admin/gabinete/PublicPolicies";
+import StrategicPrograms from "@/pages/admin/gabinete/StrategicPrograms";
+
+// Administration Module
+import AdministracaoIndex from "@/pages/admin/administracao/index";
+import RHPage from "@/pages/admin/administracao/rh/index";
+import ComprasPage from "@/pages/admin/administracao/compras/index";
+
+// Health Module
+import SaudeIndex from "@/pages/admin/saude/index";
+import AtendimentosPage from "@/pages/admin/saude/atendimentos/index";
+import MedicamentosPage from "@/pages/admin/saude/medicamentos/index";
+import TFDPage from "@/pages/admin/saude/tfd/index";
+import ProgramasPage from "@/pages/admin/saude/programas/index";
+import CampanhasPage from "@/pages/admin/saude/campanhas/index";
+import ACSPage from "@/pages/admin/saude/acs/index";
+
+// Create a new QueryClient instance
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <Routes>
-      <Route path="/">
-        <Route element={<AuthLayout />}>
-          <Route path="login" element={<LoginPage />} />
-          <Route path="register" element={<RegisterPage />} />
-          <Route path="forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="reset-password" element={<ResetPasswordPage />} />
-        </Route>
+    // Wrap the entire app with QueryClientProvider
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
+          <AuthProvider>
+            <ChatProvider> {/* Add ChatProvider here to wrap all routes */}
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/admin-register" element={<AdminRegister />} />
+                <Route path="/esqueci-senha" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
 
-        <Route
-          element={
-            <RequireAuth>
-              <MainLayout />
-            </RequireAuth>
-          }
-        >
-          <Route index element={<DashboardPage />} />
-          <Route path="profile" element={<ProfilePage />} />
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="users" element={<UserManagement />} />
+                  
+                  {/* Correio Interno Routes */}
+                  <Route path="correio/dashboard" element={<MailDashboard />} />
+                  <Route path="correio/oficio-digital" element={<OficioDigital />} />
+                  <Route path="correio/criador-oficios" element={<TemplateCreator />} />
+                  
+                  {/* Chat Route */}
+                  <Route path="chat" element={<AdminChatPage />} />
+                  
+                  {/* Gabinete do Prefeito Routes */}
+                  <Route path="gabinete/dashboard" element={<MayorDashboard />} />
+                  <Route path="gabinete/agendamentos" element={<AppointmentScheduler />} />
+                  <Route path="gabinete/solicitacoes" element={<DirectRequests />} />
+                  <Route path="gabinete/politicas" element={<PublicPolicies />} />
+                  <Route path="gabinete/programas" element={<StrategicPrograms />} />
 
-          {/* Gabinete routes */}
-          <Route path="admin/gabinete" element={<GabineteIndexPage />} />
-          <Route path="admin/gabinete/solicitacoes" element={<DirectRequests />} />
-          <Route path="admin/gabinete/politicas-publicas" element={<PublicPoliciesPage />} />
-          <Route path="admin/gabinete/programas-estrategicos" element={<StrategicProgramsPage />} />
+                  {/* Administration Module Routes */}
+                  <Route path="administracao" element={<AdministracaoIndex />} />
+                  <Route path="administracao/rh" element={<RHPage />} />
+                  <Route path="administracao/compras" element={<ComprasPage />} />
+                  
+                  {/* Health Module Routes */}
+                  <Route path="saude" element={<SaudeIndex />} />
+                  <Route path="saude/atendimentos" element={<AtendimentosPage />} />
+                  <Route path="saude/medicamentos" element={<MedicamentosPage />} />
+                  <Route path="saude/tfd" element={<TFDPage />} />
+                  <Route path="saude/programas" element={<ProgramasPage />} />
+                  <Route path="saude/campanhas" element={<CampanhasPage />} />
+                  <Route path="saude/acs" element={<ACSPage />} />
+                </Route>
 
-          {/* Educação routes */}
-          <Route path="admin/educacao" element={<EducacaoIndexPage />} />
+                {/* Citizen Routes */}
+                <Route path="/citizen" element={<CitizenLayout />}>
+                  <Route path="dashboard" element={<CitizenDashboard />} />
+                  <Route path="chat" element={<CitizenChatPage />} />
+                </Route>
 
-          {/* Saúde routes */}
-          <Route path="admin/saude" element={<SaudeIndexPage />} />
-          <Route path="admin/saude/tfd" element={<TFDIndexPage />} />
-
-          {/* Assistência Social routes */}
-          <Route path="admin/assistencia" element={<AssistenciaIndexPage />} />
-          <Route path="admin/assistencia/beneficios" element={<BenefitsPage />} />
-          <Route path="admin/assistencia/programas" element={<SocialProgramsPage />} />
-          <Route path="admin/assistencia/cras" element={<CrasCreasPage />} />
-          <Route path="admin/assistencia/familias" element={<VulnerableFamiliesPage />} />
-
-          {/* Administração routes */}
-          <Route path="admin/administracao" element={<AdministracaoIndexPage />} />
-          <Route path="admin/administracao/users" element={<UsersPage />} />
-          <Route path="admin/administracao/hr-requests" element={<HRRequestsPage />} />
-
-          {/* Serviços routes */}
-          <Route path="admin/servicos" element={<ServicosIndexPage />} />
-
-          {/* Finanças routes */}
-          <Route path="admin/financas" element={<FinancasIndexPage />} />
-          <Route path="admin/financas/purchase-requests" element={<PurchaseRequestsPage />} />
-
-          {/* Obras routes */}
-          <Route path="admin/obras" element={<ObrasIndexPage />} />
-
-          {/* Meio Ambiente routes */}
-          <Route path="admin/meioambiente" element={<MeioAmbienteIndexPage />} />
-
-          {/* Correio routes */}
-          <Route path="admin/correio" element={<CorreioIndexPage />} />
-          <Route path="admin/correio/mail-documents" element={<MailDocumentsPage />} />
-
-          {/* Chat routes */}
-          <Route path="admin/chat" element={<ChatIndexPage />} />
-        </Route>
-      </Route>
-    </Routes>
+                {/* Catch-all route for 404 */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+              
+              <Toaster />
+              <NewChatPanel />
+            </ChatProvider> {/* Close ChatProvider */}
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
