@@ -45,7 +45,7 @@ export default function BenefitDetailDialog({
     if (benefit) {
       try {
         const data = await getBenefitAttachments(benefit.id);
-        setAttachments(data);
+        setAttachments(data || []);
       } catch (error) {
         console.error("Error fetching attachments:", error);
       }
@@ -128,12 +128,12 @@ export default function BenefitDetailDialog({
                 Data da Solicitação
               </h3>
               <p>
-                {format(new Date(benefit.request_date), "dd/MM/yyyy HH:mm")}
+                {benefit.request_date ? format(new Date(benefit.request_date), "dd/MM/yyyy HH:mm") : "Não informada"}
               </p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">Status</h3>
-              <p>{getBenefitStatusBadge(benefit.status)}</p>
+              <p>{benefit.status ? getBenefitStatusBadge(benefit.status) : "Não definido"}</p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">
@@ -145,7 +145,7 @@ export default function BenefitDetailDialog({
               <h3 className="text-sm font-medium text-gray-500">
                 ID do Cidadão
               </h3>
-              <p>{benefit.citizen_id}</p>
+              <p>{benefit.citizen_id || "Não informado"}</p>
             </div>
           </div>
 

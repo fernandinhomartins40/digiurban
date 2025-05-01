@@ -1,7 +1,4 @@
 
-// Fix the type in BenefitDialog.tsx by changing how we handle the status field
-// Let's update the updateBenefit function to properly convert the status string to BenefitStatus type
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,7 +11,7 @@ import { EmergencyBenefit, BenefitStatus } from "@/types/assistance";
 import { updateEmergencyBenefit } from "@/services/assistance";
 
 interface BenefitDialogProps {
-  benefit: EmergencyBenefit;
+  benefit?: EmergencyBenefit;
   open: boolean;
   onClose: () => void;
   onUpdate: () => void;
@@ -25,27 +22,29 @@ export function BenefitDialog({ benefit, open, onClose, onUpdate }: BenefitDialo
 
   const form = useForm({
     defaultValues: {
-      benefit_type: benefit.benefit_type || "",
-      reason: benefit.reason || "",
-      status: benefit.status || "pending",
-      comments: benefit.comments || "",
-      citizen_id: benefit.citizen_id || "",
+      benefit_type: benefit?.benefit_type || "",
+      reason: benefit?.reason || "",
+      status: benefit?.status || "pending",
+      comments: benefit?.comments || "",
+      citizen_id: benefit?.citizen_id || "",
     },
   });
 
   const handleSubmit = async (values: any) => {
     setIsLoading(true);
     try {
-      await updateEmergencyBenefit(benefit.id, {
-        updated_at: new Date().toISOString(),
-        citizen_id: values.citizen_id || undefined,
-        status: values.status as BenefitStatus,
-        comments: values.comments || undefined,
-        benefit_type: values.benefit_type || undefined,
-        reason: values.reason || undefined,
-      });
-      onUpdate();
-      onClose();
+      if (benefit?.id) {
+        await updateEmergencyBenefit(benefit.id, {
+          updated_at: new Date().toISOString(),
+          citizen_id: values.citizen_id || undefined,
+          status: values.status as BenefitStatus,
+          comments: values.comments || undefined,
+          benefit_type: values.benefit_type || undefined,
+          reason: values.reason || undefined,
+        });
+        onUpdate();
+        onClose();
+      }
     } catch (error) {
       console.error("Error updating benefit:", error);
     } finally {
@@ -57,7 +56,7 @@ export function BenefitDialog({ benefit, open, onClose, onUpdate }: BenefitDialo
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Editar Benefício #{benefit.protocol_number}</DialogTitle>
+          <DialogTitle>Editar Benefício #{benefit?.protocol_number}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">

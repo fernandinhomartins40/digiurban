@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EmergencyBenefit } from "@/types/assistance";
 import { getEmergencyBenefits } from "@/services/assistance";
 import BenefitsTable from "@/components/assistencia/beneficios/BenefitsTable";
-import BenefitDialog from "@/components/assistencia/beneficios/BenefitDialog";
+import { BenefitDialog } from "@/components/assistencia/beneficios/BenefitDialog";
 import BenefitDetailDialog from "@/components/assistencia/beneficios/BenefitDetailDialog";
 
 export default function BenefitsPage() {
@@ -53,9 +53,9 @@ export default function BenefitsPage() {
   const fetchBenefits = async () => {
     setLoading(true);
     try {
-      const data = await getEmergencyBenefits();
-      setBenefits(data);
-      setFilteredBenefits(data);
+      const response = await getEmergencyBenefits();
+      setBenefits(response || []);
+      setFilteredBenefits(response || []);
     } catch (error) {
       console.error("Error fetching benefits:", error);
       toast({
@@ -191,16 +191,16 @@ export default function BenefitsPage() {
 
       {/* Dialogs */}
       <BenefitDialog
-        isOpen={isNewDialogOpen}
+        open={isNewDialogOpen}
         onClose={() => setIsNewDialogOpen(false)}
-        onSuccess={fetchBenefits}
+        onUpdate={fetchBenefits}
       />
 
       <BenefitDialog
-        isOpen={isEditDialogOpen}
+        open={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
         benefit={selectedBenefit || undefined}
-        onSuccess={fetchBenefits}
+        onUpdate={fetchBenefits}
       />
 
       <BenefitDetailDialog

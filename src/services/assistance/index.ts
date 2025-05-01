@@ -1,496 +1,469 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  EmergencyBenefit, 
-  BenefitAttachment,
-  SocialProgram,
-  ProgramBeneficiary,
+import {
   AssistanceCenter,
-  SocialAttendance,
-  AttendanceAttachment,
-  VulnerableFamily,
+  BenefitAttachment,
+  EmergencyBenefit,
   FamilyMember,
   FamilyMonitoringPlan,
   FamilyVisit,
-  VisitAttachment,
-  BenefitStatus
+  ProgramBeneficiary,
+  SocialAttendance,
+  SocialProgram,
+  VulnerableFamily
 } from "@/types/assistance";
 
-// Emergency Benefits Services
-export const getEmergencyBenefits = async (filters = {}) => {
+// Emergency Benefits
+export async function getEmergencyBenefits(): Promise<EmergencyBenefit[]> {
   const { data, error } = await supabase
     .from("emergency_benefits")
     .select("*")
-    .match(filters);
+    .order("request_date", { ascending: false });
 
-  if (error) throw error;
-  return { data: data || [] };
-};
+  if (error) {
+    console.error("Error fetching emergency benefits:", error);
+    throw error;
+  }
 
-export const getEmergencyBenefitById = async (id: string) => {
+  return data as EmergencyBenefit[];
+}
+
+export async function getEmergencyBenefit(id: string): Promise<EmergencyBenefit> {
   const { data, error } = await supabase
     .from("emergency_benefits")
     .select("*")
     .eq("id", id)
     .single();
 
-  if (error) throw error;
-  return { data };
-};
+  if (error) {
+    console.error(`Error fetching emergency benefit with ID ${id}:`, error);
+    throw error;
+  }
 
-export const createEmergencyBenefit = async (
-  benefit: Omit<EmergencyBenefit, "id" | "created_at" | "updated_at" | "protocol_number">
-) => {
+  return data as EmergencyBenefit;
+}
+
+export async function createEmergencyBenefit(benefit: Omit<EmergencyBenefit, "id" | "created_at" | "updated_at" | "protocol_number">): Promise<EmergencyBenefit> {
+  // Generate protocol number
+  const protocolNumber = `BEN-${Date.now().toString().slice(-6)}`;
+  
   const { data, error } = await supabase
     .from("emergency_benefits")
-    .insert([benefit])
-    .select();
+    .insert({
+      ...benefit,
+      protocol_number: protocolNumber,
+    })
+    .select()
+    .single();
 
-  if (error) throw error;
-  return { data: data[0] };
-};
+  if (error) {
+    console.error("Error creating emergency benefit:", error);
+    throw error;
+  }
 
-export const updateEmergencyBenefit = async (
-  id: string,
-  updates: Partial<EmergencyBenefit>
-) => {
+  return data as EmergencyBenefit;
+}
+
+export async function updateEmergencyBenefit(id: string, updates: Partial<EmergencyBenefit>): Promise<EmergencyBenefit> {
   const { data, error } = await supabase
     .from("emergency_benefits")
     .update(updates)
     .eq("id", id)
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-// Benefit Attachments Services
-export const getBenefitAttachments = async (benefitId: string) => {
-  const { data, error } = await supabase
-    .from("benefit_attachments")
-    .select("*")
-    .eq("benefit_id", benefitId);
-
-  if (error) throw error;
-  return { data: data || [] };
-};
-
-export const uploadBenefitAttachment = async (
-  attachment: Omit<BenefitAttachment, "id" | "uploaded_at">
-) => {
-  const { data, error } = await supabase
-    .from("benefit_attachments")
-    .insert([attachment])
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-// Social Programs Services
-export const getSocialPrograms = async (filters = {}) => {
-  const { data, error } = await supabase
-    .from("social_programs")
-    .select("*")
-    .match(filters);
-
-  if (error) throw error;
-  return { data: data || [] };
-};
-
-export const getSocialProgramById = async (id: string) => {
-  const { data, error } = await supabase
-    .from("social_programs")
-    .select("*")
-    .eq("id", id)
+    .select()
     .single();
 
-  if (error) throw error;
-  return { data };
-};
+  if (error) {
+    console.error(`Error updating emergency benefit with ID ${id}:`, error);
+    throw error;
+  }
 
-export const createSocialProgram = async (
-  program: Omit<SocialProgram, "id" | "created_at" | "updated_at">
-) => {
-  const { data, error } = await supabase
-    .from("social_programs")
-    .insert([program])
-    .select();
+  return data as EmergencyBenefit;
+}
 
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-export const updateSocialProgram = async (
-  id: string,
-  updates: Partial<SocialProgram>
-) => {
-  const { data, error } = await supabase
-    .from("social_programs")
-    .update(updates)
-    .eq("id", id)
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-// Program Beneficiaries Services
-export const getProgramBeneficiaries = async (filters = {}) => {
-  const { data, error } = await supabase
-    .from("program_beneficiaries")
-    .select("*")
-    .match(filters);
-
-  if (error) throw error;
-  return { data: data || [] };
-};
-
-export const getProgramBeneficiaryById = async (id: string) => {
-  const { data, error } = await supabase
-    .from("program_beneficiaries")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error) throw error;
-  return { data };
-};
-
-export const createProgramBeneficiary = async (
-  beneficiary: Omit<ProgramBeneficiary, "id" | "created_at" | "updated_at">
-) => {
-  const { data, error } = await supabase
-    .from("program_beneficiaries")
-    .insert([beneficiary])
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-export const updateProgramBeneficiary = async (
-  id: string,
-  updates: Partial<ProgramBeneficiary>
-) => {
-  const { data, error } = await supabase
-    .from("program_beneficiaries")
-    .update(updates)
-    .eq("id", id)
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-// Assistance Centers Services
-export const getAssistanceCenters = async (filters = {}) => {
-  const { data, error } = await supabase
-    .from("assistance_centers")
-    .select("*")
-    .match(filters);
-
-  if (error) throw error;
-  return { data: data || [] };
-};
-
-export const getAssistanceCenterById = async (id: string) => {
-  const { data, error } = await supabase
-    .from("assistance_centers")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error) throw error;
-  return { data };
-};
-
-export const createAssistanceCenter = async (
-  center: Omit<AssistanceCenter, "id" | "created_at" | "updated_at">
-) => {
-  const { data, error } = await supabase
-    .from("assistance_centers")
-    .insert([center])
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-export const updateAssistanceCenter = async (
-  id: string,
-  updates: Partial<AssistanceCenter>
-) => {
-  const { data, error } = await supabase
-    .from("assistance_centers")
-    .update(updates)
-    .eq("id", id)
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-// Social Attendances Services
-export const getSocialAttendances = async (filters = {}) => {
-  const { data, error } = await supabase
-    .from("social_attendances")
-    .select("*")
-    .match(filters);
-
-  if (error) throw error;
-  return { data: data || [] };
-};
-
-export const getSocialAttendanceById = async (id: string) => {
-  const { data, error } = await supabase
-    .from("social_attendances")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error) throw error;
-  return { data };
-};
-
-export const createSocialAttendance = async (
-  attendance: Omit<SocialAttendance, "id" | "created_at" | "updated_at" | "protocol_number">
-) => {
-  const { data, error } = await supabase
-    .from("social_attendances")
-    .insert([attendance])
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-export const updateSocialAttendance = async (
-  id: string,
-  updates: Partial<SocialAttendance>
-) => {
-  const { data, error } = await supabase
-    .from("social_attendances")
-    .update(updates)
-    .eq("id", id)
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-// Attendance Attachments Services
-export const getAttendanceAttachments = async (attendanceId: string) => {
-  const { data, error } = await supabase
-    .from("attendance_attachments")
-    .select("*")
-    .eq("attendance_id", attendanceId);
-
-  if (error) throw error;
-  return { data: data || [] };
-};
-
-export const uploadAttendanceAttachment = async (
-  attachment: Omit<AttendanceAttachment, "id" | "uploaded_at">
-) => {
-  const { data, error } = await supabase
-    .from("attendance_attachments")
-    .insert([attachment])
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-// Vulnerable Families Services
-export const getVulnerableFamilies = async (filters = {}) => {
-  const { data, error } = await supabase
-    .from("vulnerable_families")
-    .select("*")
-    .match(filters);
-
-  if (error) throw error;
-  return { data: data || [] };
-};
-
-export const getVulnerableFamilyById = async (id: string) => {
-  const { data, error } = await supabase
-    .from("vulnerable_families")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error) throw error;
-  return { data };
-};
-
-export const createVulnerableFamily = async (
-  family: Omit<VulnerableFamily, "id" | "created_at" | "updated_at">
-) => {
-  const { data, error } = await supabase
-    .from("vulnerable_families")
-    .insert([family])
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-export const updateVulnerableFamily = async (
-  id: string,
-  updates: Partial<VulnerableFamily>
-) => {
-  const { data, error } = await supabase
-    .from("vulnerable_families")
-    .update(updates)
-    .eq("id", id)
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-// Family Members Services
-export const getFamilyMembers = async (familyId: string) => {
-  const { data, error } = await supabase
-    .from("family_members")
-    .select("*")
-    .eq("family_id", familyId);
-
-  if (error) throw error;
-  return { data: data || [] };
-};
-
-export const createFamilyMember = async (
-  member: Omit<FamilyMember, "id" | "created_at" | "updated_at">
-) => {
-  const { data, error } = await supabase
-    .from("family_members")
-    .insert([member])
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-export const updateFamilyMember = async (
-  id: string,
-  updates: Partial<FamilyMember>
-) => {
-  const { data, error } = await supabase
-    .from("family_members")
-    .update(updates)
-    .eq("id", id)
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-export const deleteFamilyMember = async (id: string) => {
+export async function deleteEmergencyBenefit(id: string): Promise<void> {
   const { error } = await supabase
-    .from("family_members")
+    .from("emergency_benefits")
     .delete()
     .eq("id", id);
 
-  if (error) throw error;
-  return { success: true };
-};
+  if (error) {
+    console.error(`Error deleting emergency benefit with ID ${id}:`, error);
+    throw error;
+  }
+}
 
-// Family Monitoring Plans Services
-export const getFamilyMonitoringPlans = async (familyId: string) => {
+// Benefit Attachments
+export async function getBenefitAttachments(benefitId: string): Promise<BenefitAttachment[]> {
   const { data, error } = await supabase
-    .from("family_monitoring_plans")
+    .from("benefit_attachments")
+    .select("*")
+    .eq("benefit_id", benefitId)
+    .order("uploaded_at", { ascending: false });
+
+  if (error) {
+    console.error(`Error fetching attachments for benefit ${benefitId}:`, error);
+    throw error;
+  }
+
+  return data as BenefitAttachment[];
+}
+
+export async function createBenefitAttachment(attachment: Omit<BenefitAttachment, "id" | "uploaded_at">): Promise<BenefitAttachment> {
+  const { data, error } = await supabase
+    .from("benefit_attachments")
+    .insert(attachment)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating benefit attachment:", error);
+    throw error;
+  }
+
+  return data as BenefitAttachment;
+}
+
+export async function deleteBenefitAttachment(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("benefit_attachments")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(`Error deleting benefit attachment with ID ${id}:`, error);
+    throw error;
+  }
+}
+
+// Social Programs
+export async function getSocialPrograms(): Promise<SocialProgram[]> {
+  const { data, error } = await supabase
+    .from("social_programs")
+    .select("*")
+    .order("name");
+
+  if (error) {
+    console.error("Error fetching social programs:", error);
+    throw error;
+  }
+
+  return data as SocialProgram[];
+}
+
+export async function createSocialProgram(program: Omit<SocialProgram, "id" | "created_at" | "updated_at">): Promise<SocialProgram> {
+  const { data, error } = await supabase
+    .from("social_programs")
+    .insert(program)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating social program:", error);
+    throw error;
+  }
+
+  return data as SocialProgram;
+}
+
+export async function updateSocialProgram(id: string, updates: Partial<SocialProgram>): Promise<SocialProgram> {
+  const { data, error } = await supabase
+    .from("social_programs")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error updating social program with ID ${id}:`, error);
+    throw error;
+  }
+
+  return data as SocialProgram;
+}
+
+export async function deleteSocialProgram(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("social_programs")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(`Error deleting social program with ID ${id}:`, error);
+    throw error;
+  }
+}
+
+// Program Beneficiaries
+export async function getProgramBeneficiaries(programId: string): Promise<ProgramBeneficiary[]> {
+  const { data, error } = await supabase
+    .from("program_beneficiaries")
+    .select("*")
+    .eq("program_id", programId);
+
+  if (error) {
+    console.error(`Error fetching beneficiaries for program ${programId}:`, error);
+    throw error;
+  }
+
+  return data as ProgramBeneficiary[];
+}
+
+export async function createProgramBeneficiary(beneficiary: Omit<ProgramBeneficiary, "id" | "created_at" | "updated_at">): Promise<ProgramBeneficiary> {
+  const { data, error } = await supabase
+    .from("program_beneficiaries")
+    .insert(beneficiary)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating program beneficiary:", error);
+    throw error;
+  }
+
+  return data as ProgramBeneficiary;
+}
+
+export async function updateProgramBeneficiary(id: string, updates: Partial<ProgramBeneficiary>): Promise<ProgramBeneficiary> {
+  const { data, error } = await supabase
+    .from("program_beneficiaries")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error updating program beneficiary with ID ${id}:`, error);
+    throw error;
+  }
+
+  return data as ProgramBeneficiary;
+}
+
+export async function deleteProgramBeneficiary(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("program_beneficiaries")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(`Error deleting program beneficiary with ID ${id}:`, error);
+    throw error;
+  }
+}
+
+// Assistance Centers (CRAS/CREAS)
+export async function getAssistanceCenters(): Promise<AssistanceCenter[]> {
+  const { data, error } = await supabase
+    .from("assistance_centers")
+    .select("*")
+    .order("name");
+
+  if (error) {
+    console.error("Error fetching assistance centers:", error);
+    throw error;
+  }
+
+  return data as AssistanceCenter[];
+}
+
+export async function getAssistanceCenter(id: string): Promise<AssistanceCenter> {
+  const { data, error } = await supabase
+    .from("assistance_centers")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error(`Error fetching assistance center with ID ${id}:`, error);
+    throw error;
+  }
+
+  return data as AssistanceCenter;
+}
+
+export async function createAssistanceCenter(center: Omit<AssistanceCenter, "id" | "created_at" | "updated_at">): Promise<AssistanceCenter> {
+  const { data, error } = await supabase
+    .from("assistance_centers")
+    .insert(center)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating assistance center:", error);
+    throw error;
+  }
+
+  return data as AssistanceCenter;
+}
+
+export async function updateAssistanceCenter(id: string, updates: Partial<AssistanceCenter>): Promise<AssistanceCenter> {
+  const { data, error } = await supabase
+    .from("assistance_centers")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error updating assistance center with ID ${id}:`, error);
+    throw error;
+  }
+
+  return data as AssistanceCenter;
+}
+
+export async function deleteAssistanceCenter(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("assistance_centers")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(`Error deleting assistance center with ID ${id}:`, error);
+    throw error;
+  }
+}
+
+// Social Attendances
+export async function getSocialAttendances(): Promise<SocialAttendance[]> {
+  const { data, error } = await supabase
+    .from("social_attendances")
+    .select("*")
+    .order("attendance_date", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching social attendances:", error);
+    throw error;
+  }
+
+  return data as SocialAttendance[];
+}
+
+export async function createSocialAttendance(attendance: Omit<SocialAttendance, "id" | "created_at" | "updated_at" | "protocol_number">): Promise<SocialAttendance> {
+  // Generate protocol number
+  const protocolNumber = `ATT-${Date.now().toString().slice(-6)}`;
+  
+  const { data, error } = await supabase
+    .from("social_attendances")
+    .insert({
+      ...attendance,
+      protocol_number: protocolNumber,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating social attendance:", error);
+    throw error;
+  }
+
+  return data as SocialAttendance;
+}
+
+// Vulnerable Families
+export async function getVulnerableFamilies(): Promise<VulnerableFamily[]> {
+  const { data, error } = await supabase
+    .from("vulnerable_families")
+    .select("*")
+    .order("family_name");
+
+  if (error) {
+    console.error("Error fetching vulnerable families:", error);
+    throw error;
+  }
+
+  return data as VulnerableFamily[];
+}
+
+export async function getVulnerableFamily(id: string): Promise<VulnerableFamily> {
+  const { data, error } = await supabase
+    .from("vulnerable_families")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error(`Error fetching vulnerable family with ID ${id}:`, error);
+    throw error;
+  }
+
+  return data as VulnerableFamily;
+}
+
+export async function createVulnerableFamily(family: Omit<VulnerableFamily, "id" | "created_at" | "updated_at">): Promise<VulnerableFamily> {
+  const { data, error } = await supabase
+    .from("vulnerable_families")
+    .insert(family)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating vulnerable family:", error);
+    throw error;
+  }
+
+  return data as VulnerableFamily;
+}
+
+export async function updateVulnerableFamily(id: string, updates: Partial<VulnerableFamily>): Promise<VulnerableFamily> {
+  const { data, error } = await supabase
+    .from("vulnerable_families")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error updating vulnerable family with ID ${id}:`, error);
+    throw error;
+  }
+
+  return data as VulnerableFamily;
+}
+
+// Family Members
+export async function getFamilyMembers(familyId: string): Promise<FamilyMember[]> {
+  const { data, error } = await supabase
+    .from("family_members")
     .select("*")
     .eq("family_id", familyId);
 
-  if (error) throw error;
-  return { data: data || [] };
-};
+  if (error) {
+    console.error(`Error fetching members for family ${familyId}:`, error);
+    throw error;
+  }
 
-export const createFamilyMonitoringPlan = async (
-  plan: Omit<FamilyMonitoringPlan, "id" | "created_at" | "updated_at">
-) => {
+  return data as FamilyMember[];
+}
+
+// Family Monitoring Plans
+export async function getFamilyMonitoringPlans(familyId: string): Promise<FamilyMonitoringPlan[]> {
   const { data, error } = await supabase
     .from("family_monitoring_plans")
-    .insert([plan])
-    .select();
+    .select("*")
+    .eq("family_id", familyId)
+    .order("start_date", { ascending: false });
 
-  if (error) throw error;
-  return { data: data[0] };
-};
+  if (error) {
+    console.error(`Error fetching monitoring plans for family ${familyId}:`, error);
+    throw error;
+  }
 
-export const updateFamilyMonitoringPlan = async (
-  id: string,
-  updates: Partial<FamilyMonitoringPlan>
-) => {
-  const { data, error } = await supabase
-    .from("family_monitoring_plans")
-    .update(updates)
-    .eq("id", id)
-    .select();
+  return data as FamilyMonitoringPlan[];
+}
 
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-// Family Visits Services
-export const getFamilyVisits = async (familyId: string) => {
+// Family Visits
+export async function getFamilyVisits(familyId: string): Promise<FamilyVisit[]> {
   const { data, error } = await supabase
     .from("family_visits")
     .select("*")
     .eq("family_id", familyId)
     .order("visit_date", { ascending: false });
 
-  if (error) throw error;
-  return { data: data || [] };
-};
+  if (error) {
+    console.error(`Error fetching visits for family ${familyId}:`, error);
+    throw error;
+  }
 
-export const createFamilyVisit = async (
-  visit: Omit<FamilyVisit, "id" | "created_at" | "updated_at">
-) => {
-  const { data, error } = await supabase
-    .from("family_visits")
-    .insert([visit])
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-export const updateFamilyVisit = async (
-  id: string,
-  updates: Partial<FamilyVisit>
-) => {
-  const { data, error } = await supabase
-    .from("family_visits")
-    .update(updates)
-    .eq("id", id)
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
-
-// Visit Attachments Services
-export const getVisitAttachments = async (visitId: string) => {
-  const { data, error } = await supabase
-    .from("visit_attachments")
-    .select("*")
-    .eq("visit_id", visitId);
-
-  if (error) throw error;
-  return { data: data || [] };
-};
-
-export const uploadVisitAttachment = async (
-  attachment: Omit<VisitAttachment, "id" | "uploaded_at">
-) => {
-  const { data, error } = await supabase
-    .from("visit_attachments")
-    .insert([attachment])
-    .select();
-
-  if (error) throw error;
-  return { data: data[0] };
-};
+  return data as FamilyVisit[];
+}

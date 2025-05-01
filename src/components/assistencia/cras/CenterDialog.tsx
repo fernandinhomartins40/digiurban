@@ -60,7 +60,19 @@ export function CenterDialog({ center, open, onClose, onSave }: CenterDialogProp
       if (isEditing && center) {
         await updateAssistanceCenter(center.id, centerData);
       } else {
-        await createAssistanceCenter(centerData as Omit<AssistanceCenter, "id" | "created_at" | "updated_at">);
+        // Ensure we have required fields for a new center
+        await createAssistanceCenter({
+          name: values.name,
+          type: values.type as "CRAS" | "CREAS",
+          address: values.address, 
+          neighborhood: values.neighborhood,
+          city: values.city,
+          state: values.state,
+          phone: values.phone,
+          email: values.email,
+          coordinator_name: values.coordinator_name,
+          is_active: values.is_active,
+        });
       }
       onSave();
       onClose();
