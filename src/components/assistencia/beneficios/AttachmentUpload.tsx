@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-import { getBenefitAttachments, createBenefitAttachment, deleteBenefitAttachment } from '@/services/assistance';
+import { getBenefitAttachments, createBenefitAttachment, deleteBenefitAttachment } from '@/services/assistance/index';
 import { BenefitAttachment } from '@/types/assistance';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';

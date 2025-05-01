@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import {
   AssistanceCenter,
@@ -9,6 +8,7 @@ import {
   SocialAttendance,
   SocialProgram,
   VulnerableFamily,
+  Evolution,
 } from "@/types/assistance";
 
 // CRAS/CREAS centers
@@ -23,7 +23,11 @@ export const getAssistanceCenters = async (): Promise<AssistanceCenter[]> => {
     throw error;
   }
 
-  return data || [];
+  // Cast data to the correct type
+  return data?.map(center => ({
+    ...center,
+    type: center.type as "CRAS" | "CREAS"
+  })) || [];
 };
 
 export const getAssistanceCenter = async (id: string): Promise<AssistanceCenter> => {
@@ -38,7 +42,11 @@ export const getAssistanceCenter = async (id: string): Promise<AssistanceCenter>
     throw error;
   }
 
-  return data;
+  // Cast to the correct type
+  return {
+    ...data,
+    type: data.type as "CRAS" | "CREAS"
+  };
 };
 
 export const createAssistanceCenter = async (center: Omit<AssistanceCenter, "id" | "created_at" | "updated_at">): Promise<AssistanceCenter> => {
@@ -53,7 +61,11 @@ export const createAssistanceCenter = async (center: Omit<AssistanceCenter, "id"
     throw error;
   }
 
-  return data;
+  // Cast to the correct type
+  return {
+    ...data,
+    type: data.type as "CRAS" | "CREAS"
+  };
 };
 
 export const updateAssistanceCenter = async (id: string, center: Partial<AssistanceCenter>): Promise<AssistanceCenter> => {
@@ -69,7 +81,11 @@ export const updateAssistanceCenter = async (id: string, center: Partial<Assista
     throw error;
   }
 
-  return data;
+  // Cast to the correct type
+  return {
+    ...data,
+    type: data.type as "CRAS" | "CREAS"
+  };
 };
 
 export const deleteAssistanceCenter = async (id: string): Promise<void> => {
@@ -320,7 +336,11 @@ export const getFamilyVisits = async (familyId: string): Promise<FamilyVisit[]> 
     throw error;
   }
 
-  return data || [];
+  // Cast evolution to correct enum type
+  return data?.map(visit => ({
+    ...visit,
+    evolution: visit.evolution as Evolution
+  })) || [];
 };
 
 export const createFamilyVisit = async (visit: Omit<FamilyVisit, "id" | "created_at" | "updated_at">): Promise<FamilyVisit> => {
@@ -335,7 +355,11 @@ export const createFamilyVisit = async (visit: Omit<FamilyVisit, "id" | "created
     throw error;
   }
 
-  return data;
+  // Cast evolution to correct enum type
+  return {
+    ...data,
+    evolution: data.evolution as Evolution
+  };
 };
 
 // Benefits
@@ -411,7 +435,11 @@ export const getSocialPrograms = async (): Promise<SocialProgram[]> => {
     throw error;
   }
 
-  return data || [];
+  // Cast scope to the correct type
+  return data?.map(program => ({
+    ...program,
+    scope: program.scope as "municipal" | "state" | "federal"
+  })) || [];
 };
 
 export const getSocialProgram = async (id: string): Promise<SocialProgram> => {
@@ -426,7 +454,11 @@ export const getSocialProgram = async (id: string): Promise<SocialProgram> => {
     throw error;
   }
 
-  return data;
+  // Cast scope to the correct type
+  return {
+    ...data,
+    scope: data.scope as "municipal" | "state" | "federal"
+  };
 };
 
 export const createSocialProgram = async (program: Omit<SocialProgram, "id" | "created_at" | "updated_at">): Promise<SocialProgram> => {
@@ -441,7 +473,11 @@ export const createSocialProgram = async (program: Omit<SocialProgram, "id" | "c
     throw error;
   }
 
-  return data;
+  // Cast scope to the correct type
+  return {
+    ...data,
+    scope: data.scope as "municipal" | "state" | "federal"
+  };
 };
 
 export const updateSocialProgram = async (id: string, program: Partial<SocialProgram>): Promise<SocialProgram> => {
@@ -457,7 +493,11 @@ export const updateSocialProgram = async (id: string, program: Partial<SocialPro
     throw error;
   }
 
-  return data;
+  // Cast scope to the correct type
+  return {
+    ...data,
+    scope: data.scope as "municipal" | "state" | "federal"
+  };
 };
 
 export const deleteSocialProgram = async (id: string): Promise<void> => {

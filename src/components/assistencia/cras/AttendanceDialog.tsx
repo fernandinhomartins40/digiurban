@@ -1,16 +1,20 @@
-
-import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import * as z from "zod";
+import { SocialAttendance, AssistanceCenter, AttendanceType } from "@/types/assistance";
+import { createSocialAttendance, updateSocialAttendance } from "@/services/assistance/index";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -19,6 +23,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -26,128 +32,121 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { AssistanceCenter, SocialAttendance } from "@/types/assistance";
-import { createSocialAttendance } from "@/services/assistance";
+import { Switch } from "@/components/ui/switch";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
-const attendanceTypeOptions = [
-  { id: "reception", label: "Acolhida" },
-  { id: "qualified_listening", label: "Escuta Qualificada" },
-  { id: "referral", label: "Encaminhamento" },
-  { id: "guidance", label: "Orientação" },
-  { id: "follow_up", label: "Acompanhamento" },
-  { id: "other", label: "Outro" },
-];
-
-const attendanceSchema = z.object({
-  citizen_id: z.string().optional(),
-  citizen_name: z.string().min(1, { message: "Nome do cidadão é obrigatório" }),
-  center_id: z.string().min(1, { message: "Centro é obrigatório" }),
-  attendance_type: z.string().min(1, { message: "Tipo de atendimento é obrigatório" }),
-  description: z.string().min(1, { message: "Descrição é obrigatória" }),
+const formSchema = z.object({
+  center_id: z.string().min(1, "Selecione um centro"),
+  attendance_type: z.string().min(1, "Selecione o tipo de atendimento"),
+  attendance_date: z.date().optional(),
+  description: z.string().min(1, "Descrição é obrigatória"),
   referrals: z.string().optional(),
   follow_up_required: z.boolean().default(false),
-  follow_up_date: z.string().optional(),
+  follow_up_date: z.date().optional(),
 });
 
-type AttendanceFormValues = z.infer<typeof attendanceSchema>;
-
 interface AttendanceDialogProps {
+  attendance: SocialAttendance | null;
+  centers: AssistanceCenter[];
   open: boolean;
   onClose: () => void;
   onSave: () => void;
-  centers: AssistanceCenter[];
-  attendance?: SocialAttendance | null;
 }
 
 export function AttendanceDialog({
+  attendance,
+  centers,
   open,
   onClose,
   onSave,
-  centers,
-  attendance,
 }: AttendanceDialogProps) {
   const { toast } = useToast();
   const isEditing = !!attendance;
-  const [followUpRequired, setFollowUpRequired] = React.useState(false);
+  
+  const [followUpRequired, setFollowUpRequired] = useState(false);
 
-  const form = useForm<AttendanceFormValues>({
-    resolver: zodResolver(attendanceSchema),
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      citizen_name: "",
       center_id: "",
       attendance_type: "",
+      attendance_date: new Date(),
       description: "",
       referrals: "",
       follow_up_required: false,
-      follow_up_date: "",
+      follow_up_date: undefined,
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (attendance) {
       form.reset({
-        citizen_id: attendance.citizen_id,
-        citizen_name: "Nome do Cidadão", // This would come from a lookup using citizen_id
         center_id: attendance.center_id || "",
-        attendance_type: attendance.attendance_type,
-        description: attendance.description,
+        attendance_type: attendance.attendance_type || "",
+        attendance_date: attendance.attendance_date ? new Date(attendance.attendance_date) : new Date(),
+        description: attendance.description || "",
         referrals: attendance.referrals || "",
         follow_up_required: attendance.follow_up_required || false,
-        follow_up_date: attendance.follow_up_date ? new Date(attendance.follow_up_date).toISOString().split('T')[0] : "",
+        follow_up_date: attendance.follow_up_date ? new Date(attendance.follow_up_date) : undefined,
       });
       setFollowUpRequired(attendance.follow_up_required || false);
     } else {
       form.reset({
-        citizen_name: "",
         center_id: "",
         attendance_type: "",
+        attendance_date: new Date(),
         description: "",
         referrals: "",
         follow_up_required: false,
-        follow_up_date: "",
+        follow_up_date: undefined,
       });
       setFollowUpRequired(false);
     }
   }, [attendance, form]);
 
-  const onSubmit = async (values: AttendanceFormValues) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // In a real implementation, we would use the actual citizen_id
-      // For now, we're just creating a new attendance
-      if (!isEditing) {
-        await createSocialAttendance({
-          center_id: values.center_id,
-          attendance_type: values.attendance_type as any,
-          description: values.description,
-          referrals: values.referrals,
-          follow_up_required: values.follow_up_required,
-          follow_up_date: values.follow_up_date ? new Date(values.follow_up_date).toISOString() : undefined,
+      if (isEditing && attendance) {
+        await updateSocialAttendance(attendance.id, {
+          ...values,
+          attendance_date: values.attendance_date ? format(values.attendance_date, "yyyy-MM-dd") : undefined,
+          follow_up_date: values.follow_up_date ? format(values.follow_up_date, "yyyy-MM-dd") : undefined,
         });
+        
+        toast({
+          title: "Atendimento atualizado",
+          description: "O atendimento foi atualizado com sucesso.",
+        });
+      } else {
+        // Create new attendance - modified to remove protocol_number which is auto-generated
+        const attendanceData = {
+          center_id: values.center_id,
+          attendance_type: values.attendance_type as AttendanceType,
+          attendance_date: values.attendance_date ? format(values.attendance_date, "yyyy-MM-dd") : undefined,
+          description: values.description,
+          referrals: values.referrals || "",
+          follow_up_required: values.follow_up_required,
+          follow_up_date: values.follow_up_date ? format(values.follow_up_date, "yyyy-MM-dd") : undefined,
+        };
+
+        await createSocialAttendance(attendanceData);
         
         toast({
           title: "Atendimento registrado",
           description: "O atendimento foi registrado com sucesso.",
         });
-      } else {
-        // This would be an update in a real implementation
-        toast({
-          title: "Não implementado",
-          description: "A funcionalidade de editar atendimentos ainda será implementada.",
-        });
       }
       
-      form.reset();
       onSave();
       onClose();
     } catch (error) {
-      console.error("Erro ao salvar atendimento:", error);
+      console.error("Error saving attendance:", error);
       toast({
         title: "Erro",
-        description: "Houve um erro ao salvar os dados do atendimento.",
+        description: "Ocorreu um erro ao salvar o atendimento.",
         variant: "destructive",
       });
     }
@@ -155,35 +154,23 @@ export function AttendanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Editar Atendimento" : "Novo Atendimento"}
-          </DialogTitle>
+          <DialogTitle>{isEditing ? "Editar Atendimento" : "Novo Atendimento"}</DialogTitle>
+          <DialogDescription>
+            Preencha os campos abaixo para {isEditing ? "editar" : "criar"} um atendimento.
+          </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="citizen_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome do Cidadão</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Digite o nome completo" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
               control={form.control}
               name="center_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Centro de Referência</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um centro" />
@@ -192,7 +179,7 @@ export function AttendanceDialog({
                     <SelectContent>
                       {centers.map((center) => (
                         <SelectItem key={center.id} value={center.id}>
-                          {center.name} ({center.type})
+                          {center.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -208,20 +195,63 @@ export function AttendanceDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tipo de Atendimento</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o tipo de atendimento" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {attendanceTypeOptions.map((type) => (
-                        <SelectItem key={type.id} value={type.id}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="reception">Recepção</SelectItem>
+                      <SelectItem value="qualified_listening">Escuta Qualificada</SelectItem>
+                      <SelectItem value="referral">Encaminhamento</SelectItem>
+                      <SelectItem value="guidance">Orientação</SelectItem>
+                      <SelectItem value="follow_up">Acompanhamento</SelectItem>
+                      <SelectItem value="other">Outro</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="attendance_date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Data do Atendimento</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PP")
+                          ) : (
+                            <span>Selecione uma data</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > new Date()
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -232,13 +262,9 @@ export function AttendanceDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Descrição do Atendimento</FormLabel>
+                  <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Descreva o atendimento realizado"
-                      className="min-h-[100px]"
-                      {...field}
-                    />
+                    <Textarea placeholder="Descreva o atendimento realizado" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -250,51 +276,80 @@ export function AttendanceDialog({
               name="referrals"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Encaminhamentos (opcional)</FormLabel>
+                  <FormLabel>Encaminhamentos</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Descreva os encaminhamentos realizados"
-                      {...field}
-                    />
+                    <Textarea placeholder="Para quais serviços/programas a pessoa foi encaminhada?" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="follow_up_required"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={(checked) => {
-                        field.onChange(checked);
-                        setFollowUpRequired(!!checked);
-                      }}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Requer acompanhamento posterior
-                    </FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
+            <div className="flex items-center justify-between rounded-md border p-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-medium leading-none">Necessário acompanhamento?</h4>
+                <p className="text-sm text-muted-foreground">
+                  Indique se é necessário realizar acompanhamento do caso.
+                </p>
+              </div>
+              <FormField
+                control={form.control}
+                name="follow_up_required"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Switch
+                        checked={followUpRequired}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          setFollowUpRequired(checked);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {followUpRequired && (
               <FormField
                 control={form.control}
                 name="follow_up_date"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data para Acompanhamento</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Data de Acompanhamento</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PP")
+                            ) : (
+                              <span>Selecione uma data</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date < new Date()
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -302,12 +357,7 @@ export function AttendanceDialog({
             )}
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                {isEditing ? "Atualizar" : "Registrar"}
-              </Button>
+              <Button type="submit">{isEditing ? "Salvar" : "Criar"}</Button>
             </DialogFooter>
           </form>
         </Form>
