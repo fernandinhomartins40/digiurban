@@ -24,6 +24,10 @@ import { useToast } from "@/hooks/use-toast";
 import { VulnerableFamily } from "@/types/assistance";
 import { getVulnerableFamilies } from "@/services/assistance";
 import FamiliesTable from "@/components/assistencia/familias/FamiliesTable";
+import { FamilyDialog } from "@/components/assistencia/familias/FamilyDialog";
+import { MembersDialog } from "@/components/assistencia/familias/MembersDialog";
+import { FamilyDetailDialog } from "@/components/assistencia/familias/FamilyDetailDialog";
+import { MonitoringPlanDialog } from "@/components/assistencia/familias/MonitoringPlanDialog";
 
 export default function VulnerableFamiliesPage() {
   const { user } = useAuth();
@@ -39,6 +43,7 @@ export default function VulnerableFamiliesPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState<boolean>(false);
   const [isMembersDialogOpen, setIsMembersDialogOpen] = useState<boolean>(false);
+  const [isPlanDialogOpen, setIsPlanDialogOpen] = useState<boolean>(false);
   const [selectedFamily, setSelectedFamily] = useState<VulnerableFamily | null>(null);
 
   useEffect(() => {
@@ -107,6 +112,11 @@ export default function VulnerableFamiliesPage() {
   const handleManageMembers = (family: VulnerableFamily) => {
     setSelectedFamily(family);
     setIsMembersDialogOpen(true);
+  };
+
+  const handleCreatePlan = (family: VulnerableFamily) => {
+    setSelectedFamily(family);
+    setIsPlanDialogOpen(true);
   };
 
   return (
@@ -191,11 +201,46 @@ export default function VulnerableFamiliesPage() {
             onView={handleViewFamily}
             onEdit={handleEditFamily}
             onManageMembers={handleManageMembers}
+            onCreatePlan={handleCreatePlan}
           />
         </CardContent>
       </Card>
 
-      {/* Add dialogs here */}
+      <FamilyDialog 
+        open={isNewDialogOpen} 
+        onClose={() => setIsNewDialogOpen(false)} 
+        onSave={fetchFamilies}
+        family={null}
+      />
+
+      <FamilyDialog
+        open={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSave={fetchFamilies}
+        family={selectedFamily}
+      />
+
+      <FamilyDetailDialog
+        open={isViewDialogOpen}
+        onClose={() => setIsViewDialogOpen(false)}
+        family={selectedFamily}
+      />
+
+      {selectedFamily && (
+        <>
+          <MembersDialog
+            open={isMembersDialogOpen}
+            onClose={() => setIsMembersDialogOpen(false)}
+            family={selectedFamily}
+          />
+
+          <MonitoringPlanDialog
+            open={isPlanDialogOpen}
+            onClose={() => setIsPlanDialogOpen(false)}
+            family={selectedFamily}
+          />
+        </>
+      )}
     </div>
   );
 }

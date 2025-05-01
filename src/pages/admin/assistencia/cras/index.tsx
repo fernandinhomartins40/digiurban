@@ -20,6 +20,7 @@ import {
 import CentersTable from "@/components/assistencia/cras/CentersTable";
 import AttendancesTable from "@/components/assistencia/cras/AttendancesTable";
 import { CenterDialog } from "@/components/assistencia/cras/CenterDialog";
+import { AttendanceDialog } from "@/components/assistencia/cras/AttendanceDialog";
 
 export default function CrasCreasPage() {
   const { toast } = useToast();
@@ -31,7 +32,9 @@ export default function CrasCreasPage() {
   
   const [selectedTab, setSelectedTab] = useState<string>("centers");
   const [showCenterDialog, setShowCenterDialog] = useState<boolean>(false);
+  const [showAttendanceDialog, setShowAttendanceDialog] = useState<boolean>(false);
   const [selectedCenter, setSelectedCenter] = useState<AssistanceCenter | null>(null);
+  const [selectedAttendance, setSelectedAttendance] = useState<SocialAttendance | null>(null);
 
   useEffect(() => {
     fetchCenters();
@@ -87,7 +90,6 @@ export default function CrasCreasPage() {
     setShowCenterDialog(true);
   };
 
-  // Updated to accept AssistanceCenter instead of string to match the expected prop type
   const handleDeleteCenter = (center: AssistanceCenter) => {
     // Implementation for deleting a center would go here
     console.log("Delete center:", center.id);
@@ -98,15 +100,14 @@ export default function CrasCreasPage() {
     });
   };
 
-  // Updated to accept SocialAttendance instead of string to match the expected prop type
+  const handleAddAttendance = () => {
+    setSelectedAttendance(null);
+    setShowAttendanceDialog(true);
+  };
+
   const handleViewAttendance = (attendance: SocialAttendance) => {
-    // Implementation for viewing attendance details would go here
-    console.log("View attendance:", attendance.id);
-    toast({
-      title: "Não implementado",
-      description: "A função de visualizar detalhes de atendimentos ainda não foi implementada.",
-      variant: "default",
-    });
+    setSelectedAttendance(attendance);
+    setShowAttendanceDialog(true);
   };
 
   const handleEditAttendance = (attendance: SocialAttendance) => {
@@ -135,9 +136,13 @@ export default function CrasCreasPage() {
           </p>
         </div>
 
-        {selectedTab === "centers" && (
+        {selectedTab === "centers" ? (
           <Button onClick={handleAddCenter}>
             <Plus className="mr-2 h-4 w-4" /> Novo Centro
+          </Button>
+        ) : (
+          <Button onClick={handleAddAttendance}>
+            <Plus className="mr-2 h-4 w-4" /> Novo Atendimento
           </Button>
         )}
       </div>
@@ -186,6 +191,15 @@ export default function CrasCreasPage() {
         open={showCenterDialog}
         onClose={() => setShowCenterDialog(false)}
         onSave={fetchCenters}
+      />
+
+      {/* Attendance Dialog */}
+      <AttendanceDialog 
+        attendance={selectedAttendance}
+        open={showAttendanceDialog}
+        onClose={() => setShowAttendanceDialog(false)}
+        onSave={fetchAttendances}
+        centers={centers}
       />
     </div>
   );
