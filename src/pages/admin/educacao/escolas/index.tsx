@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
-import { Plus, Edit, Search, AlignJustify, Eye } from "lucide-react";
+import { Plus, Edit, Search, AlignJustify, Eye, FilterX, School as SchoolIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getSchools } from "@/services/education/schools";
 import { School as SchoolType, SchoolType as SchoolTypeEnum } from "@/types/education";
 import { SchoolDialog } from "@/components/educacao/escolas/SchoolDialog";
@@ -272,7 +288,7 @@ export default function EscolasIndex() {
         </>
       ) : (
         <div className="text-center py-10">
-          <School className="mx-auto h-12 w-12 text-gray-400" />
+          <SchoolIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-lg font-medium">Nenhuma escola encontrada</h3>
           <p className="mt-1 text-muted-foreground">
             Não encontramos escolas com os critérios especificados.

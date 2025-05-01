@@ -1,69 +1,238 @@
-import { supabase } from "@/integrations/supabase/client";
-import { 
-  Vehicle, 
-  TransportRoute, 
-  StudentTransport, 
+import { supabase } from '@/integrations/supabase/client';
+import {
+  StudentTransport,
   TransportRequest,
-  TransportRequestType,
-  TransportRequestStatus,
+  TransportRoute,
+  Vehicle,
   TransportStatus,
-  TransportRoutesRequestParams,
-  PaginatedResponse
-} from "@/types/education";
+  TransportRequestType,
+  TransportRequestStatus
+} from '@/types/education';
 
 /**
- * Fetches a paginated list of transport routes based on filter criteria
+ * VEHICLES
  */
-export async function getTransportRoutes(params: TransportRoutesRequestParams = {}): Promise<PaginatedResponse<TransportRoute>> {
-  const {
-    page = 1,
-    pageSize = 10,
-    name,
-    schoolId,
-    origin,
-    destination,
-    isActive,
-  } = params;
 
-  const offset = (page - 1) * pageSize;
+/**
+ * Get all vehicles
+ */
+export async function getVehicles(): Promise<Vehicle[]> {
+  try {
+    const { data, error } = await supabase
+      .from('education_transport_vehicles')
+      .select('*');
 
-  let query = supabase
-    .from("education_transport_routes")
-    .select("*", { count: "exact" });
+    if (error) throw error;
 
-  // Apply filters
-  if (name) {
-    query = query.ilike("name", `%${name}%`);
+    return data.map(vehicle => ({
+      id: vehicle.id,
+      plate: vehicle.plate,
+      type: vehicle.type,
+      model: vehicle.model,
+      capacity: vehicle.capacity,
+      year: vehicle.year,
+      isAccessible: vehicle.is_accessible,
+      driverName: vehicle.driver_name,
+      driverContact: vehicle.driver_contact,
+      driverLicense: vehicle.driver_license,
+      monitorName: vehicle.monitor_name,
+      monitorContact: vehicle.monitor_contact,
+      isActive: vehicle.is_active,
+      createdAt: vehicle.created_at,
+      updatedAt: vehicle.updated_at
+    }));
+  } catch (error) {
+    console.error('Error fetching vehicles:', error);
+    return [];
   }
+}
 
-  if (origin) {
-    query = query.ilike("origin", `%${origin}%`);
+/**
+ * Get a single vehicle by ID
+ * @param id
+ */
+export async function getVehicleById(id: string): Promise<Vehicle | null> {
+  try {
+    const { data, error } = await supabase
+      .from('education_transport_vehicles')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      plate: data.plate,
+      type: data.type,
+      model: data.model,
+      capacity: data.capacity,
+      year: data.year,
+      isAccessible: data.is_accessible,
+      driverName: data.driver_name,
+      driverContact: data.driver_contact,
+      driverLicense: data.driver_license,
+      monitorName: data.monitor_name,
+      monitorContact: data.monitor_contact,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error fetching vehicle:', error);
+    return null;
   }
+}
 
-  if (destination) {
-    query = query.ilike("destination", `%${destination}%`);
-  }
+/**
+ * Create a new vehicle
+ * @param vehicle
+ */
+export async function createVehicle(vehicle: Omit<Vehicle, "id" | "createdAt" | "updatedAt">): Promise<Vehicle> {
+  try {
+    const { data, error } = await supabase
+      .from('education_transport_vehicles')
+      .insert({
+        plate: vehicle.plate,
+        type: vehicle.type,
+        model: vehicle.model,
+        capacity: vehicle.capacity,
+        year: vehicle.year,
+        is_accessible: vehicle.isAccessible,
+        driver_name: vehicle.driverName,
+        driver_contact: vehicle.driverContact,
+        driver_license: vehicle.driverLicense,
+        monitor_name: vehicle.monitorName,
+        monitor_contact: vehicle.monitorContact,
+        is_active: vehicle.isActive
+      })
+      .select()
+      .single();
 
-  if (isActive !== undefined) {
-    query = query.eq("is_active", isActive);
-  }
+    if (error) throw error;
 
-  // Filter by school
-  if (schoolId) {
-    query = query.contains("school_ids", [schoolId]);
-  }
-
-  // Fetch the records with pagination
-  const { data, error, count } = await query
-    .order("name", { ascending: true })
-    .range(offset, offset + pageSize - 1);
-
-  if (error) {
+    return {
+      id: data.id,
+      plate: data.plate,
+      type: data.type,
+      model: data.model,
+      capacity: data.capacity,
+      year: data.year,
+      isAccessible: data.is_accessible,
+      driverName: data.driver_name,
+      driverContact: data.driver_contact,
+      driverLicense: data.driver_license,
+      monitorName: data.monitor_name,
+      monitorContact: data.monitor_contact,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error creating vehicle:', error);
     throw error;
   }
+}
 
-  return {
-    data: data.map(route => ({
+/**
+ * Update an existing vehicle
+ * @param id
+ * @param vehicle
+ */
+export async function updateVehicle(id: string, vehicle: Partial<Vehicle>): Promise<Vehicle> {
+  try {
+    const { data, error } = await supabase
+      .from('education_transport_vehicles')
+      .update({
+        plate: vehicle.plate,
+        type: vehicle.type,
+        model: vehicle.model,
+        capacity: vehicle.capacity,
+        year: vehicle.year,
+        is_accessible: vehicle.isAccessible,
+        driver_name: vehicle.driverName,
+        driver_contact: vehicle.driverContact,
+        driver_license: vehicle.driverLicense,
+        monitor_name: vehicle.monitorName,
+        monitor_contact: vehicle.monitorContact,
+        is_active: vehicle.isActive
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      plate: data.plate,
+      type: data.type,
+      model: data.model,
+      capacity: data.capacity,
+      year: data.year,
+      isAccessible: data.is_accessible,
+      driverName: data.driver_name,
+      driverContact: data.driver_contact,
+      driverLicense: data.driver_license,
+      monitorName: data.monitor_name,
+      monitorContact: data.monitor_contact,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error updating vehicle:', error);
+    throw error;
+  }
+}
+
+/**
+ * TRANSPORT ROUTES
+ */
+
+/**
+ * Get all transport routes
+ */
+export async function getTransportRoutes(
+  filters: {
+    name?: string;
+    schoolId?: string;
+    origin?: string;
+    destination?: string;
+    isActive?: boolean;
+  } = {}
+): Promise<TransportRoute[]> {
+  try {
+    let query = supabase
+      .from('education_transport_routes')
+      .select('*');
+
+    if (filters.name) {
+      query = query.ilike('name', `%${filters.name}%`);
+    }
+
+    if (filters.schoolId) {
+      query = query.contains('school_ids', [filters.schoolId]);
+    }
+
+    if (filters.origin) {
+      query = query.ilike('origin', `%${filters.origin}%`);
+    }
+
+    if (filters.destination) {
+      query = query.ilike('destination', `%${filters.destination}%`);
+    }
+
+    if (filters.isActive !== undefined) {
+      query = query.eq('is_active', filters.isActive);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    return data.map(route => ({
       id: route.id,
       name: route.name,
       vehicleId: route.vehicle_id,
@@ -79,646 +248,619 @@ export async function getTransportRoutes(params: TransportRoutesRequestParams = 
       isActive: route.is_active,
       createdAt: route.created_at,
       updatedAt: route.updated_at
-    })),
-    count: count || 0,
-    page,
-    pageSize,
-  };
+    }));
+  } catch (error) {
+    console.error('Error fetching transport routes:', error);
+    return [];
+  }
 }
 
 /**
  * Get a single transport route by ID
+ * @param id
  */
-export async function getTransportRouteById(id: string): Promise<TransportRoute> {
-  const { data, error } = await supabase
-    .from("education_transport_routes")
-    .select(`
-      *,
-      education_vehicles(*)
-    `)
-    .eq("id", id)
-    .single();
+export async function getTransportRouteById(id: string): Promise<TransportRoute | null> {
+  try {
+    const { data, error } = await supabase
+      .from('education_transport_routes')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-  if (error) {
-    throw error;
+    if (error) throw error;
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      name: data.name,
+      vehicleId: data.vehicle_id,
+      origin: data.origin,
+      destination: data.destination,
+      schoolIds: data.school_ids,
+      departureTime: data.departure_time,
+      returnTime: data.return_time,
+      distance: data.distance,
+      averageDuration: data.average_duration,
+      maxCapacity: data.max_capacity,
+      currentStudents: data.current_students,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error fetching transport route:', error);
+    return null;
   }
-
-  // Create the route without the vehicle info first
-  const route: TransportRoute = {
-    id: data.id,
-    name: data.name,
-    vehicleId: data.vehicle_id,
-    origin: data.origin,
-    destination: data.destination,
-    schoolIds: data.school_ids,
-    departureTime: data.departure_time,
-    returnTime: data.return_time,
-    distance: data.distance,
-    averageDuration: data.average_duration,
-    maxCapacity: data.max_capacity,
-    currentStudents: data.current_students,
-    isActive: data.is_active,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
-
-  return route;
 }
 
 /**
  * Create a new transport route
+ * @param route
  */
-export async function createTransportRoute(route: Omit<TransportRoute, "id" | "createdAt" | "updatedAt" | "currentStudents">): Promise<TransportRoute> {
-  const { data, error } = await supabase
-    .from("education_transport_routes")
-    .insert([{
-      name: route.name,
-      vehicle_id: route.vehicleId,
-      origin: route.origin,
-      destination: route.destination,
-      school_ids: route.schoolIds,
-      departure_time: route.departureTime,
-      return_time: route.returnTime,
-      distance: route.distance,
-      average_duration: route.averageDuration,
-      max_capacity: route.maxCapacity,
-      current_students: 0,
-      is_active: route.isActive
-    }])
-    .select()
-    .single();
+export async function createTransportRoute(route: Omit<TransportRoute, "id" | "createdAt" | "updatedAt">): Promise<TransportRoute> {
+  try {
+    const { data, error } = await supabase
+      .from('education_transport_routes')
+      .insert({
+        name: route.name,
+        vehicle_id: route.vehicleId,
+        origin: route.origin,
+        destination: route.destination,
+        school_ids: route.schoolIds,
+        departure_time: route.departureTime,
+        return_time: route.returnTime,
+        distance: route.distance,
+        average_duration: route.averageDuration,
+        max_capacity: route.maxCapacity,
+        current_students: route.currentStudents,
+        is_active: route.isActive
+      })
+      .select()
+      .single();
 
-  if (error) {
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      name: data.name,
+      vehicleId: data.vehicle_id,
+      origin: data.origin,
+      destination: data.destination,
+      schoolIds: data.school_ids,
+      departureTime: data.departure_time,
+      returnTime: data.return_time,
+      distance: data.distance,
+      averageDuration: data.average_duration,
+      maxCapacity: data.max_capacity,
+      currentStudents: data.current_students,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error creating transport route:', error);
     throw error;
   }
-
-  return {
-    id: data.id,
-    name: data.name,
-    vehicleId: data.vehicle_id,
-    origin: data.origin,
-    destination: data.destination,
-    schoolIds: data.school_ids,
-    departureTime: data.departure_time,
-    returnTime: data.return_time,
-    distance: data.distance,
-    averageDuration: data.average_duration,
-    maxCapacity: data.max_capacity,
-    currentStudents: data.current_students,
-    isActive: data.is_active,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
 }
 
 /**
  * Update an existing transport route
+ * @param id
+ * @param route
  */
-export async function updateTransportRoute(id: string, route: Partial<Omit<TransportRoute, "id" | "createdAt" | "updatedAt">>): Promise<TransportRoute> {
-  const updateData: any = {};
+export async function updateTransportRoute(id: string, route: Partial<TransportRoute>): Promise<TransportRoute> {
+  try {
+    const { data, error } = await supabase
+      .from('education_transport_routes')
+      .update({
+        name: route.name,
+        vehicle_id: route.vehicleId,
+        origin: route.origin,
+        destination: route.destination,
+        school_ids: route.schoolIds,
+        departure_time: route.departureTime,
+        return_time: route.returnTime,
+        distance: route.distance,
+        average_duration: route.averageDuration,
+        max_capacity: route.maxCapacity,
+        current_students: route.currentStudents,
+        is_active: route.isActive
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
-  // Map only the provided fields
-  if (route.name !== undefined) updateData.name = route.name;
-  if (route.vehicleId !== undefined) updateData.vehicle_id = route.vehicleId;
-  if (route.origin !== undefined) updateData.origin = route.origin;
-  if (route.destination !== undefined) updateData.destination = route.destination;
-  if (route.schoolIds !== undefined) updateData.school_ids = route.schoolIds;
-  if (route.departureTime !== undefined) updateData.departure_time = route.departureTime;
-  if (route.returnTime !== undefined) updateData.return_time = route.returnTime;
-  if (route.distance !== undefined) updateData.distance = route.distance;
-  if (route.averageDuration !== undefined) updateData.average_duration = route.averageDuration;
-  if (route.maxCapacity !== undefined) updateData.max_capacity = route.maxCapacity;
-  if (route.currentStudents !== undefined) updateData.current_students = route.currentStudents;
-  if (route.isActive !== undefined) updateData.is_active = route.isActive;
-  updateData.updated_at = new Date().toISOString();
+    if (error) throw error;
 
-  const { data, error } = await supabase
-    .from("education_transport_routes")
-    .update(updateData)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
+    return {
+      id: data.id,
+      name: data.name,
+      vehicleId: data.vehicle_id,
+      origin: data.origin,
+      destination: data.destination,
+      schoolIds: data.school_ids,
+      departureTime: data.departure_time,
+      returnTime: data.return_time,
+      distance: data.distance,
+      averageDuration: data.average_duration,
+      maxCapacity: data.max_capacity,
+      currentStudents: data.current_students,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error updating transport route:', error);
     throw error;
   }
-
-  return {
-    id: data.id,
-    name: data.name,
-    vehicleId: data.vehicle_id,
-    origin: data.origin,
-    destination: data.destination,
-    schoolIds: data.school_ids,
-    departureTime: data.departure_time,
-    returnTime: data.return_time,
-    distance: data.distance,
-    averageDuration: data.average_duration,
-    maxCapacity: data.max_capacity,
-    currentStudents: data.current_students,
-    isActive: data.is_active,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
 }
 
 /**
- * Get all vehicles
+ * STUDENT TRANSPORTS
  */
-export async function getVehicles(isActive: boolean = true): Promise<Vehicle[]> {
-  const query = supabase
-    .from("education_vehicles")
-    .select("*");
 
-  if (isActive !== undefined) {
-    query.eq("is_active", isActive);
+/**
+ * Get all student transports
+ */
+export async function getStudentTransports(
+  filters: {
+    studentId?: string;
+    routeId?: string;
+    schoolId?: string;
+    status?: TransportStatus;
+  } = {}
+): Promise<StudentTransport[]> {
+  try {
+    let query = supabase.from('education_student_transports')
+      .select(`
+        *,
+        education_students!student_id(id, name, registration_number),
+        education_schools!school_id(id, name, type)
+      `);
+    
+    if (filters.studentId) {
+      query = query.eq('student_id', filters.studentId);
+    }
+    
+    if (filters.routeId) {
+      query = query.eq('route_id', filters.routeId);
+    }
+    
+    if (filters.schoolId) {
+      query = query.eq('school_id', filters.schoolId);
+    }
+    
+    if (filters.status) {
+      query = query.eq('status', filters.status);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    
+    return data.map(transport => ({
+      id: transport.id,
+      studentId: transport.student_id,
+      routeId: transport.route_id,
+      pickupLocation: transport.pickup_location,
+      returnLocation: transport.return_location,
+      schoolId: transport.school_id,
+      startDate: transport.start_date,
+      endDate: transport.end_date,
+      status: transport.status as TransportStatus,
+      createdAt: transport.created_at,
+      updatedAt: transport.updated_at,
+      studentInfo: transport.education_students ? {
+        id: transport.education_students.id,
+        name: transport.education_students.name,
+        registrationNumber: transport.education_students.registration_number
+      } : undefined,
+      schoolInfo: transport.education_schools ? {
+        id: transport.education_schools.id,
+        name: transport.education_schools.name,
+        type: transport.education_schools.type
+      } : undefined
+    }));
+  } catch (error) {
+    console.error('Error fetching student transports:', error);
+    return [];
   }
-
-  const { data, error } = await query.order("plate", { ascending: true });
-
-  if (error) {
-    throw error;
-  }
-
-  return data.map(vehicle => ({
-    id: vehicle.id,
-    plate: vehicle.plate,
-    type: vehicle.type,
-    model: vehicle.model,
-    capacity: vehicle.capacity,
-    year: vehicle.year,
-    isAccessible: vehicle.is_accessible,
-    driverName: vehicle.driver_name,
-    driverContact: vehicle.driver_contact,
-    driverLicense: vehicle.driver_license,
-    monitorName: vehicle.monitor_name,
-    monitorContact: vehicle.monitor_contact,
-    isActive: vehicle.is_active,
-    createdAt: vehicle.created_at,
-    updatedAt: vehicle.updated_at
-  }));
 }
 
 /**
- * Get a single vehicle by ID
+ * Get a single student transport by ID
+ * @param id
  */
-export async function getVehicleById(id: string): Promise<Vehicle> {
-  const { data, error } = await supabase
-    .from("education_vehicles")
-    .select("*")
-    .eq("id", id)
-    .single();
+export async function getStudentTransportById(id: string): Promise<StudentTransport | null> {
+  try {
+    const { data, error } = await supabase
+      .from('education_student_transports')
+      .select(`
+        *,
+        education_students!student_id(id, name, registration_number),
+        education_schools!school_id(id, name, type)
+      `)
+      .eq('id', id)
+      .single();
 
-  if (error) {
-    throw error;
+    if (error) throw error;
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      studentId: data.student_id,
+      routeId: data.route_id,
+      pickupLocation: data.pickup_location,
+      returnLocation: data.return_location,
+      schoolId: data.school_id,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      status: data.status as TransportStatus,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      studentInfo: data.education_students ? {
+        id: data.education_students.id,
+        name: data.education_students.name,
+        registrationNumber: data.education_students.registration_number
+      } : undefined,
+      schoolInfo: data.education_schools ? {
+        id: data.education_schools.id,
+        name: data.education_schools.name,
+        type: data.education_schools.type
+      } : undefined
+    };
+  } catch (error) {
+    console.error('Error fetching student transport:', error);
+    return null;
   }
-
-  return {
-    id: data.id,
-    plate: data.plate,
-    type: data.type,
-    model: data.model,
-    capacity: data.capacity,
-    year: data.year,
-    isAccessible: data.is_accessible,
-    driverName: data.driver_name,
-    driverContact: data.driver_contact,
-    driverLicense: data.driver_license,
-    monitorName: data.monitor_name,
-    monitorContact: data.monitor_contact,
-    isActive: data.is_active,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
 }
 
 /**
- * Create a new vehicle
- */
-export async function createVehicle(vehicle: Omit<Vehicle, "id" | "createdAt" | "updatedAt">): Promise<Vehicle> {
-  const { data, error } = await supabase
-    .from("education_vehicles")
-    .insert([{
-      plate: vehicle.plate,
-      type: vehicle.type,
-      model: vehicle.model,
-      capacity: vehicle.capacity,
-      year: vehicle.year,
-      is_accessible: vehicle.isAccessible,
-      driver_name: vehicle.driverName,
-      driver_contact: vehicle.driverContact,
-      driver_license: vehicle.driverLicense,
-      monitor_name: vehicle.monitorName,
-      monitor_contact: vehicle.monitorContact,
-      is_active: vehicle.isActive
-    }])
-    .select()
-    .single();
+ * Create a new student transport
+ * @param transport
+  */
+export async function createStudentTransport(transport: Omit<StudentTransport, "id" | "createdAt" | "updatedAt">): Promise<StudentTransport> {
+  try {
+    // First insert the transport record
+    const { data, error } = await supabase
+      .from('education_student_transports')
+      .insert({
+        student_id: transport.studentId,
+        route_id: transport.routeId,
+        pickup_location: transport.pickupLocation,
+        return_location: transport.returnLocation,
+        school_id: transport.schoolId,
+        start_date: transport.startDate,
+        end_date: transport.endDate,
+        status: transport.status
+      })
+      .select()
+      .single();
 
-  if (error) {
-    throw error;
-  }
+    if (error) throw error;
 
-  return {
-    id: data.id,
-    plate: data.plate,
-    type: data.type,
-    model: data.model,
-    capacity: data.capacity,
-    year: data.year,
-    isAccessible: data.is_accessible,
-    driverName: data.driver_name,
-    driverContact: data.driver_contact,
-    driverLicense: data.driver_license,
-    monitorName: data.monitor_name,
-    monitorContact: data.monitor_contact,
-    isActive: data.is_active,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
-}
-
-/**
- * Update an existing vehicle
- */
-export async function updateVehicle(id: string, vehicle: Partial<Omit<Vehicle, "id" | "createdAt" | "updatedAt">>): Promise<Vehicle> {
-  const updateData: any = {};
-
-  // Map only the provided fields
-  if (vehicle.plate !== undefined) updateData.plate = vehicle.plate;
-  if (vehicle.type !== undefined) updateData.type = vehicle.type;
-  if (vehicle.model !== undefined) updateData.model = vehicle.model;
-  if (vehicle.capacity !== undefined) updateData.capacity = vehicle.capacity;
-  if (vehicle.year !== undefined) updateData.year = vehicle.year;
-  if (vehicle.isAccessible !== undefined) updateData.is_accessible = vehicle.isAccessible;
-  if (vehicle.driverName !== undefined) updateData.driver_name = vehicle.driverName;
-  if (vehicle.driverContact !== undefined) updateData.driver_contact = vehicle.driverContact;
-  if (vehicle.driverLicense !== undefined) updateData.driver_license = vehicle.driverLicense;
-  if (vehicle.monitorName !== undefined) updateData.monitor_name = vehicle.monitorName;
-  if (vehicle.monitorContact !== undefined) updateData.monitor_contact = vehicle.monitorContact;
-  if (vehicle.isActive !== undefined) updateData.is_active = vehicle.isActive;
-  updateData.updated_at = new Date().toISOString();
-
-  const { data, error } = await supabase
-    .from("education_vehicles")
-    .update(updateData)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return {
-    id: data.id,
-    plate: data.plate,
-    type: data.type,
-    model: data.model,
-    capacity: data.capacity,
-    year: data.year,
-    isAccessible: data.is_accessible,
-    driverName: data.driver_name,
-    driverContact: data.driver_contact,
-    driverLicense: data.driver_license,
-    monitorName: data.monitor_name,
-    monitorContact: data.monitor_contact,
-    isActive: data.is_active,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
-}
-
-/**
- * Get students assigned to a route
- */
-export async function getRouteStudents(routeId: string): Promise<any[]> {
-  const { data, error } = await supabase
-    .from("education_student_transport")
-    .select(`
-      *,
-      education_students(id, name, registration_number),
-      education_schools(id, name)
-    `)
-    .eq("route_id", routeId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw error;
-  }
-
-  return data.map(item => ({
-    id: item.id,
-    studentId: item.student_id,
-    routeId: item.route_id,
-    pickupLocation: item.pickup_location,
-    returnLocation: item.return_location,
-    schoolId: item.school_id,
-    startDate: item.start_date,
-    endDate: item.end_date,
-    status: item.status as TransportStatus,
-    createdAt: item.created_at,
-    updatedAt: item.updated_at,
-    studentInfo: item.education_students ? {
-      id: item.education_students.id,
-      name: item.education_students.name,
-      registrationNumber: item.education_students.registration_number
-    } : undefined,
-    schoolInfo: item.education_schools ? {
-      id: item.education_schools.id,
-      name: item.education_schools.name
-    } : undefined
-  }));
-}
-
-/**
- * Assign a student to a transport route
- */
-export async function assignStudentToRoute(assignment: Omit<StudentTransport, "id" | "createdAt" | "updatedAt">): Promise<StudentTransport> {
-  // First, check if route can accept more students
-  const { data: routeData, error: routeError } = await supabase
-    .from("education_transport_routes")
-    .select("current_students, max_capacity")
-    .eq("id", assignment.routeId)
-    .single();
-
-  if (routeError) {
-    throw routeError;
-  }
-
-  if (routeData.current_students >= routeData.max_capacity) {
-    throw new Error("Transport route is already at maximum capacity");
-  }
-
-  // Start a transaction to assign student and update route capacity
-  const { data, error } = await supabase
-    .from("education_student_transport")
-    .insert([{
-      student_id: assignment.studentId,
-      route_id: assignment.routeId,
-      pickup_location: assignment.pickupLocation,
-      return_location: assignment.returnLocation,
-      school_id: assignment.schoolId,
-      start_date: assignment.startDate,
-      end_date: assignment.endDate,
-      status: assignment.status
-    }])
-    .select()
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  // Update the route's current students count
-  const { error: updateError } = await supabase
-    .from("education_transport_routes")
-    .update({ 
-      current_students: routeData.current_students + 1,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", assignment.routeId);
-
-  if (updateError) {
-    // Rollback the student assignment if we can't update the route
+    // Then update the route's current students count directly
     await supabase
-      .from("education_student_transport")
+      .from('education_transport_routes')
+      .update({
+        current_students: supabase.raw('current_students + 1')
+      })
+      .eq('id', transport.routeId);
+
+    return {
+      id: data.id,
+      studentId: data.student_id,
+      routeId: data.route_id,
+      pickupLocation: data.pickup_location,
+      returnLocation: data.return_location,
+      schoolId: data.school_id,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      status: data.status as TransportStatus,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error creating student transport:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update an existing student transport
+ * @param id
+ * @param transport
+ */
+export async function updateStudentTransport(id: string, transport: Partial<StudentTransport>): Promise<StudentTransport> {
+  try {
+    const { data, error } = await supabase
+      .from('education_student_transports')
+      .update({
+        student_id: transport.studentId,
+        route_id: transport.routeId,
+        pickup_location: transport.pickupLocation,
+        return_location: transport.returnLocation,
+        school_id: transport.schoolId,
+        start_date: transport.startDate,
+        end_date: transport.endDate,
+        status: transport.status
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      studentId: data.student_id,
+      routeId: data.route_id,
+      pickupLocation: data.pickup_location,
+      returnLocation: data.return_location,
+      schoolId: data.school_id,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      status: data.status as TransportStatus,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error updating student transport:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a student transport
+ * @param id
+ */
+export async function deleteStudentTransport(id: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('education_student_transports')
       .delete()
-      .eq("id", data.id);
-    
-    throw updateError;
-  }
+      .eq('id', id);
 
-  return {
-    id: data.id,
-    studentId: data.student_id,
-    routeId: data.route_id,
-    pickupLocation: data.pickup_location,
-    returnLocation: data.return_location,
-    schoolId: data.school_id,
-    startDate: data.start_date,
-    endDate: data.end_date,
-    status: data.status as TransportStatus,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
-}
-
-/**
- * Update a student transport assignment
- */
-export async function updateStudentTransport(id: string, assignment: Partial<Omit<StudentTransport, "id" | "createdAt" | "updatedAt">>): Promise<StudentTransport> {
-  const { data: currentAssignment, error: getError } = await supabase
-    .from("education_student_transport")
-    .select("route_id, status")
-    .eq("id", id)
-    .single();
-
-  if (getError) {
-    throw getError;
-  }
-
-  // Check if route is being changed
-  if (assignment.routeId && assignment.routeId !== currentAssignment.route_id) {
-    // Decrease count in old route manually
-    const { data: oldRouteData } = await supabase
-      .from("education_transport_routes")
-      .select("current_students")
-      .eq("id", currentAssignment.route_id)
-      .single();
-    
-    if (oldRouteData) {
-      await supabase
-        .from("education_transport_routes")
-        .update({ current_students: Math.max(0, oldRouteData.current_students - 1) })
-        .eq("id", currentAssignment.route_id);
-    }
-
-    // Increase count in new route manually
-    const { data: newRouteData } = await supabase
-      .from("education_transport_routes")
-      .select("current_students")
-      .eq("id", assignment.routeId)
-      .single();
-    
-    if (newRouteData) {
-      await supabase
-        .from("education_transport_routes")
-        .update({ current_students: newRouteData.current_students + 1 })
-        .eq("id", assignment.routeId);
-    }
-  }
-
-  // Check if status is changing from active to inactive
-  if (currentAssignment.status === 'active' && assignment.status && assignment.status !== 'active') {
-    // Decrease count in route manually
-    const { data: routeData } = await supabase
-      .from("education_transport_routes")
-      .select("current_students")
-      .eq("id", currentAssignment.route_id)
-      .single();
-    
-    if (routeData) {
-      await supabase
-        .from("education_transport_routes")
-        .update({ current_students: Math.max(0, routeData.current_students - 1) })
-        .eq("id", currentAssignment.route_id);
-    }
-  }
-  // Check if status is changing from inactive to active
-  else if (currentAssignment.status !== 'active' && assignment.status === 'active') {
-    // Increase count in route manually
-    const { data: routeData } = await supabase
-      .from("education_transport_routes")
-      .select("current_students")
-      .eq("id", assignment.routeId || currentAssignment.route_id)
-      .single();
-    
-    if (routeData) {
-      await supabase
-        .from("education_transport_routes")
-        .update({ current_students: routeData.current_students + 1 })
-        .eq("id", assignment.routeId || currentAssignment.route_id);
-    }
-  }
-
-  const updateData: any = {};
-  
-  // Map only the provided fields
-  if (assignment.pickupLocation !== undefined) updateData.pickup_location = assignment.pickupLocation;
-  if (assignment.returnLocation !== undefined) updateData.return_location = assignment.returnLocation;
-  if (assignment.schoolId !== undefined) updateData.school_id = assignment.schoolId;
-  if (assignment.routeId !== undefined) updateData.route_id = assignment.routeId;
-  if (assignment.startDate !== undefined) updateData.start_date = assignment.startDate;
-  if (assignment.endDate !== undefined) updateData.end_date = assignment.endDate;
-  if (assignment.status !== undefined) updateData.status = assignment.status;
-  updateData.updated_at = new Date().toISOString();
-
-  const { data, error } = await supabase
-    .from("education_student_transport")
-    .update(updateData)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting student transport:', error);
     throw error;
   }
-
-  return {
-    id: data.id,
-    studentId: data.student_id,
-    routeId: data.route_id,
-    pickupLocation: data.pickup_location,
-    returnLocation: data.return_location,
-    schoolId: data.school_id,
-    startDate: data.start_date,
-    endDate: data.end_date,
-    status: data.status as TransportStatus,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
 }
 
 /**
- * Create a transport request (new, change, complaint, cancellation)
+ * TRANSPORT REQUESTS
  */
-export async function createTransportRequest(request: Omit<TransportRequest, "id" | "protocolNumber" | "createdAt" | "updatedAt">): Promise<TransportRequest> {
-  // Note: protocolNumber is set by a database trigger
-  const { data, error } = await supabase
-    .from("education_transport_requests")
-    .insert({
-      request_type: request.requestType,
-      student_id: request.studentId,
-      requester_id: request.requesterId,
-      requester_name: request.requesterName,
-      requester_contact: request.requesterContact,
-      school_id: request.schoolId,
-      current_route_id: request.currentRouteId,
-      requested_route_id: request.requestedRouteId,
-      pickup_location: request.pickupLocation,
-      return_location: request.returnLocation,
-      complaint_type: request.complaintType,
+
+/**
+ * Get all transport requests
+ */
+export async function getTransportRequests(
+  filters: {
+    studentId?: string;
+    schoolId?: string;
+    status?: TransportRequestStatus;
+    requestType?: TransportRequestType;
+  } = {}
+): Promise<TransportRequest[]> {
+  try {
+    let query = supabase
+      .from('education_transport_requests')
+      .select('*');
+
+    if (filters.studentId) {
+      query = query.eq('student_id', filters.studentId);
+    }
+
+    if (filters.schoolId) {
+      query = query.eq('school_id', filters.schoolId);
+    }
+
+    if (filters.status) {
+      query = query.eq('status', filters.status);
+    }
+
+    if (filters.requestType) {
+      query = query.eq('request_type', filters.requestType);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    return data.map(request => ({
+      id: request.id,
+      protocolNumber: request.protocol_number,
+      requestType: request.request_type as TransportRequestType,
+      studentId: request.student_id,
+      requesterId: request.requester_id,
+      requesterName: request.requester_name,
+      requesterContact: request.requester_contact,
+      schoolId: request.school_id,
+      currentRouteId: request.current_route_id,
+      requestedRouteId: request.requested_route_id,
+      pickupLocation: request.pickup_location,
+      returnLocation: request.return_location,
+      complaintType: request.complaint_type,
       description: request.description,
-      status: request.status
-    })
-    .select()
-    .single();
-
-  if (error) {
-    throw error;
+      status: request.status as TransportRequestStatus,
+      resolvedBy: request.resolved_by,
+      resolutionDate: request.resolution_date,
+      resolutionNotes: request.resolution_notes,
+      createdAt: request.created_at,
+      updatedAt: request.updated_at
+    }));
+  } catch (error) {
+    console.error('Error fetching transport requests:', error);
+    return [];
   }
-
-  return {
-    id: data.id,
-    protocolNumber: data.protocol_number,
-    requestType: data.request_type as TransportRequestType,
-    studentId: data.student_id,
-    requesterId: data.requester_id,
-    requesterName: data.requester_name,
-    requesterContact: data.requester_contact,
-    schoolId: data.school_id,
-    currentRouteId: data.current_route_id,
-    requestedRouteId: data.requested_route_id,
-    pickupLocation: data.pickup_location,
-    returnLocation: data.return_location,
-    complaintType: data.complaint_type,
-    description: data.description,
-    status: data.status as TransportRequestStatus,
-    resolvedBy: data.resolved_by,
-    resolutionDate: data.resolution_date,
-    resolutionNotes: data.resolution_notes,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
 }
 
 /**
- * Update a transport request status
+ * Get a single transport request by ID
+ * @param id
  */
-export async function updateTransportRequestStatus(
-  id: string,
-  status: TransportRequestStatus,
-  resolvedBy: string,
-  resolutionNotes?: string
-): Promise<TransportRequest> {
-  const { data, error } = await supabase
-    .from("education_transport_requests")
-    .update({
-      status: status,
-      resolved_by: resolvedBy,
-      resolution_date: new Date().toISOString(),
-      resolution_notes: resolutionNotes,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", id)
-    .select()
-    .single();
+export async function getTransportRequestById(id: string): Promise<TransportRequest | null> {
+  try {
+    const { data, error } = await supabase
+      .from('education_transport_requests')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-  if (error) {
+    if (error) throw error;
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      protocolNumber: data.protocol_number,
+      requestType: data.request_type as TransportRequestType,
+      studentId: data.student_id,
+      requesterId: data.requester_id,
+      requesterName: data.requester_name,
+      requesterContact: data.requester_contact,
+      schoolId: data.school_id,
+      currentRouteId: data.current_route_id,
+      requestedRouteId: data.requested_route_id,
+      pickupLocation: data.pickup_location,
+      returnLocation: data.return_location,
+      complaintType: data.complaint_type,
+      description: data.description,
+      status: data.status as TransportRequestStatus,
+      resolvedBy: data.resolved_by,
+      resolutionDate: data.resolution_date,
+      resolutionNotes: data.resolution_notes,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error fetching transport request:', error);
+    return null;
+  }
+}
+
+/**
+ * Create a new transport request
+ * @param request
+ */
+export async function createTransportRequest(
+  request: Omit<TransportRequest, "id" | "protocolNumber" | "createdAt" | "updatedAt">
+): Promise<TransportRequest> {
+  try {
+    // Generate protocol number
+    const { data: protocolData, error: protocolError } = await supabase
+      .rpc('generate_transport_request_protocol');
+    
+    if (protocolError) throw protocolError;
+    
+    const { data, error } = await supabase
+      .from('education_transport_requests')
+      .insert({
+        protocol_number: protocolData,
+        request_type: request.requestType,
+        student_id: request.studentId,
+        requester_id: request.requesterId,
+        requester_name: request.requesterName,
+        requester_contact: request.requesterContact,
+        school_id: request.schoolId,
+        current_route_id: request.currentRouteId,
+        requested_route_id: request.requestedRouteId,
+        pickup_location: request.pickupLocation,
+        return_location: request.returnLocation,
+        complaint_type: request.complaintType,
+        description: request.description,
+        status: request.status
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      protocolNumber: data.protocol_number,
+      requestType: data.request_type as TransportRequestType,
+      studentId: data.student_id,
+      requesterId: data.requester_id,
+      requesterName: data.requester_name,
+      requesterContact: data.requester_contact,
+      schoolId: data.school_id,
+      currentRouteId: data.current_route_id,
+      requestedRouteId: data.requested_route_id,
+      pickupLocation: data.pickup_location,
+      returnLocation: data.return_location,
+      complaintType: data.complaint_type,
+      description: data.description,
+      status: data.status as TransportRequestStatus,
+      resolvedBy: data.resolved_by,
+      resolutionDate: data.resolution_date,
+      resolutionNotes: data.resolution_notes,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error creating transport request:', error);
     throw error;
   }
+}
 
-  return {
-    id: data.id,
-    protocolNumber: data.protocol_number,
-    requestType: data.request_type as TransportRequestType,
-    studentId: data.student_id,
-    requesterId: data.requester_id,
-    requesterName: data.requester_name,
-    requesterContact: data.requester_contact,
-    schoolId: data.school_id,
-    currentRouteId: data.current_route_id,
-    requestedRouteId: data.requested_route_id,
-    pickupLocation: data.pickup_location,
-    returnLocation: data.return_location,
-    complaintType: data.complaint_type,
-    description: data.description,
-    status: data.status as TransportRequestStatus,
-    resolvedBy: data.resolved_by,
-    resolutionDate: data.resolution_date,
-    resolutionNotes: data.resolution_notes,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
+/**
+ * Update an existing transport request
+ * @param id
+ * @param request
+ */
+export async function updateTransportRequest(id: string, request: Partial<TransportRequest>): Promise<TransportRequest> {
+  try {
+    const { data, error } = await supabase
+      .from('education_transport_requests')
+      .update({
+        request_type: request.requestType,
+        student_id: request.studentId,
+        requester_id: request.requesterId,
+        requester_name: request.requesterName,
+        requester_contact: request.requesterContact,
+        school_id: request.schoolId,
+        current_route_id: request.currentRouteId,
+        requested_route_id: request.requestedRouteId,
+        pickup_location: request.pickupLocation,
+        return_location: request.returnLocation,
+        complaint_type: request.complaintType,
+        description: request.description,
+        status: request.status,
+        resolved_by: request.resolvedBy,
+        resolution_date: request.resolutionDate,
+        resolution_notes: request.resolutionNotes
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      protocolNumber: data.protocol_number,
+      requestType: data.request_type as TransportRequestType,
+      studentId: data.student_id,
+      requesterId: data.requester_id,
+      requesterName: data.requester_name,
+      requesterContact: data.requester_contact,
+      schoolId: data.school_id,
+      currentRouteId: data.current_route_id,
+      requestedRouteId: data.requested_route_id,
+      pickupLocation: data.pickup_location,
+      returnLocation: data.return_location,
+      complaintType: data.complaint_type,
+      description: data.description,
+      status: data.status as TransportRequestStatus,
+      resolvedBy: data.resolved_by,
+      resolutionDate: data.resolution_date,
+      resolutionNotes: data.resolution_notes,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error updating transport request:', error);
+    throw error;
+  }
 }

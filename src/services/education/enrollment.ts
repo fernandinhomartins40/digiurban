@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Enrollment, 
@@ -140,48 +139,82 @@ export async function getEnrollmentById(id: string): Promise<Enrollment> {
 /**
  * Create a new enrollment request
  */
-export async function createEnrollment(enrollment: Omit<Enrollment, "id" | "protocolNumber" | "createdAt" | "updatedAt">): Promise<Enrollment> {
-  const { data, error } = await supabase
-    .from("education_enrollments")
-    .insert({
-      student_id: enrollment.studentId,
-      class_id: enrollment.classId,
-      requested_school_id: enrollment.requestedSchoolId,
-      assigned_school_id: enrollment.assignedSchoolId,
-      school_year: enrollment.schoolYear,
-      status: enrollment.status,
-      request_date: enrollment.requestDate || new Date().toISOString(),
-      decision_date: enrollment.decisionDate,
-      decision_by: enrollment.decisionBy,
-      justification: enrollment.justification,
-      special_request: enrollment.specialRequest,
-      notes: enrollment.notes
-    })
-    .select()
-    .single();
+export async function createEnrollment(enrollment: Omit<Enrollment, "id" | "createdAt" | "updatedAt">): Promise<Enrollment> {
+  try {
+    // Generate protocol number
+    const { data: protocolData, error: protocolError } = await supabase
+      .rpc('generate_enrollment_protocol');
+    
+    if (protocolError) throw protocolError;
+    
+    // Insert new enrollment with generated protocol
+    const { data, error } = await supabase
+      .from('education_enrollments')
+      .insert({
+        protocol_number: protocolData,
+        student_id: enrollment.studentId,
+        class_id: enrollment.classId,
+        requested_school_id: enrollment.requestedSchoolId,
+        assigned_school_id: enrollment.assignedSchoolId,
+        school_year: enrollment.schoolYear,
+        status: enrollment.status,
+        request_date: enrollment.requestDate,
+        decision_date: enrollment.decisionDate,
+        decision_by: enrollment.decisionBy,
+        justification: enrollment.justification,
+        special_request: enrollment.specialRequest,
+        notes: enrollment.notes
+      })
+      .select()
+      .single();
 
-  if (error) {
+    if (error) throw error;
+
+    // Update class and school student counts if approved
+    if (data.status === 'approved' && data.class_id && data.assigned_school_id) {
+      // Update class student count directly
+      await supabase
+        .from('education_classes')
+        .update({ 
+          current_students: supabase.rpc('calculate_class_students', { 
+            class_id: data.class_id 
+          })
+        })
+        .eq('id', data.class_id);
+
+      // Update school student count directly
+      await supabase
+        .from('education_schools')
+        .update({ 
+          current_students: supabase.rpc('calculate_school_students', { 
+            school_id: data.assigned_school_id 
+          })
+        })
+        .eq('id', data.assigned_school_id);
+    }
+
+    return {
+      id: data.id,
+      protocolNumber: data.protocol_number,
+      studentId: data.student_id,
+      classId: data.class_id,
+      requestedSchoolId: data.requested_school_id,
+      assignedSchoolId: data.assigned_school_id,
+      schoolYear: data.school_year,
+      status: data.status as EnrollmentStatus,
+      requestDate: data.request_date,
+      decisionDate: data.decision_date,
+      decisionBy: data.decision_by,
+      justification: data.justification,
+      specialRequest: data.special_request,
+      notes: data.notes,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Error creating enrollment:', error);
     throw error;
   }
-
-  return {
-    id: data.id,
-    protocolNumber: data.protocol_number,
-    studentId: data.student_id,
-    classId: data.class_id,
-    requestedSchoolId: data.requested_school_id,
-    assignedSchoolId: data.assigned_school_id,
-    schoolYear: data.school_year,
-    status: data.status as EnrollmentStatus,
-    requestDate: data.request_date,
-    decisionDate: data.decision_date,
-    decisionBy: data.decision_by,
-    justification: data.justification,
-    specialRequest: data.special_request,
-    notes: data.notes,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at
-  };
 }
 
 /**
