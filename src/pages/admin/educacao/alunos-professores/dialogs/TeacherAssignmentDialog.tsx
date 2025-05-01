@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { assignTeacherToSchool, assignTeacherToClass } from "@/services/education/teachers";
 import { getSchools } from "@/services/education/schools";
-import { getClasses } from "@/services/education/classes";
+import { getClassesBySchool } from "@/services/education/classes";
 import { Teacher, School, Class } from "@/types/education";
 import { useToast } from "@/hooks/use-toast";
 
@@ -63,7 +63,7 @@ export default function TeacherAssignmentDialog({
     if (open) {
       fetchSchools();
       if (assignmentType === "class") {
-        fetchClasses();
+        fetchAllClasses();
       }
     }
   }, [open, assignmentType]);
@@ -95,11 +95,34 @@ export default function TeacherAssignmentDialog({
     }
   };
 
-  const fetchClasses = async () => {
+  const fetchAllClasses = async () => {
     setLoadingOptions(true);
     try {
-      const result = await getClasses({ isActive: true });
-      setClasses(result.data);
+      // Create an array to hold all fetched classes
+      let allClasses: Class[] = [];
+      
+      // First fetch schools if needed
+      if (schools.length === 0) {
+        const schoolsResult = await getSchools({ isActive: true });
+        
+        // For each school, fetch its classes
+        for (const school of schoolsResult.data) {
+          const classesResult = await getClassesBySchool(school.id);
+          if (classesResult.data) {
+            allClasses = [...allClasses, ...classesResult.data];
+          }
+        }
+      } else {
+        // Use existing schools data
+        for (const school of schools) {
+          const classesResult = await getClassesBySchool(school.id);
+          if (classesResult.data) {
+            allClasses = [...allClasses, ...classesResult.data];
+          }
+        }
+      }
+      
+      setClasses(allClasses);
     } catch (error) {
       console.error("Error fetching classes:", error);
       toast({
