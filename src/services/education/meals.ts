@@ -7,10 +7,10 @@ export const fetchSchoolMeals = async (schoolId?: string): Promise<SchoolMeal[]>
     .from('education_meal_menus')
     .select(`
       *,
-      education_schools(name)
+      education_schools!inner(name)
     `)
     .order('active_from', { ascending: false });
-
+  
   if (schoolId) {
     query = query.eq('school_id', schoolId);
   }
@@ -22,24 +22,27 @@ export const fetchSchoolMeals = async (schoolId?: string): Promise<SchoolMeal[]>
     throw error;
   }
 
-  // Transform to match our SchoolMeal interface
-  return data.map(item => ({
+  const meals = data.map(item => ({
     id: item.id,
     school_id: item.school_id,
     school_name: item.education_schools?.name || '',
     date: item.active_from,
-    active_from: item.active_from,
-    active_until: item.active_until,
-    meal_type: item.shift || 'lunch',
-    shift: item.shift,
+    meal_type: item.shift,
     description: item.name,
-    name: item.name,
     nutritional_info: item.nutritional_info || '',
     created_at: item.created_at,
+    // Fields needed for database operations
     year: item.year,
     day_of_week: item.day_of_week,
-    menu_items: item.menu_items
+    menu_items: item.menu_items,
+    // Mapping to database fields
+    active_from: item.active_from,
+    active_until: item.active_until,
+    shift: item.shift,
+    name: item.name
   })) as SchoolMeal[];
+
+  return meals;
 };
 
 export const fetchMealById = async (id: string): Promise<SchoolMeal> => {
@@ -47,7 +50,7 @@ export const fetchMealById = async (id: string): Promise<SchoolMeal> => {
     .from('education_meal_menus')
     .select(`
       *,
-      education_schools(name)
+      education_schools!inner(name)
     `)
     .eq('id', id)
     .maybeSingle();
@@ -61,43 +64,44 @@ export const fetchMealById = async (id: string): Promise<SchoolMeal> => {
     throw new Error('Meal not found');
   }
 
-  // Transform to match our SchoolMeal interface
   return {
     id: data.id,
     school_id: data.school_id,
     school_name: data.education_schools?.name || '',
     date: data.active_from,
-    active_from: data.active_from,
-    active_until: data.active_until,
-    meal_type: data.shift || 'lunch',
-    shift: data.shift,
+    meal_type: data.shift,
     description: data.name,
-    name: data.name,
     nutritional_info: data.nutritional_info || '',
     created_at: data.created_at,
+    // Fields needed for database operations
     year: data.year,
     day_of_week: data.day_of_week,
-    menu_items: data.menu_items
+    menu_items: data.menu_items,
+    // Mapping to database fields
+    active_from: data.active_from,
+    active_until: data.active_until,
+    shift: data.shift,
+    name: data.name
   } as SchoolMeal;
 };
 
-export const createMealMenu = async (meal: Omit<SchoolMeal, 'id' | 'created_at'>): Promise<SchoolMeal> => {
-  // Convert from our interface to DB structure
-  const mealData = {
+export const createMealMenu = async (meal: Omit<SchoolMeal, 'id' | 'created_at' | 'school_name'>): Promise<SchoolMeal> => {
+  // Map from our interface to DB structure
+  const dbData = {
     school_id: meal.school_id,
-    name: meal.description || meal.name,
-    shift: meal.meal_type || meal.shift,
+    name: meal.name || meal.description,
+    shift: meal.shift || meal.meal_type,
     nutritional_info: meal.nutritional_info,
-    active_from: meal.date || meal.active_from,
+    menu_items: meal.menu_items,
+    year: meal.year,
+    day_of_week: meal.day_of_week,
+    active_from: meal.active_from || meal.date,
     active_until: meal.active_until,
-    year: meal.year || new Date(meal.date || meal.active_from || '').getFullYear(),
-    day_of_week: meal.day_of_week || new Date(meal.date || meal.active_from || '').getDay() + 1, // 1-7 for Monday-Sunday
-    menu_items: meal.menu_items || [] // Required field in DB
   };
 
   const { data, error } = await supabase
     .from('education_meal_menus')
-    .insert([mealData])
+    .insert([dbData])
     .select(`
       *,
       education_schools(name)
@@ -109,49 +113,47 @@ export const createMealMenu = async (meal: Omit<SchoolMeal, 'id' | 'created_at'>
     throw error;
   }
 
-  // Transform back to our interface structure
   return {
     id: data.id,
     school_id: data.school_id,
-    school_name: data.education_schools?.name || meal.school_name || '',
+    school_name: data.education_schools?.name || '',
     date: data.active_from,
-    active_from: data.active_from,
-    active_until: data.active_until,
     meal_type: data.shift,
-    shift: data.shift,
     description: data.name,
-    name: data.name,
     nutritional_info: data.nutritional_info || '',
     created_at: data.created_at,
     year: data.year,
     day_of_week: data.day_of_week,
-    menu_items: data.menu_items
+    menu_items: data.menu_items,
+    active_from: data.active_from,
+    active_until: data.active_until,
+    shift: data.shift,
+    name: data.name
   } as SchoolMeal;
 };
 
 export const updateMealMenu = async (id: string, updates: Partial<SchoolMeal>): Promise<SchoolMeal> => {
-  // Convert from our interface to DB structure
-  const updateData: any = {};
+  // Map from our interface to DB structure
+  const dbUpdates: any = { ...updates };
   
-  if (updates.date) updateData.active_from = updates.date;
-  else if (updates.active_from) updateData.active_from = updates.active_from;
+  if (updates.description !== undefined) {
+    dbUpdates.name = updates.description;
+    delete dbUpdates.description;
+  }
   
-  if (updates.active_until) updateData.active_until = updates.active_until;
+  if (updates.meal_type !== undefined) {
+    dbUpdates.shift = updates.meal_type;
+    delete dbUpdates.meal_type;
+  }
   
-  if (updates.meal_type) updateData.shift = updates.meal_type;
-  else if (updates.shift) updateData.shift = updates.shift;
-  
-  if (updates.description) updateData.name = updates.description;
-  else if (updates.name) updateData.name = updates.name;
-  
-  if (updates.nutritional_info) updateData.nutritional_info = updates.nutritional_info;
-  if (updates.day_of_week) updateData.day_of_week = updates.day_of_week;
-  if (updates.menu_items) updateData.menu_items = updates.menu_items;
-  if (updates.year) updateData.year = updates.year;
+  if (updates.date !== undefined) {
+    dbUpdates.active_from = updates.date;
+    delete dbUpdates.date;
+  }
 
   const { data, error } = await supabase
     .from('education_meal_menus')
-    .update(updateData)
+    .update(dbUpdates)
     .eq('id', id)
     .select(`
       *,
@@ -164,22 +166,21 @@ export const updateMealMenu = async (id: string, updates: Partial<SchoolMeal>): 
     throw error;
   }
 
-  // Transform back to our interface structure
   return {
     id: data.id,
     school_id: data.school_id,
-    school_name: data.education_schools?.name || updates.school_name || '',
+    school_name: data.education_schools?.name || '',
     date: data.active_from,
-    active_from: data.active_from,
-    active_until: data.active_until,
     meal_type: data.shift,
-    shift: data.shift,
     description: data.name,
-    name: data.name,
     nutritional_info: data.nutritional_info || '',
     created_at: data.created_at,
     year: data.year,
     day_of_week: data.day_of_week,
-    menu_items: data.menu_items
+    menu_items: data.menu_items,
+    active_from: data.active_from,
+    active_until: data.active_until,
+    shift: data.shift,
+    name: data.name
   } as SchoolMeal;
 };

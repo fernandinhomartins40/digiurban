@@ -7,10 +7,11 @@ export const fetchIncidents = async (schoolId?: string): Promise<SchoolIncident[
     .from('education_occurrences')
     .select(`
       *,
-      education_schools(name)
+      education_schools!inner(name),
+      education_students!inner(name)
     `)
     .order('created_at', { ascending: false });
-
+  
   if (schoolId) {
     query = query.eq('school_id', schoolId);
   }
@@ -18,27 +19,28 @@ export const fetchIncidents = async (schoolId?: string): Promise<SchoolIncident[
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching school incidents:', error);
+    console.error('Error fetching incidents:', error);
     throw error;
   }
 
-  // Transform to match SchoolIncident type
-  return data.map(item => ({
+  const incidents = data.map(item => ({
     id: item.id,
     school_id: item.school_id,
     school_name: item.education_schools?.name || '',
     date: item.occurrence_date,
-    occurrence_date: item.occurrence_date,
     incident_type: item.occurrence_type,
-    occurrence_type: item.occurrence_type,
     description: item.description,
     severity: item.severity || 'medium',
     status: item.resolution_date ? 'resolved' : 'open',
     created_at: item.created_at,
     updated_at: item.updated_at,
+    // Fields needed for database operations
     reported_by: item.reported_by,
     student_id: item.student_id,
     reported_by_name: item.reported_by_name,
+    // Mapping to database fields
+    occurrence_date: item.occurrence_date,
+    occurrence_type: item.occurrence_type,
     resolution_date: item.resolution_date,
     resolved_by: item.resolved_by,
     subject: item.subject,
@@ -47,6 +49,8 @@ export const fetchIncidents = async (schoolId?: string): Promise<SchoolIncident[
     resolution: item.resolution,
     class_id: item.class_id
   })) as SchoolIncident[];
+
+  return incidents;
 };
 
 export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => {
@@ -54,7 +58,8 @@ export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => 
     .from('education_occurrences')
     .select(`
       *,
-      education_schools(name)
+      education_schools(name),
+      education_students(name)
     `)
     .eq('id', id)
     .maybeSingle();
@@ -68,15 +73,12 @@ export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => 
     throw new Error('Incident not found');
   }
 
-  // Transform to match SchoolIncident type
   return {
     id: data.id,
     school_id: data.school_id,
     school_name: data.education_schools?.name || '',
     date: data.occurrence_date,
-    occurrence_date: data.occurrence_date,
     incident_type: data.occurrence_type,
-    occurrence_type: data.occurrence_type,
     description: data.description,
     severity: data.severity || 'medium',
     status: data.resolution_date ? 'resolved' : 'open',
@@ -85,6 +87,8 @@ export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => 
     reported_by: data.reported_by,
     student_id: data.student_id,
     reported_by_name: data.reported_by_name,
+    occurrence_date: data.occurrence_date,
+    occurrence_type: data.occurrence_type,
     resolution_date: data.resolution_date,
     resolved_by: data.resolved_by,
     subject: data.subject,
@@ -95,18 +99,18 @@ export const fetchIncidentById = async (id: string): Promise<SchoolIncident> => 
   } as SchoolIncident;
 };
 
-export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'created_at' | 'updated_at'>): Promise<SchoolIncident> => {
-  // Convert from our interface to DB structure
-  const occurrenceData = {
+export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'created_at' | 'updated_at' | 'school_name'>): Promise<SchoolIncident> => {
+  // Map from our interface to DB structure
+  const dbData = {
     school_id: incident.school_id,
-    occurrence_date: incident.date || incident.occurrence_date,
-    occurrence_type: incident.incident_type || incident.occurrence_type,
+    student_id: incident.student_id,
+    occurrence_date: incident.occurrence_date || incident.date,
+    occurrence_type: incident.occurrence_type || incident.incident_type,
+    subject: incident.subject,
     description: incident.description,
     severity: incident.severity,
     reported_by: incident.reported_by,
-    student_id: incident.student_id,
-    reported_by_name: incident.reported_by_name || 'System Reporter',
-    subject: incident.subject,
+    reported_by_name: incident.reported_by_name,
     class_id: incident.class_id,
     parent_notified: incident.parent_notified,
     parent_notification_date: incident.parent_notification_date
@@ -114,10 +118,11 @@ export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'crea
 
   const { data, error } = await supabase
     .from('education_occurrences')
-    .insert([occurrenceData])
+    .insert([dbData])
     .select(`
       *,
-      education_schools(name)
+      education_schools(name),
+      education_students(name)
     `)
     .single();
 
@@ -126,15 +131,12 @@ export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'crea
     throw error;
   }
 
-  // Transform back to our interface structure
   return {
     id: data.id,
     school_id: data.school_id,
-    school_name: data.education_schools?.name || incident.school_name || '',
+    school_name: data.education_schools?.name || '',
     date: data.occurrence_date,
-    occurrence_date: data.occurrence_date,
     incident_type: data.occurrence_type,
-    occurrence_type: data.occurrence_type,
     description: data.description,
     severity: data.severity || 'medium',
     status: 'open',
@@ -143,39 +145,49 @@ export const createIncident = async (incident: Omit<SchoolIncident, 'id' | 'crea
     reported_by: data.reported_by,
     student_id: data.student_id,
     reported_by_name: data.reported_by_name,
+    occurrence_date: data.occurrence_date,
+    occurrence_type: data.occurrence_type,
     subject: data.subject,
-    class_id: data.class_id,
+    parent_notification_date: data.parent_notification_date,
     parent_notified: data.parent_notified,
-    parent_notification_date: data.parent_notification_date
+    class_id: data.class_id
   } as SchoolIncident;
 };
 
 export const updateIncident = async (id: string, updates: Partial<SchoolIncident>): Promise<SchoolIncident> => {
-  // Convert from our interface to DB structure
-  const updateData: any = {};
+  // Map from our interface to DB structure
+  const dbUpdates: any = { ...updates };
   
-  if (updates.date) updateData.occurrence_date = updates.date;
-  else if (updates.occurrence_date) updateData.occurrence_date = updates.occurrence_date;
+  if (updates.incident_type !== undefined) {
+    dbUpdates.occurrence_type = updates.incident_type;
+    delete dbUpdates.incident_type;
+  }
   
-  if (updates.incident_type) updateData.occurrence_type = updates.incident_type;
-  else if (updates.occurrence_type) updateData.occurrence_type = updates.occurrence_type;
-  
-  if (updates.description) updateData.description = updates.description;
-  if (updates.severity) updateData.severity = updates.severity;
-  if (updates.reported_by) updateData.reported_by = updates.reported_by;
-  if (updates.reported_by_name) updateData.reported_by_name = updates.reported_by_name;
-  if (updates.subject) updateData.subject = updates.subject;
-  if (updates.class_id) updateData.class_id = updates.class_id;
-  if (updates.parent_notified !== undefined) updateData.parent_notified = updates.parent_notified;
-  if (updates.parent_notification_date) updateData.parent_notification_date = updates.parent_notification_date;
-  
+  if (updates.date !== undefined) {
+    dbUpdates.occurrence_date = updates.date;
+    delete dbUpdates.date;
+  }
+
+  // Handle status updates appropriately
+  if (updates.status !== undefined) {
+    if (updates.status === 'resolved' && !dbUpdates.resolution_date) {
+      dbUpdates.resolution_date = new Date().toISOString();
+    } else if (updates.status !== 'resolved') {
+      dbUpdates.resolution_date = null;
+      dbUpdates.resolution = null;
+      dbUpdates.resolved_by = null;
+    }
+    delete dbUpdates.status;
+  }
+
   const { data, error } = await supabase
     .from('education_occurrences')
-    .update(updateData)
+    .update(dbUpdates)
     .eq('id', id)
     .select(`
       *,
-      education_schools(name)
+      education_schools(name),
+      education_students(name)
     `)
     .single();
 
@@ -184,15 +196,12 @@ export const updateIncident = async (id: string, updates: Partial<SchoolIncident
     throw error;
   }
 
-  // Transform back to our interface structure
   return {
     id: data.id,
     school_id: data.school_id,
-    school_name: data.education_schools?.name || updates.school_name || '',
+    school_name: data.education_schools?.name || '',
     date: data.occurrence_date,
-    occurrence_date: data.occurrence_date,
     incident_type: data.occurrence_type,
-    occurrence_type: data.occurrence_type,
     description: data.description,
     severity: data.severity || 'medium',
     status: data.resolution_date ? 'resolved' : 'open',
@@ -201,29 +210,39 @@ export const updateIncident = async (id: string, updates: Partial<SchoolIncident
     reported_by: data.reported_by,
     student_id: data.student_id,
     reported_by_name: data.reported_by_name,
+    occurrence_date: data.occurrence_date,
+    occurrence_type: data.occurrence_type,
     resolution_date: data.resolution_date,
     resolved_by: data.resolved_by,
     subject: data.subject,
-    class_id: data.class_id,
-    parent_notified: data.parent_notified,
     parent_notification_date: data.parent_notification_date,
-    resolution: data.resolution
+    parent_notified: data.parent_notified,
+    resolution: data.resolution,
+    class_id: data.class_id
   } as SchoolIncident;
 };
 
-export const updateIncidentStatus = async (id: string, status: SchoolIncident['status']): Promise<SchoolIncident> => {
-  // Convert from our interface status to DB structure
-  const updateData: any = {
-    resolution_date: status === 'resolved' ? new Date().toISOString() : null
-  };
+export const updateIncidentStatus = async (id: string, status: SchoolIncident['status'], resolution?: string, resolvedBy?: string): Promise<SchoolIncident> => {
+  const updates: any = {};
+  
+  if (status === 'resolved') {
+    updates.resolution_date = new Date().toISOString();
+    if (resolution) updates.resolution = resolution;
+    if (resolvedBy) updates.resolved_by = resolvedBy;
+  } else {
+    updates.resolution_date = null;
+    updates.resolution = null;
+    updates.resolved_by = null;
+  }
 
   const { data, error } = await supabase
     .from('education_occurrences')
-    .update(updateData)
+    .update(updates)
     .eq('id', id)
     .select(`
       *,
-      education_schools(name)
+      education_schools(name),
+      education_students(name)
     `)
     .single();
 
@@ -232,15 +251,12 @@ export const updateIncidentStatus = async (id: string, status: SchoolIncident['s
     throw error;
   }
 
-  // Transform back to our interface structure
   return {
     id: data.id,
     school_id: data.school_id,
     school_name: data.education_schools?.name || '',
     date: data.occurrence_date,
-    occurrence_date: data.occurrence_date,
     incident_type: data.occurrence_type,
-    occurrence_type: data.occurrence_type,
     description: data.description,
     severity: data.severity || 'medium',
     status: data.resolution_date ? 'resolved' : 'open',
@@ -249,12 +265,14 @@ export const updateIncidentStatus = async (id: string, status: SchoolIncident['s
     reported_by: data.reported_by,
     student_id: data.student_id,
     reported_by_name: data.reported_by_name,
+    occurrence_date: data.occurrence_date,
+    occurrence_type: data.occurrence_type,
     resolution_date: data.resolution_date,
     resolved_by: data.resolved_by,
     subject: data.subject,
-    class_id: data.class_id,
-    parent_notified: data.parent_notified,
     parent_notification_date: data.parent_notification_date,
-    resolution: data.resolution
+    parent_notified: data.parent_notified,
+    resolution: data.resolution,
+    class_id: data.class_id
   } as SchoolIncident;
 };

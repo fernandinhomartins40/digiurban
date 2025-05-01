@@ -53,6 +53,7 @@ import ACSPage from "@/pages/admin/saude/acs/index";
 import EducacaoIndex from "@/pages/admin/educacao/index";
 import EscolasPage from "@/pages/admin/educacao/escolas/index";
 import MatriculaPage from "@/pages/admin/educacao/matricula/index";
+import TransportePage from "@/pages/admin/educacao/transporte/index";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -112,6 +113,7 @@ function App() {
                   <Route path="educacao" element={<EducacaoIndex />} />
                   <Route path="educacao/escolas" element={<EscolasPage />} />
                   <Route path="educacao/matricula" element={<MatriculaPage />} />
+                  <Route path="educacao/transporte" element={<TransportePage />} />
                 </Route>
 
                 {/* Citizen Routes */}
