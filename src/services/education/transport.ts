@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { TransportRequest } from "@/types/education";
+import { handleServiceError, checkDataExists, mapTransportRequestFromDB, mapTransportRequestToDB } from "./utils";
 
 export const fetchTransportRequests = async (): Promise<TransportRequest[]> => {
   const { data, error } = await supabase
@@ -13,20 +14,10 @@ export const fetchTransportRequests = async (): Promise<TransportRequest[]> => {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching transport requests:', error);
-    throw error;
+    return handleServiceError(error, 'fetching transport requests');
   }
 
-  // Transform the data to match our TransportRequest type
-  const transportRequests = data.map(item => ({
-    ...item,
-    student_name: item.education_students?.name || '',
-    school_name: item.education_schools?.name || '',
-    pickup_address: item.pickup_location || '',
-    distance_km: 0 // Default value since it's not in the database
-  })) as TransportRequest[];
-
-  return transportRequests;
+  return data.map(item => mapTransportRequestFromDB(item));
 };
 
 export const fetchTransportRequestById = async (id: string): Promise<TransportRequest> => {
@@ -41,45 +32,15 @@ export const fetchTransportRequestById = async (id: string): Promise<TransportRe
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching transport request:', error);
-    throw error;
+    return handleServiceError(error, 'fetching transport request');
   }
 
-  if (!data) {
-    throw new Error('Transport request not found');
-  }
-
-  // Transform to match our TransportRequest interface
-  return {
-    ...data,
-    student_name: data.education_students?.name || '',
-    school_name: data.education_schools?.name || '',
-    pickup_address: data.pickup_location || '',
-    distance_km: 0 // Default value since it's not in the database
-  } as TransportRequest;
+  return checkDataExists(mapTransportRequestFromDB(data), 'Transport request');
 };
 
 export const createTransportRequest = async (request: Omit<TransportRequest, 'id' | 'protocol_number' | 'created_at' | 'updated_at' | 'student_name' | 'school_name'>): Promise<TransportRequest> => {
   // Map from our interface to DB structure
-  const dbData = {
-    student_id: request.student_id,
-    school_id: request.school_id,
-    requester_name: request.requester_name,
-    requester_contact: request.requester_contact,
-    requester_id: request.requester_id,
-    request_type: request.request_type,
-    description: request.description,
-    status: request.status,
-    pickup_location: request.pickup_location || request.pickup_address,
-    return_location: request.return_location,
-    current_route_id: request.current_route_id,
-    requested_route_id: request.requested_route_id,
-    complaint_type: request.complaint_type,
-    resolution_notes: request.resolution_notes,
-    resolution_date: request.resolution_date,
-    resolved_by: request.resolved_by
-    // protocol_number is handled by a database trigger
-  };
+  const dbData = mapTransportRequestToDB(request);
 
   const { data, error } = await supabase
     .from('education_transport_requests')
@@ -92,18 +53,10 @@ export const createTransportRequest = async (request: Omit<TransportRequest, 'id
     .single();
 
   if (error) {
-    console.error('Error creating transport request:', error);
-    throw error;
+    return handleServiceError(error, 'creating transport request');
   }
 
-  // Transform to match our TransportRequest interface
-  return {
-    ...data,
-    student_name: data.education_students?.name || '',
-    school_name: data.education_schools?.name || '',
-    pickup_address: data.pickup_location || '',
-    distance_km: 0 // Default value since it's not in the database
-  } as TransportRequest;
+  return mapTransportRequestFromDB(data);
 };
 
 export const updateTransportRequestStatus = async (id: string, status: TransportRequest['status']): Promise<TransportRequest> => {
@@ -119,16 +72,8 @@ export const updateTransportRequestStatus = async (id: string, status: Transport
     .single();
 
   if (error) {
-    console.error('Error updating transport request status:', error);
-    throw error;
+    return handleServiceError(error, 'updating transport request status');
   }
 
-  // Transform to match our TransportRequest interface
-  return {
-    ...data,
-    student_name: data.education_students?.name || '',
-    school_name: data.education_schools?.name || '',
-    pickup_address: data.pickup_location || '',
-    distance_km: 0 // Default value since it's not in the database
-  } as TransportRequest;
+  return mapTransportRequestFromDB(data);
 };

@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Enrollment } from "@/types/education";
+import { handleServiceError, checkDataExists, mapEnrollmentFromDB } from "./utils";
 
 export const fetchEnrollments = async (): Promise<Enrollment[]> => {
   const { data, error } = await supabase
@@ -13,19 +14,10 @@ export const fetchEnrollments = async (): Promise<Enrollment[]> => {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching enrollments:', error);
-    throw error;
+    return handleServiceError(error, 'fetching enrollments');
   }
 
-  // Transform the data to match our Enrollment type
-  const enrollments = data.map(item => ({
-    ...item,
-    student_name: item.education_students?.name || '',
-    school_name: item.education_schools?.name || '',
-    school_year: Number(item.school_year) // Ensure school_year is a number
-  })) as Enrollment[];
-
-  return enrollments;
+  return data.map(item => mapEnrollmentFromDB(item));
 };
 
 export const fetchEnrollmentById = async (id: string): Promise<Enrollment> => {
@@ -40,23 +32,10 @@ export const fetchEnrollmentById = async (id: string): Promise<Enrollment> => {
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching enrollment:', error);
-    throw error;
+    return handleServiceError(error, 'fetching enrollment');
   }
 
-  if (!data) {
-    throw new Error('Enrollment not found');
-  }
-
-  // Transform to include student_name and school_name
-  const enrollment = {
-    ...data,
-    student_name: data.education_students?.name || '',
-    school_name: data.education_schools?.name || '',
-    school_year: Number(data.school_year) // Ensure school_year is a number
-  } as Enrollment;
-
-  return enrollment;
+  return checkDataExists(mapEnrollmentFromDB(data), 'Enrollment');
 };
 
 export const createEnrollment = async (enrollmentData: Omit<Enrollment, 'id' | 'protocol_number' | 'created_at' | 'updated_at' | 'student_name' | 'school_name'>): Promise<Enrollment> => {
@@ -84,15 +63,10 @@ export const createEnrollment = async (enrollmentData: Omit<Enrollment, 'id' | '
     .single();
 
   if (error) {
-    console.error('Error creating enrollment:', error);
-    throw error;
+    return handleServiceError(error, 'creating enrollment');
   }
   
-  // Return with necessary type transformation
-  return {
-    ...data,
-    school_year: Number(data.school_year) // Ensure school_year is a number
-  } as Enrollment;
+  return mapEnrollmentFromDB(data);
 };
 
 export const updateEnrollmentStatus = async (id: string, status: Enrollment['status']): Promise<Enrollment> => {
@@ -104,13 +78,8 @@ export const updateEnrollmentStatus = async (id: string, status: Enrollment['sta
     .single();
 
   if (error) {
-    console.error('Error updating enrollment status:', error);
-    throw error;
+    return handleServiceError(error, 'updating enrollment status');
   }
 
-  // Return with necessary type transformation
-  return {
-    ...data,
-    school_year: Number(data.school_year) // Ensure school_year is a number
-  } as Enrollment;
+  return mapEnrollmentFromDB(data);
 };

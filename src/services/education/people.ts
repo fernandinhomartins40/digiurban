@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Student, Teacher } from "@/types/education";
+import { handleServiceError, checkDataExists, mapTeacherFromDB, mapTeacherToDB } from "./utils";
 
 export const fetchStudents = async (): Promise<Student[]> => {
   const { data, error } = await supabase
@@ -9,8 +10,7 @@ export const fetchStudents = async (): Promise<Student[]> => {
     .order('name');
 
   if (error) {
-    console.error('Error fetching students:', error);
-    throw error;
+    return handleServiceError(error, 'fetching students');
   }
 
   return data as Student[];
@@ -24,15 +24,10 @@ export const fetchStudentById = async (id: string): Promise<Student> => {
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching student:', error);
-    throw error;
+    return handleServiceError(error, 'fetching student');
   }
 
-  if (!data) {
-    throw new Error('Student not found');
-  }
-
-  return data as Student;
+  return checkDataExists(data as Student, 'Student');
 };
 
 export const createStudent = async (student: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Promise<Student> => {
@@ -43,8 +38,7 @@ export const createStudent = async (student: Omit<Student, 'id' | 'created_at' |
     .single();
 
   if (error) {
-    console.error('Error creating student:', error);
-    throw error;
+    return handleServiceError(error, 'creating student');
   }
 
   return data as Student;
@@ -59,8 +53,7 @@ export const updateStudent = async (id: string, updates: Partial<Student>): Prom
     .single();
 
   if (error) {
-    console.error('Error updating student:', error);
-    throw error;
+    return handleServiceError(error, 'updating student');
   }
 
   return data as Student;
@@ -73,14 +66,10 @@ export const fetchTeachers = async (): Promise<Teacher[]> => {
     .order('name');
 
   if (error) {
-    console.error('Error fetching teachers:', error);
-    throw error;
+    return handleServiceError(error, 'fetching teachers');
   }
 
-  return data.map(teacher => ({
-    ...teacher,
-    active: teacher.is_active,
-  })) as Teacher[];
+  return data.map(teacher => mapTeacherFromDB(teacher));
 };
 
 export const fetchTeacherById = async (id: string): Promise<Teacher> => {
@@ -91,36 +80,19 @@ export const fetchTeacherById = async (id: string): Promise<Teacher> => {
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching teacher:', error);
-    throw error;
+    return handleServiceError(error, 'fetching teacher');
   }
 
   if (!data) {
     throw new Error('Teacher not found');
   }
 
-  return {
-    ...data,
-    active: data.is_active,
-  } as Teacher;
+  return mapTeacherFromDB(data);
 };
 
 export const createTeacher = async (teacher: Omit<Teacher, 'id' | 'created_at' | 'updated_at'>): Promise<Teacher> => {
   // Map from our interface to DB structure
-  const dbData = {
-    name: teacher.name,
-    birth_date: teacher.birth_date,
-    address: teacher.address,
-    cpf: teacher.cpf,
-    phone: teacher.phone,
-    email: teacher.email,
-    is_active: teacher.active,
-    education_level: teacher.education_level,
-    registration_number: teacher.registration_number,
-    hiring_date: teacher.hiring_date,
-    specialties: teacher.specialties || [],
-    teaching_areas: teacher.teaching_areas || []
-  };
+  const dbData = mapTeacherToDB(teacher);
 
   const { data, error } = await supabase
     .from('education_teachers')
@@ -129,24 +101,15 @@ export const createTeacher = async (teacher: Omit<Teacher, 'id' | 'created_at' |
     .single();
 
   if (error) {
-    console.error('Error creating teacher:', error);
-    throw error;
+    return handleServiceError(error, 'creating teacher');
   }
 
-  return {
-    ...data,
-    active: data.is_active,
-  } as Teacher;
+  return mapTeacherFromDB(data);
 };
 
 export const updateTeacher = async (id: string, updates: Partial<Teacher>): Promise<Teacher> => {
   // Map from our interface to DB structure
-  const dbUpdates: any = { ...updates };
-  
-  if (updates.active !== undefined) {
-    dbUpdates.is_active = updates.active;
-    delete dbUpdates.active;
-  }
+  const dbUpdates = mapTeacherToDB(updates);
 
   const { data, error } = await supabase
     .from('education_teachers')
@@ -156,12 +119,8 @@ export const updateTeacher = async (id: string, updates: Partial<Teacher>): Prom
     .single();
 
   if (error) {
-    console.error('Error updating teacher:', error);
-    throw error;
+    return handleServiceError(error, 'updating teacher');
   }
 
-  return {
-    ...data,
-    active: data.is_active,
-  } as Teacher;
+  return mapTeacherFromDB(data);
 };
