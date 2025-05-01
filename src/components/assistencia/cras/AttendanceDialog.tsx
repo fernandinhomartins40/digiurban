@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -114,6 +115,8 @@ export function AttendanceDialog({
           ...values,
           attendance_date: values.attendance_date ? format(values.attendance_date, "yyyy-MM-dd") : undefined,
           follow_up_date: values.follow_up_date ? format(values.follow_up_date, "yyyy-MM-dd") : undefined,
+          // Cast the string value to AttendanceType to fix the error
+          attendance_type: values.attendance_type as AttendanceType
         });
         
         toast({
@@ -124,6 +127,7 @@ export function AttendanceDialog({
         // Create new attendance - modified to remove protocol_number which is auto-generated
         const attendanceData = {
           center_id: values.center_id,
+          // Cast the string value to AttendanceType to fix the error
           attendance_type: values.attendance_type as AttendanceType,
           attendance_date: values.attendance_date ? format(values.attendance_date, "yyyy-MM-dd") : undefined,
           description: values.description,
