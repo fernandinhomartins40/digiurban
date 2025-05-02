@@ -9,3 +9,4 @@ export * from './meals';
 export * from './classes';
 export * from './grades';
 export * from './calendar';
+export * from './communication';
