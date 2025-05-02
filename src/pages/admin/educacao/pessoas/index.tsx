@@ -1,15 +1,28 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { fetchStudents, fetchTeachers } from "@/services/education";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { UserPlus, UserCog } from "lucide-react";
+import { UserPlus, UserCog, Search, Pencil, Trash2, Filter } from "lucide-react";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 export default function PessoasPage() {
   const navigate = useNavigate();
+  const [studentSearch, setStudentSearch] = useState("");
+  const [teacherSearch, setTeacherSearch] = useState("");
+  
   const { data: students, isLoading: loadingStudents } = useQuery({
     queryKey: ['education-students'],
     queryFn: () => fetchStudents(),
@@ -19,6 +32,18 @@ export default function PessoasPage() {
     queryKey: ['education-teachers'],
     queryFn: () => fetchTeachers(),
   });
+
+  // Filter students based on search
+  const filteredStudents = students?.filter(student => 
+    student.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
+    student.registration_number.toLowerCase().includes(studentSearch.toLowerCase())
+  ) || [];
+
+  // Filter teachers based on search
+  const filteredTeachers = teachers?.filter(teacher => 
+    teacher.name.toLowerCase().includes(teacherSearch.toLowerCase()) ||
+    teacher.registration_number.toLowerCase().includes(teacherSearch.toLowerCase())
+  ) || [];
 
   return (
     <div className="space-y-6">
@@ -98,7 +123,6 @@ export default function PessoasPage() {
             </Card>
           </div>
           
-          {/* Lista de alunos seria exibida aqui */}
           <Card>
             <CardHeader>
               <CardTitle>Lista de Alunos</CardTitle>
@@ -110,7 +134,72 @@ export default function PessoasPage() {
               {loadingStudents ? (
                 <div className="flex justify-center p-4">Carregando...</div>
               ) : (
-                <p>Tabela completa de alunos será implementada aqui.</p>
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="relative w-full max-w-sm">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Buscar por nome ou matrícula..." 
+                        value={studentSearch}
+                        onChange={(e) => setStudentSearch(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+                    <Button variant="outline" size="sm">
+                      <Filter className="mr-2 h-4 w-4" />
+                      Filtros
+                    </Button>
+                  </div>
+                
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Matrícula</TableHead>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Responsável</TableHead>
+                          <TableHead>Contato</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredStudents.length > 0 ? (
+                          filteredStudents.map((student) => (
+                            <TableRow key={student.id}>
+                              <TableCell className="font-medium">{student.registration_number}</TableCell>
+                              <TableCell>{student.name}</TableCell>
+                              <TableCell>{student.parent_name}</TableCell>
+                              <TableCell>{student.parent_phone}</TableCell>
+                              <TableCell>
+                                <Badge variant={student.is_active ? "default" : "secondary"}>
+                                  {student.is_active ? "Ativo" : "Inativo"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => navigate(`/admin/educacao/pessoas/alunos/${student.id}`)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-4">
+                              {studentSearch ? "Nenhum aluno encontrado para esta busca." : "Nenhum aluno cadastrado."}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
@@ -152,7 +241,7 @@ export default function PessoasPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Contrataç��es Recentes</CardTitle>
+                <CardTitle className="text-sm font-medium">Contratações Recentes</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -165,7 +254,6 @@ export default function PessoasPage() {
             </Card>
           </div>
           
-          {/* Lista de professores seria exibida aqui */}
           <Card>
             <CardHeader>
               <CardTitle>Lista de Professores</CardTitle>
@@ -177,7 +265,74 @@ export default function PessoasPage() {
               {loadingTeachers ? (
                 <div className="flex justify-center p-4">Carregando...</div>
               ) : (
-                <p>Tabela completa de professores será implementada aqui.</p>
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="relative w-full max-w-sm">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Buscar por nome ou matrícula..." 
+                        value={teacherSearch}
+                        onChange={(e) => setTeacherSearch(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+                    <Button variant="outline" size="sm">
+                      <Filter className="mr-2 h-4 w-4" />
+                      Filtros
+                    </Button>
+                  </div>
+                
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Matrícula</TableHead>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Formação</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Telefone</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredTeachers.length > 0 ? (
+                          filteredTeachers.map((teacher) => (
+                            <TableRow key={teacher.id}>
+                              <TableCell className="font-medium">{teacher.registration_number}</TableCell>
+                              <TableCell>{teacher.name}</TableCell>
+                              <TableCell>{teacher.education_level}</TableCell>
+                              <TableCell>{teacher.email}</TableCell>
+                              <TableCell>{teacher.phone}</TableCell>
+                              <TableCell>
+                                <Badge variant={teacher.is_active ? "default" : "secondary"}>
+                                  {teacher.is_active ? "Ativo" : "Inativo"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => navigate(`/admin/educacao/pessoas/professores/${teacher.id}`)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center py-4">
+                              {teacherSearch ? "Nenhum professor encontrado para esta busca." : "Nenhum professor cadastrado."}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
