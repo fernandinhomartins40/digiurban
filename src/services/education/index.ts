@@ -7,3 +7,4 @@ export * from './transport';
 export * from './incidents';
 export * from './meals';
 export * from './classes';
+export * from './grades';
