@@ -9,8 +9,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { GradeTable } from "@/components/education/grades/GradeTable";
 import { AttendanceSheet } from "@/components/education/grades/AttendanceSheet";
 import { GradeForm } from "@/components/education/grades/GradeForm";
-import { fetchGrades, fetchAttendanceSummary, recordAttendance, submitGrade, fetchClassById } from "@/services/education/grades";
-import { fetchClasses } from "@/services/education/classes";
+import { fetchGrades, fetchAttendanceSummary, recordAttendance, submitGrade } from "@/services/education/grades";
+import { fetchClasses, fetchClassById } from "@/services/education/classes";
 import { fetchStudentById } from "@/services/education/people";
 import { PlusCircle, Search } from "lucide-react";
 
