@@ -1,9 +1,15 @@
+
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { fetchStudents, fetchTeachers } from "@/services/education";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { UserPlus, UserCog } from "lucide-react";
 
 export default function PessoasPage() {
+  const navigate = useNavigate();
   const { data: students, isLoading: loadingStudents } = useQuery({
     queryKey: ['education-students'],
     queryFn: () => fetchStudents(),
