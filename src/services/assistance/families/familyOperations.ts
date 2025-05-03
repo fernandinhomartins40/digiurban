@@ -101,7 +101,7 @@ export async function updateFamily(id: string, family: Partial<VulnerableFamily>
       'monitoring', 'stable', 'critical', 'improved', 'completed'
     ];
     
-    if (!validFamilyStatuses.includes(family.family_status)) {
+    if (!validFamilyStatuses.includes(family.family_status as FamilyStatus)) {
       throw new Error('Invalid family status');
     }
   }

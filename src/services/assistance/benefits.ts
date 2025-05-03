@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { EmergencyBenefit, BenefitAttachment, BenefitStatus } from '@/types/assistance';
 
@@ -53,6 +52,7 @@ export async function createBenefit(benefit: Partial<EmergencyBenefit>): Promise
     responsible_id: benefit.responsible_id,
     responsible_name: benefit.responsible_name,
     comments: benefit.comments,
+    // Make sure status is one of the allowed values for the database
     status: benefit.status || 'pending',
     // Add a temporary protocol_number that will be overwritten by the database trigger
     protocol_number: 'TEMP-' + Date.now()
