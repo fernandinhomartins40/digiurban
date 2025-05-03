@@ -3,4 +3,4 @@
 export * from './benefits';
 export * from './programs';
 export * from './centers/index';
-export * from './families';
+export * from './families/index';
