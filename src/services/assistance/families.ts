@@ -37,9 +37,35 @@ export async function fetchFamilyById(id: string): Promise<VulnerableFamily | nu
 }
 
 export async function createFamily(family: Partial<VulnerableFamily>): Promise<VulnerableFamily> {
-  // Validate family_status is one of the allowed values
-  if (family.family_status && !Object.values(FamilyStatus).includes(family.family_status as FamilyStatus)) {
-    throw new Error('Invalid family status');
+  // Validate required fields
+  if (!family.family_name) {
+    throw new Error('Family name is required');
+  }
+  if (!family.address) {
+    throw new Error('Address is required');
+  }
+  if (!family.neighborhood) {
+    throw new Error('Neighborhood is required');
+  }
+  if (!family.city) {
+    throw new Error('City is required');
+  }
+  if (!family.state) {
+    throw new Error('State is required');
+  }
+  if (!family.vulnerability_criteria) {
+    throw new Error('Vulnerability criteria is required');
+  }
+
+  // Validate family_status if provided
+  if (family.family_status) {
+    const validFamilyStatuses: FamilyStatus[] = [
+      'monitoring', 'active', 'inactive', 'stable', 'critical', 'improved', 'completed'
+    ];
+    
+    if (!validFamilyStatuses.includes(family.family_status)) {
+      throw new Error('Invalid family status');
+    }
   }
   
   // Create a safe family object
@@ -54,8 +80,8 @@ export async function createFamily(family: Partial<VulnerableFamily>): Promise<V
     city: family.city,
     state: family.state,
     vulnerability_criteria: family.vulnerability_criteria,
-    family_status: family.family_status || 'monitoring'
-  } as any; // Using any to work around the TypeScript error temporarily
+    family_status: family.family_status || 'monitoring' as FamilyStatus
+  };
 
   const { data, error } = await supabase
     .from('vulnerable_families')
@@ -72,14 +98,20 @@ export async function createFamily(family: Partial<VulnerableFamily>): Promise<V
 }
 
 export async function updateFamily(id: string, family: Partial<VulnerableFamily>): Promise<VulnerableFamily> {
-  // Validate family_status is one of the allowed values
-  if (family.family_status && !Object.values(FamilyStatus).includes(family.family_status as FamilyStatus)) {
-    throw new Error('Invalid family status');
+  // Validate family_status if provided
+  if (family.family_status) {
+    const validFamilyStatuses: FamilyStatus[] = [
+      'monitoring', 'active', 'inactive', 'stable', 'critical', 'improved', 'completed'
+    ];
+    
+    if (!validFamilyStatuses.includes(family.family_status)) {
+      throw new Error('Invalid family status');
+    }
   }
   
   const { data, error } = await supabase
     .from('vulnerable_families')
-    .update(family as any) // Using any to work around the TypeScript error temporarily
+    .update(family)
     .eq('id', id)
     .select()
     .single();
@@ -93,9 +125,26 @@ export async function updateFamily(id: string, family: Partial<VulnerableFamily>
 }
 
 export async function createFamilyMember(member: Partial<FamilyMember>): Promise<FamilyMember> {
+  // Validate required fields
+  if (!member.family_id) {
+    throw new Error('Family ID is required');
+  }
+  if (!member.relationship) {
+    throw new Error('Relationship is required');
+  }
+  
+  // Create a safe member object
+  const safeMember = {
+    family_id: member.family_id,
+    citizen_id: member.citizen_id,
+    citizen_name: member.citizen_name,
+    relationship: member.relationship,
+    is_dependent: member.is_dependent !== undefined ? member.is_dependent : false
+  };
+
   const { data, error } = await supabase
     .from('family_members')
-    .insert(member)
+    .insert(safeMember)
     .select()
     .single();
 
@@ -136,9 +185,32 @@ export async function removeFamilyMember(id: string): Promise<void> {
 }
 
 export async function createFamilyVisit(visit: Partial<FamilyVisit>): Promise<FamilyVisit> {
+  // Validate required fields
+  if (!visit.family_id) {
+    throw new Error('Family ID is required');
+  }
+  if (!visit.situation) {
+    throw new Error('Situation is required');
+  }
+  if (!visit.observations) {
+    throw new Error('Observations are required');
+  }
+  
+  // Create a safe visit object
+  const safeVisit = {
+    family_id: visit.family_id,
+    professional_id: visit.professional_id,
+    professional_name: visit.professional_name,
+    visit_date: visit.visit_date || new Date().toISOString(),
+    next_visit_date: visit.next_visit_date,
+    situation: visit.situation,
+    observations: visit.observations,
+    evolution: visit.evolution
+  };
+
   const { data, error } = await supabase
     .from('family_visits')
-    .insert(visit)
+    .insert(safeVisit)
     .select()
     .single();
 
@@ -209,9 +281,36 @@ export async function uploadVisitAttachment(
 }
 
 export async function createMonitoringPlan(plan: Partial<FamilyMonitoringPlan>): Promise<FamilyMonitoringPlan> {
+  // Validate required fields
+  if (!plan.family_id) {
+    throw new Error('Family ID is required');
+  }
+  if (!plan.objectives) {
+    throw new Error('Objectives are required');
+  }
+  if (!plan.actions) {
+    throw new Error('Actions are required');
+  }
+  if (!plan.contact_frequency) {
+    throw new Error('Contact frequency is required');
+  }
+  
+  // Create a safe plan object
+  const safePlan = {
+    family_id: plan.family_id,
+    responsible_id: plan.responsible_id,
+    responsible_name: plan.responsible_name,
+    start_date: plan.start_date || new Date().toISOString().split('T')[0],
+    end_date: plan.end_date,
+    objectives: plan.objectives,
+    actions: plan.actions,
+    contact_frequency: plan.contact_frequency,
+    status: plan.status || 'active'
+  };
+
   const { data, error } = await supabase
     .from('family_monitoring_plans')
-    .insert(plan)
+    .insert(safePlan)
     .select()
     .single();
 

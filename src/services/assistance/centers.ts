@@ -135,8 +135,21 @@ export async function fetchAttendanceById(id: string): Promise<SocialAttendance 
 }
 
 export async function createAttendance(attendance: Partial<SocialAttendance>): Promise<SocialAttendance> {
+  // Validate required fields
+  if (!attendance.attendance_type) {
+    throw new Error('Attendance type is required');
+  }
+  if (!attendance.description) {
+    throw new Error('Description is required');
+  }
+  
   // Validate attendance_type is one of the allowed values
-  if (attendance.attendance_type && !Object.values(AttendanceType).includes(attendance.attendance_type as AttendanceType)) {
+  const validAttendanceTypes: AttendanceType[] = [
+    'individual', 'family', 'group', 'other', 'reception', 
+    'qualified_listening', 'referral', 'guidance', 'follow_up'
+  ];
+  
+  if (!validAttendanceTypes.includes(attendance.attendance_type)) {
     throw new Error('Invalid attendance type');
   }
 
@@ -155,7 +168,7 @@ export async function createAttendance(attendance: Partial<SocialAttendance>): P
     referrals: attendance.referrals,
     follow_up_required: attendance.follow_up_required,
     follow_up_date: attendance.follow_up_date
-  } as any; // Using any to work around the TypeScript error temporarily
+  };
 
   const { data, error } = await supabase
     .from('social_attendances')
@@ -172,14 +185,21 @@ export async function createAttendance(attendance: Partial<SocialAttendance>): P
 }
 
 export async function updateAttendance(id: string, attendance: Partial<SocialAttendance>): Promise<SocialAttendance> {
-  // Validate attendance_type is one of the allowed values
-  if (attendance.attendance_type && !Object.values(AttendanceType).includes(attendance.attendance_type as AttendanceType)) {
-    throw new Error('Invalid attendance type');
+  // Validate attendance_type if provided
+  if (attendance.attendance_type) {
+    const validAttendanceTypes: AttendanceType[] = [
+      'individual', 'family', 'group', 'other', 'reception', 
+      'qualified_listening', 'referral', 'guidance', 'follow_up'
+    ];
+    
+    if (!validAttendanceTypes.includes(attendance.attendance_type)) {
+      throw new Error('Invalid attendance type');
+    }
   }
   
   const { data, error } = await supabase
     .from('social_attendances')
-    .update(attendance as any) // Using any to work around the TypeScript error temporarily
+    .update(attendance)
     .eq('id', id)
     .select()
     .single();
