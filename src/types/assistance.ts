@@ -1,6 +1,7 @@
+
 export type BenefitStatus = 'pending' | 'approved' | 'rejected' | 'delivering' | 'delivered' | 'completed';
 export type AttendanceType = 'reception' | 'qualified_listening' | 'referral' | 'guidance' | 'follow_up' | 'other';
-export type FamilyStatus = 'monitoring' | 'active' | 'inactive' | 'stable' | 'critical' | 'improved' | 'completed';
+export type FamilyStatus = 'monitoring' | 'stable' | 'critical' | 'improved' | 'completed' | 'active' | 'inactive';
 
 export interface EmergencyBenefit {
   id: string;

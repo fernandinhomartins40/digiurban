@@ -60,7 +60,7 @@ export async function createSocialProgram(program: Partial<SocialProgram>): Prom
   return data;
 }
 
-export async function updateProgram(id: string, program: Partial<SocialProgram>): Promise<SocialProgram> {
+export async function updateSocialProgram(id: string, program: Partial<SocialProgram>): Promise<SocialProgram> {
   const { data, error } = await supabase
     .from('social_programs')
     .update(program)
