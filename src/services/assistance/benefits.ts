@@ -35,6 +35,14 @@ export async function fetchBenefitById(id: string): Promise<EmergencyBenefit | n
 }
 
 export async function createBenefit(benefit: Partial<EmergencyBenefit>): Promise<EmergencyBenefit> {
+  // Make sure required fields are present
+  if (!benefit.benefit_type) {
+    throw new Error('Benefit type is required');
+  }
+  if (!benefit.reason) {
+    throw new Error('Reason is required');
+  }
+
   const { data, error } = await supabase
     .from('emergency_benefits')
     .insert(benefit)
@@ -70,11 +78,15 @@ export async function updateBenefitStatus(
   status: BenefitStatus,
   comments?: string
 ): Promise<EmergencyBenefit> {
-  const updates = { 
+  const updates: Record<string, any> = { 
     status, 
-    comments: comments || undefined,
-    ...(status === 'delivered' ? { delivery_date: new Date().toISOString() } : {})
+    comments: comments || undefined
   };
+  
+  // Add delivery_date when status is delivered
+  if (status === 'delivered') {
+    updates.delivery_date = new Date().toISOString();
+  }
 
   const { data, error } = await supabase
     .from('emergency_benefits')

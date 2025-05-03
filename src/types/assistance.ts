@@ -1,5 +1,5 @@
 
-export type BenefitStatus = 'pending' | 'approved' | 'rejected' | 'delivered';
+export type BenefitStatus = 'pending' | 'approved' | 'rejected' | 'delivering' | 'delivered';
 export type AttendanceType = 'individual' | 'family' | 'group' | 'other';
 export type FamilyStatus = 'monitoring' | 'active' | 'inactive';
 
@@ -63,7 +63,7 @@ export interface ProgramBeneficiary {
 export interface AssistanceCenter {
   id: string;
   name: string;
-  type: 'CRAS' | 'CREAS';
+  type: string; // Changed from "CRAS" | "CREAS" to string to match database
   address: string;
   neighborhood: string;
   city: string;

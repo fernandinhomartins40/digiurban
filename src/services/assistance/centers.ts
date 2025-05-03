@@ -32,6 +32,26 @@ export async function fetchCenterById(id: string): Promise<AssistanceCenter | nu
 }
 
 export async function createCenter(center: Partial<AssistanceCenter>): Promise<AssistanceCenter> {
+  // Make sure required fields are present
+  if (!center.name) {
+    throw new Error('Center name is required');
+  }
+  if (!center.type) {
+    throw new Error('Center type is required');
+  }
+  if (!center.address) {
+    throw new Error('Address is required');
+  }
+  if (!center.neighborhood) {
+    throw new Error('Neighborhood is required');
+  }
+  if (!center.city) {
+    throw new Error('City is required');
+  }
+  if (!center.state) {
+    throw new Error('State is required');
+  }
+
   // Make sure the type is either 'CRAS' or 'CREAS'
   if (center.type && !['CRAS', 'CREAS'].includes(center.type)) {
     throw new Error('Center type must be either "CRAS" or "CREAS"');
