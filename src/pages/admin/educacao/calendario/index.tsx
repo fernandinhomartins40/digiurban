@@ -239,33 +239,36 @@ export default function CalendarioPage() {
       </div>
 
       <div>
-        <TabsContent value="monthly" className="mt-0">
-          <MonthlyCalendarView
-            currentMonth={currentDate}
-            events={events}
-            onDateClick={handleDateSelect}
-            onEventClick={handleViewEvent}
-          />
-        </TabsContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsContent value="monthly" className="mt-0">
+            <MonthlyCalendarView
+              currentMonth={currentDate}
+              events={events}
+              onDateClick={handleDateSelect}
+              onEventClick={handleViewEvent}
+              onChangeMonth={setCurrentDate}
+            />
+          </TabsContent>
 
-        <TabsContent value="list" className="mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>Eventos do Mês</CardTitle>
-              <CardDescription>
-                {format(currentDate, "MMMM yyyy", { locale: ptBR })}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CalendarEventList
-                events={events}
-                onViewEvent={handleViewEvent}
-                onEditEvent={handleEditEvent}
-                onDeleteEvent={handleDeleteEvent}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="list" className="mt-0">
+            <Card>
+              <CardHeader>
+                <CardTitle>Eventos do Mês</CardTitle>
+                <CardDescription>
+                  {format(currentDate, "MMMM yyyy", { locale: ptBR })}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CalendarEventList
+                  events={events}
+                  onViewEvent={handleViewEvent}
+                  onEditEvent={handleEditEvent}
+                  onDeleteEvent={handleDeleteEvent}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Event Form Dialog */}
