@@ -1,5 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { VulnerableFamily, FamilyStatus } from '@/types/assistance';
+import { VulnerableFamily, FamilyStatus, VulnerabilityCriteria } from '@/types/assistance';
 
 export async function fetchVulnerableFamilies(): Promise<VulnerableFamily[]> {
   const { data, error } = await supabase
@@ -65,6 +66,20 @@ export async function createFamily(family: Partial<VulnerableFamily>): Promise<V
     throw new Error('Invalid family status');
   }
   
+  // Validate vulnerability criteria
+  const validCriteria: VulnerabilityCriteria[] = [
+    'other', 'income', 'housing', 'education', 
+    'domestic_violence', 'health', 'unemployment', 'food_insecurity'
+  ];
+  
+  if (family.vulnerability_criteria) {
+    for (const criteria of family.vulnerability_criteria) {
+      if (!validCriteria.includes(criteria as VulnerabilityCriteria)) {
+        throw new Error(`Invalid vulnerability criteria: ${criteria}`);
+      }
+    }
+  }
+  
   // Create a safe family object
   const safeFamily = {
     family_name: family.family_name,
@@ -76,8 +91,8 @@ export async function createFamily(family: Partial<VulnerableFamily>): Promise<V
     neighborhood: family.neighborhood,
     city: family.city,
     state: family.state,
-    vulnerability_criteria: family.vulnerability_criteria,
-    family_status: family.family_status || 'monitoring'
+    vulnerability_criteria: family.vulnerability_criteria as VulnerabilityCriteria[],
+    family_status: (family.family_status || 'monitoring') as FamilyStatus
   };
 
   const { data, error } = await supabase
@@ -106,6 +121,20 @@ export async function updateFamily(id: string, family: Partial<VulnerableFamily>
     }
   }
   
+  // Validate vulnerability criteria if provided
+  if (family.vulnerability_criteria) {
+    const validCriteria: VulnerabilityCriteria[] = [
+      'other', 'income', 'housing', 'education', 
+      'domestic_violence', 'health', 'unemployment', 'food_insecurity'
+    ];
+    
+    for (const criteria of family.vulnerability_criteria) {
+      if (!validCriteria.includes(criteria as VulnerabilityCriteria)) {
+        throw new Error(`Invalid vulnerability criteria: ${criteria}`);
+      }
+    }
+  }
+  
   // Create safe update object
   const safeUpdate: Record<string, any> = {};
   
@@ -119,8 +148,8 @@ export async function updateFamily(id: string, family: Partial<VulnerableFamily>
   if (family.neighborhood !== undefined) safeUpdate.neighborhood = family.neighborhood;
   if (family.city !== undefined) safeUpdate.city = family.city;
   if (family.state !== undefined) safeUpdate.state = family.state;
-  if (family.vulnerability_criteria !== undefined) safeUpdate.vulnerability_criteria = family.vulnerability_criteria;
-  if (family.family_status !== undefined) safeUpdate.family_status = family.family_status;
+  if (family.vulnerability_criteria !== undefined) safeUpdate.vulnerability_criteria = family.vulnerability_criteria as VulnerabilityCriteria[];
+  if (family.family_status !== undefined) safeUpdate.family_status = family.family_status as FamilyStatus;
   
   const { data, error } = await supabase
     .from('vulnerable_families')

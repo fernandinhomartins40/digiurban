@@ -1,6 +1,9 @@
-export type BenefitStatus = 'pending' | 'approved' | 'rejected' | 'delivering' | 'delivered' | 'completed';
+export type BenefitStatus = 'pending' | 'approved' | 'rejected' | 'delivering' | 'completed';
 export type AttendanceType = 'reception' | 'qualified_listening' | 'referral' | 'guidance' | 'follow_up' | 'other';
 export type FamilyStatus = 'monitoring' | 'stable' | 'critical' | 'improved' | 'completed';
+
+// Define valid vulnerability criteria types
+export type VulnerabilityCriteria = 'other' | 'income' | 'housing' | 'education' | 'domestic_violence' | 'health' | 'unemployment' | 'food_insecurity';
 
 export interface EmergencyBenefit {
   id: string;
@@ -118,7 +121,7 @@ export interface VulnerableFamily {
   neighborhood: string;
   city: string;
   state: string;
-  vulnerability_criteria: string[];
+  vulnerability_criteria: VulnerabilityCriteria[];
   family_status: FamilyStatus;
   created_at: string;
   updated_at: string;
