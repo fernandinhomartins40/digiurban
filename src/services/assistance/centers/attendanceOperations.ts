@@ -72,7 +72,9 @@ export async function createAttendance(attendance: Partial<SocialAttendance>): P
     description: attendance.description,
     referrals: attendance.referrals,
     follow_up_required: attendance.follow_up_required,
-    follow_up_date: attendance.follow_up_date
+    follow_up_date: attendance.follow_up_date,
+    // Add a temporary protocol_number that will be overwritten by the database trigger
+    protocol_number: 'TEMP-' + Date.now()
   };
 
   const { data, error } = await supabase
