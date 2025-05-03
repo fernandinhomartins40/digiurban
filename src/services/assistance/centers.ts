@@ -32,6 +32,11 @@ export async function fetchCenterById(id: string): Promise<AssistanceCenter | nu
 }
 
 export async function createCenter(center: Partial<AssistanceCenter>): Promise<AssistanceCenter> {
+  // Make sure the type is either 'CRAS' or 'CREAS'
+  if (center.type && !['CRAS', 'CREAS'].includes(center.type)) {
+    throw new Error('Center type must be either "CRAS" or "CREAS"');
+  }
+
   const { data, error } = await supabase
     .from('assistance_centers')
     .insert(center)
@@ -47,6 +52,11 @@ export async function createCenter(center: Partial<AssistanceCenter>): Promise<A
 }
 
 export async function updateCenter(id: string, center: Partial<AssistanceCenter>): Promise<AssistanceCenter> {
+  // Make sure the type is either 'CRAS' or 'CREAS' if it's being updated
+  if (center.type && !['CRAS', 'CREAS'].includes(center.type)) {
+    throw new Error('Center type must be either "CRAS" or "CREAS"');
+  }
+  
   const { data, error } = await supabase
     .from('assistance_centers')
     .update(center)

@@ -67,7 +67,7 @@ export async function updateBenefit(id: string, benefit: Partial<EmergencyBenefi
 
 export async function updateBenefitStatus(
   id: string, 
-  status: 'pending' | 'approved' | 'rejected' | 'delivered',
+  status: BenefitStatus,
   comments?: string
 ): Promise<EmergencyBenefit> {
   const updates = { 
