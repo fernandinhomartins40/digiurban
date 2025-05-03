@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
-import { fetchBenefits, updateBenefitStatus } from '@/services/assistance';
+import { fetchBenefits, updateBenefitStatus, fetchBenefitById } from '@/services/assistance';
 import { EmergencyBenefit } from '@/types/assistance';
 
 export function useBenefits() {
@@ -10,14 +10,21 @@ export function useBenefits() {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
-  const [selectedBenefit, setSelectedBenefit] = useState<EmergencyBenefit | null>(null);
+  const [selectedBenefitId, setSelectedBenefitId] = useState<string | null>(null);
   const [showBenefitForm, setShowBenefitForm] = useState<boolean>(false);
   const [showBenefitDetail, setShowBenefitDetail] = useState<boolean>(false);
   
-  // Fetch benefits
-  const { data: benefits = [], isLoading, refetch } = useQuery({
+  // Fetch all benefits
+  const { data: benefits = [], isLoading: isBenefitsLoading, refetch: refetchBenefits } = useQuery({
     queryKey: ['emergency-benefits'],
     queryFn: fetchBenefits,
+  });
+  
+  // Fetch selected benefit details
+  const { data: selectedBenefit, isLoading: isSelectedBenefitLoading } = useQuery({
+    queryKey: ['emergency-benefit', selectedBenefitId],
+    queryFn: () => selectedBenefitId ? fetchBenefitById(selectedBenefitId) : null,
+    enabled: !!selectedBenefitId,
   });
   
   // Filter benefits
@@ -61,7 +68,7 @@ export function useBenefits() {
       });
       
       // Refresh benefits
-      refetch();
+      refetchBenefits();
       
       // Close detail dialog
       setShowBenefitDetail(false);
@@ -73,18 +80,20 @@ export function useBenefits() {
         variant: "destructive",
       });
     }
-  }, [refetch, toast]);
+  }, [refetchBenefits, toast]);
 
-  // Handle beneficiary actions
+  // Handle benefit actions
   const handleViewBenefit = useCallback((benefit: EmergencyBenefit) => {
-    setSelectedBenefit(benefit);
+    setSelectedBenefitId(benefit.id);
     setShowBenefitDetail(true);
   }, []);
 
   const handleAddBenefit = useCallback(() => {
-    setSelectedBenefit(null);
+    setSelectedBenefitId(null);
     setShowBenefitForm(true);
   }, []);
+
+  const isLoading = isBenefitsLoading || isSelectedBenefitLoading;
 
   return {
     activeTab,
@@ -104,6 +113,7 @@ export function useBenefits() {
     typeOptions,
     handleUpdateStatus,
     handleViewBenefit,
-    handleAddBenefit
+    handleAddBenefit,
+    refetchBenefits
   };
 }

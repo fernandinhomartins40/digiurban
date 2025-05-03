@@ -17,6 +17,7 @@ export default function BeneficiosPage() {
     setSearchTerm,
     filterType,
     setFilterType,
+    selectedBenefit,
     showBenefitForm,
     setShowBenefitForm,
     showBenefitDetail,
@@ -25,7 +26,8 @@ export default function BeneficiosPage() {
     filteredBenefits,
     typeOptions,
     handleViewBenefit,
-    handleAddBenefit
+    handleAddBenefit,
+    refetchBenefits
   } = useBenefits();
 
   return (
@@ -77,6 +79,8 @@ export default function BeneficiosPage() {
       <BenefitDetailDialog 
         open={showBenefitDetail} 
         onOpenChange={setShowBenefitDetail}
+        benefit={selectedBenefit}
+        onStatusUpdate={refetchBenefits}
       />
     </div>
   );
