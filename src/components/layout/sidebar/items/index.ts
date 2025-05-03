@@ -12,6 +12,14 @@ import { getAssistenciaItem } from "./AssistenciaItem";
 import { getObrasItem } from "./ObrasItem";
 import { getServicosItem } from "./ServicosItem";
 import { getMeioAmbienteItem } from "./MeioAmbienteItem";
+import { getAgriculturaItem } from "./AgriculturaItem";
+import { getEsportesItem } from "./EsportesItem";
+import { getCulturaItem } from "./CulturaItem";
+import { getTurismoItem } from "./TurismoItem";
+import { getHabitacaoItem } from "./HabitacaoItem";
+import { getSegurancaPublicaItem } from "./SegurancaPublicaItem";
+import { getTransporteItem } from "./TransporteItem";
+import { getOuvidoriaItem } from "./OuvidoriaItem";
 
 export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => [
   getDashboardItem(),
@@ -23,7 +31,15 @@ export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => 
   getEducacaoItem(),
   getSaudeItem(),
   getAssistenciaItem(),
+  getAgriculturaItem(),
+  getEsportesItem(),
+  getCulturaItem(),
+  getTurismoItem(),
+  getHabitacaoItem(),
+  getSegurancaPublicaItem(),
+  getTransporteItem(),
   getObrasItem(),
   getServicosItem(),
   getMeioAmbienteItem(),
+  getOuvidoriaItem(),
 ];

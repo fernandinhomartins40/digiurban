@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { VulnerableFamily, FamilyStatus } from '@/types/assistance';
 
@@ -59,7 +58,7 @@ export async function createFamily(family: Partial<VulnerableFamily>): Promise<V
 
   // Validate family_status if provided
   const validFamilyStatuses: FamilyStatus[] = [
-    'monitoring', 'stable', 'critical', 'improved', 'completed', 'active', 'inactive'
+    'monitoring', 'stable', 'critical', 'improved', 'completed'
   ];
   
   if (family.family_status && !validFamilyStatuses.includes(family.family_status)) {
@@ -99,7 +98,7 @@ export async function updateFamily(id: string, family: Partial<VulnerableFamily>
   // Validate family_status if provided
   if (family.family_status) {
     const validFamilyStatuses: FamilyStatus[] = [
-      'monitoring', 'stable', 'critical', 'improved', 'completed', 'active', 'inactive'
+      'monitoring', 'stable', 'critical', 'improved', 'completed'
     ];
     
     if (!validFamilyStatuses.includes(family.family_status)) {

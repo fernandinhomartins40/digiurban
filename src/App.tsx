@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext"; 
@@ -69,6 +68,16 @@ import ProgramasSociaisPage from "@/pages/admin/assistencia/programas/index";
 import CRASCREASPage from "@/pages/admin/assistencia/cras/index";
 import FamiliaVulneraveisPage from "@/pages/admin/assistencia/familias/index";
 
+// New Modules
+import AgriculturaIndex from "@/pages/admin/agricultura/index";
+import EsportesIndex from "@/pages/admin/esportes/index";
+import CulturaIndex from "@/pages/admin/cultura/index";
+import TurismoIndex from "@/pages/admin/turismo/index";
+import HabitacaoIndex from "@/pages/admin/habitacao/index";
+import SegurancaPublicaIndex from "@/pages/admin/seguranca/index";
+import TransporteIndex from "@/pages/admin/transporte/index";
+import OuvidoriaIndex from "@/pages/admin/ouvidoria/index";
+
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
 
@@ -79,7 +88,7 @@ function App() {
       <BrowserRouter>
         <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
           <AuthProvider>
-            <ChatProvider> {/* Add ChatProvider here to wrap all routes */}
+            <ChatProvider>
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
@@ -143,6 +152,31 @@ function App() {
                   <Route path="assistencia/programas" element={<ProgramasSociaisPage />} />
                   <Route path="assistencia/cras" element={<CRASCREASPage />} />
                   <Route path="assistencia/familias" element={<FamiliaVulneraveisPage />} />
+
+                  {/* New Module Routes */}
+                  {/* Agricultura */}
+                  <Route path="agricultura" element={<AgriculturaIndex />} />
+                  
+                  {/* Esportes */}
+                  <Route path="esportes" element={<EsportesIndex />} />
+                  
+                  {/* Cultura */}
+                  <Route path="cultura" element={<CulturaIndex />} />
+                  
+                  {/* Turismo */}
+                  <Route path="turismo" element={<TurismoIndex />} />
+                  
+                  {/* Habitação */}
+                  <Route path="habitacao" element={<HabitacaoIndex />} />
+                  
+                  {/* Segurança Pública */}
+                  <Route path="seguranca" element={<SegurancaPublicaIndex />} />
+                  
+                  {/* Transporte e Mobilidade */}
+                  <Route path="transporte" element={<TransporteIndex />} />
+                  
+                  {/* Ouvidoria Municipal */}
+                  <Route path="ouvidoria" element={<OuvidoriaIndex />} />
                 </Route>
 
                 {/* Citizen Routes */}
@@ -157,7 +191,7 @@ function App() {
               
               <Toaster />
               <NewChatPanel />
-            </ChatProvider> {/* Close ChatProvider */}
+            </ChatProvider>
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>
