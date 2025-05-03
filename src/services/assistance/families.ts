@@ -109,9 +109,25 @@ export async function updateFamily(id: string, family: Partial<VulnerableFamily>
     }
   }
   
+  // Create safe update object
+  const safeUpdate: Record<string, any> = {};
+  
+  // Only include defined fields
+  if (family.family_name !== undefined) safeUpdate.family_name = family.family_name;
+  if (family.reference_person_id !== undefined) safeUpdate.reference_person_id = family.reference_person_id;
+  if (family.reference_person_name !== undefined) safeUpdate.reference_person_name = family.reference_person_name;
+  if (family.responsible_id !== undefined) safeUpdate.responsible_id = family.responsible_id;
+  if (family.responsible_name !== undefined) safeUpdate.responsible_name = family.responsible_name;
+  if (family.address !== undefined) safeUpdate.address = family.address;
+  if (family.neighborhood !== undefined) safeUpdate.neighborhood = family.neighborhood;
+  if (family.city !== undefined) safeUpdate.city = family.city;
+  if (family.state !== undefined) safeUpdate.state = family.state;
+  if (family.vulnerability_criteria !== undefined) safeUpdate.vulnerability_criteria = family.vulnerability_criteria;
+  if (family.family_status !== undefined) safeUpdate.family_status = family.family_status;
+  
   const { data, error } = await supabase
     .from('vulnerable_families')
-    .update(family)
+    .update(safeUpdate)
     .eq('id', id)
     .select()
     .single();

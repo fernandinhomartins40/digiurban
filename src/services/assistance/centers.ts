@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { AssistanceCenter, SocialAttendance, AttendanceAttachment, AttendanceType } from '@/types/assistance';
 
@@ -145,8 +144,7 @@ export async function createAttendance(attendance: Partial<SocialAttendance>): P
   
   // Validate attendance_type is one of the allowed values
   const validAttendanceTypes: AttendanceType[] = [
-    'individual', 'family', 'group', 'other', 'reception', 
-    'qualified_listening', 'referral', 'guidance', 'follow_up'
+    'reception', 'qualified_listening', 'referral', 'guidance', 'follow_up', 'other'
   ];
   
   if (!validAttendanceTypes.includes(attendance.attendance_type)) {
@@ -188,8 +186,7 @@ export async function updateAttendance(id: string, attendance: Partial<SocialAtt
   // Validate attendance_type if provided
   if (attendance.attendance_type) {
     const validAttendanceTypes: AttendanceType[] = [
-      'individual', 'family', 'group', 'other', 'reception', 
-      'qualified_listening', 'referral', 'guidance', 'follow_up'
+      'reception', 'qualified_listening', 'referral', 'guidance', 'follow_up', 'other'
     ];
     
     if (!validAttendanceTypes.includes(attendance.attendance_type)) {
