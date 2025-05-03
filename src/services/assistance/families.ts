@@ -80,7 +80,7 @@ export async function createFamily(family: Partial<VulnerableFamily>): Promise<V
     city: family.city,
     state: family.state,
     vulnerability_criteria: family.vulnerability_criteria,
-    family_status: family.family_status || 'monitoring' as FamilyStatus
+    family_status: family.family_status || 'monitoring'
   };
 
   const { data, error } = await supabase
