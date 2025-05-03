@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { EmergencyBenefit, BenefitAttachment } from '@/types/assistance';
+import { EmergencyBenefit, BenefitAttachment, BenefitStatus } from '@/types/assistance';
 
 export async function fetchBenefits(): Promise<EmergencyBenefit[]> {
   const { data, error } = await supabase
