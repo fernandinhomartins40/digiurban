@@ -1,7 +1,7 @@
 
 export type BenefitStatus = 'pending' | 'approved' | 'rejected' | 'delivering' | 'delivered' | 'completed';
 export type AttendanceType = 'individual' | 'family' | 'group' | 'other' | 'reception' | 'qualified_listening' | 'referral' | 'guidance' | 'follow_up';
-export type FamilyStatus = 'monitoring' | 'active' | 'inactive';
+export type FamilyStatus = 'monitoring' | 'active' | 'inactive' | 'stable' | 'critical' | 'improved' | 'completed';
 
 export interface EmergencyBenefit {
   id: string;
@@ -63,7 +63,7 @@ export interface ProgramBeneficiary {
 export interface AssistanceCenter {
   id: string;
   name: string;
-  type: string; // Changed from "CRAS" | "CREAS" to string to match database
+  type: string; 
   address: string;
   neighborhood: string;
   city: string;

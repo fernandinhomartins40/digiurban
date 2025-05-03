@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { VulnerableFamily, FamilyMember, FamilyVisit, VisitAttachment, FamilyMonitoringPlan } from '@/types/assistance';
+import { VulnerableFamily, FamilyMember, FamilyVisit, VisitAttachment, FamilyMonitoringPlan, FamilyStatus } from '@/types/assistance';
 
 export async function fetchVulnerableFamilies(): Promise<VulnerableFamily[]> {
   const { data, error } = await supabase
@@ -37,9 +37,29 @@ export async function fetchFamilyById(id: string): Promise<VulnerableFamily | nu
 }
 
 export async function createFamily(family: Partial<VulnerableFamily>): Promise<VulnerableFamily> {
+  // Validate family_status is one of the allowed values
+  if (family.family_status && !Object.values(FamilyStatus).includes(family.family_status as FamilyStatus)) {
+    throw new Error('Invalid family status');
+  }
+  
+  // Create a safe family object
+  const safeFamily = {
+    family_name: family.family_name,
+    reference_person_id: family.reference_person_id,
+    reference_person_name: family.reference_person_name,
+    responsible_id: family.responsible_id,
+    responsible_name: family.responsible_name,
+    address: family.address,
+    neighborhood: family.neighborhood,
+    city: family.city,
+    state: family.state,
+    vulnerability_criteria: family.vulnerability_criteria,
+    family_status: family.family_status || 'monitoring'
+  } as any; // Using any to work around the TypeScript error temporarily
+
   const { data, error } = await supabase
     .from('vulnerable_families')
-    .insert(family)
+    .insert(safeFamily)
     .select()
     .single();
 
@@ -52,9 +72,14 @@ export async function createFamily(family: Partial<VulnerableFamily>): Promise<V
 }
 
 export async function updateFamily(id: string, family: Partial<VulnerableFamily>): Promise<VulnerableFamily> {
+  // Validate family_status is one of the allowed values
+  if (family.family_status && !Object.values(FamilyStatus).includes(family.family_status as FamilyStatus)) {
+    throw new Error('Invalid family status');
+  }
+  
   const { data, error } = await supabase
     .from('vulnerable_families')
-    .update(family)
+    .update(family as any) // Using any to work around the TypeScript error temporarily
     .eq('id', id)
     .select()
     .single();
