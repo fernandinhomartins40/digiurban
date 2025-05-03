@@ -1,42 +1,186 @@
 
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchIncidents } from "@/services/education";
+import { fetchIncidents, createIncident, updateIncident, updateIncidentStatus } from "@/services/education";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ClipboardList, Filter, Plus, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SchoolIncident } from "@/types/education";
 
 export default function OcorrenciasPage() {
-  const { data: incidents, isLoading } = useQuery({
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filterSchool, setFilterSchool] = useState<string>("");
+  const [filterType, setFilterType] = useState<string>("");
+  const [selectedIncident, setSelectedIncident] = useState<SchoolIncident | null>(null);
+  const [showIncidentForm, setShowIncidentForm] = useState<boolean>(false);
+  const [showIncidentDetail, setShowIncidentDetail] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+
+  // Fetch incidents
+  const { data: incidents, isLoading, refetch } = useQuery({
     queryKey: ['education-incidents'],
     queryFn: () => fetchIncidents(),
   });
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'high': return "bg-red-100 text-red-800";
-      case 'medium': return "bg-yellow-100 text-yellow-800";
-      case 'low': return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
+  // Filter incidents
+  const filteredIncidents = incidents?.filter(incident => {
+    // Filter by tab (status)
+    if (activeTab !== 'all' && incident.status !== activeTab) {
+      return false;
+    }
+    
+    // Filter by search term
+    if (searchTerm && !(
+      incident.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      incident.incident_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      incident.reported_by_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      incident.school_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    )) {
+      return false;
+    }
+    
+    // Filter by school
+    if (filterSchool && incident.school_id !== filterSchool) {
+      return false;
+    }
+    
+    // Filter by incident type
+    if (filterType && incident.incident_type !== filterType) {
+      return false;
+    }
+    
+    return true;
+  }) || [];
+
+  // Handle create or update incident
+  const handleSubmitIncident = async (data: any) => {
+    try {
+      if (isEditing && selectedIncident) {
+        await updateIncident(selectedIncident.id, data);
+        toast({
+          title: "Sucesso",
+          description: "Ocorrência atualizada com sucesso.",
+        });
+      } else {
+        await createIncident(data);
+        toast({
+          title: "Sucesso",
+          description: "Ocorrência registrada com sucesso.",
+        });
+      }
+      
+      // Refresh incidents
+      refetch();
+      
+      // Close form
+      setShowIncidentForm(false);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error handling incident:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a ocorrência.",
+        variant: "destructive",
+      });
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'open': return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'in_progress': return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'resolved': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      default: return <AlertCircle className="h-4 w-4" />;
+  // Handle update incident status
+  const handleUpdateStatus = async (incidentId: string, status: 'open' | 'in_progress' | 'resolved', resolution?: string) => {
+    try {
+      await updateIncidentStatus(incidentId, status, resolution);
+      toast({
+        title: "Sucesso",
+        description: "Status da ocorrência atualizado com sucesso.",
+      });
+      
+      // Refresh incidents
+      refetch();
+      
+      // Close detail dialog
+      setShowIncidentDetail(false);
+    } catch (error) {
+      console.error("Error updating incident status:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status da ocorrência.",
+        variant: "destructive",
+      });
     }
   };
 
-  const getStatusText = (status: string) => {
+  // Functions for handling incident actions
+  const handleViewIncident = (incident: SchoolIncident) => {
+    setSelectedIncident(incident);
+    setShowIncidentDetail(true);
+  };
+
+  const handleEditIncident = (incident: SchoolIncident) => {
+    setSelectedIncident(incident);
+    setIsEditing(true);
+    setShowIncidentForm(true);
+  };
+
+  const handleAddIncident = () => {
+    setSelectedIncident(null);
+    setIsEditing(false);
+    setShowIncidentForm(true);
+  };
+
+  // Get unique schools from incidents for filter options
+  const schoolOptions = incidents ? 
+    Array.from(new Set(incidents.map(incident => incident.school_id)))
+      .map(schoolId => {
+        const incident = incidents.find(inc => inc.school_id === schoolId);
+        return { id: schoolId, name: incident?.school_name || 'Desconhecido' };
+      }) : [];
+
+  // Get unique incident types for filter options
+  const typeOptions = incidents ? 
+    Array.from(new Set(incidents.map(incident => incident.incident_type))) : [];
+
+  // Helper function to get status label
+  const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'open': return "Aberta";
-      case 'in_progress': return "Em Andamento";
-      case 'resolved': return "Resolvida";
+      case 'open': return 'Aberta';
+      case 'in_progress': return 'Em andamento';
+      case 'resolved': return 'Resolvida';
       default: return status;
+    }
+  };
+
+  // Helper function to get status badge variant
+  const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case 'open': return "destructive";
+      case 'in_progress': return "secondary";
+      case 'resolved': return "default";
+      default: return "outline";
+    }
+  };
+
+  // Helper function to get type label
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'behavioral': return 'Comportamental';
+      case 'accident': return 'Acidente';
+      case 'infrastructure': return 'Infraestrutura';
+      case 'other': return 'Outro';
+      default: return type;
     }
   };
 
@@ -46,161 +190,158 @@ export default function OcorrenciasPage() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Ocorrências Escolares</h2>
           <p className="text-muted-foreground">
-            Registre e gerencie ocorrências nas unidades escolares
+            Gerenciamento de ocorrências nas escolas da rede municipal.
           </p>
         </div>
-        <Button className="flex items-center gap-2">
-          <ClipboardList className="h-4 w-4" />
+        <Button onClick={handleAddIncident} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
           <span>Nova Ocorrência</span>
         </Button>
       </div>
 
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Ocorrências Abertas</CardTitle>
-              <AlertCircle className="h-5 w-5 text-red-500" />
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="relative w-full md:w-auto flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar ocorrências..."
+            className="pl-8 w-full"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <Select value={filterSchool} onValueChange={setFilterSchool}>
+          <SelectTrigger className="w-full md:w-[180px]">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              <span>{filterSchool ? schoolOptions.find(s => s.id === filterSchool)?.name : "Filtrar escola"}</span>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {incidents?.filter(i => i.status === 'open').length || 0}
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todas as escolas</SelectItem>
+            {schoolOptions.map((school) => (
+              <SelectItem key={school.id} value={school.id}>{school.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterType} onValueChange={setFilterType}>
+          <SelectTrigger className="w-full md:w-[180px]">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              <span>{filterType ? getTypeLabel(filterType) : "Filtrar tipo"}</span>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Em Andamento</CardTitle>
-              <Clock className="h-5 w-5 text-yellow-500" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {incidents?.filter(i => i.status === 'in_progress').length || 0}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Resolvidas</CardTitle>
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {incidents?.filter(i => i.status === 'resolved').length || 0}
-            </div>
-          </CardContent>
-        </Card>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todos os tipos</SelectItem>
+            {typeOptions.map((type) => (
+              <SelectItem key={type} value={type}>{getTypeLabel(type)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <p>Carregando ocorrências...</p>
-        </div>
-      ) : incidents && incidents.length > 0 ? (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Lista de Ocorrências</CardTitle>
-            <CardDescription>
-              Todas as ocorrências registradas no sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4">Data</th>
-                    <th className="text-left py-3 px-4">Escola</th>
-                    <th className="text-left py-3 px-4">Tipo</th>
-                    <th className="text-left py-3 px-4">Descrição</th>
-                    <th className="text-left py-3 px-4">Gravidade</th>
-                    <th className="text-left py-3 px-4">Status</th>
-                    <th className="text-left py-3 px-4">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {incidents.map((incident) => (
-                    <tr key={incident.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4">{new Date(incident.date).toLocaleDateString('pt-BR')}</td>
-                      <td className="py-3 px-4">{incident.school_name}</td>
-                      <td className="py-3 px-4">{incident.incident_type}</td>
-                      <td className="py-3 px-4 max-w-xs truncate">{incident.description}</td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(incident.severity)}`}>
-                          {incident.severity === 'high' ? 'Alta' : incident.severity === 'medium' ? 'Média' : 'Baixa'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-1">
-                          {getStatusIcon(incident.status)}
-                          <span>{getStatusText(incident.status)}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Button variant="outline" size="sm">Ver detalhes</Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Ocorrências Escolares</CardTitle>
-            <CardDescription>
-              Ainda não há ocorrências registradas no sistema.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-4">
-              <p className="mb-4">Registre a primeira ocorrência para iniciar o acompanhamento.</p>
-              <Button>
-                <ClipboardList className="mr-2 h-4 w-4" />
-                Registrar Ocorrência
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-4 mb-4">
+          <TabsTrigger value="all">Todas</TabsTrigger>
+          <TabsTrigger value="open">Abertas</TabsTrigger>
+          <TabsTrigger value="in_progress">Em Andamento</TabsTrigger>
+          <TabsTrigger value="resolved">Resolvidas</TabsTrigger>
+        </TabsList>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Tipos de Ocorrências</CardTitle>
-          <CardDescription>
-            Categorias de ocorrências que podem ser registradas
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="p-4 border-2 hover:border-primary transition-colors">
-              <div className="font-medium mb-2">Comportamental</div>
-              <p className="text-sm text-muted-foreground">Ocorrências relacionadas ao comportamento dos alunos</p>
+        <TabsContent value={activeTab} className="mt-0">
+          {isLoading ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex justify-center py-8">
+                  <p>Carregando ocorrências...</p>
+                </div>
+              </CardContent>
             </Card>
-            <Card className="p-4 border-2 hover:border-primary transition-colors">
-              <div className="font-medium mb-2">Acidentes</div>
-              <p className="text-sm text-muted-foreground">Acidentes ocorridos dentro do ambiente escolar</p>
+          ) : filteredIncidents.length > 0 ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredIncidents.map((incident) => (
+                <Card key={incident.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleViewIncident(incident)}>
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-lg font-medium truncate">
+                        {incident.subject || "Ocorrência " + incident.id.substring(0, 8)}
+                      </CardTitle>
+                      <Badge variant={getStatusBadgeVariant(incident.status)}>
+                        {getStatusLabel(incident.status)}
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      {incident.school_name} - {new Date(incident.date).toLocaleDateString('pt-BR')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="font-medium">Tipo:</span> {getTypeLabel(incident.incident_type)}
+                      </div>
+                      <div>
+                        <span className="font-medium">Reportado por:</span> {incident.reported_by_name}
+                      </div>
+                      <div className="line-clamp-2">
+                        <span className="font-medium">Descrição:</span> {incident.description}
+                      </div>
+                      <div className="mt-4 flex justify-end">
+                        <Button variant="outline" size="sm" onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditIncident(incident);
+                        }}>
+                          Editar
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center py-6">
+                  <ClipboardList className="mx-auto h-10 w-10 text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-semibold">Nenhuma ocorrência encontrada</h3>
+                  <p className="text-muted-foreground mt-2">
+                    Não foram encontradas ocorrências com os filtros selecionados.
+                  </p>
+                </div>
+              </CardContent>
             </Card>
-            <Card className="p-4 border-2 hover:border-primary transition-colors">
-              <div className="font-medium mb-2">Infraestrutura</div>
-              <p className="text-sm text-muted-foreground">Problemas relacionados à estrutura física</p>
-            </Card>
-            <Card className="p-4 border-2 hover:border-primary transition-colors">
-              <div className="font-medium mb-2">Outros</div>
-              <p className="text-sm text-muted-foreground">Ocorrências que não se encaixam nas categorias anteriores</p>
-            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Placeholder components for the incident form dialog and detail dialog */}
+      <Dialog open={showIncidentForm} onOpenChange={setShowIncidentForm}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>{isEditing ? "Editar Ocorrência" : "Nova Ocorrência"}</DialogTitle>
+            <DialogDescription>
+              {isEditing
+                ? "Atualize os detalhes da ocorrência escolar."
+                : "Registre uma nova ocorrência escolar."}
+            </DialogDescription>
+          </DialogHeader>
+          {/* Here we would include the IncidentForm component */}
+          <div className="py-4">
+            <p className="text-center text-muted-foreground">Formulário de ocorrência será implementado aqui.</p>
           </div>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showIncidentDetail} onOpenChange={setShowIncidentDetail}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Detalhes da Ocorrência</DialogTitle>
+          </DialogHeader>
+          {/* Here we would include the IncidentDetail component */}
+          <div className="py-4">
+            <p className="text-center text-muted-foreground">Detalhes da ocorrência serão exibidos aqui.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

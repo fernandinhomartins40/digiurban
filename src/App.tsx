@@ -60,6 +60,8 @@ import AulasPage from "@/pages/admin/educacao/aulas/index";
 import DesempenhoPage from "@/pages/admin/educacao/desempenho/index";
 import CalendarioPage from "@/pages/admin/educacao/calendario/index";
 import ComunicacaoPage from "@/pages/admin/educacao/comunicacao/index";
+import MerendaPage from "@/pages/admin/educacao/merenda/index";
+import OcorrenciasPage from "@/pages/admin/educacao/ocorrencias/index";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -121,8 +123,8 @@ function App() {
                   <Route path="educacao/matricula" element={<MatriculaPage />} />
                   <Route path="educacao/transporte" element={<TransportePage />} />
                   <Route path="educacao/pessoas" element={<PessoasPage />} />
-                  <Route path="educacao/merenda" element={<EducacaoIndex />} />
-                  <Route path="educacao/ocorrencias" element={<EducacaoIndex />} />
+                  <Route path="educacao/merenda" element={<MerendaPage />} />
+                  <Route path="educacao/ocorrencias" element={<OcorrenciasPage />} />
                   
                   {/* Novas rotas para o módulo educacional */}
                   <Route path="educacao/aulas" element={<AulasPage />} />
