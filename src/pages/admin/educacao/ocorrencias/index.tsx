@@ -217,7 +217,8 @@ export default function OcorrenciasPage() {
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as escolas</SelectItem>
+            {/* FIX: Use a non-empty value for the "all" option */}
+            <SelectItem value="all">Todas as escolas</SelectItem>
             {schoolOptions.map((school) => (
               <SelectItem key={school.id} value={school.id}>{school.name}</SelectItem>
             ))}
@@ -231,7 +232,8 @@ export default function OcorrenciasPage() {
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os tipos</SelectItem>
+            {/* FIX: Use a non-empty value for the "all" option */}
+            <SelectItem value="all">Todos os tipos</SelectItem>
             {typeOptions.map((type) => (
               <SelectItem key={type} value={type}>{getTypeLabel(type)}</SelectItem>
             ))}

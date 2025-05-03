@@ -211,7 +211,8 @@ export default function MerendaPage() {
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as refeições</SelectItem>
+            {/* FIX: Replace empty string value with a non-empty value */}
+            <SelectItem value="all">Todas as refeições</SelectItem>
             <SelectItem value="breakfast">Café da manhã</SelectItem>
             <SelectItem value="lunch">Almoço</SelectItem>
             <SelectItem value="snack">Lanche</SelectItem>
