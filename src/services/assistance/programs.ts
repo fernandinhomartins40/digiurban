@@ -6,7 +6,7 @@ export async function fetchSocialPrograms(): Promise<SocialProgram[]> {
   const { data, error } = await supabase
     .from('social_programs')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('name');
 
   if (error) {
     console.error('Error fetching social programs:', error);
@@ -16,7 +16,7 @@ export async function fetchSocialPrograms(): Promise<SocialProgram[]> {
   return data || [];
 }
 
-export async function fetchProgramById(id: string): Promise<SocialProgram | null> {
+export async function fetchSocialProgramById(id: string): Promise<SocialProgram | null> {
   const { data, error } = await supabase
     .from('social_programs')
     .select('*')
@@ -31,10 +31,24 @@ export async function fetchProgramById(id: string): Promise<SocialProgram | null
   return data;
 }
 
-export async function createProgram(program: Partial<SocialProgram>): Promise<SocialProgram> {
+export async function createSocialProgram(program: Partial<SocialProgram>): Promise<SocialProgram> {
+  if (!program.name) {
+    throw new Error('Program name is required');
+  }
+  if (!program.scope) {
+    throw new Error('Program scope is required');
+  }
+
   const { data, error } = await supabase
     .from('social_programs')
-    .insert(program)
+    .insert({
+      name: program.name,
+      description: program.description,
+      scope: program.scope,
+      start_date: program.start_date,
+      end_date: program.end_date,
+      is_active: program.is_active ?? true
+    })
     .select()
     .single();
 
