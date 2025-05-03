@@ -1,5 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { AssistanceCenter, SocialAttendance, AttendanceAttachment } from '@/types/assistance';
+import { AssistanceCenter, SocialAttendance, AttendanceAttachment, AttendanceType } from '@/types/assistance';
 
 export async function fetchAssistanceCenters(): Promise<AssistanceCenter[]> {
   const { data, error } = await supabase
@@ -144,9 +145,26 @@ export async function fetchAttendanceById(id: string): Promise<SocialAttendance 
 }
 
 export async function createAttendance(attendance: Partial<SocialAttendance>): Promise<SocialAttendance> {
+  // Create a safe attendance object
+  const safeAttendance = {
+    protocol_number: attendance.protocol_number,
+    citizen_id: attendance.citizen_id,
+    citizen_name: attendance.citizen_name,
+    professional_id: attendance.professional_id,
+    professional_name: attendance.professional_name,
+    center_id: attendance.center_id,
+    center_name: attendance.center_name,
+    attendance_type: attendance.attendance_type,
+    attendance_date: attendance.attendance_date,
+    description: attendance.description,
+    referrals: attendance.referrals,
+    follow_up_required: attendance.follow_up_required,
+    follow_up_date: attendance.follow_up_date
+  };
+
   const { data, error } = await supabase
     .from('social_attendances')
-    .insert(attendance)
+    .insert(safeAttendance)
     .select()
     .single();
 
