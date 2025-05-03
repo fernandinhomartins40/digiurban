@@ -1,5 +1,4 @@
-
-export type BenefitStatus = 'pending' | 'approved' | 'rejected' | 'delivering' | 'delivered';
+export type BenefitStatus = 'pending' | 'approved' | 'rejected' | 'delivering' | 'delivered' | 'completed';
 export type AttendanceType = 'individual' | 'family' | 'group' | 'other';
 export type FamilyStatus = 'monitoring' | 'active' | 'inactive';
 

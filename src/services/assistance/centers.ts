@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { AssistanceCenter, SocialAttendance, AttendanceAttachment } from '@/types/assistance';
 
@@ -57,9 +56,23 @@ export async function createCenter(center: Partial<AssistanceCenter>): Promise<A
     throw new Error('Center type must be either "CRAS" or "CREAS"');
   }
 
+  // Create a safe center object with only the allowed fields
+  const safeCenter = {
+    name: center.name,
+    type: center.type,
+    address: center.address,
+    neighborhood: center.neighborhood,
+    city: center.city,
+    state: center.state,
+    phone: center.phone,
+    email: center.email,
+    coordinator_name: center.coordinator_name,
+    is_active: center.is_active !== undefined ? center.is_active : true
+  };
+
   const { data, error } = await supabase
     .from('assistance_centers')
-    .insert(center)
+    .insert(safeCenter)
     .select()
     .single();
 

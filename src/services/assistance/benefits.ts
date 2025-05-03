@@ -43,9 +43,21 @@ export async function createBenefit(benefit: Partial<EmergencyBenefit>): Promise
     throw new Error('Reason is required');
   }
 
+  // Create a safe benefit object with only the allowed fields
+  const safeBenefit = {
+    benefit_type: benefit.benefit_type,
+    reason: benefit.reason,
+    citizen_id: benefit.citizen_id,
+    citizen_name: benefit.citizen_name,
+    responsible_id: benefit.responsible_id,
+    responsible_name: benefit.responsible_name,
+    comments: benefit.comments,
+    status: benefit.status || 'pending',
+  };
+
   const { data, error } = await supabase
     .from('emergency_benefits')
-    .insert(benefit)
+    .insert(safeBenefit)
     .select()
     .single();
 
