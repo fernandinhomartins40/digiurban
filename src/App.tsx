@@ -16,7 +16,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { CitizenLayout } from "@/components/layout/CitizenLayout";
 
 import AdminDashboard from "@/pages/admin/Dashboard";
-import CitizenDashboard from "@/pages/citizen/Dashboard";
+import CitizenDashboard from "@/pages/admin/Dashboard";
 import UserManagement from "@/pages/admin/users/UserManagement";
 
 // Correio Interno (Internal Mail) Module
@@ -62,6 +62,12 @@ import CalendarioPage from "@/pages/admin/educacao/calendario/index";
 import ComunicacaoPage from "@/pages/admin/educacao/comunicacao/index";
 import MerendaPage from "@/pages/admin/educacao/merenda/index";
 import OcorrenciasPage from "@/pages/admin/educacao/ocorrencias/index";
+
+// Assistência Social Module
+import BeneficiosPage from "@/pages/admin/assistencia/beneficios/index";
+import ProgramasSociaisPage from "@/pages/admin/assistencia/programas/index";
+import CRASCREASPage from "@/pages/admin/assistencia/cras/index";
+import FamiliaVulneraveisPage from "@/pages/admin/assistencia/familias/index";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -131,6 +137,12 @@ function App() {
                   <Route path="educacao/desempenho" element={<DesempenhoPage />} />
                   <Route path="educacao/calendario" element={<CalendarioPage />} />
                   <Route path="educacao/comunicacao" element={<ComunicacaoPage />} />
+
+                  {/* Assistência Social Module Routes */}
+                  <Route path="assistencia/beneficios" element={<BeneficiosPage />} />
+                  <Route path="assistencia/programas" element={<ProgramasSociaisPage />} />
+                  <Route path="assistencia/cras" element={<CRASCREASPage />} />
+                  <Route path="assistencia/familias" element={<FamiliaVulneraveisPage />} />
                 </Route>
 
                 {/* Citizen Routes */}
