@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchBenefits, updateBenefitStatus } from '@/services/assistance';
@@ -59,7 +58,7 @@ export default function BeneficiosPage() {
   });
 
   // Handle update benefit status
-  const handleUpdateStatus = async (benefitId: string, status: 'pending' | 'approved' | 'rejected' | 'delivered', comments?: string) => {
+  const handleUpdateStatus = async (benefitId: string, status: 'pending' | 'approved' | 'rejected' | 'delivering' | 'completed', comments?: string) => {
     try {
       await updateBenefitStatus(benefitId, status, comments);
       toast({
@@ -96,7 +95,8 @@ export default function BeneficiosPage() {
       case 'pending': return "secondary";
       case 'approved': return "default";
       case 'rejected': return "destructive";
-      case 'delivered': return "outline";
+      case 'delivering': return "outline";
+      case 'completed': return "outline";
       default: return "outline";
     }
   };
@@ -107,7 +107,8 @@ export default function BeneficiosPage() {
       case 'pending': return 'Pendente';
       case 'approved': return 'Aprovado';
       case 'rejected': return 'Rejeitado';
-      case 'delivered': return 'Entregue';
+      case 'delivering': return 'Em Entrega';
+      case 'completed': return 'Concluído';
       default: return status;
     }
   };
@@ -170,7 +171,7 @@ export default function BeneficiosPage() {
           <TabsTrigger value="pending">Pendentes</TabsTrigger>
           <TabsTrigger value="approved">Aprovados</TabsTrigger>
           <TabsTrigger value="rejected">Rejeitados</TabsTrigger>
-          <TabsTrigger value="delivered">Entregues</TabsTrigger>
+          <TabsTrigger value="completed">Concluídos</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-0">

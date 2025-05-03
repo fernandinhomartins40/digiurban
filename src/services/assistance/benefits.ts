@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { EmergencyBenefit, BenefitAttachment, BenefitStatus } from '@/types/assistance';
 
@@ -113,8 +114,8 @@ export async function updateBenefitStatus(
     comments: comments || undefined
   };
   
-  // Add delivery_date when status is delivered
-  if (status === 'delivered') {
+  // Add delivery_date when status is completed
+  if (status === 'completed') {
     updates.delivery_date = new Date().toISOString();
   }
 
