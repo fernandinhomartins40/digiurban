@@ -96,11 +96,13 @@ export function MessageForm({ onSubmit, onCancel, initialData }: MessageFormProp
   async function onFormSubmit(values: MessageFormValues) {
     setIsLoading(true);
     try {
-      // Prepare submission data
+      // Prepare submission data and convert Date to string for scheduled_for
       const messageData = {
         ...values,
         sender_id: "current-user-id", // Would be replaced with actual user ID
         sender_name: "Usuário Atual", // Would be replaced with actual user name
+        // Convert the Date object to ISO string if it exists
+        scheduled_for: values.scheduled_for ? values.scheduled_for.toISOString() : undefined,
       } as Omit<ParentMessage, 'id' | 'created_at' | 'updated_at' | 'read_by'>;
 
       await onSubmit(messageData);

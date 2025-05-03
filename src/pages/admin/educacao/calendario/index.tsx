@@ -241,10 +241,10 @@ export default function CalendarioPage() {
       <div>
         <TabsContent value="monthly" className="mt-0">
           <MonthlyCalendarView
-            date={currentDate}
+            currentMonth={currentDate}
             events={events}
-            onSelectDate={handleDateSelect}
-            onSelectEvent={handleViewEvent}
+            onDateClick={handleDateSelect}
+            onEventClick={handleViewEvent}
           />
         </TabsContent>
 
