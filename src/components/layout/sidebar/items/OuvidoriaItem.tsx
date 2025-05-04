@@ -5,9 +5,9 @@ import { MessageSquare } from "lucide-react";
 
 export function getOuvidoriaItem(): SidebarItemProps {
   return {
-    icon: <MessageSquare size={20} />,
+    icon: <MessageSquare size={18} />,
     title: "Ouvidoria Municipal",
-    path: "/admin/ouvidoria",
+    moduleId: "ouvidoria",
     children: [
       {
         title: "Painel de Controle",
@@ -26,6 +26,5 @@ export function getOuvidoriaItem(): SidebarItemProps {
         path: "/admin/ouvidoria/atendimento",
       },
     ],
-    moduleId: "ouvidoria",
   };
 }

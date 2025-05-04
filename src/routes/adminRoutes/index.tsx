@@ -21,6 +21,7 @@ import { otherModulesRoutes } from "./otherModulesRoutes";
 import { obrasRoutes } from "./obrasRoutes";
 import { servicosRoutes } from "./servicosRoutes";
 import { meioAmbienteRoutes } from "./meioAmbienteRoutes";
+import { ouvidoriaRoutes } from "./ouvidoriaRoutes";
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -54,6 +55,7 @@ export const adminRoutes: RouteObject[] = [
       ...obrasRoutes,
       ...servicosRoutes,
       ...meioAmbienteRoutes,
+      ...ouvidoriaRoutes,
       ...otherModulesRoutes,
     ],
   },
