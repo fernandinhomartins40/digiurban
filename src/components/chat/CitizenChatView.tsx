@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Paperclip, X, Plus } from "lucide-react";
-import { useChat, ChatConversation } from "@/contexts/ChatContext";
+import { useChat, Conversation } from "@/contexts/ChatContext";
 import { cn } from "@/lib/utils";
 import { ConversationView } from "./ConversationView";
 import { EmptyState } from "./EmptyState";

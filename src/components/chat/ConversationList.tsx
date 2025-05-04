@@ -1,14 +1,14 @@
 
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChatConversation } from "@/contexts/ChatContext";
+import { Conversation } from "@/contexts/ChatContext";
 import { cn } from "@/lib/utils";
 import { User, Users } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface ConversationListProps {
-  conversations: ChatConversation[];
+  conversations: Conversation[];
   onSelect: (id: string) => void;
 }
 
