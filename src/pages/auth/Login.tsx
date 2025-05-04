@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,17 +8,27 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Building, Loader2, UserRound } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isAuthenticated, userType, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [activeUserType, setActiveUserType] = useState<"admin" | "citizen">("admin");
+  const [activeUserType, setActiveUserType] = useState<"admin" | "citizen">(
+    (location.state?.userType as "admin" | "citizen") || "admin"
+  );
   const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loginAttempted, setLoginAttempted] = useState(false);
+
+  // Set the initial tab based on location state
+  useEffect(() => {
+    if (location.state?.userType) {
+      setActiveUserType(location.state.userType);
+    }
+  }, [location.state]);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -82,10 +93,16 @@ export default function Login() {
           <p className="text-gray-600">Sistema Integrado de Gestão Municipal</p>
         </div>
 
-        <Tabs defaultValue="admin" onValueChange={(value) => setActiveUserType(value as "admin" | "citizen")}>
+        <Tabs value={activeUserType} onValueChange={(value) => setActiveUserType(value as "admin" | "citizen")}>
           <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="admin">Administração</TabsTrigger>
-            <TabsTrigger value="citizen">Cidadão</TabsTrigger>
+            <TabsTrigger value="admin" className="flex items-center gap-1">
+              <Building className="w-4 h-4" />
+              Administração
+            </TabsTrigger>
+            <TabsTrigger value="citizen" className="flex items-center gap-1">
+              <UserRound className="w-4 h-4" />
+              Cidadão
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="admin">
@@ -127,20 +144,20 @@ export default function Login() {
                     />
                   </div>
                   <div className="text-right">
-                    <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
+                    <Link to="/auth/esqueci-senha" className="text-sm text-primary hover:underline">
                       Esqueci minha senha
                     </Link>
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
                   {showLoading ? (
-                    <Button className="w-full" disabled>
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700" disabled>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Processando...
                     </Button>
                   ) : loginAttempted ? (
                     <div className="flex w-full space-x-2">
-                      <Button className="flex-1" type="submit">
+                      <Button className="flex-1 bg-blue-600 hover:bg-blue-700" type="submit">
                         Tentar novamente
                       </Button>
                       <Button variant="outline" className="flex-1" onClick={handleReset}>
@@ -148,7 +165,7 @@ export default function Login() {
                       </Button>
                     </div>
                   ) : (
-                    <Button className="w-full" type="submit">
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit">
                       Entrar
                     </Button>
                   )}
@@ -157,7 +174,7 @@ export default function Login() {
                     variant="outline"
                     className="w-full"
                     type="button"
-                    onClick={() => navigate("/admin-register")}
+                    onClick={() => navigate("/auth/admin-register")}
                     disabled={showLoading}
                   >
                     Criar conta de administrador
@@ -206,20 +223,20 @@ export default function Login() {
                     />
                   </div>
                   <div className="text-right">
-                    <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
+                    <Link to="/auth/esqueci-senha" className="text-sm text-primary hover:underline">
                       Esqueci minha senha
                     </Link>
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
                   {showLoading ? (
-                    <Button className="w-full" disabled>
+                    <Button className="w-full border-green-600 bg-green-600 hover:bg-green-700 text-white" disabled>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Processando...
                     </Button>
                   ) : loginAttempted ? (
                     <div className="flex w-full space-x-2">
-                      <Button className="flex-1" type="submit">
+                      <Button className="flex-1 border-green-600 bg-green-600 hover:bg-green-700 text-white" type="submit">
                         Tentar novamente
                       </Button>
                       <Button variant="outline" className="flex-1" onClick={handleReset}>
@@ -227,7 +244,7 @@ export default function Login() {
                       </Button>
                     </div>
                   ) : (
-                    <Button className="w-full" type="submit">
+                    <Button className="w-full border-green-600 bg-green-600 hover:bg-green-700 text-white" type="submit">
                       Entrar
                     </Button>
                   )}
@@ -236,7 +253,7 @@ export default function Login() {
                     variant="outline"
                     className="w-full"
                     type="button"
-                    onClick={() => navigate("/register")}
+                    onClick={() => navigate("/auth/register")}
                     disabled={showLoading}
                   >
                     Criar conta
@@ -246,6 +263,12 @@ export default function Login() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <div className="mt-8 text-center">
+          <Link to="/" className="text-sm text-primary hover:underline">
+            Voltar para página inicial
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ import {
   Phone,
   ShieldCheck,
   Users,
+  UserRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -156,9 +157,18 @@ const LandingPage: React.FC = () => {
             <a href="#usecases" className="hover:text-primary transition-colors">Casos de Uso</a>
             <a href="#security" className="hover:text-primary transition-colors">Segurança</a>
           </div>
-          <div>
-            <Button asChild size="sm" className="hidden md:inline-flex">
-              <Link to="/auth/login">Entrar</Link>
+          <div className="flex gap-3">
+            <Button asChild size="sm" className="hidden md:inline-flex" variant="default">
+              <Link to="/auth/login" state={{ userType: "admin" }}>
+                <Building className="w-4 h-4 mr-2" />
+                Área Administrativa
+              </Link>
+            </Button>
+            <Button asChild size="sm" className="hidden md:inline-flex" variant="outline">
+              <Link to="/auth/login" state={{ userType: "citizen" }}>
+                <UserRound className="w-4 h-4 mr-2" />
+                Portal do Cidadão
+              </Link>
             </Button>
             <Button size="sm" variant="outline" className="md:hidden">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
@@ -186,6 +196,25 @@ const LandingPage: React.FC = () => {
                   Conhecer Módulos
                 </Button>
               </div>
+              
+              <div className="flex flex-col gap-4 pt-6 pb-2 border-t border-border/30">
+                <p className="text-base font-medium">Acesse o Sistema:</p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button asChild size="lg" className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                    <Link to="/auth/login" state={{ userType: "admin" }}>
+                      <Building className="h-5 w-5" />
+                      Área Administrativa
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="gap-2 border-green-600 text-green-700 hover:bg-green-50">
+                    <Link to="/auth/login" state={{ userType: "citizen" }}>
+                      <UserRound className="h-5 w-5" />
+                      Portal do Cidadão
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+              
               <div className="flex items-center gap-4 pt-4">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map((i) => (
@@ -435,15 +464,33 @@ const LandingPage: React.FC = () => {
             Pronto para transformar a gestão da sua cidade?
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Agende uma demonstração personalizada e descubra como o DigiUrban pode ajudar sua prefeitura a se tornar mais eficiente e moderna.
+            Agende uma demonstração personalizada ou acesse o sistema para começar a usar agora.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
             <Button size="lg" className="gap-2">
               Agendar Demonstração <ArrowRight className="h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline">
               Falar com Especialista
             </Button>
+          </div>
+          
+          <div className="flex flex-col items-center mt-8 pt-8 border-t border-primary/20">
+            <p className="text-lg font-medium mb-4">Já possui acesso? Entre agora:</p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button asChild size="lg" className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                <Link to="/auth/login" state={{ userType: "admin" }}>
+                  <Building className="h-5 w-5" />
+                  Área Administrativa
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="gap-2 border-green-600 text-green-700 hover:bg-green-50">
+                <Link to="/auth/login" state={{ userType: "citizen" }}>
+                  <UserRound className="h-5 w-5" />
+                  Portal do Cidadão
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
