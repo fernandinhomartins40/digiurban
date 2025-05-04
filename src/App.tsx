@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext"; 
@@ -181,6 +180,9 @@ function App() {
                   
                   {/* Esportes */}
                   <Route path="esportes" element={<EsportesIndex />} />
+                  <Route path="esportes/competicoes" element={<CompeticoesPage />} />
+                  <Route path="esportes/equipes" element={<EquipesPage />} />
+                  <Route path="esportes/infraestrutura" element={<InfraestruturaPage />} />
                   
                   {/* Cultura */}
                   <Route path="cultura" element={<CulturaIndex />} />
