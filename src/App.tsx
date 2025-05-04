@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext"; 
@@ -81,8 +82,13 @@ import ProdutoresRuraisPage from "@/pages/admin/agricultura/produtores/index";
 import AssistenciaTecnicaPage from "@/pages/admin/agricultura/assistencia/index";
 import ProjetosRuraisPage from "@/pages/admin/agricultura/projetos/index";
 
-// New Modules
+// Esportes Module
 import EsportesIndex from "@/pages/admin/esportes/index";
+import CompeticoesPage from "@/pages/admin/esportes/competicoes/index";
+import EquipesPage from "@/pages/admin/esportes/equipes/index";
+import InfraestruturaPage from "@/pages/admin/esportes/infraestrutura/index";
+
+// New Modules
 import CulturaIndex from "@/pages/admin/cultura/index";
 import TurismoIndex from "@/pages/admin/turismo/index";
 import HabitacaoIndex from "@/pages/admin/habitacao/index";
@@ -224,3 +230,4 @@ function App() {
 }
 
 export default App;
+
