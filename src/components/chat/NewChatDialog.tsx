@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useChat, ChatContact } from "@/contexts/ChatContext";
+import { useChat, ChatContact, ChatType } from "@/contexts/ChatContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "@/hooks/use-toast";
@@ -112,8 +112,23 @@ export function NewChatDialog({
         return;
       }
 
-      // Create the conversation
+      // Determine chat type based on contact type
+      const contact = contacts.find(c => c.id === values.contactId);
+      if (!contact) {
+        toast({
+          title: "Erro",
+          description: "Contato não encontrado.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Determine chat type - if contact is citizen then type is internal, otherwise citizen
+      const chatType: ChatType = contact.type === "citizen" ? "internal" : "citizen";
+
+      // Create the conversation with the correct chat type
       const conversationId = await createConversation(
+        chatType,
         values.contactId,
         values.title || undefined,
         values.linkProtocol && values.protocolId ? [values.protocolId] : undefined
