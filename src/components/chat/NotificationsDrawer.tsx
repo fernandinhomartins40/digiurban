@@ -67,7 +67,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
                               size="icon"
                               variant="ghost"
                               className="h-6 w-6"
-                              onClick={() => markAllNotificationsAsRead([notification.id])}
+                              onClick={() => markAllNotificationsAsRead?.([notification.id])}
                               title="Marcar como lida"
                             >
                               <Check className="h-3.5 w-3.5" />
@@ -77,7 +77,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
                             size="icon"
                             variant="ghost"
                             className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                            onClick={() => deleteNotification(notification.id)}
+                            onClick={() => deleteNotification?.(notification.id)}
                             title="Excluir notificação"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -134,14 +134,14 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
               <Button
                 variant="ghost"
                 className="sm:flex-1"
-                onClick={() => markAllNotificationsAsRead(notifications.map(n => n.id))}
+                onClick={() => markAllNotificationsAsRead?.(notifications.map(n => n.id))}
               >
                 Marcar todas como lidas
               </Button>
               <Button 
                 variant="outline"
                 className="sm:flex-1"
-                onClick={clearAllNotifications}
+                onClick={() => clearAllNotifications?.()}
               >
                 Limpar todas
               </Button>

@@ -19,6 +19,7 @@ export interface CitizenRequest {
   protocol?: string;
   documents?: string[];
   comments?: Comment[];
+  target_department?: string;
 }
 
 export interface Comment {
@@ -51,7 +52,8 @@ const MOCK_REQUESTS = [
     departmentId: "dept-1",
     priority: "medium",
     protocol: "2025-000123",
-    target_department: "Secretaria de Educação"
+    target_department: "Secretaria de Educação",
+    comments: [] // Initialize empty comments array
   },
   {
     id: "2",
@@ -65,7 +67,8 @@ const MOCK_REQUESTS = [
     departmentId: "dept-2",
     priority: "high",
     protocol: "2025-000124",
-    target_department: "Secretaria de Saúde"
+    target_department: "Secretaria de Saúde",
+    comments: [] // Initialize empty comments array
   },
   {
     id: "3",
@@ -79,7 +82,8 @@ const MOCK_REQUESTS = [
     departmentId: "dept-3",
     priority: "low",
     protocol: "2025-000126",
-    target_department: "Secretaria de Infraestrutura"
+    target_department: "Secretaria de Infraestrutura",
+    comments: [] // Initialize empty comments array
   }
 ];
 
@@ -99,7 +103,7 @@ export async function fetchCitizenRequests(userId: string): Promise<CitizenReque
 
     // Using mock data for now
     const mockData = MOCK_REQUESTS.filter(req => req.userId === userId);
-    return mockData;
+    return mockData as CitizenRequest[];
   } catch (error) {
     console.error("Error in fetchCitizenRequests:", error);
     throw error;
@@ -125,7 +129,7 @@ export async function fetchCitizenRequestById(requestId: string): Promise<Citize
     if (!mockData) {
       throw new Error("Request not found");
     }
-    return mockData;
+    return mockData as CitizenRequest;
   } catch (error) {
     console.error("Error in fetchCitizenRequestById:", error);
     throw error;
@@ -149,7 +153,8 @@ export async function createCitizenRequest(
       userId: userId || "anonymous",
       departmentId: "dept-1", // Default department
       priority: request.priority,
-      protocol
+      protocol,
+      comments: [] // Initialize empty comments array
     };
 
     // In a real app, this would be sent to Supabase
@@ -240,7 +245,7 @@ export async function addCommentToCitizenRequest(
       MOCK_REQUESTS[requestIndex].comments = [];
     }
 
-    MOCK_REQUESTS[requestIndex].comments!.push(newComment);
+    MOCK_REQUESTS[requestIndex].comments.push(newComment);
     MOCK_REQUESTS[requestIndex].updatedAt = new Date().toISOString();
 
     return true;

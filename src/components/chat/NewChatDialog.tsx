@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useChat, ChatContact, ChatType } from "@/contexts/ChatContext";
+import { useChat, Contact } from "@/contexts/ChatContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "@/hooks/use-toast";
@@ -124,23 +124,22 @@ export function NewChatDialog({
       }
       
       // Determine chat type - if contact is citizen then type is internal, otherwise citizen
-      const chatType: ChatType = contact.type === "citizen" ? "internal" : "citizen";
+      const chatType = contact.type === "citizen" ? "internal" : "citizen";
 
-      // Create the conversation with the correct chat type
-      const conversationId = await createConversation(
-        chatType,
+      // Create the conversation
+      const newConversation = await createConversation(
         values.contactId,
-        values.title || undefined,
-        values.linkProtocol && values.protocolId ? [values.protocolId] : undefined
+        contact.name,
+        chatType
       );
       
       // If there's an initial message, send it
       if (values.message && values.message.trim()) {
-        await sendMessage(conversationId, values.message);
+        await sendMessage(newConversation.id, values.message);
       }
       
       // Set it as the active conversation
-      setActiveConversation(conversationId);
+      setActiveConversation(newConversation.id);
       
       // Close the dialog
       onOpenChange(false);
@@ -160,7 +159,7 @@ export function NewChatDialog({
     }
   }
 
-  const renderContactItem = (contact: ChatContact) => (
+  const renderContactItem = (contact: Contact) => (
     <div 
       key={contact.id}
       className="flex items-center p-2 rounded-md cursor-pointer hover:bg-muted"

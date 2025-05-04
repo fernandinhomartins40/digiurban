@@ -48,6 +48,9 @@ export interface Conversation {
   tags?: string[];
 }
 
+// Export the type alias for components to use
+export type ChatType = 'citizen' | 'admin' | 'internal';
+
 // Define the contact interface
 export interface Contact {
   id: string;
@@ -56,6 +59,19 @@ export interface Contact {
   status: 'online' | 'offline' | 'away';
   departmentName?: string;
   favorite?: boolean;
+}
+
+// Export the type alias for components to use
+export type ChatContact = Contact;
+
+// Define notification interface
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  conversationId?: string;
 }
 
 // Define the chat settings interface
@@ -81,6 +97,7 @@ interface ChatContextType {
   contacts: Contact[];
   chatSettings: ChatSettings;
   loading: boolean;
+  notifications?: Notification[];
   sendMessage: (conversationId: string, text: string, attachments?: any[], replyToId?: string) => Promise<void>;
   selectConversation: (id: string) => void;
   setActiveConversation: (id: string | null) => void;
@@ -90,6 +107,9 @@ interface ChatContextType {
   addTagToConversation: (id: string, tag: string) => Promise<void>;
   updateChatSettings: (settings: ChatSettings) => void;
   addProtocolToConversation?: (conversationId: string, protocolId: string) => Promise<void>;
+  markAllNotificationsAsRead?: (notificationIds: string[]) => void;
+  deleteNotification?: (id: string) => void;
+  clearAllNotifications?: () => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -115,6 +135,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<{ [key: string]: Message[] }>({});
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [chatSettings, setChatSettings] = useState<ChatSettings>(defaultChatSettings);
   const [loading, setLoading] = useState(false);
 
@@ -179,8 +200,22 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           }
         ]);
       }
+
+      // Initialize mock notifications
+      if (notifications.length === 0) {
+        setNotifications([
+          {
+            id: uuidv4(),
+            title: "Nova mensagem",
+            message: "Você recebeu uma nova mensagem do suporte técnico",
+            timestamp: new Date().toISOString(),
+            read: false,
+            conversationId: conversations[0]?.id
+          }
+        ]);
+      }
     }
-  }, [user, conversations.length, contacts.length]);
+  }, [user, conversations.length, contacts.length, notifications.length]);
 
   const setActiveConversation = (id: string | null) => {
     setActiveConversationId(id);
@@ -231,7 +266,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       const newMessage: Message = {
         id: uuidv4(),
         text,
-        sender: user?.userType === 'admin' ? 'admin' : 'citizen',
+        sender: isAdminUser(user) ? 'admin' : 'citizen',
         senderId: user?.id,
         senderName: user?.name || 'User',
         timestamp: new Date().toISOString(),
@@ -259,7 +294,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       }));
 
       // Simulate response for demo purposes
-      if (user?.userType !== 'admin') {
+      if (!isAdminUser(user)) {
         setTimeout(() => {
           const responseMessage: Message = {
             id: uuidv4(),
@@ -357,6 +392,30 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setChatSettings(settings);
   };
 
+  // Notification handling functions
+  const markAllNotificationsAsRead = (notificationIds: string[]) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notificationIds.includes(notification.id) 
+          ? { ...notification, read: true } 
+          : notification
+      )
+    );
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+  };
+
+  // Helper function to check if a user is an admin
+  function isAdminUser(user: any) {
+    return user?.role === 'admin' || user?.role === 'prefeito';
+  }
+
   return (
     <ChatContext.Provider 
       value={{
@@ -367,6 +426,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         contacts,
         chatSettings,
         loading,
+        notifications,
         sendMessage,
         selectConversation,
         setActiveConversation,
@@ -375,7 +435,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         loadMoreMessages,
         addTagToConversation,
         updateChatSettings,
-        addProtocolToConversation
+        addProtocolToConversation,
+        markAllNotificationsAsRead,
+        deleteNotification,
+        clearAllNotifications
       }}
     >
       {children}
@@ -389,4 +452,9 @@ export function useChat() {
     throw new Error('useChat must be used within a ChatProvider');
   }
   return context;
+}
+
+// Helper function to check if user is admin, exported for use in other components
+function isAdminUser(user: any): boolean {
+  return user?.role === 'admin' || user?.role === 'prefeito';
 }
