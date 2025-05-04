@@ -458,7 +458,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // New settings state
   const [chatSettings, setChatSettings] = useState<ChatSettingsType>(DEFAULT_CHAT_SETTINGS);
   
-  // New state for controlling UI components
+  // New state for controlling UI components - we're only keeping track of state, not rendering components
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -907,18 +907,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       openChatSettings
     }}>
       {children}
-      {isNotificationsOpen && (
-        <NotificationsDrawer
-          open={isNotificationsOpen}
-          onOpenChange={setIsNotificationsOpen}
-        />
-      )}
-      {isSettingsOpen && (
-        <ChatSettingsSheet
-          open={isSettingsOpen}
-          onOpenChange={setIsSettingsOpen}
-        />
-      )}
     </ChatContext.Provider>
   );
 };
