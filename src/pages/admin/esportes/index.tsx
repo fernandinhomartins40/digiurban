@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EsportesLayout } from "./components/EsportesLayout";
-import { Football, Users, Building } from "lucide-react";
+import { Dumbbell, Users, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -11,7 +11,7 @@ export default function EsportesIndex() {
     {
       title: "Competições",
       description: "Gestão de competições esportivas municipais.",
-      icon: <Football className="h-12 w-12 text-primary/70" />,
+      icon: <Dumbbell className="h-12 w-12 text-primary/70" />,
       path: "/admin/esportes/competicoes"
     },
     {
