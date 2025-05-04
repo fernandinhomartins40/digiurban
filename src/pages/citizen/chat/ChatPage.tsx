@@ -1,270 +1,168 @@
-import React, { useState, useEffect } from "react";
-import { useChat } from "@/contexts/ChatContext";
+
+import React, { useState, useEffect, useRef } from "react";
+import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, ArrowLeft, Search, Filter, Bell, Settings } from "lucide-react";
-import { ChatContactList } from "@/components/chat/ChatContactList";
-import { ChatConversationList } from "@/components/chat/ChatConversationList";
-import { ConversationDetail } from "@/components/chat/ConversationDetail";
-import { ChatSearch } from "@/components/chat/ChatSearch";
-import { ChatFilters } from "@/components/chat/ChatFilters";
-import { NewChatDialog } from "@/components/chat/NewChatDialog";
-import { EmptyState } from "@/components/chat/EmptyState";
-import { Badge } from "@/components/ui/badge";
-import { NotificationsSheet } from "@/components/chat/NotificationsSheet";
-import { ChatSettingsSheet } from "@/components/chat/ChatSettingsSheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { SendHorizontal, Loader2, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { useChat } from "@/contexts/ChatContext";
 
 export default function CitizenChatPage() {
-  const { 
-    conversations, 
-    activeConversationId, 
-    activeContactId,
-    setActiveConversation,
-    setActiveContact,
-    loading,
-    contacts,
-    unreadCount,
-    viewNotifications,
-    openChatSettings
-  } = useChat();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Use the chat context
+  const { conversations, activeConversation, sendMessage, selectConversation } = useChat();
+
+  // Filter only citizen conversations
+  const citizenConversations = conversations.filter(conv => conv.type === "citizen");
   
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "closed">("all");
-  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
-  const [isMobileView, setIsMobileView] = useState(false);
-  const [showNotificationsDrawer, setShowNotificationsDrawer] = useState(false);
-  const [showSettingsSheet, setShowSettingsSheet] = useState(false);
-  
-  // Check for mobile view on mount and window resize
+  // Find or create a default conversation for the user
   useEffect(() => {
-    const checkMobileView = () => {
-      setIsMobileView(window.innerWidth < 768);
-    };
-    
-    checkMobileView();
-    window.addEventListener('resize', checkMobileView);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobileView);
-    };
-  }, []);
-  
-  // Handle back navigation in mobile view
-  const handleBackFromConversation = () => {
-    setActiveConversation(null);
-  };
-
-  const handleBackFromContact = () => {
-    setActiveContact(null);
-  };
-  
-  const handleOpenNotifications = () => {
-    setShowNotificationsDrawer(true);
-    viewNotifications(); // Mark as viewed in context
-  };
-  
-  const handleOpenSettings = () => {
-    setShowSettingsSheet(true);
-    openChatSettings(); // Open settings in context
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+    const userConversation = citizenConversations.find(
+      conv => conv.participantId === user?.id
     );
-  }
+    
+    if (userConversation && !activeConversation) {
+      selectConversation(userConversation.id);
+    }
+  }, [citizenConversations, activeConversation, user?.id, selectConversation]);
 
-  // Filter conversations - citizens only see their own conversations
-  const citizenConversations = conversations
-    .filter(conv => conv.type === "citizen")
-    .filter(conv => statusFilter === "all" || conv.status === statusFilter)
-    .filter(conv => 
-      searchQuery === "" || 
-      conv.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (conv.protocolIds && conv.protocolIds.some(id => id.toLowerCase().includes(searchQuery.toLowerCase())))
-    );
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeConversation]);
 
-  // Filter available contacts - citizens only see departments
-  const availableContacts = contacts.filter(contact => contact.type === "department");
+  const handleSendMessage = async () => {
+    if (!message.trim()) return;
+    if (!activeConversation) {
+      toast({
+        title: "Erro ao enviar mensagem",
+        description: "Não foi possível identificar a conversa ativa.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await sendMessage(activeConversation, message, "citizen");
+      setMessage("");
+    } catch (error) {
+      toast({
+        title: "Erro ao enviar mensagem",
+        description: "Não foi possível enviar sua mensagem. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatMessageTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Chat</h1>
-          <p className="text-sm text-muted-foreground">
-            Acompanhe suas solicitações e conversas com a prefeitura
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            title="Configurações"
-            onClick={handleOpenSettings}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
-          <div className="relative">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              title="Notificações"
-              onClick={handleOpenNotifications}
-            >
-              <Bell className="h-4 w-4" />
-              {unreadCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 h-4 w-4 text-[10px] flex items-center justify-center p-0 rounded-full"
-                >
-                  {unreadCount}
-                </Badge>
-              )}
-            </Button>
-          </div>
-          <Button onClick={() => setShowNewChatDialog(true)}>
-            Iniciar conversa
-          </Button>
-        </div>
-      </div>
+    <div className="container mx-auto py-6 space-y-6">
+      <Heading 
+        title="Chat de Atendimento" 
+        description="Converse com nossos atendentes para tirar dúvidas"
+      />
+      
+      <Separator />
 
-      <div className="border rounded-lg flex-1 overflow-hidden">
-        {/* Two/Three-column layout */}
-        <div className={`h-full grid ${
-          isMobileView 
-            ? "grid-cols-1" 
-            : activeConversationId 
-              ? "grid-cols-[250px_1fr]" 
-              : activeContactId
-                ? "grid-cols-[250px_1fr]"
-                : "grid-cols-[1fr]"
-        }`}>
-          {/* Column 1: Contacts (Hidden in mobile when conversation is active) */}
-          {(!isMobileView || (!activeContactId && !activeConversationId)) && (
-            <div className="h-full flex flex-col">
-              <div className="p-3 border-b">
-                <h3 className="font-medium text-sm mb-2">Secretarias e Departamentos</h3>
-                <ChatSearch 
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  placeholder="Buscar departamentos..."
-                />
-              </div>
-              
-              <ScrollArea className="flex-1 p-2">
-                {availableContacts.length > 0 ? (
-                  <ChatContactList 
-                    type="department"
-                    searchQuery={searchQuery}
-                    onSelectContact={setActiveContact}
-                    activeContactId={activeContactId}
-                  />
-                ) : (
-                  <EmptyState
-                    title="Nenhum departamento disponível"
-                    description="Não há departamentos disponíveis no momento."
-                    icon={<MessageCircle className="h-6 w-6 text-primary" />}
-                  />
-                )}
-              </ScrollArea>
+      <Card className="h-[calc(100vh-13rem)] flex flex-col">
+        <CardContent className="p-0 flex flex-col h-full">
+          <div className="bg-muted/50 p-4 border-b flex items-center space-x-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src="/support-avatar.png" alt="Suporte" />
+              <AvatarFallback className="bg-primary/10 text-primary">SP</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-medium">Atendimento ao Cidadão</p>
+              <p className="text-xs text-muted-foreground">Online - Resposta em até 24h</p>
             </div>
-          )}
-          
-          {/* Column 2: Conversations with selected contact (Hidden in mobile when no contact is selected or conversation is active) */}
-          {(!isMobileView && activeContactId && !activeConversationId) || (isMobileView && activeContactId && !activeConversationId) ? (
-            <div className="h-full flex flex-col border-l">
-              <div className="p-3 border-b flex items-center">
-                {isMobileView && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="mr-2" 
-                    onClick={handleBackFromContact}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                )}
-                <div className="flex-1">
-                  <h3 className="font-medium">
-                    {contacts.find(c => c.id === activeContactId)?.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {contacts.find(c => c.id === activeContactId)?.description}
+          </div>
+
+          <div className="flex-grow p-4 overflow-y-auto space-y-4">
+            {activeConversation ? (
+              activeConversation.messages.length > 0 ? (
+                <>
+                  {activeConversation.messages.map((msg, i) => (
+                    <div 
+                      key={i}
+                      className={`flex ${msg.sender === "citizen" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div 
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          msg.sender === "citizen" 
+                            ? "bg-primary text-primary-foreground" 
+                            : "bg-muted"
+                        }`}
+                      >
+                        <p className="text-sm">{msg.text}</p>
+                        <p className={`text-xs mt-1 ${
+                          msg.sender === "citizen" 
+                            ? "text-primary-foreground/70" 
+                            : "text-muted-foreground"
+                        }`}>
+                          {formatMessageTime(msg.timestamp)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </>
+              ) : (
+                <div className="h-full flex items-center justify-center flex-col">
+                  <div className="bg-primary/10 p-4 rounded-full mb-4">
+                    <User size={32} className="text-primary" />
+                  </div>
+                  <p className="text-xl font-medium mb-2">Bem-vindo ao Atendimento</p>
+                  <p className="text-center text-muted-foreground max-w-md">
+                    Envie sua primeira mensagem para iniciar uma conversa com nossa equipe de atendimento.
                   </p>
                 </div>
-                <Button 
-                  size="sm" 
-                  onClick={() => setShowNewChatDialog(true)}
-                  title="Iniciar nova conversa"
-                >
-                  Iniciar conversa
-                </Button>
+              )
+            ) : (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-              
-              <div className="p-3 border-b">
-                <ChatFilters
-                  statusFilter={statusFilter}
-                  setStatusFilter={setStatusFilter}
-                />
-              </div>
-              
-              <ScrollArea className="flex-1">
-                <div className="p-3">
-                  <ChatConversationList
-                    contactId={activeContactId}
-                    statusFilter={statusFilter}
-                    searchQuery=""
-                    onSelectConversation={setActiveConversation}
-                  />
-                </div>
-              </ScrollArea>
-            </div>
-          ) : null}
-          
-          {/* Column 3: Active Conversation or Empty state */}
-          {(!isMobileView || activeConversationId) ? (
-            activeConversationId ? (
-              <div className="h-full bg-background border-l">
-                <ConversationDetail
-                  onBack={isMobileView ? handleBackFromConversation : undefined}
-                />
-              </div>
-            ) : !activeContactId ? (
-              <div className="h-full flex items-center justify-center flex-col p-4">
-                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <MessageCircle className="h-10 w-10 text-primary opacity-80" />
-                </div>
-                <h3 className="text-xl font-medium mb-2">Bem-vindo ao Chat</h3>
-                <p className="text-center text-muted-foreground mb-6 max-w-md">
-                  Selecione um departamento para ver suas conversas ou inicie uma nova conversa.
-                </p>
-                <Button onClick={() => setShowNewChatDialog(true)}>
-                  Iniciar uma conversa
-                </Button>
-              </div>
-            ) : null
-          ) : null}
-        </div>
-      </div>
+            )}
+          </div>
 
-      <NewChatDialog
-        open={showNewChatDialog}
-        onOpenChange={setShowNewChatDialog}
-        initialContactId={activeContactId}
-      />
-      
-      <NotificationsSheet 
-        open={showNotificationsDrawer}
-        onOpenChange={setShowNotificationsDrawer}
-      />
-      
-      <ChatSettingsSheet
-        open={showSettingsSheet}
-        onOpenChange={setShowSettingsSheet}
-      />
+          <div className="border-t p-4">
+            <div className="flex space-x-2">
+              <Input
+                placeholder="Digite sua mensagem..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                disabled={loading || !activeConversation}
+              />
+              <Button 
+                onClick={handleSendMessage} 
+                disabled={!message.trim() || loading || !activeConversation}
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <SendHorizontal className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
