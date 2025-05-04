@@ -1,57 +1,67 @@
 
-import React from 'react';
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
-import { CalendarDays, Clock } from "lucide-react";
-import { EmergencyBenefit } from "@/types/assistance";
+import React from "react";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BenefitStatusBadge } from "./BenefitStatusBadge";
+import { Eye, Calendar } from "lucide-react";
+import { Benefit } from "../hooks/useBenefits";
 
 interface BenefitCardProps {
-  benefit: EmergencyBenefit;
-  onClick: () => void;
+  benefit: Benefit;
 }
 
-export function BenefitCard({ benefit, onClick }: BenefitCardProps) {
-  // Helper function to format dates
+export function BenefitCard({ benefit }: BenefitCardProps) {
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('pt-BR').format(date);
   };
-  
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
   return (
-    <Card
-      className="hover:shadow-md transition-shadow cursor-pointer"
-      onClick={onClick}
-    >
+    <Card>
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-medium">
-            {benefit.benefit_type || "Benefício Emergencial"}
-          </CardTitle>
+        <div className="flex justify-between items-start">
           <BenefitStatusBadge status={benefit.status} />
+          <span className="text-sm text-muted-foreground flex items-center">
+            <Calendar className="h-3 w-3 mr-1" />
+            {formatDate(benefit.lastUpdate)}
+          </span>
         </div>
-        <CardDescription className="flex items-center gap-1">
-          <span className="font-medium">{benefit.protocol_number}</span>
-        </CardDescription>
+        <h3 className="text-lg font-semibold mt-2">{benefit.category}</h3>
+        <p className="text-sm text-muted-foreground truncate">
+          {benefit.beneficiaryName}
+        </p>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <div>
-            <span className="font-medium">Cidadão:</span> {benefit.citizen_name || 'Não especificado'}
+      <CardContent className="pb-2">
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">CPF:</span>
+            <span>{benefit.beneficiaryCpf}</span>
           </div>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <CalendarDays className="h-3.5 w-3.5" />
-            <span>Solicitado em: {formatDate(benefit.request_date)}</span>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Valor:</span>
+            <span>{formatCurrency(benefit.value)}</span>
           </div>
-          {benefit.delivery_date && (
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Clock className="h-3.5 w-3.5" />
-              <span>Entregue em: {formatDate(benefit.delivery_date)}</span>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Início:</span>
+            <span>{formatDate(benefit.startDate)}</span>
+          </div>
+          {benefit.endDate && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Término:</span>
+              <span>{formatDate(benefit.endDate)}</span>
             </div>
           )}
-          <div className="line-clamp-2">
-            <span className="font-medium">Motivo:</span> {benefit.reason}
-          </div>
         </div>
       </CardContent>
+      <CardFooter>
+        <Button variant="outline" className="w-full" size="sm">
+          <Eye className="h-4 w-4 mr-2" /> Ver Detalhes
+        </Button>
+      </CardFooter>
     </Card>
   );
 }

@@ -1,53 +1,40 @@
 
-import React from 'react';
-import { EmergencyBenefit } from '@/types/assistance';
-import { BenefitCard } from './BenefitCard';
-import { Card, CardContent } from '@/components/ui/card';
-import { Package2 } from 'lucide-react';
+// Update BenefitsGrid to accept Benefit type instead of EmergencyBenefit
+import React from "react";
+import { BenefitCard } from "./BenefitCard";
+import { Card, CardContent } from "@/components/ui/card";
+import { Benefit } from "../hooks/useBenefits";
 
 interface BenefitsGridProps {
-  benefits: EmergencyBenefit[];
+  benefits: Benefit[];
   isLoading: boolean;
-  onBenefitClick: (benefit: EmergencyBenefit) => void;
 }
 
-export function BenefitsGrid({ benefits, isLoading, onBenefitClick }: BenefitsGridProps) {
+export function BenefitsGrid({ benefits, isLoading }: BenefitsGridProps) {
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex justify-center py-8">
-            <p>Carregando benefícios...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Card key={i} className="h-[300px] animate-pulse bg-muted/30"></Card>
+        ))}
+      </div>
     );
   }
 
   if (benefits.length === 0) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-6">
-            <Package2 className="mx-auto h-10 w-10 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-semibold">Nenhum benefício encontrado</h3>
-            <p className="text-muted-foreground mt-2">
-              Não foram encontrados benefícios com os filtros selecionados.
-            </p>
-          </div>
+      <Card className="w-full">
+        <CardContent className="flex flex-col items-center justify-center p-6">
+          <p className="text-muted-foreground">Nenhum benefício encontrado.</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {benefits.map((benefit) => (
-        <BenefitCard
-          key={benefit.id}
-          benefit={benefit}
-          onClick={() => onBenefitClick(benefit)}
-        />
+        <BenefitCard key={benefit.id} benefit={benefit} />
       ))}
     </div>
   );

@@ -1,10 +1,20 @@
 
-import React from "react";
+import React, { ReactNode } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { Heading } from "@/components/ui/heading";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export function AgriculturaLayout({ title = "Agricultura", description = "Gestão de atividades agrícolas do município" }) {
+interface AgriculturaLayoutProps {
+  title?: string;
+  description?: string;
+  children?: ReactNode;
+}
+
+export function AgriculturaLayout({ 
+  title = "Agricultura", 
+  description = "Gestão de atividades agrícolas do município",
+  children
+}: AgriculturaLayoutProps) {
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -36,7 +46,7 @@ export function AgriculturaLayout({ title = "Agricultura", description = "Gestã
         </Tabs>
       </div>
 
-      <Outlet />
+      {children || <Outlet />}
     </div>
   );
 }

@@ -13,8 +13,6 @@ export type Benefit = {
   lastUpdate: string;
 };
 
-export type EmergencyBenefit = Benefit;
-
 export function useBenefits() {
   const [benefits, setBenefits] = useState<Benefit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
