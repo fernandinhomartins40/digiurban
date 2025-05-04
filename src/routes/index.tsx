@@ -1,30 +1,35 @@
 
-import { RouteObject } from "react-router-dom";
+import { lazy } from "react";
 import { Navigate } from "react-router-dom";
-import { authRoutes } from "./authRoutes";
-import { adminRoutes } from "./adminRoutes";
-import { citizenRoutes } from "./citizenRoutes";
+import { RouteObject } from "react-router-dom";
+import adminRoutes from "./adminRoutes";
+import authRoutes from "./authRoutes";
+import citizenRoutes from "./citizenRoutes";
+import LandingPage from "@/pages/Landing";
 
-// Combine all routes
+// Components
+const NotFound = lazy(() => import("@/pages/NotFound"));
+
 export const appRoutes: RouteObject[] = [
-  // Root redirect
   {
     path: "/",
-    element: <Navigate to="/login" replace />,
+    element: <LandingPage />,
+    index: true,
   },
-  
-  // Auth routes (login, register, etc.)
-  ...authRoutes,
-  
-  // Admin routes
-  ...adminRoutes,
-  
-  // Citizen routes
-  ...citizenRoutes,
-  
-  // Catch-all route for 404
+  {
+    path: "admin/*",
+    children: adminRoutes,
+  },
+  {
+    path: "auth/*",
+    children: authRoutes,
+  },
+  {
+    path: "citizen/*",
+    children: citizenRoutes,
+  },
   {
     path: "*",
-    element: <Navigate to="/" replace />,
-  }
+    element: <NotFound />,
+  },
 ];
