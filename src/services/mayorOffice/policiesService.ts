@@ -31,7 +31,8 @@ export async function getPublicPolicies(status?: PolicyStatus): Promise<Policy[]
         endDate: policy.end_date ? new Date(policy.end_date) : undefined,
         status: policy.status as PolicyStatus,
         responsibleId: policy.responsible_id,
-        responsibleName: policy.responsible_name || policy.responsible_id,
+        // Use responsible_id if responsible_name is missing
+        responsibleName: policy.responsible_id, 
         department: policy.department,
         createdBy: policy.created_by,
         createdAt: new Date(policy.created_at),
@@ -68,9 +69,10 @@ export async function getPublicPolicies(status?: PolicyStatus): Promise<Policy[]
         responsible: publicPolicy.responsibleName,
         progress: progress,
         updatedAt: publicPolicy.updatedAt.toISOString(),
-        code: policy.code || undefined,
-        targetGoal: policy.target_goal || undefined,
-        key_objectives: policy.key_objectives || [],
+        // For optional fields that may not exist in the database, provide defaults
+        code: undefined, // These fields may not exist in the database yet
+        targetGoal: undefined,
+        key_objectives: [],
       };
     });
   } catch (error: any) {

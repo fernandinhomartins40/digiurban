@@ -35,7 +35,8 @@ export async function getStrategicPrograms(status?: ProgramStatus): Promise<Prog
         status: program.status as ProgramStatus,
         progressPercentage: program.progress_percentage,
         coordinatorId: program.coordinator_id,
-        coordinatorName: program.coordinator_name || program.coordinator_id,
+        // Use coordinator_id if coordinator_name is missing
+        coordinatorName: program.coordinator_id,
         createdBy: program.created_by,
         createdAt: new Date(program.created_at),
         updatedAt: new Date(program.updated_at),
@@ -78,9 +79,10 @@ export async function getStrategicPrograms(status?: ProgramStatus): Promise<Prog
         responsible: strategicProgram.coordinatorName, // Map coordinatorName to responsible
         progress: strategicProgram.progressPercentage, // Map progressPercentage to progress
         updatedAt: strategicProgram.updatedAt.toISOString(),
-        code: program.code || undefined,
-        category: program.category || undefined,
-        beneficiaries_count: program.beneficiaries_count || undefined,
+        // For optional fields that may not exist in the database, provide defaults
+        code: undefined, // These fields may not exist in the database yet
+        category: undefined,
+        beneficiaries_count: undefined,
         milestones: strategicProgram.milestones?.map(milestone => ({
           title: milestone.title,
           date: milestone.dueDate.toISOString(),
