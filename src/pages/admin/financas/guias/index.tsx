@@ -23,8 +23,8 @@ import { FileText, Search, Download } from "lucide-react";
 
 export default function SolicitacaoGuias() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [tipoGuia, setTipoGuia] = useState("");
-  const [status, setStatus] = useState("");
+  const [tipoGuia, setTipoGuia] = useState("todos");
+  const [status, setStatus] = useState("todos");
   
   // Mock data for guides
   const guias = [
@@ -81,8 +81,8 @@ export default function SolicitacaoGuias() {
       guia.cpfCnpj.includes(searchTerm) ||
       guia.id.includes(searchTerm);
     
-    const matchesTipo = tipoGuia === "" || guia.tipo === tipoGuia;
-    const matchesStatus = status === "" || guia.status === status;
+    const matchesTipo = tipoGuia === "todos" || guia.tipo === tipoGuia;
+    const matchesStatus = status === "todos" || guia.status === status;
     
     return matchesSearch && matchesTipo && matchesStatus;
   });
@@ -171,7 +171,7 @@ export default function SolicitacaoGuias() {
             <SelectValue placeholder="Tipo de guia" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os tipos</SelectItem>
+            <SelectItem value="todos">Todos os tipos</SelectItem>
             <SelectItem value="IPTU">IPTU</SelectItem>
             <SelectItem value="ISS">ISS</SelectItem>
             <SelectItem value="Taxa de Licença">Taxa de Licença</SelectItem>
@@ -184,7 +184,7 @@ export default function SolicitacaoGuias() {
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os status</SelectItem>
+            <SelectItem value="todos">Todos os status</SelectItem>
             <SelectItem value="Pendente">Pendente</SelectItem>
             <SelectItem value="Emitida">Emitida</SelectItem>
             <SelectItem value="Paga">Paga</SelectItem>
