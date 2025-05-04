@@ -1,7 +1,6 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { NewAppointmentDrawer } from "./NewAppointmentDrawer";
 
 interface NewAppointmentDialogProps {
   open?: boolean;
@@ -12,19 +11,15 @@ interface NewAppointmentDialogProps {
 }
 
 export function NewAppointmentDialog({ 
-  open, 
-  onOpenChange, 
   onSuccess,
   buttonVariant = "default",
   className = ""
 }: NewAppointmentDialogProps) {
   return (
-    <Button 
-      onClick={() => onOpenChange?.(true)}
-      variant={buttonVariant as any}
+    <NewAppointmentDrawer
+      onSuccess={onSuccess}
+      buttonVariant={buttonVariant}
       className={className}
-    >
-      <Plus className="mr-2 h-4 w-4" /> Novo Agendamento
-    </Button>
+    />
   );
 }

@@ -15,7 +15,7 @@ import { getPublicPolicies } from "@/services/mayorOffice";
 import { useAuth } from "@/contexts/AuthContext";
 import { PolicyFilter, PolicyTabs } from "@/components/gabinete/politicas/PolicyFilter";
 import { PolicyList } from "@/components/gabinete/politicas/PolicyList";
-import { NewPolicyDialog } from "@/components/gabinete/politicas/NewPolicyDialog";
+import { NewPolicyDrawer } from "@/components/gabinete/politicas/NewPolicyDrawer";
 import { PolicyDrawer } from "@/components/gabinete/politicas/PolicyDrawer";
 
 export default function PublicPolicies() {
@@ -54,7 +54,7 @@ export default function PublicPolicies() {
           </p>
         </div>
 
-        <NewPolicyDialog />
+        <NewPolicyDrawer />
       </div>
 
       <Card>
