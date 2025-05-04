@@ -25,7 +25,7 @@ export function NotificationsSheet({ open, onOpenChange }: NotificationsSheetPro
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
+      <SheetContent className="pt-10">
         <SheetHeader>
           <SheetTitle className="flex items-center">
             <Bell className="mr-2 h-5 w-5" />
