@@ -1,35 +1,55 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useChat } from "@/contexts/ChatContext";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, ArrowLeft, Search, Filter } from "lucide-react";
-import { ConversationList } from "@/components/chat/ConversationList";
-import { EmptyState } from "@/components/chat/EmptyState";
+import { ChatContactList } from "@/components/chat/ChatContactList";
+import { ChatConversationList } from "@/components/chat/ChatConversationList";
 import { ConversationDetail } from "@/components/chat/ConversationDetail";
 import { ChatSearch } from "@/components/chat/ChatSearch";
 import { ChatFilters } from "@/components/chat/ChatFilters";
+import { NewChatDialog } from "@/components/chat/NewChatDialog";
+import { EmptyState } from "@/components/chat/EmptyState";
 
 export default function CitizenChatPage() {
   const { 
     conversations, 
     activeConversationId, 
+    activeContactId,
     setActiveConversation,
-    loading 
+    setActiveContact,
+    loading,
+    contacts
   } = useChat();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "closed">("all");
+  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
   
-  // Filter conversations - citizens only see their own conversations
-  const citizenConversations = conversations
-    .filter(conv => conv.type === "citizen")
-    .filter(conv => statusFilter === "all" || conv.status === statusFilter)
-    .filter(conv => 
-      searchQuery === "" || 
-      conv.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (conv.protocolId && conv.protocolId.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+  // Check for mobile view on mount and window resize
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    checkMobileView();
+    window.addEventListener('resize', checkMobileView);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
+  
+  // Handle back navigation in mobile view
+  const handleBackFromConversation = () => {
+    setActiveConversation(null);
+  };
+
+  const handleBackFromContact = () => {
+    setActiveContact(null);
+  };
 
   if (loading) {
     return (
@@ -38,6 +58,19 @@ export default function CitizenChatPage() {
       </div>
     );
   }
+
+  // Filter conversations - citizens only see their own conversations
+  const citizenConversations = conversations
+    .filter(conv => conv.type === "citizen")
+    .filter(conv => statusFilter === "all" || conv.status === statusFilter)
+    .filter(conv => 
+      searchQuery === "" || 
+      conv.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (conv.protocolIds && conv.protocolIds.some(id => id.toLowerCase().includes(searchQuery.toLowerCase())))
+    );
+
+  // Filter available contacts - citizens only see departments
+  const availableContacts = contacts.filter(contact => contact.type === "department");
 
   return (
     <div className="flex flex-col h-full">
@@ -48,43 +81,135 @@ export default function CitizenChatPage() {
             Acompanhe suas solicitações e conversas com a prefeitura
           </p>
         </div>
+        <Button onClick={() => setShowNewChatDialog(true)}>
+          Iniciar conversa
+        </Button>
       </div>
 
-      {activeConversationId ? (
-        <ConversationDetail
-          onBack={() => setActiveConversation(null)}
-        />
-      ) : (
-        <div className="border rounded-lg flex-1">
-          <div className="border-b p-3">
-            <div className="flex items-center gap-2">
-              <ChatSearch 
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-              />
-              <ChatFilters
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-              />
+      <div className="border rounded-lg flex-1 overflow-hidden">
+        {/* Two/Three-column layout */}
+        <div className={`h-full grid ${
+          isMobileView 
+            ? "grid-cols-1" 
+            : activeConversationId 
+              ? "grid-cols-[250px_1fr]" 
+              : activeContactId
+                ? "grid-cols-[250px_1fr]"
+                : "grid-cols-[1fr]"
+        }`}>
+          {/* Column 1: Contacts (Hidden in mobile when conversation is active) */}
+          {(!isMobileView || (!activeContactId && !activeConversationId)) && (
+            <div className="h-full flex flex-col">
+              <div className="p-3 border-b">
+                <h3 className="font-medium text-sm mb-2">Secretarias e Departamentos</h3>
+                <ChatSearch 
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  placeholder="Buscar departamento..."
+                />
+              </div>
+              
+              <ScrollArea className="flex-1 p-2">
+                {availableContacts.length > 0 ? (
+                  <ChatContactList 
+                    type="department"
+                    searchQuery={searchQuery}
+                    onSelectContact={setActiveContact}
+                    activeContactId={activeContactId}
+                  />
+                ) : (
+                  <EmptyState
+                    title="Nenhum departamento disponível"
+                    description="Não há departamentos disponíveis no momento."
+                    icon={<MessageCircle className="h-6 w-6 text-primary" />}
+                  />
+                )}
+              </ScrollArea>
             </div>
-          </div>
-
-          {citizenConversations.length === 0 ? (
-            <EmptyState
-              title="Nenhuma conversa ativa"
-              description="Você não possui nenhuma conversa ativa no momento. As conversas são iniciadas após protocolos serem abertos."
-              icon={<MessageCircle className="h-6 w-6 text-primary" />}
-            />
-          ) : (
-            <ScrollArea className="flex-1 p-3 h-full">
-              <ConversationList
-                conversations={citizenConversations}
-                onSelect={setActiveConversation}
-              />
-            </ScrollArea>
           )}
+          
+          {/* Column 2: Conversations with selected contact (Hidden in mobile when no contact is selected or conversation is active) */}
+          {(!isMobileView && activeContactId && !activeConversationId) || (isMobileView && activeContactId && !activeConversationId) ? (
+            <div className="h-full flex flex-col border-l">
+              <div className="p-3 border-b flex items-center">
+                {isMobileView && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="mr-2" 
+                    onClick={handleBackFromContact}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                )}
+                <div className="flex-1">
+                  <h3 className="font-medium">
+                    {contacts.find(c => c.id === activeContactId)?.name}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {contacts.find(c => c.id === activeContactId)?.description}
+                  </p>
+                </div>
+                <Button 
+                  size="sm" 
+                  onClick={() => setShowNewChatDialog(true)}
+                  title="Iniciar nova conversa"
+                >
+                  Iniciar conversa
+                </Button>
+              </div>
+              
+              <div className="p-3 border-b">
+                <ChatFilters
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                />
+              </div>
+              
+              <ScrollArea className="flex-1">
+                <div className="p-3">
+                  <ChatConversationList
+                    contactId={activeContactId}
+                    statusFilter={statusFilter}
+                    searchQuery=""
+                    onSelectConversation={setActiveConversation}
+                  />
+                </div>
+              </ScrollArea>
+            </div>
+          ) : null}
+          
+          {/* Column 3: Active Conversation or Empty state */}
+          {(!isMobileView || activeConversationId) ? (
+            activeConversationId ? (
+              <div className="h-full bg-background border-l">
+                <ConversationDetail
+                  onBack={isMobileView ? handleBackFromConversation : undefined}
+                />
+              </div>
+            ) : !activeContactId ? (
+              <div className="h-full flex items-center justify-center flex-col p-4">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <MessageCircle className="h-10 w-10 text-primary opacity-80" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">Bem-vindo ao Chat</h3>
+                <p className="text-center text-muted-foreground mb-6 max-w-md">
+                  Selecione um departamento para ver suas conversas ou inicie uma nova conversa.
+                </p>
+                <Button onClick={() => setShowNewChatDialog(true)}>
+                  Iniciar uma conversa
+                </Button>
+              </div>
+            ) : null
+          ) : null}
         </div>
-      )}
+      </div>
+
+      <NewChatDialog
+        open={showNewChatDialog}
+        onOpenChange={setShowNewChatDialog}
+        initialContactId={activeContactId}
+      />
     </div>
   );
 }
