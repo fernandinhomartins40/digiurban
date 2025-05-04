@@ -13,9 +13,9 @@ import { useQuery } from "@tanstack/react-query";
 import { ProgramStatus, Program } from "@/types/mayorOffice";
 import { getStrategicPrograms } from "@/services/mayorOffice";
 import { useAuth } from "@/contexts/AuthContext";
-import { ProgramFilter, ProgramTabs } from "@/components/gabinete/programas/ProgramFilter";
+import { ProgramFilter } from "@/components/gabinete/programas/ProgramFilter";
 import { ProgramList } from "@/components/gabinete/programas/ProgramList";
-import { NewProgramDialog } from "@/components/gabinete/programas/NewProgramDialog";
+import { NewProgramDrawer } from "@/components/gabinete/programas/NewProgramDrawer";
 import { ProgramDrawer } from "@/components/gabinete/programas/ProgramDrawer";
 
 export default function StrategicPrograms() {
@@ -48,20 +48,18 @@ export default function StrategicPrograms() {
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Programas Estratégicos
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Programas Estratégicos</h1>
           <p className="text-sm text-muted-foreground">
-            Ferramenta para monitoramento contínuo de projetos prioritários da gestão.
+            Gerenciamento de programas de desenvolvimento e projetos estratégicos do município.
           </p>
         </div>
 
-        <NewProgramDialog />
+        <NewProgramDrawer />
       </div>
 
       <Card>
         <CardHeader>
-          <ProgramFilter 
+          <ProgramFilter
             selectedStatus={selectedStatus}
             searchQuery={searchQuery}
             onStatusChange={setSelectedStatus}
@@ -70,19 +68,12 @@ export default function StrategicPrograms() {
         </CardHeader>
 
         <CardContent>
-          <ProgramTabs 
-            selectedStatus={selectedStatus}
-            onStatusChange={setSelectedStatus}
+          <ProgramList 
+            programs={programs} 
+            isLoading={isLoading} 
+            searchQuery={searchQuery}
+            onProgramClick={handleProgramClick}
           />
-
-          <div className="mt-6">
-            <ProgramList 
-              programs={programs} 
-              isLoading={isLoading} 
-              searchQuery={searchQuery} 
-              onProgramClick={handleProgramClick}
-            />
-          </div>
         </CardContent>
 
         <CardFooter className="flex justify-between border-t pt-4">
