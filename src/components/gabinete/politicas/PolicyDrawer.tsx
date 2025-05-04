@@ -105,7 +105,7 @@ export function PolicyDrawer({
               <div className="flex items-center gap-2 mt-1">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">
-                  Atualizado em {formatDate(policy.updated_at)}
+                  Atualizado em {formatDate(policy.updatedAt)}
                 </span>
               </div>
             </div>
@@ -119,14 +119,14 @@ export function PolicyDrawer({
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Data de Início</span>
                 </div>
-                <span className="text-sm">{formatDate(policy.start_date)}</span>
+                <span className="text-sm">{formatDate(policy.startDate)}</span>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Data Fim</span>
                 </div>
-                <span className="text-sm">{formatDate(policy.end_date)}</span>
+                <span className="text-sm">{formatDate(policy.endDate)}</span>
               </div>
             </div>
 
@@ -137,7 +137,7 @@ export function PolicyDrawer({
               <div className="flex items-center gap-2">
                 <BarChart className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  <strong>Meta:</strong> {policy.target_goal}
+                  <strong>Meta:</strong> {policy.targetGoal}
                 </span>
               </div>
               {policy.responsible && (

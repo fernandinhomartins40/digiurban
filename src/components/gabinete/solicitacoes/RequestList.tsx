@@ -74,8 +74,8 @@ export function RequestList({
   const filteredRequests = requests?.filter((request) =>
     request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     request.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    request.requester_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    request.target_department?.toLowerCase().includes(searchQuery.toLowerCase())
+    request.requesterName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    request.targetDepartment?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (isLoading) {
@@ -83,7 +83,7 @@ export function RequestList({
   }
 
   if (!filteredRequests || filteredRequests.length === 0) {
-    return <EmptyRequests />;
+    return <EmptyRequests searchQuery={searchQuery} />;
   }
 
   return (
@@ -104,13 +104,13 @@ export function RequestList({
           {filteredRequests.map((request) => (
             <TableRow key={request.id}>
               <TableCell className="font-mono text-xs">
-                {request.protocol_number}
+                {request.protocolNumber}
               </TableCell>
               <TableCell className="font-medium max-w-xs truncate">
                 {request.title}
               </TableCell>
-              <TableCell>{request.target_department}</TableCell>
-              <TableCell>{formatDate(request.due_date)}</TableCell>
+              <TableCell>{request.targetDepartment}</TableCell>
+              <TableCell>{formatDate(request.dueDate?.toString())}</TableCell>
               <TableCell>{getPriorityBadge(request.priority)}</TableCell>
               <TableCell>{getStatusBadge(request.status)}</TableCell>
               <TableCell className="text-right">

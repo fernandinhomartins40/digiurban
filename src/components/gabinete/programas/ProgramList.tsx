@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Program } from "@/types/mayorOffice";
-import { ProgramCard } from "./ProgramCard";
 import { FileBarChart } from "lucide-react";
 
 interface ProgramListProps {
@@ -9,6 +8,26 @@ interface ProgramListProps {
   isLoading: boolean;
   searchQuery: string;
   onProgramClick?: (program: Program) => void;
+}
+
+interface ProgramCardProps {
+  program: Program;
+  onClick?: () => void; // Added onClick prop
+}
+
+export function ProgramCard({ program, onClick }: ProgramCardProps) {
+  return (
+    <div 
+      className="border rounded-md p-4 hover:shadow-md transition-shadow cursor-pointer"
+      onClick={onClick}
+    >
+      <h3 className="font-medium text-lg">{program.name}</h3>
+      {program.description && <p className="text-muted-foreground truncate mt-1">{program.description}</p>}
+      <div className="flex items-center justify-between mt-4">
+        <span className="text-sm text-muted-foreground">{program.category}</span>
+      </div>
+    </div>
+  );
 }
 
 export function ProgramList({ programs, isLoading, searchQuery, onProgramClick }: ProgramListProps) {

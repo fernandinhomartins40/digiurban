@@ -1,18 +1,8 @@
 
 import React from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Policy, PolicyStatus } from "@/types/mayorOffice";
-import { PolicyCard } from "./PolicyCard";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import {
-  Calendar,
-  CheckCircle,
-  Clock,
-  FileBarChart,
-  Users,
-} from "lucide-react";
+import { Policy } from "@/types/mayorOffice";
+import { ProgramCard } from "@/components/gabinete/programas/ProgramCard"; // We'll use this component temporarily 
+import { FileBarChart } from "lucide-react";
 
 interface PolicyListProps {
   policies: Policy[] | undefined;
@@ -21,16 +11,28 @@ interface PolicyListProps {
   onPolicyClick?: (policy: Policy) => void;
 }
 
-export function PolicyList({ policies, isLoading, searchQuery, onPolicyClick }: PolicyListProps) {
-  const formatDate = (date: string | undefined) => {
-    if (!date) return "N/A";
-    try {
-      return format(new Date(date), "dd/MM/yyyy", { locale: ptBR });
-    } catch (e) {
-      return date || "N/A";
-    }
-  };
+// Temporary component to render policies (will be replaced with a dedicated PolicyCard)
+interface PolicyCardProps {
+  policy: Policy;
+  onClick?: () => void; // Added onClick to make it compatible
+}
 
+export function PolicyCard({ policy, onClick }: PolicyCardProps) {
+  return (
+    <div 
+      className="border rounded-md p-4 hover:shadow-md transition-shadow cursor-pointer"
+      onClick={onClick}
+    >
+      <h3 className="font-medium text-lg">{policy.name}</h3>
+      {policy.description && <p className="text-muted-foreground truncate mt-1">{policy.description}</p>}
+      <div className="flex items-center justify-between mt-4">
+        <span className="text-sm text-muted-foreground">{policy.category}</span>
+      </div>
+    </div>
+  );
+}
+
+export function PolicyList({ policies, isLoading, searchQuery, onPolicyClick }: PolicyListProps) {
   // Filter policies by search query
   const filteredPolicies = policies?.filter(
     (policy) =>

@@ -112,15 +112,15 @@ export function AppointmentDrawer({
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  <strong>Data:</strong> {formatDate(appointment.requested_date)}
+                  <strong>Data:</strong> {formatDate(appointment.requestedDate.toString())}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  <strong>Horário:</strong> {appointment.requested_time}
-                  {appointment.duration_minutes &&
-                    ` (${appointment.duration_minutes} minutos)`}
+                  <strong>Horário:</strong> {appointment.requestedTime}
+                  {appointment.durationMinutes &&
+                    ` (${appointment.durationMinutes} minutos)`}
                 </span>
               </div>
               {appointment.location && (
@@ -142,22 +142,22 @@ export function AppointmentDrawer({
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">
-                    <strong>Nome:</strong> {appointment.requester_name}
+                    <strong>Nome:</strong> {appointment.requesterName}
                   </span>
                 </div>
-                {appointment.requester_email && (
+                {appointment.requesterEmail && (
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      <strong>Email:</strong> {appointment.requester_email}
+                      <strong>Email:</strong> {appointment.requesterEmail}
                     </span>
                   </div>
                 )}
-                {appointment.requester_phone && (
+                {appointment.requesterPhone && (
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      <strong>Telefone:</strong> {appointment.requester_phone}
+                      <strong>Telefone:</strong> {appointment.requesterPhone}
                     </span>
                   </div>
                 )}
@@ -180,11 +180,11 @@ export function AppointmentDrawer({
             )}
 
             {/* Admin Notes */}
-            {appointment.admin_notes && (
+            {appointment.adminNotes && (
               <div>
                 <h4 className="text-sm font-medium mb-1">Observações Administrativas</h4>
                 <div className="text-sm border rounded-md p-3 bg-muted/30">
-                  {appointment.admin_notes}
+                  {appointment.adminNotes}
                 </div>
               </div>
             )}

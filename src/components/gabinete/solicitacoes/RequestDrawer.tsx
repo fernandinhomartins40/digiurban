@@ -86,7 +86,7 @@ export function RequestDrawer({
               Detalhes da Solicitação
             </DrawerTitle>
             <DrawerDescription>
-              {request.protocol_number && `Protocolo: ${request.protocol_number}`}
+              {request.protocolNumber && `Protocolo: ${request.protocolNumber}`}
             </DrawerDescription>
           </DrawerHeader>
 
@@ -106,19 +106,19 @@ export function RequestDrawer({
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  <strong>Data Limite:</strong> {formatDate(request.due_date)}
+                  <strong>Data Limite:</strong> {formatDate(request.dueDate?.toString())}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Building className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  <strong>Departamento:</strong> {request.target_department}
+                  <strong>Departamento:</strong> {request.targetDepartment}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  <strong>Criado em:</strong> {formatDate(request.created_at)}
+                  <strong>Criado em:</strong> {formatDate(request.createdAt?.toString())}
                 </span>
               </div>
             </div>
@@ -132,22 +132,22 @@ export function RequestDrawer({
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">
-                    <strong>Nome:</strong> {request.requester_name}
+                    <strong>Nome:</strong> {request.requesterName}
                   </span>
                 </div>
-                {request.requester_email && (
+                {request.requesterId && (
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      <strong>Email:</strong> {request.requester_email}
+                      <strong>Email:</strong> {request.requesterId}
                     </span>
                   </div>
                 )}
-                {request.requester_phone && (
+                {request.requesterName && (
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      <strong>Telefone:</strong> {request.requester_phone}
+                      <strong>Telefone:</strong> {request.requesterName}
                     </span>
                   </div>
                 )}
@@ -177,9 +177,9 @@ export function RequestDrawer({
                   {request.comments.map((comment, i) => (
                     <div key={i} className="text-sm border rounded-md p-3 bg-muted/30">
                       <p className="text-xs text-muted-foreground mb-1">
-                        {comment.created_at && formatDate(comment.created_at)}
+                        {comment.createdAt && formatDate(comment.createdAt.toString())}
                       </p>
-                      <p>{comment.comment_text}</p>
+                      <p>{comment.commentText}</p>
                     </div>
                   ))}
                 </div>

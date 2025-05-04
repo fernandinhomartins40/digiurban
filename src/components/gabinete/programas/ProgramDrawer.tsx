@@ -49,10 +49,10 @@ export function ProgramDrawer({
 
   const getStatusBadge = (status: ProgramStatus) => {
     switch (status) {
-      case "active":
-        return <Badge className="bg-green-500 hover:bg-green-600">Ativo</Badge>;
       case "planning":
         return <Badge variant="outline">Planejamento</Badge>;
+      case "in_progress":
+        return <Badge className="bg-green-500 hover:bg-green-600">Ativo</Badge>;
       case "completed":
         return <Badge variant="secondary">Concluído</Badge>;
       case "cancelled":
@@ -106,7 +106,7 @@ export function ProgramDrawer({
               <div className="flex items-center gap-2 mt-1">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">
-                  Atualizado em {formatDate(program.updated_at)}
+                  Atualizado em {formatDate(program.updatedAt)}
                 </span>
               </div>
             </div>
@@ -120,14 +120,14 @@ export function ProgramDrawer({
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Data de Início</span>
                 </div>
-                <span className="text-sm">{formatDate(program.start_date)}</span>
+                <span className="text-sm">{formatDate(program.startDate)}</span>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Data Fim</span>
                 </div>
-                <span className="text-sm">{formatDate(program.end_date)}</span>
+                <span className="text-sm">{formatDate(program.endDate)}</span>
               </div>
             </div>
 

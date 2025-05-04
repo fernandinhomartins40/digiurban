@@ -55,7 +55,7 @@ export interface RequestComment {
   createdAt: Date;
 }
 
-export interface MayorAppointment {
+export interface Appointment {
   id: string;
   requesterName: string;
   requesterId?: string;
@@ -74,80 +74,43 @@ export interface MayorAppointment {
   respondedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  location?: string;
+  protocol_number?: string; // Adding this for backward compatibility
 }
 
-export interface PublicPolicy {
+export interface Policy {
   id: string;
-  title: string;
-  description: string;
-  startDate: Date;
-  endDate?: Date;
+  name: string;
+  code?: string;
+  description?: string;
+  category?: string;
   status: PolicyStatus;
-  responsibleId: string;
-  responsibleName?: string;
-  department: string;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-  goals?: PolicyGoal[];
+  startDate?: string;
+  endDate?: string;
+  targetGoal?: string;
+  responsible?: string;
+  progress?: number;
+  updatedAt?: string;
+  key_objectives?: string[];
 }
 
-export interface PolicyGoal {
+export interface Program {
   id: string;
-  policyId: string;
-  title: string;
-  description: string;
-  targetValue?: number;
-  targetUnit?: string;
-  currentValue: number;
-  dueDate?: Date;
-  status: GoalStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface StrategicProgram {
-  id: string;
-  title: string;
-  description: string;
-  startDate: Date;
-  endDate?: Date;
-  budget?: number;
-  spentAmount: number;
+  name: string;
+  code?: string;
+  description?: string;
+  category?: string;
   status: ProgramStatus;
-  progressPercentage: number;
-  coordinatorId: string;
-  coordinatorName?: string;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-  milestones?: ProgramMilestone[];
-  documents?: ProgramDocument[];
-}
-
-export interface ProgramMilestone {
-  id: string;
-  programId: string;
-  title: string;
-  description: string;
-  dueDate: Date;
-  completionDate?: Date;
-  status: GoalStatus;
-  responsibleId?: string;
-  responsibleName?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface ProgramDocument {
-  id: string;
-  programId: string;
-  documentTitle: string;
-  documentDescription?: string;
-  filePath: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  uploadedBy: string;
-  createdAt: Date;
+  startDate?: string;
+  endDate?: string;
+  budget?: number;
+  responsible?: string;
+  progress?: number;
+  beneficiaries_count?: number;
+  updatedAt?: string;
+  milestones?: {
+    title: string;
+    date?: string;
+    completed: boolean;
+  }[];
 }

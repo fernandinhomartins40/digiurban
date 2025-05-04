@@ -25,8 +25,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  getAppointments,
-  updateAppointmentStatus,
+  getMayorAppointments,
+  updateMayorAppointmentStatus,
 } from "@/services/mayorOffice/appointmentsService";
 import { Appointment, AppointmentStatus } from "@/types/mayorOffice";
 import { AppointmentDrawer } from "@/components/gabinete/agendamentos/AppointmentDrawer";
@@ -39,17 +39,18 @@ export default function AppointmentScheduler() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [filterStatus, setFilterStatus] = useState<AppointmentStatus | "all">("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
 
   // Fetch appointments
   const { data: appointments, isLoading } = useQuery({
     queryKey: ["mayorAppointments", filterStatus],
-    queryFn: () => getAppointments(filterStatus !== "all" ? filterStatus : undefined),
+    queryFn: () => getMayorAppointments(filterStatus !== "all" ? filterStatus : undefined),
   });
 
   // Update appointment status mutation
   const updateStatusMutation = useMutation({
     mutationFn: ({ appointmentId, status }: { appointmentId: string; status: AppointmentStatus }) =>
-      updateAppointmentStatus(appointmentId, status),
+      updateMayorAppointmentStatus(appointmentId, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["mayorAppointments"] });
       toast({
@@ -119,7 +120,11 @@ export default function AppointmentScheduler() {
           </p>
         </div>
 
-        <NewAppointmentDialog />
+        <NewAppointmentDialog 
+          open={isNewAppointmentDialogOpen} 
+          onOpenChange={setIsNewAppointmentDialogOpen}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ["mayorAppointments"] })}
+        />
       </div>
 
       <Card>
@@ -183,11 +188,11 @@ export default function AppointmentScheduler() {
                       <TableCell className="font-medium">
                         {appointment.subject}
                       </TableCell>
-                      <TableCell>{appointment.requester_name}</TableCell>
+                      <TableCell>{appointment.requesterName}</TableCell>
                       <TableCell>
-                        {formatAppointmentDate(appointment.requested_date)}
+                        {formatAppointmentDate(appointment.requestedDate.toString())}
                       </TableCell>
-                      <TableCell>{appointment.requested_time}</TableCell>
+                      <TableCell>{appointment.requestedTime}</TableCell>
                       <TableCell>{getStatusBadge(appointment.status)}</TableCell>
                       <TableCell>{appointment.location || "-"}</TableCell>
                       <TableCell className="text-right">
@@ -209,7 +214,13 @@ export default function AppointmentScheduler() {
               <p className="text-muted-foreground">
                 Nenhum agendamento encontrado.
               </p>
-              <NewAppointmentDialog buttonVariant="outline" className="mt-4" />
+              <NewAppointmentDialog 
+                open={isNewAppointmentDialogOpen} 
+                onOpenChange={setIsNewAppointmentDialogOpen}
+                onSuccess={() => queryClient.invalidateQueries({ queryKey: ["mayorAppointments"] })}
+                buttonVariant="outline" 
+                className="mt-4"
+              />
             </div>
           )}
         </CardContent>
