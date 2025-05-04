@@ -5,8 +5,6 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { ChatProvider } from "@/contexts/ChatContext";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { CitizenSidebar } from "./CitizenSidebar";
 
 export function CitizenLayout() {
   const { isLoading, isAuthenticated, userType, user } = useAuth();
@@ -108,17 +106,12 @@ export function CitizenLayout() {
 
   return (
     <ChatProvider>
-      <SidebarProvider defaultOpen={true}>
-        <div className="flex flex-col h-screen bg-gray-50 w-full">
-          <CitizenNavbar />
-          <div className="flex flex-1 overflow-hidden">
-            <CitizenSidebar />
-            <main className="flex-1 overflow-auto p-6">
-              <Outlet />
-            </main>
-          </div>
-        </div>
-      </SidebarProvider>
+      <div className="flex flex-col h-screen bg-gray-50">
+        <CitizenNavbar />
+        <main className="flex-1 overflow-auto p-6">
+          <Outlet />
+        </main>
+      </div>
     </ChatProvider>
   );
 }
