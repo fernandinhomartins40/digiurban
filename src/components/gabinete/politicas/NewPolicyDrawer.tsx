@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -52,11 +51,16 @@ type PolicyFormValues = z.infer<typeof policyFormSchema>;
 // Mock function to create a policy (replace with real API call)
 const createPolicy = async (data: PolicyFormValues): Promise<Policy> => {
   // This would be replaced with an actual API call
+  const currentDate = new Date().toISOString(); // Convert Date to string
+  
   return {
     id: Math.random().toString(36).substring(7),
-    ...data,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    name: data.name,
+    description: data.description,
+    category: data.category,
+    status: "draft", // Make sure this is a valid PolicyStatus
+    updatedAt: currentDate, // Use string instead of Date object
+    key_objectives: [],
   };
 };
 

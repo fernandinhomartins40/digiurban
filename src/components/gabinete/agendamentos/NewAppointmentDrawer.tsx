@@ -63,7 +63,16 @@ const createAppointment = async (data: AppointmentFormValues): Promise<Appointme
   return {
     id: Math.random().toString(36).substring(7),
     status: "pending" as AppointmentStatus,
-    ...data,
+    subject: data.subject,
+    requesterName: data.requesterName, // Make sure requesterName is always provided
+    requesterEmail: data.requesterEmail,
+    requesterPhone: "",  // Provide default value for required fields
+    requestedDate: data.requestedDate,
+    requestedTime: data.requestedTime,
+    durationMinutes: data.durationMinutes,
+    priority: data.priority,
+    description: data.description || "",
+    location: data.location || "",
     createdAt: new Date(),
     updatedAt: new Date(),
   };
