@@ -177,7 +177,7 @@ export default function OcorrenciasIndex() {
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="todos">Todos os status</SelectItem>
                 <SelectItem value="pendente">Pendentes</SelectItem>
                 <SelectItem value="em_andamento">Em andamento</SelectItem>
                 <SelectItem value="concluido">Concluídos</SelectItem>
@@ -189,7 +189,7 @@ export default function OcorrenciasIndex() {
                 <SelectValue placeholder="Filtrar por tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
+                <SelectItem value="todos">Todos os tipos</SelectItem>
                 <SelectItem value="Perturbação do Sossego">Perturbação do Sossego</SelectItem>
                 <SelectItem value="Acidente de Trânsito">Acidente de Trânsito</SelectItem>
                 <SelectItem value="Vandalismo">Vandalismo</SelectItem>
