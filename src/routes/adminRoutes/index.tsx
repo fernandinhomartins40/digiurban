@@ -13,6 +13,7 @@ import { assistenciaRoutes } from "./assistenciaRoutes";
 import { financasRoutes } from "./financasRoutes";
 import { agriculturaRoutes } from "./agriculturaRoutes";
 import { esportesRoutes } from "./esportesRoutes";
+import { culturaRoutes } from "./culturaRoutes";
 import { otherModulesRoutes } from "./otherModulesRoutes";
 
 export const adminRoutes: RouteObject[] = [
@@ -40,6 +41,7 @@ export const adminRoutes: RouteObject[] = [
       ...financasRoutes,
       ...agriculturaRoutes,
       ...esportesRoutes,
+      ...culturaRoutes,
       ...otherModulesRoutes,
     ],
   },
