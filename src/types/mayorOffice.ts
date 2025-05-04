@@ -78,6 +78,7 @@ export interface Appointment {
   protocol_number?: string; // Adding this for backward compatibility
 }
 
+// Policy interface definition (used in components)
 export interface Policy {
   id: string;
   name: string;
@@ -94,6 +95,7 @@ export interface Policy {
   key_objectives?: string[];
 }
 
+// Program interface definition (used in components)
 export interface Program {
   id: string;
   name: string;
@@ -115,7 +117,7 @@ export interface Program {
   }[];
 }
 
-// Add new StrategicProgram interface
+// StrategicProgram interface (from API)
 export interface StrategicProgram {
   id: string;
   title: string;
@@ -133,9 +135,16 @@ export interface StrategicProgram {
   updatedAt: Date;
   milestones?: ProgramMilestone[];
   documents?: ProgramDocument[];
+  // Add fields needed by Program interface
+  name?: string; // Map from title in the service
+  code?: string;
+  category?: string;
+  responsible?: string; // Map from coordinatorName in the service
+  progress?: number; // Map from progressPercentage in the service
+  beneficiaries_count?: number;
 }
 
-// Add supporting interfaces for StrategicProgram
+// Supporting interfaces for StrategicProgram
 export interface ProgramMilestone {
   id: string;
   programId: string;
@@ -163,7 +172,7 @@ export interface ProgramDocument {
   createdAt: Date;
 }
 
-// Add new PublicPolicy interface
+// PublicPolicy interface (from API)
 export interface PublicPolicy {
   id: string;
   title: string;
@@ -178,9 +187,17 @@ export interface PublicPolicy {
   createdAt: Date;
   updatedAt: Date;
   goals?: PolicyGoal[];
+  // Add fields needed by Policy interface
+  name?: string; // Map from title in the service
+  code?: string;
+  category?: string; // Map from department in the service
+  responsible?: string; // Map from responsibleName in the service
+  targetGoal?: string;
+  progress?: number; // Calculate from goals in the service
+  key_objectives?: string[];
 }
 
-// Add supporting interface for PublicPolicy
+// Supporting interface for PublicPolicy
 export interface PolicyGoal {
   id: string;
   policyId: string;

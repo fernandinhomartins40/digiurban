@@ -1,10 +1,10 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { StrategicProgram, ProgramStatus } from "@/types/mayorOffice";
+import { StrategicProgram, Program, ProgramStatus } from "@/types/mayorOffice";
 import { toast } from "@/hooks/use-toast";
 
 // Strategic Programs
-export async function getStrategicPrograms(status?: ProgramStatus): Promise<StrategicProgram[]> {
+export async function getStrategicPrograms(status?: ProgramStatus): Promise<Program[]> {
   try {
     let query = supabase
       .from("strategic_programs")
@@ -23,47 +23,71 @@ export async function getStrategicPrograms(status?: ProgramStatus): Promise<Stra
 
     if (error) throw error;
 
-    return (data || []).map((program) => ({
-      id: program.id,
-      title: program.title,
-      description: program.description,
-      startDate: new Date(program.start_date),
-      endDate: program.end_date ? new Date(program.end_date) : undefined,
-      budget: program.budget,
-      spentAmount: program.spent_amount,
-      status: program.status as ProgramStatus,
-      progressPercentage: program.progress_percentage,
-      coordinatorId: program.coordinator_id,
-      coordinatorName: program.coordinator_id, // This field doesn't exist in the DB, using coordinator_id as fallback
-      createdBy: program.created_by,
-      createdAt: new Date(program.created_at),
-      updatedAt: new Date(program.updated_at),
-      milestones: program.strategic_program_milestones?.map((milestone: any) => ({
-        id: milestone.id,
-        programId: milestone.program_id,
-        title: milestone.title,
-        description: milestone.description,
-        dueDate: new Date(milestone.due_date),
-        completionDate: milestone.completion_date ? new Date(milestone.completion_date) : undefined,
-        status: milestone.status,
-        responsibleId: milestone.responsible_id,
-        responsibleName: milestone.responsible_id, // This field may not exist in the DB
-        createdAt: new Date(milestone.created_at),
-        updatedAt: new Date(milestone.updated_at),
-      })) || [],
-      documents: program.strategic_program_documents?.map((document: any) => ({
-        id: document.id,
-        programId: document.program_id,
-        documentTitle: document.document_title,
-        documentDescription: document.document_description,
-        filePath: document.file_path,
-        fileName: document.file_name,
-        fileType: document.file_type,
-        fileSize: document.file_size,
-        uploadedBy: document.uploaded_by,
-        createdAt: new Date(document.created_at),
-      })) || [],
-    }));
+    return (data || []).map((program) => {
+      const strategicProgram: StrategicProgram = {
+        id: program.id,
+        title: program.title,
+        description: program.description,
+        startDate: new Date(program.start_date),
+        endDate: program.end_date ? new Date(program.end_date) : undefined,
+        budget: program.budget,
+        spentAmount: program.spent_amount,
+        status: program.status as ProgramStatus,
+        progressPercentage: program.progress_percentage,
+        coordinatorId: program.coordinator_id,
+        coordinatorName: program.coordinator_name || program.coordinator_id,
+        createdBy: program.created_by,
+        createdAt: new Date(program.created_at),
+        updatedAt: new Date(program.updated_at),
+        milestones: program.strategic_program_milestones?.map((milestone: any) => ({
+          id: milestone.id,
+          programId: milestone.program_id,
+          title: milestone.title,
+          description: milestone.description,
+          dueDate: new Date(milestone.due_date),
+          completionDate: milestone.completion_date ? new Date(milestone.completion_date) : undefined,
+          status: milestone.status,
+          responsibleId: milestone.responsible_id,
+          responsibleName: milestone.responsible_name || milestone.responsible_id,
+          createdAt: new Date(milestone.created_at),
+          updatedAt: new Date(milestone.updated_at),
+        })) || [],
+        documents: program.strategic_program_documents?.map((document: any) => ({
+          id: document.id,
+          programId: document.program_id,
+          documentTitle: document.document_title,
+          documentDescription: document.document_description,
+          filePath: document.file_path,
+          fileName: document.file_name,
+          fileType: document.file_type,
+          fileSize: document.file_size,
+          uploadedBy: document.uploaded_by,
+          createdAt: new Date(document.created_at),
+        })) || [],
+      };
+
+      // Map StrategicProgram to Program interface needed by components
+      return {
+        id: strategicProgram.id,
+        name: strategicProgram.title, // Map title to name
+        description: strategicProgram.description,
+        status: strategicProgram.status,
+        startDate: strategicProgram.startDate.toISOString(),
+        endDate: strategicProgram.endDate?.toISOString(),
+        budget: strategicProgram.budget,
+        responsible: strategicProgram.coordinatorName, // Map coordinatorName to responsible
+        progress: strategicProgram.progressPercentage, // Map progressPercentage to progress
+        updatedAt: strategicProgram.updatedAt.toISOString(),
+        code: program.code || undefined,
+        category: program.category || undefined,
+        beneficiaries_count: program.beneficiaries_count || undefined,
+        milestones: strategicProgram.milestones?.map(milestone => ({
+          title: milestone.title,
+          date: milestone.dueDate.toISOString(),
+          completed: milestone.status === 'completed'
+        }))
+      };
+    });
   } catch (error: any) {
     console.error("Error fetching strategic programs:", error.message);
     toast({
