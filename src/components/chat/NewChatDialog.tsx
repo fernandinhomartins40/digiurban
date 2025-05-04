@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   Form,
   FormControl,
@@ -215,14 +215,14 @@ export function NewChatDialog({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Nova conversa</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-[500px] overflow-y-auto">
+        <SheetHeader className="mb-5">
+          <SheetTitle>Nova conversa</SheetTitle>
+          <SheetDescription>
             Selecione com quem você deseja conversar.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -354,7 +354,7 @@ export function NewChatDialog({
               )}
             />
             
-            <DialogFooter>
+            <SheetFooter className="pt-2">
               <Button
                 type="button"
                 variant="outline"
@@ -363,10 +363,10 @@ export function NewChatDialog({
                 Cancelar
               </Button>
               <Button type="submit">Iniciar conversa</Button>
-            </DialogFooter>
+            </SheetFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

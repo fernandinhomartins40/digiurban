@@ -87,17 +87,19 @@ export default function AdminChatPage() {
           <Button variant="outline" size="icon" title="Configurações">
             <Settings className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" title="Notificações" className="relative">
-            <Bell className="h-4 w-4" />
-            {unreadCount > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-4 w-4 text-[10px] flex items-center justify-center p-0 rounded-full"
-              >
-                {unreadCount}
-              </Badge>
-            )}
-          </Button>
+          <div className="relative">
+            <Button variant="outline" size="icon" title="Notificações">
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-4 w-4 text-[10px] flex items-center justify-center p-0 rounded-full"
+                >
+                  {unreadCount}
+                </Badge>
+              )}
+            </Button>
+          </div>
           <Button onClick={() => setShowNewChatDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nova conversa
@@ -125,6 +127,7 @@ export default function AdminChatPage() {
                 <ChatSearch 
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
+                  placeholder="Buscar contatos..."
                 />
               </div>
               <Tabs defaultValue="departments" className="flex-1 flex flex-col">
@@ -197,6 +200,7 @@ export default function AdminChatPage() {
                 <ChatSearch 
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
+                  placeholder="Buscar conversas..."
                 />
                 <div className="flex items-center gap-2 mt-2">
                   <ChatFilters

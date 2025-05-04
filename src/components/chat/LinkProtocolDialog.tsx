@@ -1,13 +1,15 @@
 
 import React, { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import {
   Select,
   SelectContent,
@@ -68,6 +70,11 @@ export function LinkProtocolDialog({
       // Reset and close
       setSelectedProtocolId("");
       onOpenChange(false);
+      
+      toast({
+        title: "Protocolo vinculado",
+        description: "O protocolo foi vinculado à conversa com sucesso.",
+      });
     } catch (error) {
       console.error("Error linking protocol:", error);
       toast({
@@ -81,68 +88,66 @@ export function LinkProtocolDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Vincular protocolo à conversa</DialogTitle>
-          <DialogDescription>
-            Selecione um protocolo para vincular a esta conversa.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="py-4">
-          <Select
-            value={selectedProtocolId}
-            onValueChange={setSelectedProtocolId}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um protocolo" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableProtocols.length > 0 ? (
-                availableProtocols.map(protocol => (
-                  <SelectItem key={protocol.id} value={protocol.id}>
-                    {protocol.id} - {protocol.title}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="none" disabled>
-                  Todos os protocolos já estão vinculados
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <div className="mx-auto w-full max-w-sm">
+          <DrawerHeader>
+            <DrawerTitle>Vincular protocolo à conversa</DrawerTitle>
+            <DrawerDescription>
+              Selecione um protocolo para vincular a esta conversa.
+            </DrawerDescription>
+          </DrawerHeader>
           
-          {conversation?.protocolIds && conversation.protocolIds.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-sm font-medium mb-2">Protocolos vinculados:</h4>
-              <ul className="text-sm space-y-1">
-                {conversation.protocolIds.map(id => {
-                  const protocol = PROTOCOLS.find(p => p.id === id);
-                  return (
-                    <li key={id} className="text-muted-foreground">
-                      {id} {protocol ? `- ${protocol.title}` : ""}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
+          <div className="p-4">
+            <Select
+              value={selectedProtocolId}
+              onValueChange={setSelectedProtocolId}
+            >
+              <SelectTrigger className="mb-4">
+                <SelectValue placeholder="Selecione um protocolo" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableProtocols.length > 0 ? (
+                  availableProtocols.map(protocol => (
+                    <SelectItem key={protocol.id} value={protocol.id}>
+                      {protocol.id} - {protocol.title}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none" disabled>
+                    Todos os protocolos já estão vinculados
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            
+            {conversation?.protocolIds && conversation.protocolIds.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium mb-2">Protocolos vinculados:</h4>
+                <ul className="text-sm space-y-1">
+                  {conversation.protocolIds.map(id => {
+                    const protocol = PROTOCOLS.find(p => p.id === id);
+                    return (
+                      <li key={id} className="text-muted-foreground">
+                        {id} {protocol ? `- ${protocol.title}` : ""}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
+          
+          <DrawerFooter className="pt-2">
+            <Button onClick={handleSubmit} disabled={!selectedProtocolId || loading}>
+              {loading ? "Vinculando..." : "Vincular protocolo"}
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="outline">Cancelar</Button>
+            </DrawerClose>
+          </DrawerFooter>
         </div>
-        
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
-            Cancelar
-          </Button>
-          <Button onClick={handleSubmit} disabled={!selectedProtocolId || loading}>
-            {loading ? "Vinculando..." : "Vincular protocolo"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   );
 }

@@ -2,13 +2,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   Form,
   FormControl,
@@ -112,14 +112,14 @@ export function CreateConversationDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Nova conversa interna</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="sm:max-w-[425px] overflow-y-auto">
+        <SheetHeader className="mb-5">
+          <SheetTitle>Nova conversa interna</SheetTitle>
+          <SheetDescription>
             Crie uma nova conversa com outro departamento ou servidor.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -208,7 +208,7 @@ export function CreateConversationDialog({
               />
             )}
             
-            <DialogFooter>
+            <SheetFooter className="pt-2">
               <Button
                 type="button"
                 variant="outline"
@@ -217,10 +217,10 @@ export function CreateConversationDialog({
                 Cancelar
               </Button>
               <Button type="submit">Criar conversa</Button>
-            </DialogFooter>
+            </SheetFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -105,6 +105,7 @@ export default function CitizenChatPage() {
                 <ChatSearch 
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
+                  placeholder="Buscar departamentos..."
                 />
               </div>
               
