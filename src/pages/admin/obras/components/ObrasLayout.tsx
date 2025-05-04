@@ -2,7 +2,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Hardhat, Map, MessageSquareText } from "lucide-react";
+import { HardHat, Map, MessageSquareText } from "lucide-react";
 
 interface ObrasLayoutProps {
   children: React.ReactNode;
@@ -29,7 +29,7 @@ export const ObrasLayout = ({ children, title, description }: ObrasLayoutProps) 
             asChild
           >
             <Link to="/admin/obras" className={currentPath === "/admin/obras" ? "data-[state=active]" : ""}>
-              <Hardhat size={16} />
+              <HardHat size={16} />
               Visão Geral
             </Link>
           </TabsTrigger>
@@ -42,7 +42,7 @@ export const ObrasLayout = ({ children, title, description }: ObrasLayoutProps) 
               to="/admin/obras/pequenas" 
               className={currentPath.includes("/admin/obras/pequenas") ? "data-[state=active]" : ""}
             >
-              <Hardhat size={16} />
+              <HardHat size={16} />
               Pequenas Obras
             </Link>
           </TabsTrigger>
