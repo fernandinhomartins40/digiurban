@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { ChatMessage } from "@/contexts/ChatContext";
+import { Message } from "@/contexts/ChatContext";
 import { cn } from "@/lib/utils";
 import { 
   Reply, 
@@ -30,7 +30,7 @@ import { toast } from "@/hooks/use-toast";
 import { useChat } from "@/contexts/ChatContext";
 
 interface MessageItemProps {
-  message: ChatMessage;
+  message: Message;
   isCurrentUser: boolean;
   onReply: () => void;
   conversationId: string;
@@ -55,7 +55,7 @@ export function MessageItem({ message, isCurrentUser, onReply, conversationId }:
 
   // Handle message copy
   const copyMessage = () => {
-    navigator.clipboard.writeText(message.content);
+    navigator.clipboard.writeText(message.content || message.text || '');
     toast({
       description: "Mensagem copiada para a área de transferência",
     });
@@ -71,7 +71,7 @@ export function MessageItem({ message, isCurrentUser, onReply, conversationId }:
     return (
       <div className="flex justify-center my-2">
         <div className="bg-muted/50 rounded-md px-4 py-2 text-xs text-center max-w-[80%]">
-          {message.content}
+          {message.content || message.text}
           {message.protocolId && (
             <Badge variant="outline" className="ml-2">
               {message.protocolId}
@@ -122,7 +122,7 @@ export function MessageItem({ message, isCurrentUser, onReply, conversationId }:
             <span className="text-xs font-medium block mb-1">{message.senderName}</span>
           )}
           
-          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+          <p className="text-sm whitespace-pre-wrap break-words">{message.content || message.text}</p>
           
           {/* Attachments */}
           {message.attachments && message.attachments.length > 0 && (

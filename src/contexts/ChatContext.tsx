@@ -15,12 +15,19 @@ export interface Message {
   timestamp: string;
   read: boolean;
   replyToId?: string;
+  replyToMessageId?: string;
+  replyToContent?: string;
   attachments?: any[];
+  reactions?: Array<{ emoji: string; userId: string; userName: string }>;
+  senderType?: 'user' | 'system' | 'admin';
+  protocolId?: string;
 }
+
+export type ChatType = 'admin' | 'citizen' | 'internal';
 
 export interface Conversation {
   id: string;
-  type: 'admin' | 'citizen' | 'internal';
+  type: ChatType;
   title: string;
   participantId: string;
   participantName: string;
@@ -44,6 +51,16 @@ export interface ChatContact {
   favorite?: boolean;
 }
 
+export interface ChatNotification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  conversationId?: string;
+  type?: 'message' | 'system' | 'alert';
+}
+
 interface ChatSettings {
   theme: 'sistema' | 'claro' | 'escuro';
   messageOrder: 'newest' | 'oldest';
@@ -65,15 +82,21 @@ interface ChatContextType {
   messages: Record<string, Message[]>;
   contacts: ChatContact[];
   chatSettings: ChatSettings;
+  notifications: ChatNotification[];
   loading: boolean;
   sendMessage: (conversationId: string, text: string, attachments?: File[], replyToId?: string) => Promise<void>;
   selectConversation: (id: string) => void;
   setActiveConversation: (id: string | null) => void;
-  createConversation: (participantId: string, participantName: string, type: 'admin' | 'citizen' | 'internal') => Promise<Conversation>;
+  createConversation: (type: ChatType, contactId: string, title?: string, protocolIds?: string[]) => Promise<string>;
   closeConversation: (id: string) => Promise<void>;
   loadMoreMessages: (id: string) => Promise<void>;
   addTagToConversation: (id: string, tag: string) => Promise<void>;
   updateChatSettings: (settings: ChatSettings) => void;
+  markAllNotificationsAsRead: (ids: string[]) => void;
+  deleteNotification: (id: string) => void;
+  clearAllNotifications: () => void;
+  addReaction: (conversationId: string, messageId: string, emoji: string) => void;
+  addProtocolToConversation: (conversationId: string, protocolId: string) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -99,6 +122,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [contacts, setContacts] = useState<ChatContact[]>([]);
+  const [notifications, setNotifications] = useState<ChatNotification[]>([]);
   const [chatSettings, setChatSettings] = useState<ChatSettings>(defaultChatSettings);
   const [loading, setLoading] = useState(false);
 
@@ -216,7 +240,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       const newMessage: Message = {
         id: uuidv4(),
         text,
-        sender: user?.userType === 'admin' ? 'admin' : 'citizen',
+        sender: user?.role === 'admin' ? 'admin' : 'citizen',
         senderId: user?.id,
         senderName: user?.name || 'User',
         timestamp: new Date().toISOString(),
@@ -244,7 +268,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       }));
 
       // Simulate response for demo purposes
-      if (user?.userType !== 'admin') {
+      if (user?.role !== 'admin') {
         setTimeout(() => {
           const responseMessage: Message = {
             id: uuidv4(),
@@ -282,29 +306,34 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   };
 
   const createConversation = async (
-    participantId: string,
-    participantName: string,
-    type: 'admin' | 'citizen' | 'internal'
-  ): Promise<Conversation> => {
+    type: ChatType,
+    contactId: string,
+    title?: string,
+    protocolIds?: string[]
+  ): Promise<string> => {
     // In a real application, create a conversation in your database
+    const contact = contacts.find(c => c.id === contactId);
+    
     const newConversation: Conversation = {
       id: uuidv4(),
       type,
-      title: type === 'admin' ? 'Cidadão' : 'Atendimento',
-      participantId,
-      participantName,
+      title: title || (type === 'admin' ? 'Cidadão' : 'Atendimento'),
+      participantId: contactId,
+      participantName: contact?.name || 'Contato',
       status: 'active',
       messages: [],
       unreadCount: 0,
+      contactId,
+      protocolIds,
       participants: [
         { id: user?.id || '', name: user?.name || 'Usuário' },
-        { id: participantId, name: participantName }
+        { id: contactId, name: contact?.name || 'Contato' }
       ]
     };
 
     setConversations((prev) => [...prev, newConversation]);
     setMessages(prev => ({...prev, [newConversation.id]: []}));
-    return newConversation;
+    return newConversation.id;
   };
 
   const closeConversation = async (id: string) => {
@@ -335,9 +364,64 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       )
     );
   };
+  
+  const addProtocolToConversation = async (conversationId: string, protocolId: string) => {
+    setConversations(prev => 
+      prev.map(conv => 
+        conv.id === conversationId 
+          ? {
+              ...conv, 
+              protocolIds: conv.protocolIds ? 
+                (conv.protocolIds.includes(protocolId) ? conv.protocolIds : [...conv.protocolIds, protocolId]) 
+                : [protocolId]
+            } 
+          : conv
+      )
+    );
+  };
 
   const updateChatSettings = (settings: ChatSettings) => {
     setChatSettings(settings);
+  };
+  
+  const markAllNotificationsAsRead = (ids: string[]) => {
+    setNotifications(prev => 
+      prev.map(notif => 
+        ids.includes(notif.id) ? {...notif, read: true} : notif
+      )
+    );
+  };
+  
+  const deleteNotification = (id: string) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
+  };
+  
+  const clearAllNotifications = () => {
+    setNotifications([]);
+  };
+  
+  const addReaction = (conversationId: string, messageId: string, emoji: string) => {
+    if (!user) return;
+    
+    setMessages(prev => {
+      const conversationMessages = prev[conversationId];
+      if (!conversationMessages) return prev;
+      
+      return {
+        ...prev,
+        [conversationId]: conversationMessages.map(msg => 
+          msg.id === messageId 
+            ? {
+                ...msg,
+                reactions: [
+                  ...(msg.reactions || []),
+                  { emoji, userId: user.id, userName: user.name || 'Usuário' }
+                ]
+              }
+            : msg
+        )
+      };
+    });
   };
 
   return (
@@ -349,6 +433,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         messages,
         contacts,
         chatSettings,
+        notifications,
         loading,
         sendMessage,
         selectConversation,
@@ -358,6 +443,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         loadMoreMessages,
         addTagToConversation,
         updateChatSettings,
+        markAllNotificationsAsRead,
+        deleteNotification,
+        clearAllNotifications,
+        addReaction,
+        addProtocolToConversation
       }}
     >
       {children}

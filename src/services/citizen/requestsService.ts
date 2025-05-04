@@ -1,175 +1,181 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid';
 
 export interface CitizenRequest {
   id: string;
-  protocol_number: string;
   title: string;
   description: string;
-  target_department: string;
-  priority: string;
   status: string;
-  due_date?: string;
-  created_at: string;
-  updated_at: string;
+  type: string; 
+  createdAt: string;
+  updatedAt?: string;
+  userId: string;
+  departmentId: string;
+  priority?: string;
+  dueDate?: string;
+  category?: string;
+  protocol?: string;
+  documents?: string[];
+  comments?: Comment[];
 }
 
-export interface NewRequestData {
-  title: string;
-  description: string;
-  target_department: string;
-  priority: string;
+export interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  userId: string;
+  userName: string;
+  isInternal: boolean;
 }
 
-// Fetch all requests for a citizen
-export async function getCitizenRequests(citizenId: string | undefined): Promise<CitizenRequest[]> {
-  if (!citizenId) {
-    return [];
-  }
-
+export async function fetchCitizenRequests(userId: string): Promise<CitizenRequest[]> {
   try {
-    // Get requests from mayor_direct_requests table
-    const { data: requests, error } = await supabase
-      .from("mayor_direct_requests")
+    const { data, error } = await supabase
+      .from("citizen_requests")
       .select("*")
-      .eq("requester_id", citizenId)
-      .order("created_at", { ascending: false });
+      .eq("userId", userId)
+      .order("createdAt", { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching citizen requests:", error);
+      throw new Error(error.message);
+    }
 
-    return requests.map(request => ({
-      id: request.id,
-      protocol_number: request.protocol_number,
-      title: request.title,
-      description: request.description,
-      target_department: request.target_department,
-      priority: request.priority,
-      status: request.status,
-      due_date: request.due_date,
-      created_at: request.created_at,
-      updated_at: request.updated_at
-    }));
-  } catch (error: any) {
-    console.error("Error fetching citizen requests:", error.message);
+    return data || [];
+  } catch (error) {
+    console.error("Error in fetchCitizenRequests:", error);
     throw error;
   }
 }
 
-// Fetch a specific request by ID
-export async function getCitizenRequestById(requestId: string, citizenId: string | undefined): Promise<CitizenRequest | null> {
-  if (!citizenId) {
-    return null;
-  }
-
+export async function fetchCitizenRequestById(requestId: string): Promise<CitizenRequest> {
   try {
     const { data, error } = await supabase
-      .from("mayor_direct_requests")
-      .select(`
-        *,
-        mayor_request_attachments(*),
-        mayor_request_comments(*)
-      `)
+      .from("citizen_requests")
+      .select("*")
       .eq("id", requestId)
-      .eq("requester_id", citizenId)
       .single();
 
-    if (error) throw error;
-    
-    return {
-      id: data.id,
-      protocol_number: data.protocol_number,
-      title: data.title,
-      description: data.description,
-      target_department: data.target_department,
-      priority: data.priority,
-      status: data.status,
-      due_date: data.due_date,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      // Include additional properties for attachments and comments
-      attachments: data.mayor_request_attachments || [],
-      comments: data.mayor_request_comments || []
-    };
-  } catch (error: any) {
-    console.error("Error fetching request details:", error.message);
-    return null;
+    if (error) {
+      console.error("Error fetching citizen request:", error);
+      throw new Error(error.message);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error in fetchCitizenRequestById:", error);
+    throw error;
   }
 }
 
-// Create a new citizen request
-export async function createCitizenRequest(data: NewRequestData, citizenId: string | undefined): Promise<CitizenRequest | null> {
-  if (!citizenId) {
-    toast({
-      title: "Erro ao criar solicitação",
-      description: "Usuário não identificado. Por favor, faça login novamente.",
-      variant: "destructive",
-    });
-    return null;
-  }
-
+export async function createCitizenRequest(
+  request: Omit<CitizenRequest, "id" | "createdAt" | "status" | "protocol">
+): Promise<CitizenRequest> {
   try {
-    const { data: requestData, error } = await supabase
-      .from("mayor_direct_requests")
-      .insert({
-        title: data.title,
-        description: data.description,
-        target_department: data.target_department,
-        priority: data.priority || "normal",
-        status: "open",
-        requester_id: citizenId,
-        protocol_number: '' // This will be auto-generated by the DB trigger
-      })
+    const protocol = generateProtocol();
+    const newRequest = {
+      ...request,
+      id: uuidv4(),
+      status: "pending",
+      protocol,
+      createdAt: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from("citizen_requests")
+      .insert([newRequest])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error creating citizen request:", error);
+      throw new Error(error.message);
+    }
 
     toast({
-      title: "Solicitação criada",
-      description: `Protocolo ${requestData.protocol_number} registrado com sucesso.`,
+      title: "Solicitação enviada",
+      description: `Sua solicitação foi registrada com sucesso. Protocolo: ${protocol}`,
     });
 
-    return {
-      id: requestData.id,
-      protocol_number: requestData.protocol_number,
-      title: requestData.title,
-      description: requestData.description,
-      target_department: requestData.target_department,
-      priority: requestData.priority,
-      status: requestData.status,
-      created_at: requestData.created_at,
-      updated_at: requestData.updated_at
-    };
-  } catch (error: any) {
-    console.error("Error creating citizen request:", error.message);
-    toast({
-      title: "Erro ao criar solicitação",
-      description: error.message || "Ocorreu um erro ao registrar sua solicitação.",
-      variant: "destructive",
-    });
-    return null;
+    return data;
+  } catch (error) {
+    console.error("Error in createCitizenRequest:", error);
+    throw error;
   }
 }
 
-// Add a comment to a request
-export async function addCommentToRequest(requestId: string, commentText: string, authorId: string | undefined): Promise<boolean> {
-  if (!authorId) return false;
-  
+export async function updateCitizenRequest(
+  id: string,
+  updates: Partial<CitizenRequest>
+): Promise<CitizenRequest> {
   try {
-    const { error } = await supabase
-      .from("mayor_request_comments")
-      .insert({
-        request_id: requestId,
-        comment_text: commentText,
-        author_id: authorId
-      });
-      
-    if (error) throw error;
-    
-    return true;
-  } catch (error: any) {
-    console.error("Error adding comment:", error.message);
-    return false;
+    const { data, error } = await supabase
+      .from("citizen_requests")
+      .update({ ...updates, updatedAt: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating citizen request:", error);
+      throw new Error(error.message);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error in updateCitizenRequest:", error);
+    throw error;
   }
+}
+
+export async function addCommentToCitizenRequest(
+  requestId: string,
+  comment: Omit<Comment, "id" | "createdAt">
+): Promise<Comment> {
+  try {
+    // In a real app, you would add this to a comments table related to the request
+    const newComment = {
+      ...comment,
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+    };
+
+    // For this example, we'll update the request's comments array
+    const { data: request } = await supabase
+      .from("citizen_requests")
+      .select("comments")
+      .eq("id", requestId)
+      .single();
+
+    const currentComments = request?.comments || [];
+    
+    const { data, error } = await supabase
+      .from("citizen_requests")
+      .update({
+        comments: [...currentComments, newComment],
+        updatedAt: new Date().toISOString(),
+      })
+      .eq("id", requestId)
+      .select("comments")
+      .single();
+
+    if (error) {
+      console.error("Error adding comment to citizen request:", error);
+      throw new Error(error.message);
+    }
+
+    return newComment;
+  } catch (error) {
+    console.error("Error in addCommentToCitizenRequest:", error);
+    throw error;
+  }
+}
+
+// Helper function to generate a protocol number
+function generateProtocol(): string {
+  const year = new Date().getFullYear();
+  const random = Math.floor(Math.random() * 100000).toString().padStart(6, "0");
+  return `${year}-${random}`;
 }

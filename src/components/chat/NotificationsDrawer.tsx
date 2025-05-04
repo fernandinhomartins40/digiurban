@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Drawer,
   DrawerClose,
@@ -21,7 +21,13 @@ interface NotificationsDrawerProps {
 }
 
 export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerProps) {
-  const { notifications, markAllNotificationsAsRead, deleteNotification, clearAllNotifications } = useChat();
+  const { 
+    notifications = [], 
+    markAllNotificationsAsRead, 
+    deleteNotification, 
+    clearAllNotifications,
+    setActiveConversation
+  } = useChat();
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -98,9 +104,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
                             onClick={() => {
                               onOpenChange(false);
                               setTimeout(() => {
-                                // Access conversation after drawer closes
                                 if (notification.conversationId) {
-                                  const { setActiveConversation } = useChat();
                                   setActiveConversation(notification.conversationId);
                                 }
                               }, 300);

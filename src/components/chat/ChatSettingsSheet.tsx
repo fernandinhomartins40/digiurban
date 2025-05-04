@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Settings } from "lucide-react";
+import { useChat } from "@/contexts/ChatContext";
 
 interface ChatSettingsSheetProps {
   open: boolean;
@@ -19,10 +20,21 @@ interface ChatSettingsSheetProps {
 }
 
 export function ChatSettingsSheet({ open, onOpenChange }: ChatSettingsSheetProps) {
-  // We'll use this simplified version that doesn't rely on the updated chat context yet
+  const { chatSettings, updateChatSettings } = useChat();
+  
+  // Create a copy of settings to modify
+  const [localSettings, setLocalSettings] = useState({ ...chatSettings });
   
   const handleSave = () => {
+    updateChatSettings(localSettings);
     onOpenChange(false);
+  };
+  
+  const handleToggle = (key: string, value: boolean) => {
+    setLocalSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
 
   return (
@@ -47,7 +59,10 @@ export function ChatSettingsSheet({ open, onOpenChange }: ChatSettingsSheetProps
                   Receber notificações de novas mensagens
                 </p>
               </div>
-              <Switch defaultChecked={true} />
+              <Switch 
+                checked={localSettings.browserNotifications}
+                onCheckedChange={(checked) => handleToggle('browserNotifications', checked)} 
+              />
             </div>
             
             <div className="flex flex-row items-center justify-between rounded-lg border p-3">
@@ -57,7 +72,10 @@ export function ChatSettingsSheet({ open, onOpenChange }: ChatSettingsSheetProps
                   Tocar som ao receber mensagens
                 </p>
               </div>
-              <Switch defaultChecked={true} />
+              <Switch 
+                checked={localSettings.notificationSounds}
+                onCheckedChange={(checked) => handleToggle('notificationSounds', checked)}
+              />
             </div>
           </div>
         </div>

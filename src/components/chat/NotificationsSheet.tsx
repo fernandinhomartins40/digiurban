@@ -21,7 +21,13 @@ interface NotificationsSheetProps {
 }
 
 export function NotificationsSheet({ open, onOpenChange }: NotificationsSheetProps) {
-  const { notifications, markAllNotificationsAsRead, deleteNotification, clearAllNotifications, setActiveConversation } = useChat();
+  const { 
+    notifications = [], 
+    markAllNotificationsAsRead, 
+    deleteNotification, 
+    clearAllNotifications, 
+    setActiveConversation 
+  } = useChat();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

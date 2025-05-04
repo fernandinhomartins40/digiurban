@@ -1,11 +1,11 @@
 
 import { cn } from "@/lib/utils";
-import { ChatMessage } from "@/contexts/ChatContext";
+import { Message } from "@/contexts/ChatContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface MessageBubbleProps {
-  message: ChatMessage;
+  message: Message;
   isCurrentUser: boolean;
 }
 
@@ -27,7 +27,7 @@ export function MessageBubble({ message, isCurrentUser }: MessageBubbleProps) {
         {!isCurrentUser && (
           <div className="text-xs font-medium mb-1">{message.senderName}</div>
         )}
-        <p className="text-sm break-words">{message.content}</p>
+        <p className="text-sm break-words">{message.text || message.content}</p>
         
         {/* Attachments if any */}
         {message.attachments && message.attachments.length > 0 && (
