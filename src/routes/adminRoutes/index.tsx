@@ -60,3 +60,5 @@ export const adminRoutes: RouteObject[] = [
     ],
   },
 ];
+
+export default adminRoutes;

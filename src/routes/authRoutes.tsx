@@ -28,3 +28,5 @@ export const authRoutes: RouteObject[] = [
     element: <ResetPassword />,
   },
 ];
+
+export default authRoutes;

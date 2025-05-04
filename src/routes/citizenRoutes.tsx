@@ -20,3 +20,5 @@ export const citizenRoutes: RouteObject[] = [
     ],
   },
 ];
+
+export default citizenRoutes;
