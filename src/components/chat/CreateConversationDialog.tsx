@@ -85,9 +85,9 @@ export function CreateConversationDialog({
       // Create the conversation
       const conversationId = await createConversation(
         "internal",
-        [values.departmentId],
+        values.departmentId,
         title,
-        values.protocolId || undefined
+        values.protocolId ? [values.protocolId] : undefined
       );
 
       // Set it as the active conversation

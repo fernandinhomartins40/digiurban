@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,7 +85,12 @@ interface ChatContextType {
   sendMessage: (conversationId: string, content: string, attachments?: File[], replyToMessageId?: string) => Promise<void>;
   markAsRead: (conversationId: string) => Promise<void>;
   closeConversation: (conversationId: string) => Promise<void>;
-  createConversation: (contactId: string, title?: string, protocolIds?: string[]) => Promise<string>;
+  createConversation: (
+    type: ChatType, 
+    contactId: string, 
+    title?: string, 
+    protocolIds?: string[]
+  ) => Promise<string>;
   loadMoreMessages: (conversationId: string) => Promise<void>;
   addReaction: (conversationId: string, messageId: string, reactionType: string) => Promise<void>;
   searchConversations: (query: string) => ChatConversation[];
@@ -535,6 +539,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const createConversation = async (
+    type: ChatType, 
     contactId: string, 
     title?: string, 
     protocolIds?: string[]

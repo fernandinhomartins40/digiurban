@@ -81,10 +81,10 @@ export function ConversationView() {
       <div className="p-3 border-b flex items-center">
         <div className="flex-1">
           <h4 className="font-medium">{activeConversation.title}</h4>
-          {activeConversation.protocolId && (
+          {activeConversation.protocolIds && activeConversation.protocolIds.length > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-500">
-                Protocolo: {activeConversation.protocolId}
+                Protocolo: {activeConversation.protocolIds[0]}
               </span>
               <Badge variant="outline" className="text-xs">
                 {activeConversation.status === "active" ? "Ativo" : "Arquivado"}

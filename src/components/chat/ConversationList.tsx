@@ -60,9 +60,9 @@ export function ConversationList({
               )}
             </div>
             
-            {conversation.protocolId && (
+            {conversation.protocolIds && conversation.protocolIds.length > 0 && (
               <span className="text-xs text-muted-foreground block">
-                Protocolo: {conversation.protocolId}
+                Protocolo: {conversation.protocolIds[0]}
               </span>
             )}
             

@@ -267,7 +267,7 @@ export function ConversationDetail({ onBack }: ConversationDetailProps) {
       )}
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" viewportRef={scrollRef}>
+      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-4">
           {/* Load more button */}
           <div className="flex justify-center mb-4">
