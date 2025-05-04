@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Heading } from "@/components/ui/heading";
@@ -26,7 +25,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { getCitizenRequestById, addCommentToRequest } from "@/services/citizen/requestsService";
+import { fetchCitizenRequestById, addCommentToCitizenRequest } from "@/services/citizen/requestsService";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function RequestDetailPage() {
@@ -44,7 +43,7 @@ export default function RequestDetailPage() {
       if (!id) return;
       try {
         setLoading(true);
-        const data = await getCitizenRequestById(id, user?.id);
+        const data = await fetchCitizenRequestById(id);
         if (!data) {
           toast({
             title: "Solicitação não encontrada",
@@ -112,7 +111,7 @@ export default function RequestDetailPage() {
     
     setSubmitting(true);
     try {
-      const success = await addCommentToRequest(id!, comment, user?.id);
+      const success = await addCommentToCitizenRequest(id!, comment, user?.id);
       if (success) {
         toast({
           title: "Comentário adicionado",
@@ -120,7 +119,7 @@ export default function RequestDetailPage() {
         });
         setComment("");
         // Refresh request data to show the new comment
-        const updatedRequest = await getCitizenRequestById(id!, user?.id);
+        const updatedRequest = await fetchCitizenRequestById(id!);
         setRequest(updatedRequest);
       } else {
         throw new Error("Falha ao adicionar comentário");
@@ -175,7 +174,7 @@ export default function RequestDetailPage() {
           <ChevronLeft size={20} />
         </Button>
         <Heading 
-          title={`Solicitação: ${request.protocol_number}`}
+          title={`Solicitação: ${request.protocol}`}
           description="Detalhes e acompanhamento da sua solicitação" 
         />
       </div>
@@ -190,7 +189,7 @@ export default function RequestDetailPage() {
                 <div>
                   <CardTitle className="text-xl mb-1">{request.title}</CardTitle>
                   <CardDescription>
-                    Protocolo: {request.protocol_number}
+                    Protocolo: {request.protocol}
                   </CardDescription>
                 </div>
                 {getStatusBadge(request.status)}
@@ -205,7 +204,7 @@ export default function RequestDetailPage() {
                 <div className="flex items-center text-sm">
                   <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">Data de criação:</span>
-                  <span className="ml-2 font-medium">{formatDate(request.created_at)}</span>
+                  <span className="ml-2 font-medium">{formatDate(request.createdAt)}</span>
                 </div>
                 <div className="flex items-center text-sm">
                   <Building className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -217,11 +216,11 @@ export default function RequestDetailPage() {
                   <span className="text-muted-foreground">Prioridade:</span>
                   <span className="ml-2">{getPriorityBadge(request.priority)}</span>
                 </div>
-                {request.due_date && (
+                {request.dueDate && (
                   <div className="flex items-center text-sm">
                     <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Prazo:</span>
-                    <span className="ml-2 font-medium">{formatDate(request.due_date)}</span>
+                    <span className="ml-2 font-medium">{formatDate(request.dueDate)}</span>
                   </div>
                 )}
               </div>
@@ -244,13 +243,13 @@ export default function RequestDetailPage() {
                     <div key={index} className="bg-muted p-4 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-medium">
-                          {comment.author_name || "Usuário"}
+                          {comment.userName || "Usuário"}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {formatDate(comment.created_at)}
+                          {formatDate(comment.createdAt)}
                         </span>
                       </div>
-                      <p className="text-sm">{comment.comment_text}</p>
+                      <p className="text-sm">{comment.content}</p>
                     </div>
                   ))}
                 </div>
@@ -301,7 +300,7 @@ export default function RequestDetailPage() {
                     <span className="ml-2 font-medium">Solicitação Recebida</span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {formatDate(request.created_at)}
+                    {formatDate(request.createdAt)}
                   </p>
                 </div>
                 
@@ -342,7 +341,7 @@ export default function RequestDetailPage() {
                 Último status atualizado em:
               </p>
               <p className="font-medium text-sm">
-                {formatDate(request.updated_at)}
+                {formatDate(request.updatedAt)}
               </p>
             </CardFooter>
           </Card>

@@ -1,121 +1,134 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X } from "lucide-react";
+
+import React, { useState } from "react";
 import { useChat } from "@/contexts/ChatContext";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ConversationView } from "./ConversationView";
 import { ConversationList } from "./ConversationList";
+import { ConversationDetail } from "./ConversationDetail";
+import { ChatContactList } from "./ChatContactList";
 import { EmptyState } from "./EmptyState";
-import { CreateConversationDialog } from "./CreateConversationDialog";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, User, Users } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function AdminChatView() {
-  const { 
-    conversations,
+  const {
     activeConversationId,
     messages,
-    setActiveConversation
+    setActiveConversation,
+    conversations,
+    contacts,
+    createConversation,
   } = useChat();
-  
-  const [showNewConversationDialog, setShowNewConversationDialog] = useState(false);
 
-  // Filter conversations by type
-  const citizenConversations = conversations.filter(
-    (conv) => conv.type === "citizen"
-  );
-  
-  const internalConversations = conversations.filter(
-    (conv) => conv.type === "internal"
-  );
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
+  const [activeTab, setActiveTab] = useState<"chats" | "contacts">("chats");
 
-  const renderChatContent = () => {
-    // If an active conversation is selected, show its messages
-    if (activeConversationId && messages[activeConversationId]) {
-      return <ConversationView />;
-    } 
-    
-    // Otherwise, show the current tab's content
-    return (
-      <Tabs defaultValue="citizens" className="flex-1 flex flex-col">
-        <div className="p-2 border-b flex items-center justify-between">
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="citizens">Cidadãos</TabsTrigger>
-            <TabsTrigger value="internal">Interno</TabsTrigger>
-          </TabsList>
-          
-          <Button
-            variant="ghost" 
-            size="icon"
-            onClick={() => setShowNewConversationDialog(true)}
-            title="Nova conversa interna"
-          >
-            <Plus size={16} />
-          </Button>
-        </div>
-
-        <TabsContent value="citizens" className="flex-1 m-0">
-          {citizenConversations.length === 0 ? (
-            <EmptyState
-              title="Nenhuma conversa com cidadãos"
-              description="Não existem conversas ativas com cidadãos relacionadas ao seu departamento."
-            />
-          ) : (
-            <ScrollArea className="flex-1 p-3">
-              <ConversationList
-                conversations={citizenConversations}
-                onSelect={setActiveConversation}
-              />
-            </ScrollArea>
-          )}
-        </TabsContent>
-
-        <TabsContent value="internal" className="flex-1 m-0">
-          <div className="flex flex-col h-full">
-            {internalConversations.length === 0 ? (
-              <EmptyState
-                title="Nenhuma conversa interna"
-                description="Não existem conversas internas ativas. Clique no + para iniciar uma nova conversa."
-              />
-            ) : (
-              <ScrollArea className="flex-1 p-3">
-                <ConversationList
-                  conversations={internalConversations}
-                  onSelect={setActiveConversation}
-                />
-              </ScrollArea>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-    );
+  const handleSelectConversation = (id: string) => {
+    setActiveConversation(id);
+    setShowMobileDetail(true);
   };
 
+  const handleSelectContact = (contactId: string, contactName: string) => {
+    // Check if there's already a conversation with this contact
+    const existingConversation = conversations.find(
+      conv => conv.participantId === contactId && conv.type !== "internal"
+    );
+
+    if (existingConversation) {
+      setActiveConversation(existingConversation.id);
+    } else {
+      // Create a new conversation with this contact
+      createConversation(contactId, contactName, "citizen")
+        .then((newConversation) => {
+          setActiveConversation(newConversation.id);
+        })
+        .catch((error) => {
+          console.error("Error creating conversation:", error);
+        });
+    }
+    setShowMobileDetail(true);
+  };
+
+  const handleBackToList = () => {
+    setShowMobileDetail(false);
+  };
+
+  // On mobile, show either the list or the detail view
+  const showList = !isMobile || !showMobileDetail;
+  const showDetail = !isMobile || showMobileDetail;
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b flex items-center justify-between">
-        <h3 className="font-semibold">Chat administrativo</h3>
-        {activeConversationId && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveConversation(null)}
-          >
-            <X size={16} />
-          </Button>
-        )}
-      </div>
+    <div className="flex h-full overflow-hidden bg-background">
+      {/* Sidebar - Contacts and Conversations */}
+      {showList && (
+        <div className={`${showDetail ? "w-1/3 border-r" : "w-full"} flex flex-col h-full`}>
+          <div className="p-2 border-b">
+            <Tabs 
+              defaultValue="chats" 
+              value={activeTab} 
+              onValueChange={(v) => setActiveTab(v as "chats" | "contacts")}
+              className="w-full"
+            >
+              <TabsList className="grid grid-cols-2">
+                <TabsTrigger value="chats">
+                  <MessageSquare className="h-4 w-4 mr-2" /> Conversas
+                </TabsTrigger>
+                <TabsTrigger value="contacts">
+                  <User className="h-4 w-4 mr-2" /> Contatos
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="chats" className="mt-0">
+                <div className="p-2">
+                  {conversations.length > 0 ? (
+                    <ConversationList
+                      conversations={conversations}
+                      onSelect={handleSelectConversation}
+                    />
+                  ) : (
+                    <EmptyState
+                      title="Nenhuma conversa iniciada"
+                      description="Você ainda não tem conversas ativas"
+                      icon={<MessageSquare className="h-12 w-12 text-muted-foreground" />}
+                    />
+                  )}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="contacts" className="mt-0">
+                <div className="p-2">
+                  {contacts.length > 0 ? (
+                    <ChatContactList 
+                      contacts={contacts} 
+                      onSelect={handleSelectContact}
+                    />
+                  ) : (
+                    <EmptyState
+                      title="Nenhum contato"
+                      description="Você ainda não tem contatos"
+                      icon={<Users className="h-12 w-12 text-muted-foreground" />}
+                    />
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      )}
 
-      {/* Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {renderChatContent()}
-      </div>
-
-      {/* Create conversation dialog */}
-      <CreateConversationDialog
-        open={showNewConversationDialog}
-        onOpenChange={setShowNewConversationDialog}
-      />
+      {/* Main Content - Conversation Detail */}
+      {showDetail && (
+        <div className={`${showList ? "w-2/3" : "w-full"} flex flex-col h-full`}>
+          {activeConversationId ? (
+            <ConversationDetail onBack={handleBackToList} />
+          ) : (
+            <EmptyState 
+              title="Selecione uma conversa"
+              description="Escolha uma conversa da lista ou um contato para iniciar uma nova conversa"
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -31,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { getCitizenRequests } from "@/services/citizen/requestsService";
+import { fetchCitizenRequests } from "@/services/citizen/requestsService";
 
 export default function CitizenRequestsPage() {
   const navigate = useNavigate();
@@ -46,7 +45,7 @@ export default function CitizenRequestsPage() {
     const loadRequests = async () => {
       try {
         setLoading(true);
-        const data = await getCitizenRequests(user?.id);
+        const data = await fetchCitizenRequests(user?.id);
         setRequests(data);
       } catch (error) {
         console.error("Error loading requests:", error);
@@ -66,7 +65,7 @@ export default function CitizenRequestsPage() {
   const filteredRequests = requests.filter(request => {
     const matchesSearch = searchTerm === "" || 
       request.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.protocol_number?.toLowerCase().includes(searchTerm.toLowerCase());
+      request.protocol?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === null || request.status === statusFilter;
     
@@ -164,7 +163,7 @@ export default function CitizenRequestsPage() {
                   <div>
                     <CardTitle className="line-clamp-1">{request.title}</CardTitle>
                     <CardDescription className="mt-1">
-                      Protocolo: {request.protocol_number}
+                      Protocolo: {request.protocol}
                     </CardDescription>
                   </div>
                   {getStatusBadge(request.status)}
@@ -178,7 +177,7 @@ export default function CitizenRequestsPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Data:</span>
-                    <span>{formatDate(request.created_at)}</span>
+                    <span>{formatDate(request.createdAt)}</span>
                   </div>
                 </div>
               </CardContent>

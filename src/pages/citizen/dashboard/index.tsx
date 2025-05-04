@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -19,7 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { getCitizenRequests } from "@/services/citizen/requestsService";
+import { fetchCitizenRequests } from "@/services/citizen/requestsService";
 
 export default function CitizenDashboard() {
   const navigate = useNavigate();
@@ -31,7 +30,7 @@ export default function CitizenDashboard() {
     const loadRecentRequests = async () => {
       try {
         setLoading(true);
-        const requests = await getCitizenRequests(user?.id);
+        const requests = await fetchCitizenRequests(user?.id);
         setRecentRequests(requests.slice(0, 3)); // Get only the 3 most recent
       } catch (error) {
         console.error("Error loading recent requests:", error);
@@ -159,7 +158,7 @@ export default function CitizenDashboard() {
                     <div>
                       <div className="font-medium">{request.title}</div>
                       <div className="text-xs text-muted-foreground">
-                        Protocolo: {request.protocol_number} • {formatDate(request.created_at)}
+                        Protocolo: {request.protocol} • {formatDate(request.createdAt)}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
