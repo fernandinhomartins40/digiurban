@@ -1,195 +1,104 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Helmet } from "react-helmet";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  BarChart, 
-  Bar, 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+import { getDashboardStats } from "@/services/mayorOffice/dashboardService";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CalendarIcon, Download } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format, subDays, subMonths } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
+  BarChart,
+  Bar,
   PieChart,
   Pie,
-  Cell
+  Cell,
 } from "recharts";
-import { format, subDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { useAuth } from "@/contexts/AuthContext";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Loader2, ArrowRight, BarChart3, CalendarCheck, FileText, Target } from "lucide-react";
-import { getDashboardStats, getDirectRequests, getMayorAppointments } from "@/services/mayorOfficeService";
-import { DashboardStatistic, DirectRequest, MayorAppointment } from "@/types/mayorOffice";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+// Dados de exemplo para os gráficos
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+
+const performanceData = [
+  { month: "Jan", solicitacoes: 65, processos: 28, atendimentos: 33 },
+  { month: "Fev", solicitacoes: 59, processos: 48, atendimentos: 31 },
+  { month: "Mar", solicitacoes: 80, processos: 40, atendimentos: 38 },
+  { month: "Abr", solicitacoes: 81, processos: 47, atendimentos: 45 },
+  { month: "Mai", solicitacoes: 56, processos: 65, atendimentos: 51 },
+  { month: "Jun", solicitacoes: 55, processos: 58, atendimentos: 42 },
+  { month: "Jul", solicitacoes: 40, processos: 44, atendimentos: 26 },
+];
+
+const departmentRequests = [
+  { name: "Saúde", valor: 400 },
+  { name: "Educação", valor: 300 },
+  { name: "Urbanismo", valor: 300 },
+  { name: "Obras", valor: 200 },
+  { name: "Assistência", valor: 150 },
+];
+
+const statusData = [
+  { name: "Em Andamento", value: 32 },
+  { name: "Pendente", value: 26 },
+  { name: "Concluído", value: 42 },
+  { name: "Cancelado", value: 6 },
+];
 
 export default function MayorDashboard() {
-  const { user } = useAuth();
-  const [timeFrame, setTimeFrame] = useState<"7d" | "30d" | "90d" | "year">("30d");
-  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
-    start: subDays(new Date(), 30),
-    end: new Date(),
+  const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "custom">("30d");
+  const [startDate, setStartDate] = useState<Date | undefined>(subDays(new Date(), 30));
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [selectedSector, setSelectedSector] = useState<string | undefined>(undefined);
+
+  // Obter dados do dashboard com base nos filtros
+  const { data: dashboardStats, isLoading } = useQuery({
+    queryKey: ["mayorDashboardStats", startDate, endDate, selectedSector],
+    queryFn: () => getDashboardStats(startDate, endDate, selectedSector),
   });
 
-  // Update date range when time frame changes
-  useEffect(() => {
-    const end = new Date();
-    let start;
-
-    switch (timeFrame) {
-      case "7d":
-        start = subDays(end, 7);
-        break;
-      case "30d":
-        start = subDays(end, 30);
-        break;
-      case "90d":
-        start = subDays(end, 90);
-        break;
-      case "year":
-        start = subDays(end, 365);
-        break;
-      default:
-        start = subDays(end, 30);
+  // Manipuladores para alterações de filtro
+  const handleDateRangeChange = (range: "7d" | "30d" | "90d" | "custom") => {
+    setDateRange(range);
+    if (range === "7d") {
+      setStartDate(subDays(new Date(), 7));
+      setEndDate(new Date());
+    } else if (range === "30d") {
+      setStartDate(subDays(new Date(), 30));
+      setEndDate(new Date());
+    } else if (range === "90d") {
+      setStartDate(subDays(new Date(), 90));
+      setEndDate(new Date());
     }
-
-    setDateRange({ start, end });
-  }, [timeFrame]);
-
-  // Fetch dashboard statistics
-  const { data: stats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["mayorDashboardStats", dateRange],
-    queryFn: () => getDashboardStats(dateRange.start, dateRange.end),
-  });
-
-  // Fetch recent requests
-  const { data: recentRequests, isLoading: isLoadingRequests } = useQuery({
-    queryKey: ["mayorRecentRequests"],
-    queryFn: () => getDirectRequests(),
-  });
-
-  // Fetch upcoming appointments
-  const { data: upcomingAppointments, isLoading: isLoadingAppointments } = useQuery({
-    queryKey: ["mayorUpcomingAppointments"],
-    queryFn: () => getMayorAppointments("approved"),
-  });
-
-  // Transform data for charts
-  const getRequestsByStatusData = () => {
-    if (!recentRequests) return [];
-
-    const statusCounts = {
-      open: 0,
-      in_progress: 0,
-      completed: 0,
-      cancelled: 0,
-    };
-
-    recentRequests.forEach((request: DirectRequest) => {
-      if (statusCounts.hasOwnProperty(request.status)) {
-        statusCounts[request.status as keyof typeof statusCounts]++;
-      }
-    });
-
-    return Object.keys(statusCounts).map((status) => ({
-      name: mapStatusName(status),
-      value: statusCounts[status as keyof typeof statusCounts],
-    }));
-  };
-
-  const getTimelineData = () => {
-    if (!stats) return [];
-
-    // Group stats by date and count
-    const groupedByDate = stats.reduce<Record<string, { requests: number; appointments: number }>>((acc, stat) => {
-      const dateStr = format(stat.statDate, "yyyy-MM-dd");
-      
-      if (!acc[dateStr]) {
-        acc[dateStr] = { requests: 0, appointments: 0 };
-      }
-      
-      if (stat.statType === "requests") {
-        acc[dateStr].requests = stat.statValue;
-      } else if (stat.statType === "appointments") {
-        acc[dateStr].appointments = stat.statValue;
-      }
-      
-      return acc;
-    }, {});
-
-    // Convert to array for chart
-    return Object.keys(groupedByDate).map(date => ({
-      date: format(new Date(date), "dd/MM"),
-      requests: groupedByDate[date].requests,
-      appointments: groupedByDate[date].appointments,
-    }));
-  };
-
-  const mapStatusName = (status: string): string => {
-    const statusMap: Record<string, string> = {
-      open: "Aberta",
-      in_progress: "Em Progresso",
-      completed: "Concluída",
-      cancelled: "Cancelada",
-      pending: "Pendente",
-      approved: "Aprovada",
-      rejected: "Rejeitada",
-    };
-    return statusMap[status] || status;
-  };
-
-  const mapPriorityName = (priority: string): string => {
-    const priorityMap: Record<string, string> = {
-      low: "Baixa",
-      normal: "Normal",
-      high: "Alta",
-      urgent: "Urgente",
-    };
-    return priorityMap[priority] || priority;
-  };
-
-  const getPriorityColor = (priority: string): string => {
-    const colorMap: Record<string, string> = {
-      low: "bg-blue-100 text-blue-800",
-      normal: "bg-green-100 text-green-800",
-      high: "bg-amber-100 text-amber-800",
-      urgent: "bg-red-100 text-red-800",
-    };
-    return colorMap[priority] || "bg-gray-100 text-gray-800";
-  };
-
-  const getStatusColor = (status: string): string => {
-    const colorMap: Record<string, string> = {
-      open: "bg-blue-100 text-blue-800",
-      in_progress: "bg-amber-100 text-amber-800",
-      completed: "bg-green-100 text-green-800",
-      cancelled: "bg-gray-100 text-gray-800",
-      pending: "bg-purple-100 text-purple-800",
-      approved: "bg-green-100 text-green-800",
-      rejected: "bg-red-100 text-red-800",
-    };
-    return colorMap[status] || "bg-gray-100 text-gray-800";
-  };
-
-  // Calculate summary totals
-  const getTotalRequests = () => {
-    return recentRequests?.length || 0;
-  };
-
-  const getCompletedRequests = () => {
-    return recentRequests?.filter(r => r.status === "completed").length || 0;
-  };
-
-  const getPendingAppointments = () => {
-    return upcomingAppointments?.filter(a => a.status === "approved").length || 0;
   };
 
   return (
@@ -197,269 +106,354 @@ export default function MayorDashboard() {
       <Helmet>
         <title>Dashboard | Gabinete do Prefeito</title>
       </Helmet>
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard do Prefeito</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard do Gabinete</h1>
           <p className="text-sm text-muted-foreground">
-            Painel geral de visualização de indicadores-chave da gestão.
+            Visão geral dos indicadores e desempenho do gabinete do prefeito
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={timeFrame} onValueChange={(value) => setTimeFrame(value as any)}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Período" />
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Select
+            value={selectedSector}
+            onValueChange={setSelectedSector}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Todos os setores" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7d">7 dias</SelectItem>
-              <SelectItem value="30d">30 dias</SelectItem>
-              <SelectItem value="90d">90 dias</SelectItem>
-              <SelectItem value="year">1 ano</SelectItem>
+              <SelectItem value={undefined}>Todos os setores</SelectItem>
+              <SelectItem value="gabinete">Gabinete</SelectItem>
+              <SelectItem value="saude">Saúde</SelectItem>
+              <SelectItem value="educacao">Educação</SelectItem>
+              <SelectItem value="obras">Obras</SelectItem>
+              <SelectItem value="urbanismo">Urbanismo</SelectItem>
             </SelectContent>
           </Select>
+
+          <div className="flex gap-2">
+            <Tabs
+              value={dateRange}
+              onValueChange={(value) => handleDateRangeChange(value as "7d" | "30d" | "90d" | "custom")}
+              className="w-fit"
+            >
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="7d">7D</TabsTrigger>
+                <TabsTrigger value="30d">30D</TabsTrigger>
+                <TabsTrigger value="90d">90D</TabsTrigger>
+                <TabsTrigger value="custom">
+                  <CalendarIcon className="h-4 w-4" />
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {dateRange === "custom" && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-auto justify-start text-left font-normal">
+                    {startDate && endDate ? (
+                      <>
+                        {format(startDate, "P", { locale: ptBR })} -{" "}
+                        {format(endDate, "P", { locale: ptBR })}
+                      </>
+                    ) : (
+                      <span>Escolha um período</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="range"
+                    selected={{
+                      from: startDate,
+                      to: endDate,
+                    }}
+                    onSelect={(range) => {
+                      setStartDate(range?.from);
+                      setEndDate(range?.to);
+                    }}
+                    defaultMonth={startDate}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
+
+            <Button variant="outline" size="icon">
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      {/* KPI Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Solicitações</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Solicitações
+            </CardTitle>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoadingRequests ? <Loader2 className="h-4 w-4 animate-spin" /> : getTotalRequests()}
+            <div className="text-2xl font-bold">231</div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                +12% em relação ao mês anterior
+              </p>
+              <div className="text-sm font-medium text-green-600">↑ 12%</div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              No período selecionado
-            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Solicitações Concluídas</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Tempo Médio de Resposta
+            </CardTitle>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoadingRequests ? <Loader2 className="h-4 w-4 animate-spin" /> : getCompletedRequests()}
+            <div className="text-2xl font-bold">2.4 dias</div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                -0.5 dias em relação ao mês anterior
+              </p>
+              <div className="text-sm font-medium text-green-600">↓ 19%</div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {isLoadingRequests ? "..." : `${Math.round((getCompletedRequests() / (getTotalRequests() || 1)) * 100)}% do total`}
-            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Agendamentos Pendentes</CardTitle>
-            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Taxa de Resolução
+            </CardTitle>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
+              <rect width="20" height="14" x="2" y="5" rx="2" />
+              <path d="M2 10h20" />
+            </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoadingAppointments ? <Loader2 className="h-4 w-4 animate-spin" /> : getPendingAppointments()}
+            <div className="text-2xl font-bold">78%</div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                +3% em relação ao mês anterior
+              </p>
+              <div className="text-sm font-medium text-green-600">↑ 3%</div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Agendamentos aprovados
-            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Indicadores</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Satisfação
+            </CardTitle>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+            </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoadingStats ? <Loader2 className="h-4 w-4 animate-spin" /> : (stats?.length || 0)}
+            <div className="text-2xl font-bold">4.6/5</div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                +0.2 em relação ao mês anterior
+              </p>
+              <div className="text-sm font-medium text-green-600">↑ 4%</div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Métricas monitoradas
-            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="requests">Solicitações</TabsTrigger>
-          <TabsTrigger value="appointments">Agendamentos</TabsTrigger>
-        </TabsList>
+      {/* Charts */}
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle>Desempenho Mensal</CardTitle>
+            <CardDescription>
+              Visão geral do volume de atividades ao longo dos meses
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-2">
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={performanceData}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="solicitacoes"
+                    stroke="#8884d8"
+                    activeDot={{ r: 8 }}
+                  />
+                  <Line type="monotone" dataKey="processos" stroke="#82ca9d" />
+                  <Line type="monotone" dataKey="atendimentos" stroke="#ffc658" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Evolução no Período</CardTitle>
-                <CardDescription>Solicitações e agendamentos ao longo do tempo</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                {isLoadingStats ? (
-                  <div className="flex h-full items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle>Solicitações por Departamento</CardTitle>
+            <CardDescription>
+              Distribuição das solicitações por departamento
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-2">
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={departmentRequests}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="valor" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+        <Card className="col-span-1">
+          <CardHeader>
+            <CardTitle>Status das Solicitações</CardTitle>
+            <CardDescription>
+              Visão geral do status atual das solicitações
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] flex justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-1 md:col-span-2">
+          <CardHeader>
+            <CardTitle>Atividades Recentes</CardTitle>
+            <CardDescription>
+              Últimas atividades registradas no gabinete
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map((_, i) => (
+                <div key={i} className="flex items-center">
+                  <div className={cn(
+                    "mr-2 h-2 w-2 rounded-full",
+                    i === 0 ? "bg-red-500" : i === 1 ? "bg-yellow-500" : "bg-green-500"
+                  )} />
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {i === 0 && "Nova solicitação urgente recebida"}
+                      {i === 1 && "Reunião agendada com Secretário de Obras"}
+                      {i === 2 && "Política pública de educação atualizada"}
+                      {i === 3 && "Solicitação #2340 foi finalizada"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      há {i === 0 ? "5 minutos" : i === 1 ? "2 horas" : i === 2 ? "5 horas" : "1 dia"}
+                    </p>
                   </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={getTimelineData()}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="requests" stroke="#8884d8" name="Solicitações" />
-                      <Line type="monotone" dataKey="appointments" stroke="#82ca9d" name="Agendamentos" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Solicitações por Status</CardTitle>
-                <CardDescription>Distribuição das solicitações por status</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                {isLoadingRequests ? (
-                  <div className="flex h-full items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <div>
+                    <Button variant="ghost" size="sm">
+                      Ver
+                    </Button>
                   </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={getRequestsByStatusData()}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {getRequestsByStatusData().map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="requests">
-          <Card>
-            <CardHeader>
-              <CardTitle>Solicitações Recentes</CardTitle>
-              <CardDescription>Últimas solicitações registradas no sistema</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingRequests ? (
-                <div className="flex h-64 items-center justify-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
-              ) : recentRequests && recentRequests.length > 0 ? (
-                <div className="space-y-4">
-                  {recentRequests.slice(0, 5).map((request) => (
-                    <div key={request.id} className="flex flex-col border rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-medium">{request.title}</h3>
-                        <div className="flex gap-2">
-                          <Badge className={getPriorityColor(request.priority)}>
-                            {mapPriorityName(request.priority)}
-                          </Badge>
-                          <Badge className={getStatusColor(request.status)}>
-                            {mapStatusName(request.status)}
-                          </Badge>
-                        </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                        {request.description}
-                      </p>
-                      <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                        <span>Protocolo: {request.protocolNumber}</span>
-                        <span>
-                          {format(request.createdAt, "dd 'de' MMMM 'de' yyyy, HH:mm", { locale: ptBR })}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">Nenhuma solicitação encontrada</p>
-                </div>
-              )}
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" asChild>
-                <a href="/admin/gabinete/solicitacoes">
-                  Ver todas as solicitações <ArrowRight className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="appointments">
-          <Card>
-            <CardHeader>
-              <CardTitle>Agendamentos Próximos</CardTitle>
-              <CardDescription>Audiências agendadas para os próximos dias</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingAppointments ? (
-                <div className="flex h-64 items-center justify-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : upcomingAppointments && upcomingAppointments.length > 0 ? (
-                <div className="space-y-4">
-                  {upcomingAppointments.slice(0, 5).map((appointment) => (
-                    <div key={appointment.id} className="flex flex-col border rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-medium">{appointment.subject}</h3>
-                        <Badge className={getPriorityColor(appointment.priority)}>
-                          {mapPriorityName(appointment.priority)}
-                        </Badge>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-2">
-                        <span className="text-sm">{appointment.requesterName}</span>
-                        <span className="text-sm font-medium">
-                          {format(appointment.requestedDate, "dd/MM/yyyy")} às {appointment.requestedTime.slice(0, 5)}
-                        </span>
-                      </div>
-                      {appointment.description && (
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                          {appointment.description}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">Nenhum agendamento encontrado</p>
-                </div>
-              )}
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" asChild>
-                <a href="/admin/gabinete/agendamentos">
-                  Ver todos os agendamentos <ArrowRight className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              ))}
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" className="w-full">
+              Ver todas as atividades
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }

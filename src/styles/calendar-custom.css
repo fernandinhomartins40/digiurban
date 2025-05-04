@@ -1,0 +1,58 @@
+
+/* Custom Calendar Styles to fix alignment issues */
+
+.calendar-wrapper .rdp {
+  --rdp-cell-size: 40px;
+  margin: 0;
+}
+
+.calendar-wrapper .rdp-months {
+  justify-content: center;
+}
+
+.calendar-wrapper .rdp-month {
+  margin: 0;
+}
+
+.calendar-wrapper .rdp-table {
+  margin: 0;
+  max-width: 100%;
+}
+
+.calendar-wrapper .rdp-cell {
+  padding: 0;
+  text-align: center;
+}
+
+.calendar-wrapper .rdp-head_cell {
+  text-align: center;
+  font-weight: 500;
+  padding-bottom: 0.5rem;
+}
+
+.calendar-wrapper .rdp-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--rdp-cell-size);
+  width: var(--rdp-cell-size);
+  margin: 0 auto;
+}
+
+.calendar-wrapper .rdp-button:hover:not([disabled]),
+.calendar-wrapper .rdp-button:focus-visible:not([disabled]) {
+  background-color: var(--rdp-background-color);
+  color: var(--rdp-accent-color);
+}
+
+.calendar-wrapper .rdp-day_selected {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+/* Fix for Safari */
+@supports (-webkit-touch-callout: none) {
+  .calendar-wrapper .rdp-day {
+    margin: 0;
+  }
+}
