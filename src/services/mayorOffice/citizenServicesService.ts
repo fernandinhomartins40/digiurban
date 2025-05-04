@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { BenefitStatus } from "@/types/assistance";
 
 // Type definitions
 type SearchCitizenServicesParams = {
@@ -204,6 +205,7 @@ export async function searchCitizenServices(params: SearchCitizenServicesParams)
         .eq('citizen_id', citizenId);
       
       if (status && status !== 'all') {
+        // Use appropriate status mapping for benefits
         query = query.eq('status', status);
       }
       
@@ -405,11 +407,14 @@ export async function getServiceDetails(serviceType: string, serviceId: string):
           .eq('id', data.citizen_id || '')
           .single();
         
+        // Convert string status to BenefitStatus type
+        const status = data.status as BenefitStatus;
+        
         serviceDetails = {
           id: data.id,
           title: `Benefício: ${data.benefit_type}`,
           description: data.reason,
-          status: data.status,
+          status: status,
           protocol: data.protocol_number,
           date: data.request_date,
           createdAt: data.created_at,
