@@ -1,4 +1,3 @@
-
 import React from "react";
 import { SegurancaLayout } from "../components/SegurancaLayout";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -209,7 +208,7 @@ export default function CamerasMonitoramentoIndex() {
                 <SelectValue placeholder="Filtrar por tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
+                <SelectItem value="todos">Todos os tipos</SelectItem>
                 <SelectItem value="fixa">Câmera fixa</SelectItem>
                 <SelectItem value="rotativa">Câmera rotativa</SelectItem>
               </SelectContent>
@@ -220,7 +219,7 @@ export default function CamerasMonitoramentoIndex() {
                 <SelectValue placeholder="Filtrar por bairro" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os bairros</SelectItem>
+                <SelectItem value="todos">Todos os bairros</SelectItem>
                 <SelectItem value="Centro">Centro</SelectItem>
                 <SelectItem value="Vila Nova">Vila Nova</SelectItem>
                 <SelectItem value="Jardim América">Jardim América</SelectItem>
