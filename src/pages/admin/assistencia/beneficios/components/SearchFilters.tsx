@@ -1,7 +1,7 @@
 
-import React from 'react';
-import { Search, Filter } from "lucide-react";
+import React from "react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -9,47 +9,85 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Search, Filter } from "lucide-react";
 
 interface SearchFiltersProps {
+  statusFilter: string;
+  setStatusFilter: (value: string) => void;
+  categoryFilter: string;
+  setCategoryFilter: (value: string) => void;
   searchTerm: string;
-  onSearchChange: (value: string) => void;
-  filterType: string;
-  onFilterChange: (value: string) => void;
-  typeOptions: string[];
+  setSearchTerm: (value: string) => void;
 }
 
 export function SearchFilters({
+  statusFilter,
+  setStatusFilter,
+  categoryFilter,
+  setCategoryFilter,
   searchTerm,
-  onSearchChange,
-  filterType,
-  onFilterChange,
-  typeOptions
+  setSearchTerm,
 }: SearchFiltersProps) {
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <div className="relative w-full md:w-auto flex-1">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por nome, protocolo..."
-          className="pl-8 w-full"
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
+    <div className="bg-card rounded-md border p-4 mb-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Filtros</h3>
+        <Button variant="outline" size="sm" className="flex gap-1">
+          <Filter className="h-4 w-4" />
+          <span>Limpar</span>
+        </Button>
       </div>
-      <Select value={filterType} onValueChange={onFilterChange}>
-        <SelectTrigger className="w-full md:w-[180px]">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            <span>{filterType || "Filtrar tipo"}</span>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="search">Buscar por nome ou CPF</Label>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="search"
+              placeholder="Digite para buscar..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="">Todos os tipos</SelectItem>
-          {typeOptions.map((type) => (
-            <SelectItem key={type} value={type}>{type}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="status">Status</Label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger id="status">
+              <SelectValue placeholder="Todos os status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os status</SelectItem>
+              <SelectItem value="aprovado">Aprovado</SelectItem>
+              <SelectItem value="pendente">Pendente</SelectItem>
+              <SelectItem value="rejeitado">Rejeitado</SelectItem>
+              <SelectItem value="inativo">Inativo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="category">Categoria</Label>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger id="category">
+              <SelectValue placeholder="Todas as categorias" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todas as categorias</SelectItem>
+              <SelectItem value="auxilio-moradia">Auxílio Moradia</SelectItem>
+              <SelectItem value="bolsa-familia">Bolsa Família</SelectItem>
+              <SelectItem value="bpc">BPC</SelectItem>
+              <SelectItem value="cesta-basica">Cesta Básica</SelectItem>
+              <SelectItem value="auxilio-emergencial">Auxílio Emergencial</SelectItem>
+              <SelectItem value="outros">Outros</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
     </div>
   );
 }

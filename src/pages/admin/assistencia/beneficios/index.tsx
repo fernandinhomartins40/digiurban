@@ -1,87 +1,60 @@
 
-import React from 'react';
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PackagePlus } from "lucide-react";
-import { SearchFilters } from './components/SearchFilters';
-import { BenefitsGrid } from './components/BenefitsGrid';
-import { BenefitFormDialog } from './components/BenefitFormDialog';
-import { BenefitDetailDialog } from './components/BenefitDetailDialog';
-import { useBenefits } from './hooks/useBenefits';
+import { SearchFilters } from "./components/SearchFilters";
+import { BenefitsGrid } from "./components/BenefitsGrid";
+import { useBenefits } from "./hooks/useBenefits";
+import { Plus } from "lucide-react";
+import { BenefitFormDialog } from "./components/BenefitFormDialog";
 
 export default function BeneficiosPage() {
-  const {
-    activeTab,
-    setActiveTab,
-    searchTerm,
-    setSearchTerm,
-    filterType,
-    setFilterType,
-    selectedBenefit,
-    showBenefitForm,
-    setShowBenefitForm,
-    showBenefitDetail,
-    setShowBenefitDetail,
-    isLoading,
-    filteredBenefits,
-    typeOptions,
-    handleViewBenefit,
-    handleAddBenefit,
-    refetchBenefits
-  } = useBenefits();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("todos");
+  const [categoryFilter, setCategoryFilter] = useState("todos");
+
+  const { benefits, isLoading, error } = useBenefits();
+
+  // Filter benefits based on search term and filters
+  const filteredBenefits = benefits.filter((benefit) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      benefit.beneficiaryName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      benefit.beneficiaryCpf.includes(searchTerm);
+    
+    const matchesStatus = statusFilter === "todos" || benefit.status.toLowerCase() === statusFilter;
+    const matchesCategory = categoryFilter === "todos" || benefit.category.toLowerCase() === categoryFilter;
+    
+    return matchesSearch && matchesStatus && matchesCategory;
+  });
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container py-6">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Benefícios Emergenciais</h2>
+          <h1 className="text-3xl font-bold tracking-tight">Benefícios Sociais</h1>
           <p className="text-muted-foreground">
-            Gerencie a distribuição de benefícios sociais emergenciais.
+            Gerencie os benefícios concedidos aos cidadãos
           </p>
         </div>
-        <Button onClick={handleAddBenefit} className="flex items-center gap-2">
-          <PackagePlus className="h-4 w-4" />
+        <Button className="gap-1" onClick={() => setIsDialogOpen(true)}>
+          <Plus className="h-4 w-4" />
           <span>Novo Benefício</span>
         </Button>
       </div>
 
       <SearchFilters
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        filterType={filterType}
-        onFilterChange={setFilterType}
-        typeOptions={typeOptions}
+        setSearchTerm={setSearchTerm}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 mb-4">
-          <TabsTrigger value="all">Todos</TabsTrigger>
-          <TabsTrigger value="pending">Pendentes</TabsTrigger>
-          <TabsTrigger value="approved">Aprovados</TabsTrigger>
-          <TabsTrigger value="rejected">Rejeitados</TabsTrigger>
-          <TabsTrigger value="completed">Concluídos</TabsTrigger>
-        </TabsList>
+      <BenefitsGrid benefits={filteredBenefits} isLoading={isLoading} />
 
-        <TabsContent value={activeTab} className="mt-0">
-          <BenefitsGrid 
-            benefits={filteredBenefits}
-            isLoading={isLoading}
-            onBenefitClick={handleViewBenefit}
-          />
-        </TabsContent>
-      </Tabs>
-
-      <BenefitFormDialog 
-        open={showBenefitForm} 
-        onOpenChange={setShowBenefitForm}
-      />
-
-      <BenefitDetailDialog 
-        open={showBenefitDetail} 
-        onOpenChange={setShowBenefitDetail}
-        benefit={selectedBenefit}
-        onStatusUpdate={refetchBenefits}
-      />
+      <BenefitFormDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
     </div>
   );
 }

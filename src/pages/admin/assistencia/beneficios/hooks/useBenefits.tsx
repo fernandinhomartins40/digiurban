@@ -1,119 +1,106 @@
 
-import { useState, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useToast } from '@/components/ui/use-toast';
-import { fetchBenefits, updateBenefitStatus, fetchBenefitById } from '@/services/assistance';
-import { EmergencyBenefit } from '@/types/assistance';
+import { useState, useEffect } from "react";
+
+export type Benefit = {
+  id: string;
+  beneficiaryName: string;
+  beneficiaryCpf: string;
+  category: string;
+  value: number;
+  startDate: string;
+  endDate: string | null;
+  status: string;
+  lastUpdate: string;
+};
 
 export function useBenefits() {
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [filterType, setFilterType] = useState<string>('');
-  const [selectedBenefitId, setSelectedBenefitId] = useState<string | null>(null);
-  const [showBenefitForm, setShowBenefitForm] = useState<boolean>(false);
-  const [showBenefitDetail, setShowBenefitDetail] = useState<boolean>(false);
-  
-  // Fetch all benefits
-  const { data: benefits = [], isLoading: isBenefitsLoading, refetch: refetchBenefits } = useQuery({
-    queryKey: ['emergency-benefits'],
-    queryFn: fetchBenefits,
-  });
-  
-  // Fetch selected benefit details
-  const { data: selectedBenefit, isLoading: isSelectedBenefitLoading } = useQuery({
-    queryKey: ['emergency-benefit', selectedBenefitId],
-    queryFn: () => selectedBenefitId ? fetchBenefitById(selectedBenefitId) : null,
-    enabled: !!selectedBenefitId,
-  });
-  
-  // Filter benefits
-  const filteredBenefits = benefits.filter(benefit => {
-    // Filter by tab (status)
-    if (activeTab !== 'all' && benefit.status !== activeTab) {
-      return false;
-    }
-    
-    // Filter by search term
-    if (searchTerm && !(
-      benefit.protocol_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      benefit.citizen_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      benefit.benefit_type?.toLowerCase().includes(searchTerm.toLowerCase())
-    )) {
-      return false;
-    }
-    
-    // Filter by benefit type
-    if (filterType && benefit.benefit_type !== filterType) {
-      return false;
-    }
-    
-    return true;
-  });
-  
-  // Get unique benefit types for filter options
-  const typeOptions = benefits ? Array.from(new Set(benefits.map(benefit => benefit.benefit_type))) : [];
+  const [benefits, setBenefits] = useState<Benefit[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Handle update benefit status
-  const handleUpdateStatus = useCallback(async (
-    benefitId: string, 
-    status: 'pending' | 'approved' | 'rejected' | 'delivering' | 'completed', 
-    comments?: string
-  ) => {
-    try {
-      await updateBenefitStatus(benefitId, status, comments);
-      toast({
-        title: "Sucesso",
-        description: "Status do benefício atualizado com sucesso.",
-      });
+  useEffect(() => {
+    // Simulate API call
+    const fetchBenefits = () => {
+      setIsLoading(true);
       
-      // Refresh benefits
-      refetchBenefits();
-      
-      // Close detail dialog
-      setShowBenefitDetail(false);
-    } catch (error) {
-      console.error("Error updating benefit status:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o status do benefício.",
-        variant: "destructive",
-      });
-    }
-  }, [refetchBenefits, toast]);
+      // Mock data
+      const mockBenefits: Benefit[] = [
+        {
+          id: "BNF-001",
+          beneficiaryName: "Maria da Silva",
+          beneficiaryCpf: "123.456.789-01",
+          category: "Bolsa Família",
+          value: 600,
+          startDate: "2023-01-15",
+          endDate: null,
+          status: "Aprovado",
+          lastUpdate: "2023-04-10"
+        },
+        {
+          id: "BNF-002",
+          beneficiaryName: "João Santos",
+          beneficiaryCpf: "987.654.321-09",
+          category: "Auxílio Moradia",
+          value: 350,
+          startDate: "2023-02-01",
+          endDate: "2023-08-01",
+          status: "Aprovado",
+          lastUpdate: "2023-03-15"
+        },
+        {
+          id: "BNF-003",
+          beneficiaryName: "Ana Pereira",
+          beneficiaryCpf: "456.789.123-45",
+          category: "Cesta Básica",
+          value: 120,
+          startDate: "2023-03-10",
+          endDate: null,
+          status: "Pendente",
+          lastUpdate: "2023-03-10"
+        },
+        {
+          id: "BNF-004",
+          beneficiaryName: "Carlos Ferreira",
+          beneficiaryCpf: "789.123.456-78",
+          category: "BPC",
+          value: 1212,
+          startDate: "2022-11-20",
+          endDate: null,
+          status: "Aprovado",
+          lastUpdate: "2023-02-22"
+        },
+        {
+          id: "BNF-005",
+          beneficiaryName: "Luiza Oliveira",
+          beneficiaryCpf: "321.654.987-32",
+          category: "Auxílio Emergencial",
+          value: 600,
+          startDate: "2023-01-05",
+          endDate: "2023-07-05",
+          status: "Inativo",
+          lastUpdate: "2023-04-05"
+        },
+        {
+          id: "BNF-006",
+          beneficiaryName: "Roberto Almeida",
+          beneficiaryCpf: "654.321.987-65",
+          category: "Bolsa Família",
+          value: 600,
+          startDate: "2023-02-15",
+          endDate: null,
+          status: "Rejeitado",
+          lastUpdate: "2023-02-28"
+        }
+      ];
 
-  // Handle benefit actions
-  const handleViewBenefit = useCallback((benefit: EmergencyBenefit) => {
-    setSelectedBenefitId(benefit.id);
-    setShowBenefitDetail(true);
+      setTimeout(() => {
+        setBenefits(mockBenefits);
+        setIsLoading(false);
+      }, 1000);
+    };
+
+    fetchBenefits();
   }, []);
 
-  const handleAddBenefit = useCallback(() => {
-    setSelectedBenefitId(null);
-    setShowBenefitForm(true);
-  }, []);
-
-  const isLoading = isBenefitsLoading || isSelectedBenefitLoading;
-
-  return {
-    activeTab,
-    setActiveTab,
-    searchTerm,
-    setSearchTerm,
-    filterType,
-    setFilterType,
-    selectedBenefit,
-    showBenefitForm,
-    setShowBenefitForm,
-    showBenefitDetail,
-    setShowBenefitDetail,
-    benefits,
-    isLoading,
-    filteredBenefits,
-    typeOptions,
-    handleUpdateStatus,
-    handleViewBenefit,
-    handleAddBenefit,
-    refetchBenefits
-  };
+  return { benefits, isLoading, error };
 }
