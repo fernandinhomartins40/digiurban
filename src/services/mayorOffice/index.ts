@@ -7,3 +7,4 @@ export * from './policiesService';
 export * from './programsService';
 export * from './storageService';
 export * from './auditService';
+export * from './citizenServicesService';

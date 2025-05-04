@@ -28,5 +28,9 @@ export const getGabineteItem = (): SidebarItemProps => ({
       title: "Programas Estratégicos",
       path: "/admin/gabinete/programas",
     },
+    {
+      title: "Serviços por Cidadão",
+      path: "/admin/gabinete/cidadaos",
+    },
   ],
 });

@@ -3,13 +3,13 @@ import React from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -76,14 +76,14 @@ export function AppointmentDetails({
   if (!isOpen || !appointmentId) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Detalhes do Agendamento</DialogTitle>
-          <DialogDescription>
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="sm:max-w-[600px] pt-10 overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Detalhes do Agendamento</SheetTitle>
+          <SheetDescription>
             Visualize e gerencie os detalhes desta solicitação de agendamento
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <div className="space-y-4 py-4">
           <div>
@@ -197,7 +197,7 @@ export function AppointmentDetails({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <SheetFooter className="gap-2 sm:gap-0">
           {status === "rejected" || status === "cancelled" ? (
             <div className="flex items-center mr-auto">
               <AlertTriangle className="h-4 w-4 mr-2 text-destructive" />
@@ -219,8 +219,8 @@ export function AppointmentDetails({
           <Button onClick={handleUpdateStatus} disabled={loading}>
             {loading ? "Processando..." : "Salvar alterações"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
