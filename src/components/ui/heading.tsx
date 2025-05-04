@@ -2,7 +2,7 @@
 import React from 'react';
 
 interface HeadingProps {
-  title: string;
+  title: React.ReactNode;
   description?: string;
 }
 
