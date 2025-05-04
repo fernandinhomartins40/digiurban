@@ -25,7 +25,7 @@ import { ouvidoriaRoutes } from "./ouvidoriaRoutes";
 
 export const adminRoutes: RouteObject[] = [
   {
-    path: "/admin",
+    path: "",
     element: <AdminLayout />,
     children: [
       {

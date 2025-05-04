@@ -8,23 +8,23 @@ import ResetPassword from "@/pages/auth/ResetPassword";
 
 export const authRoutes: RouteObject[] = [
   {
-    path: "/login",
+    path: "login",
     element: <Login />,
   },
   {
-    path: "/register",
+    path: "register",
     element: <Register />,
   },
   {
-    path: "/admin-register",
+    path: "admin-register",
     element: <AdminRegister />,
   },
   {
-    path: "/esqueci-senha",
+    path: "esqueci-senha",
     element: <ForgotPassword />,
   },
   {
-    path: "/reset-password",
+    path: "reset-password",
     element: <ResetPassword />,
   },
 ];

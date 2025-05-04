@@ -6,7 +6,7 @@ import CitizenChatPage from "@/pages/citizen/chat/ChatPage";
 
 export const citizenRoutes: RouteObject[] = [
   {
-    path: "/citizen",
+    path: "",
     element: <CitizenLayout />,
     children: [
       {
