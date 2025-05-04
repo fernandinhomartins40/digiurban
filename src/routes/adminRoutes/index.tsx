@@ -15,6 +15,7 @@ import { agriculturaRoutes } from "./agriculturaRoutes";
 import { esportesRoutes } from "./esportesRoutes";
 import { culturaRoutes } from "./culturaRoutes";
 import { turismoRoutes } from "./turismoRoutes";
+import { habitacaoRoutes } from "./habitacaoRoutes";
 import { otherModulesRoutes } from "./otherModulesRoutes";
 
 export const adminRoutes: RouteObject[] = [
@@ -44,6 +45,7 @@ export const adminRoutes: RouteObject[] = [
       ...esportesRoutes,
       ...culturaRoutes,
       ...turismoRoutes,
+      ...habitacaoRoutes,
       ...otherModulesRoutes,
     ],
   },
