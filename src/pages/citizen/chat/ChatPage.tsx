@@ -11,7 +11,7 @@ import { ChatFilters } from "@/components/chat/ChatFilters";
 import { NewChatDialog } from "@/components/chat/NewChatDialog";
 import { EmptyState } from "@/components/chat/EmptyState";
 import { Badge } from "@/components/ui/badge";
-import { NotificationsDrawer } from "@/components/chat/NotificationsDrawer";
+import { NotificationsSheet } from "@/components/chat/NotificationsSheet";
 import { ChatSettingsSheet } from "@/components/chat/ChatSettingsSheet";
 
 export default function CitizenChatPage() {
@@ -256,7 +256,7 @@ export default function CitizenChatPage() {
         initialContactId={activeContactId}
       />
       
-      <NotificationsDrawer 
+      <NotificationsSheet 
         open={showNotificationsDrawer}
         onOpenChange={setShowNotificationsDrawer}
       />

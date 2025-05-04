@@ -24,7 +24,7 @@ import { NewChatDialog } from "@/components/chat/NewChatDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { NotificationsDrawer } from "@/components/chat/NotificationsDrawer";
+import { NotificationsSheet } from "@/components/chat/NotificationsSheet";
 import { ChatSettingsSheet } from "@/components/chat/ChatSettingsSheet";
 
 export default function AdminChatPage() {
@@ -286,7 +286,7 @@ export default function AdminChatPage() {
         initialContactId={activeContactId}
       />
       
-      <NotificationsDrawer 
+      <NotificationsSheet 
         open={showNotificationsDrawer}
         onOpenChange={setShowNotificationsDrawer}
       />
