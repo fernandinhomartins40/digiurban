@@ -191,7 +191,7 @@ export default function AppointmentScheduler() {
                                     {appointment.requestedTime}
                                   </span>
                                   <Badge variant={
-                                    appointment.status === "approved" ? "success" :
+                                    appointment.status === "approved" ? "default" :
                                     appointment.status === "rejected" ? "destructive" :
                                     appointment.status === "completed" ? "outline" :
                                     appointment.status === "cancelled" ? "destructive" :
@@ -241,7 +241,7 @@ export default function AppointmentScheduler() {
                               {appointment.requestedTime}
                             </span>
                             <Badge variant={
-                              appointment.status === "approved" ? "success" :
+                              appointment.status === "approved" ? "default" :
                               appointment.status === "rejected" ? "destructive" :
                               appointment.status === "completed" ? "outline" :
                               appointment.status === "cancelled" ? "destructive" :

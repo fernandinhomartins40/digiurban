@@ -91,7 +91,7 @@ export function AppointmentDetails({
             <div className="flex items-center gap-2 mt-1">
               <Badge
                 variant={
-                  appointment.status === "approved" ? "success" :
+                  appointment.status === "approved" ? "default" :
                   appointment.status === "rejected" ? "destructive" :
                   appointment.status === "completed" ? "outline" :
                   appointment.status === "cancelled" ? "destructive" :
