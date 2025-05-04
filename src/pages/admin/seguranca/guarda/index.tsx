@@ -1,4 +1,3 @@
-
 import React from "react";
 import { SegurancaLayout } from "../components/SegurancaLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -214,7 +213,7 @@ export default function GuardaMunicipalIndex() {
                   <SelectValue placeholder="Filtrar por equipe" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as equipes</SelectItem>
+                  <SelectItem value="todos">Todas as equipes</SelectItem>
                   <SelectItem value="Alfa">Equipe Alfa</SelectItem>
                   <SelectItem value="Beta">Equipe Beta</SelectItem>
                   <SelectItem value="Gama">Equipe Gama</SelectItem>
