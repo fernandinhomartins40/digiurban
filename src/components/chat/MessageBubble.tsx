@@ -18,16 +18,16 @@ export function MessageBubble({ message, isCurrentUser }: MessageBubbleProps) {
     <div className={cn("flex", isCurrentUser ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[80%] rounded-lg p-3",
+          "max-w-full rounded-lg px-4 py-3",
           isCurrentUser
-            ? "bg-primary text-white"
-            : "bg-muted text-foreground"
+            ? "bg-primary text-white rounded-tr-none"
+            : "bg-muted text-foreground rounded-tl-none"
         )}
       >
         {!isCurrentUser && (
           <div className="text-xs font-medium mb-1">{message.senderName}</div>
         )}
-        <p className="text-sm break-words">{message.text || message.content}</p>
+        <p className="text-sm break-words whitespace-pre-wrap">{message.text || message.content}</p>
         
         {/* Attachments if any */}
         {message.attachments && message.attachments.length > 0 && (

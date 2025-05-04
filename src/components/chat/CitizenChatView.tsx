@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useChat, Conversation } from "@/contexts/ChatContext";
 import { ConversationList } from "./ConversationList";
@@ -10,6 +10,7 @@ import { MessageSquare, User, Users, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatContactList } from "./ChatContactList";
 import { NewChatDialog } from "./NewChatDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function CitizenChatView() {
   const { user } = useAuth();
@@ -22,10 +23,17 @@ export function CitizenChatView() {
     createConversation,
   } = useChat();
   
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const [showMobileDetail, setShowMobileDetail] = useState(false);
   const [activeTab, setActiveTab] = useState<"chats" | "contacts">("chats");
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
+
+  // Effect to handle mobile view transitions
+  useEffect(() => {
+    if (!isMobile && showMobileDetail) {
+      setShowMobileDetail(false);
+    }
+  }, [isMobile]);
 
   const handleCreateConversation = async () => {
     if (!user) return;
@@ -52,7 +60,9 @@ export function CitizenChatView() {
 
   const handleSelectConversation = (id: string) => {
     setActiveConversation(id);
-    setShowMobileDetail(true);
+    if (isMobile) {
+      setShowMobileDetail(true);
+    }
   };
 
   const handleSelectContact = (contactId: string, contactName: string) => {
@@ -73,7 +83,9 @@ export function CitizenChatView() {
           console.error("Error creating conversation:", error);
         });
     }
-    setShowMobileDetail(true);
+    if (isMobile) {
+      setShowMobileDetail(true);
+    }
   };
 
   const handleBackToList = () => {
@@ -85,10 +97,10 @@ export function CitizenChatView() {
   const showDetail = !isMobile || showMobileDetail;
 
   return (
-    <div className="flex h-full overflow-hidden bg-background">
+    <div className="flex h-full overflow-hidden bg-background rounded-lg">
       {/* Sidebar - Contacts and Conversations */}
       {showList && (
-        <div className={`${showDetail ? "w-1/3 border-r" : "w-full"} flex flex-col h-full`}>
+        <div className={`${showDetail ? "w-full md:w-1/3 border-r" : "w-full"} flex flex-col h-full`}>
           <div className="p-2 border-b">
             <Tabs 
               defaultValue="chats" 
@@ -96,19 +108,19 @@ export function CitizenChatView() {
               onValueChange={(v) => setActiveTab(v as "chats" | "contacts")}
               className="w-full"
             >
-              <TabsList className="grid grid-cols-2">
-                <TabsTrigger value="chats">
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="chats" className="flex items-center justify-center">
                   <MessageSquare className="h-4 w-4 mr-2" /> Conversas
                 </TabsTrigger>
-                <TabsTrigger value="contacts">
+                <TabsTrigger value="contacts" className="flex items-center justify-center">
                   <User className="h-4 w-4 mr-2" /> Contatos
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="chats" className="mt-0">
-                <div className="p-2">
+              <TabsContent value="chats" className="mt-2">
+                <div className="px-2 pb-2">
                   {/* New Conversation Button - Now opens the dialog */}
-                  <div className="mb-3">
+                  <div className="mb-4">
                     <Button 
                       onClick={handleOpenNewChatDialog}
                       className="w-full"
@@ -134,8 +146,8 @@ export function CitizenChatView() {
                 </div>
               </TabsContent>
               
-              <TabsContent value="contacts" className="mt-0">
-                <div className="p-2">
+              <TabsContent value="contacts" className="mt-2">
+                <div className="px-2 pb-2">
                   {contacts.length > 0 ? (
                     <ChatContactList 
                       contacts={contacts} 
@@ -157,7 +169,7 @@ export function CitizenChatView() {
 
       {/* Main Content - Conversation Detail */}
       {showDetail && (
-        <div className={`${showList ? "w-2/3" : "w-full"} flex flex-col h-full`}>
+        <div className={`${showList && !isMobile ? "hidden md:flex md:w-2/3" : "w-full"} flex flex-col h-full`}>
           {activeConversationId ? (
             <ConversationDetail onBack={handleBackToList} />
           ) : (
