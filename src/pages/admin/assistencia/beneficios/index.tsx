@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchFilters } from "./components/SearchFilters";
 import { BenefitsGrid } from "./components/BenefitsGrid";
-import { useBenefits } from "./hooks/useBenefits";
+import { useBenefits, Benefit } from "./hooks/useBenefits";
 import { Plus } from "lucide-react";
 import { BenefitFormDialog } from "./components/BenefitFormDialog";
 
@@ -22,8 +22,8 @@ export default function BeneficiosPage() {
       benefit.beneficiaryName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       benefit.beneficiaryCpf.includes(searchTerm);
     
-    const matchesStatus = statusFilter === "todos" || benefit.status.toLowerCase() === statusFilter;
-    const matchesCategory = categoryFilter === "todos" || benefit.category.toLowerCase() === categoryFilter;
+    const matchesStatus = statusFilter === "todos" || benefit.status.toLowerCase() === statusFilter.toLowerCase();
+    const matchesCategory = categoryFilter === "todos" || benefit.category.toLowerCase() === categoryFilter.toLowerCase();
     
     return matchesSearch && matchesStatus && matchesCategory;
   });

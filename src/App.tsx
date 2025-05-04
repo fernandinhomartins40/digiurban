@@ -76,8 +76,13 @@ import SolicitacaoGuias from "@/pages/admin/financas/guias/index";
 import ConsultarDebitos from "@/pages/admin/financas/debitos/index";
 import Certidoes from "@/pages/admin/financas/certidoes/index";
 
-// New Modules
+// Agricultura Module
 import AgriculturaIndex from "@/pages/admin/agricultura/index";
+import ProdutoresRuraisPage from "@/pages/admin/agricultura/produtores/index";
+import AssistenciaTecnicaPage from "@/pages/admin/agricultura/assistencia/index";
+import ProjetosRuraisPage from "@/pages/admin/agricultura/projetos/index";
+
+// New Modules
 import EsportesIndex from "@/pages/admin/esportes/index";
 import CulturaIndex from "@/pages/admin/cultura/index";
 import TurismoIndex from "@/pages/admin/turismo/index";
@@ -168,9 +173,11 @@ function App() {
                   <Route path="financas/debitos" element={<ConsultarDebitos />} />
                   <Route path="financas/certidoes" element={<Certidoes />} />
 
-                  {/* New Module Routes */}
-                  {/* Agricultura */}
+                  {/* Agricultura Module Routes */}
                   <Route path="agricultura" element={<AgriculturaIndex />} />
+                  <Route path="agricultura/produtores" element={<ProdutoresRuraisPage />} />
+                  <Route path="agricultura/assistencia" element={<AssistenciaTecnicaPage />} />
+                  <Route path="agricultura/projetos" element={<ProjetosRuraisPage />} />
                   
                   {/* Esportes */}
                   <Route path="esportes" element={<EsportesIndex />} />
