@@ -205,8 +205,9 @@ export async function searchCitizenServices(params: SearchCitizenServicesParams)
         .eq('citizen_id', citizenId);
       
       if (status && status !== 'all') {
-        // Use appropriate status mapping for benefits
-        query = query.eq('status', status);
+        // Cast the status string to BenefitStatus type
+        const benefitStatus = status as BenefitStatus;
+        query = query.eq('status', benefitStatus);
       }
       
       query = applyDateFilter(query);
