@@ -114,3 +114,83 @@ export interface Program {
     completed: boolean;
   }[];
 }
+
+// Add new StrategicProgram interface
+export interface StrategicProgram {
+  id: string;
+  title: string;
+  description: string;
+  startDate: Date;
+  endDate?: Date;
+  budget?: number;
+  spentAmount?: number;
+  status: ProgramStatus;
+  progressPercentage: number;
+  coordinatorId: string;
+  coordinatorName?: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  milestones?: ProgramMilestone[];
+  documents?: ProgramDocument[];
+}
+
+// Add supporting interfaces for StrategicProgram
+export interface ProgramMilestone {
+  id: string;
+  programId: string;
+  title: string;
+  description: string;
+  dueDate: Date;
+  completionDate?: Date;
+  status: string;
+  responsibleId: string;
+  responsibleName?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProgramDocument {
+  id: string;
+  programId: string;
+  documentTitle: string;
+  documentDescription?: string;
+  filePath: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  uploadedBy: string;
+  createdAt: Date;
+}
+
+// Add new PublicPolicy interface
+export interface PublicPolicy {
+  id: string;
+  title: string;
+  description: string;
+  startDate: Date;
+  endDate?: Date;
+  status: PolicyStatus;
+  responsibleId: string;
+  responsibleName?: string;
+  department: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  goals?: PolicyGoal[];
+}
+
+// Add supporting interface for PublicPolicy
+export interface PolicyGoal {
+  id: string;
+  policyId: string;
+  title: string;
+  description: string;
+  targetValue?: number;
+  targetUnit?: string;
+  currentValue?: number;
+  dueDate?: Date;
+  status: GoalStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
