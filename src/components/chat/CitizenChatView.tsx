@@ -36,6 +36,9 @@ export function CitizenChatView() {
       );
       
       setActiveConversation(newConversation.id);
+      if (isMobile) {
+        setShowMobileDetail(true);
+      }
     } catch (error) {
       console.error('Error creating conversation:', error);
     }
@@ -98,6 +101,18 @@ export function CitizenChatView() {
               
               <TabsContent value="chats" className="mt-0">
                 <div className="p-2">
+                  {/* New Conversation Button - Always visible */}
+                  <div className="mb-3">
+                    <Button 
+                      onClick={handleCreateConversation}
+                      className="w-full"
+                      size="sm"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nova Conversa
+                    </Button>
+                  </div>
+                  
                   {conversations.length > 0 ? (
                     <ConversationList
                       conversations={conversations}
@@ -108,12 +123,6 @@ export function CitizenChatView() {
                       title="Nenhuma conversa iniciada"
                       description="Inicie uma nova conversa para entrar em contato com nossos atendentes"
                       icon={<MessageSquare className="h-12 w-12 text-muted-foreground" />}
-                      action={
-                        <Button onClick={handleCreateConversation}>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Iniciar Conversa
-                        </Button>
-                      }
                     />
                   )}
                 </div>
