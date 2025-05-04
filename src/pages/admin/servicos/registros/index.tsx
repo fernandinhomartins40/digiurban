@@ -149,7 +149,7 @@ export default function RegistrosFotograficosIndex() {
                 <SelectValue placeholder="Categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as categorias</SelectItem>
+                <SelectItem value="all">Todas as categorias</SelectItem>
                 {categories.map(category => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}
@@ -162,7 +162,7 @@ export default function RegistrosFotograficosIndex() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="antes">Antes</SelectItem>
                 <SelectItem value="durante">Durante</SelectItem>
                 <SelectItem value="depois">Depois</SelectItem>
