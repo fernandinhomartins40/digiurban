@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { OuvidoriaLayout } from "../components/OuvidoriaLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BarChart, LineChart, PieChart, DonutChart, Palette } from "lucide-react";
+import { BarChart, LineChart, PieChart, CircleGauge, Palette } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function RelatoriosIndex() {
@@ -133,7 +132,7 @@ export default function RelatoriosIndex() {
                   Departamentos
                 </TabsTrigger>
                 <TabsTrigger value="performance" className="flex items-center">
-                  <DonutChart className="h-4 w-4 mr-2" />
+                  <CircleGauge className="h-4 w-4 mr-2" />
                   Desempenho
                 </TabsTrigger>
               </TabsList>
@@ -331,7 +330,7 @@ export default function RelatoriosIndex() {
               <TabsContent value="performance" className="space-y-4">
                 <div className="h-[300px] w-full flex items-center justify-center border rounded-lg bg-muted/20">
                   <div className="text-center p-6">
-                    <DonutChart className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
+                    <CircleGauge className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
                     <h3 className="text-lg font-medium">Indicadores de Desempenho</h3>
                     <p className="text-sm text-muted-foreground">
                       Métricas de tempo de resposta e resolução

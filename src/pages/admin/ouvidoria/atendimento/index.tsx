@@ -1,4 +1,3 @@
-
 import React from "react";
 import { OuvidoriaLayout } from "../components/OuvidoriaLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,15 +25,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AtendimentoIndex() {
   return (
@@ -266,53 +262,42 @@ export default function AtendimentoIndex() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Form>
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <FormItem>
-                      <FormLabel>Número principal</FormLabel>
-                      <FormControl>
-                        <Input type="tel" value="(99) 3333-4444" />
-                      </FormControl>
-                      <FormDescription>
-                        Número principal de contato da ouvidoria
-                      </FormDescription>
-                    </FormItem>
-                    <FormItem>
-                      <FormLabel>Número secundário</FormLabel>
-                      <FormControl>
-                        <Input type="tel" value="0800 123 4567" />
-                      </FormControl>
-                      <FormDescription>
-                        Número gratuito para ligações
-                      </FormDescription>
-                    </FormItem>
-                    <FormItem>
-                      <FormLabel>Responsável</FormLabel>
-                      <FormControl>
-                        <Input value="Maria Oliveira" />
-                      </FormControl>
-                    </FormItem>
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select defaultValue="active">
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">Ativo</SelectItem>
-                          <SelectItem value="inactive">Inativo</SelectItem>
-                          <SelectItem value="maintenance">Em manutenção</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Número principal</label>
+                    <Input type="tel" value="(99) 3333-4444" />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Número principal de contato da ouvidoria
+                    </p>
                   </div>
-                  <div className="mt-4 flex justify-end gap-2">
-                    <Button type="submit">Salvar Alterações</Button>
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Número secundário</label>
+                    <Input type="tel" value="0800 123 4567" />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Número gratuito para ligações
+                    </p>
                   </div>
-                </Form>
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Responsável</label>
+                    <Input value="Maria Oliveira" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Status</label>
+                    <Select defaultValue="active">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Ativo</SelectItem>
+                        <SelectItem value="inactive">Inativo</SelectItem>
+                        <SelectItem value="maintenance">Em manutenção</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button type="submit">Salvar Alterações</Button>
+                </div>
                 
                 <div className="pt-4 border-t">
                   <h3 className="text-lg font-medium mb-2">Estatísticas do Canal</h3>
