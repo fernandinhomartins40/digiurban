@@ -9,6 +9,7 @@ import { EmptyState } from "./EmptyState";
 import { MessageSquare, User, Users, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatContactList } from "./ChatContactList";
+import { NewChatDialog } from "./NewChatDialog";
 
 export function CitizenChatView() {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ export function CitizenChatView() {
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileDetail, setShowMobileDetail] = useState(false);
   const [activeTab, setActiveTab] = useState<"chats" | "contacts">("chats");
+  const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
 
   const handleCreateConversation = async () => {
     if (!user) return;
@@ -42,6 +44,10 @@ export function CitizenChatView() {
     } catch (error) {
       console.error('Error creating conversation:', error);
     }
+  };
+
+  const handleOpenNewChatDialog = () => {
+    setIsNewChatDialogOpen(true);
   };
 
   const handleSelectConversation = (id: string) => {
@@ -101,10 +107,10 @@ export function CitizenChatView() {
               
               <TabsContent value="chats" className="mt-0">
                 <div className="p-2">
-                  {/* New Conversation Button - Always visible */}
+                  {/* New Conversation Button - Now opens the dialog */}
                   <div className="mb-3">
                     <Button 
-                      onClick={handleCreateConversation}
+                      onClick={handleOpenNewChatDialog}
                       className="w-full"
                       size="sm"
                     >
@@ -162,6 +168,12 @@ export function CitizenChatView() {
           )}
         </div>
       )}
+
+      {/* New Chat Dialog */}
+      <NewChatDialog
+        open={isNewChatDialogOpen}
+        onOpenChange={setIsNewChatDialogOpen}
+      />
     </div>
   );
 }
