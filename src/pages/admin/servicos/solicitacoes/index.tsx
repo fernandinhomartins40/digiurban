@@ -182,7 +182,7 @@ export default function SolicitacoesIndex() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="em_andamento">Em andamento</SelectItem>
                 <SelectItem value="concluido">Concluído</SelectItem>
@@ -195,7 +195,7 @@ export default function SolicitacoesIndex() {
                 <SelectValue placeholder="Tipo de Serviço" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
+                <SelectItem value="all">Todos os tipos</SelectItem>
                 {requestTypes.map(type => (
                   <SelectItem key={type} value={type}>{type}</SelectItem>
                 ))}
