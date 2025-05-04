@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext"; 
@@ -67,6 +68,13 @@ import BeneficiosPage from "@/pages/admin/assistencia/beneficios/index";
 import ProgramasSociaisPage from "@/pages/admin/assistencia/programas/index";
 import CRASCREASPage from "@/pages/admin/assistencia/cras/index";
 import FamiliaVulneraveisPage from "@/pages/admin/assistencia/familias/index";
+
+// Finanças Module
+import FinancasIndex from "@/pages/admin/financas/index";
+import FinancasDashboard from "@/pages/admin/financas/dashboard/index";
+import SolicitacaoGuias from "@/pages/admin/financas/guias/index";
+import ConsultarDebitos from "@/pages/admin/financas/debitos/index";
+import Certidoes from "@/pages/admin/financas/certidoes/index";
 
 // New Modules
 import AgriculturaIndex from "@/pages/admin/agricultura/index";
@@ -152,6 +160,13 @@ function App() {
                   <Route path="assistencia/programas" element={<ProgramasSociaisPage />} />
                   <Route path="assistencia/cras" element={<CRASCREASPage />} />
                   <Route path="assistencia/familias" element={<FamiliaVulneraveisPage />} />
+
+                  {/* Finanças Module Routes */}
+                  <Route path="financas" element={<FinancasIndex />} />
+                  <Route path="financas/dashboard" element={<FinancasDashboard />} />
+                  <Route path="financas/guias" element={<SolicitacaoGuias />} />
+                  <Route path="financas/debitos" element={<ConsultarDebitos />} />
+                  <Route path="financas/certidoes" element={<Certidoes />} />
 
                   {/* New Module Routes */}
                   {/* Agricultura */}
