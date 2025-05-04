@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -16,6 +15,19 @@ import {
   Users,
   UserRound,
   ChevronDown,
+  LayoutDashboard,
+  Calendar,
+  FileSearch,
+  MessageSquare,
+  Database,
+  LineChart,
+  Briefcase,
+  BookOpen,
+  GraduationCap,
+  Lightbulb,
+  Settings,
+  ClipboardList,
+  FolderCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,52 +120,66 @@ const benefits = [
   },
 ];
 
-// Features for carousel
+// Features for carousel - updated to use icons instead of images
 const features = [
   {
     title: "Agendamento Inteligente",
     description: "Sistema de agendamentos com priorização automática e notificações",
-    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80",
+    icon: Calendar,
+    color: "text-blue-600",
+    gradient: "from-blue-100 to-indigo-50",
   },
   {
     title: "Gestão de Políticas Públicas",
     description: "Acompanhe o ciclo completo de criação e execução de políticas municipais",
-    image: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&w=600&q=80",
+    icon: FileSearch,
+    color: "text-indigo-600",
+    gradient: "from-indigo-100 to-purple-50",
   },
   {
     title: "Atendimento ao Cidadão",
     description: "Portal integrado com todas as solicitações e serviços",
-    image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=600&q=80",
+    icon: MessageSquare,
+    color: "text-green-600",
+    gradient: "from-green-100 to-teal-50",
   },
   {
     title: "Painel Administrativo",
     description: "Dashboards analíticos para todos os setores da prefeitura",
-    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=600&q=80",
+    icon: LayoutDashboard,
+    color: "text-purple-600",
+    gradient: "from-purple-100 to-pink-50",
   },
 ];
 
-// Use cases
+// Use cases - updated to use icons instead of images
 const useCases = [
   {
     title: "Modernização da Gestão",
     before: "Processos manuais e desconectados",
     after: "Sistema integrado com visão completa da operação",
     improvement: "Redução de 65% no tempo de processamento",
-    image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80",
+    icon: Database,
+    color: "text-blue-700",
+    gradient: "from-blue-100 to-cyan-50"
   },
   {
     title: "Atendimento ao Cidadão",
     before: "Atendimento presencial com longas filas",
     after: "Múltiplos canais digitais de atendimento",
     improvement: "Satisfação do cidadão aumentou 75%",
-    image: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&w=600&q=80",
+    icon: Users,
+    color: "text-purple-700",
+    gradient: "from-purple-100 to-indigo-50"
   },
   {
     title: "Transparência",
     before: "Dados espalhados e de difícil acesso",
     after: "Portal de transparência integrado e automatizado",
     improvement: "100% de conformidade com legislação",
-    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=600&q=80",
+    icon: LineChart,
+    color: "text-green-700",
+    gradient: "from-green-100 to-emerald-50"
   },
 ];
 
@@ -355,17 +381,25 @@ const LandingPage: React.FC = () => {
                 </p>
               </div>
             </div>
+            {/* Replace hero image with icon grid */}
             <div className="relative h-[300px] md:h-[400px] lg:h-[500px]">
               <div className="absolute inset-0 bg-gradient-to-r from-[#D6BCFA] to-[#D3E4FD] rounded-2xl shadow-xl overflow-hidden group hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-1">
                 <div className="absolute inset-0 opacity-20 bg-grid-white-300/20 group-hover:opacity-30 transition-opacity"></div>
                 <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-2xl transform translate-x-10 -translate-y-10 group-hover:scale-110 transition-transform duration-500"></div>
                 <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-br from-green-500/20 to-blue-500/20 rounded-full blur-2xl transform -translate-x-10 translate-y-10 group-hover:scale-110 transition-transform duration-500"></div>
-                <img 
-                  src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=800&q=80"
-                  alt="Sistema de gestão municipal"
-                  className="absolute inset-0 object-cover w-full h-full opacity-70 mix-blend-overlay"
-                />
-                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent text-white">
+                <div className="grid grid-cols-2 gap-8 p-8 relative z-10">
+                  {[
+                    { icon: LayoutDashboard, color: "text-blue-600" },
+                    { icon: Calendar, color: "text-purple-600" },
+                    { icon: FileSearch, color: "text-green-600" },
+                    { icon: MessageSquare, color: "text-indigo-600" }
+                  ].map((item, i) => (
+                    <div key={i} className="flex flex-col items-center justify-center gap-4 p-6 bg-white/30 backdrop-blur-sm rounded-xl hover:bg-white/50 transition-all duration-300 hover:scale-105 hover:shadow-md">
+                      <item.icon size={64} className={item.color} />
+                    </div>
+                  ))}
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/30 to-transparent text-white">
                   <p className="font-medium">Sistema Integrado de Gestão Municipal</p>
                 </div>
               </div>
@@ -454,7 +488,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Features Carousel */}
+      {/* Features Carousel - Updated to use icons instead of images */}
       <section id="features" className="py-20 bg-gradient-to-br from-primary/5 to-background">
         <div className="container mx-auto px-4">
           <Heading 
@@ -475,13 +509,9 @@ const LandingPage: React.FC = () => {
                     <div className="p-1">
                       <Card className="overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300">
                         <CardContent className="p-0">
-                          <div className="relative h-52 overflow-hidden">
-                            <img 
-                              src={feature.image} 
-                              alt={feature.title} 
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent opacity-60"></div>
+                          <div className={`relative h-52 bg-gradient-to-br ${feature.gradient} flex items-center justify-center overflow-hidden`}>
+                            <feature.icon size={86} className={`${feature.color} transition-all duration-500 group-hover:scale-110`} />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-black/0 to-transparent opacity-30"></div>
                           </div>
                           <div className="p-6 bg-white">
                             <h3 className="font-semibold text-lg mb-2 group-hover:text-blue-700 transition-colors">{feature.title}</h3>
@@ -502,7 +532,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Use Cases */}
+      {/* Use Cases - Updated to use icons instead of images */}
       <section id="usecases" className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <Heading 
@@ -518,13 +548,9 @@ const LandingPage: React.FC = () => {
           <div className="grid md:grid-cols-3 gap-8 mt-12">
             {useCases.map((useCase, index) => (
               <Card key={index} className="border border-border/50 hover:shadow-xl transition-all duration-300 overflow-hidden group">
-                <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={useCase.image} 
-                    alt={useCase.title} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/60 to-black/20"></div>
+                <div className={`relative h-48 bg-gradient-to-br ${useCase.gradient} flex items-center justify-center overflow-hidden`}>
+                  <useCase.icon size={86} className={`${useCase.color} opacity-90 transition-transform duration-500 group-hover:scale-110`} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/20 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <h3 className="text-white font-bold text-xl">{useCase.title}</h3>
                   </div>
