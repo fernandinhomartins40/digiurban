@@ -26,6 +26,7 @@ import {
 import { RequestList } from "@/components/gabinete/solicitacoes/RequestList";
 import { RequestFilter } from "@/components/gabinete/solicitacoes/RequestFilter";
 import { NewRequestDialog } from "@/components/gabinete/solicitacoes/NewRequestDialog";
+import { RequestDrawer } from "@/components/gabinete/solicitacoes/RequestDrawer";
 
 // Form schema
 const requestFormSchema = z.object({
@@ -43,6 +44,8 @@ export default function DirectRequests() {
   const [selectedStatus, setSelectedStatus] = useState<RequestStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState<string | "all">("all");
+  const [selectedRequest, setSelectedRequest] = useState<DirectRequest | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   
   const departments = [
     "Gabinete do Prefeito",
@@ -98,8 +101,15 @@ export default function DirectRequests() {
   const handleStatusChange = async (requestId: string, status: RequestStatus) => {
     const result = await updateDirectRequest(requestId, { status });
     if (result) {
+      setDrawerOpen(false);
       refetch();
     }
+  };
+  
+  // Handle request click
+  const handleRequestClick = (request: DirectRequest) => {
+    setSelectedRequest(request);
+    setDrawerOpen(true);
   };
 
   return (
@@ -154,6 +164,7 @@ export default function DirectRequests() {
             isLoading={isLoading}
             searchQuery={searchQuery}
             handleStatusChange={handleStatusChange}
+            onRequestClick={handleRequestClick}
           />
         </CardContent>
 
@@ -163,6 +174,14 @@ export default function DirectRequests() {
           </div>
         </CardFooter>
       </Card>
+      
+      {/* Request Drawer */}
+      <RequestDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        request={selectedRequest}
+        onUpdateStatus={handleStatusChange}
+      />
     </div>
   );
 }

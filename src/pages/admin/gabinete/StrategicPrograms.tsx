@@ -10,17 +10,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { ProgramStatus } from "@/types/mayorOffice";
+import { ProgramStatus, Program } from "@/types/mayorOffice";
 import { getStrategicPrograms } from "@/services/mayorOffice";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProgramFilter, ProgramTabs } from "@/components/gabinete/programas/ProgramFilter";
 import { ProgramList } from "@/components/gabinete/programas/ProgramList";
 import { NewProgramDialog } from "@/components/gabinete/programas/NewProgramDialog";
+import { ProgramDrawer } from "@/components/gabinete/programas/ProgramDrawer";
 
 export default function StrategicPrograms() {
   const { user } = useAuth();
   const [selectedStatus, setSelectedStatus] = useState<ProgramStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Fetch strategic programs
   const { data: programs, isLoading } = useQuery({
@@ -30,6 +33,12 @@ export default function StrategicPrograms() {
       return getStrategicPrograms(status);
     },
   });
+  
+  // Handle program click
+  const handleProgramClick = (program: Program) => {
+    setSelectedProgram(program);
+    setIsDrawerOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -71,6 +80,7 @@ export default function StrategicPrograms() {
               programs={programs} 
               isLoading={isLoading} 
               searchQuery={searchQuery} 
+              onProgramClick={handleProgramClick}
             />
           </div>
         </CardContent>
@@ -81,6 +91,13 @@ export default function StrategicPrograms() {
           </div>
         </CardFooter>
       </Card>
+      
+      {/* Program Drawer */}
+      <ProgramDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        program={selectedProgram}
+      />
     </div>
   );
 }

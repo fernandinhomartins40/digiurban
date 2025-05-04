@@ -3,65 +3,106 @@ import React, { useState } from "react";
 import { Helmet } from "react-helmet";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useQuery } from "@tanstack/react-query";
-import { getMayorAppointments } from "@/services/mayorOffice/appointmentsService";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarPlus, Filter, List, CalendarDays } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  getAppointments,
+  updateAppointmentStatus,
+} from "@/services/mayorOffice/appointmentsService";
+import { Appointment, AppointmentStatus } from "@/types/mayorOffice";
+import { AppointmentDrawer } from "@/components/gabinete/agendamentos/AppointmentDrawer";
 import { NewAppointmentDialog } from "@/components/gabinete/agendamentos/NewAppointmentDialog";
-import { AppointmentDetails } from "@/components/gabinete/agendamentos/AppointmentDetails";
-import { AppointmentStatus } from "@/types/mayorOffice";
 
 export default function AppointmentScheduler() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [view, setView] = useState<"calendar" | "list">("calendar");
-  const [statusFilter, setStatusFilter] = useState<AppointmentStatus | "all">("all");
-  const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
-  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [filterStatus, setFilterStatus] = useState<AppointmentStatus | "all">("all");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Fetch appointments
   const { data: appointments, isLoading } = useQuery({
-    queryKey: ["mayorAppointments", statusFilter],
-    queryFn: () => {
-      const status = statusFilter !== "all" ? statusFilter as AppointmentStatus : undefined;
-      return getMayorAppointments(status);
+    queryKey: ["mayorAppointments", filterStatus],
+    queryFn: () => getAppointments(filterStatus !== "all" ? filterStatus : undefined),
+  });
+
+  // Update appointment status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ appointmentId, status }: { appointmentId: string; status: AppointmentStatus }) =>
+      updateAppointmentStatus(appointmentId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mayorAppointments"] });
+      toast({
+        title: "Status atualizado",
+        description: "O status do agendamento foi atualizado com sucesso.",
+      });
+      setDrawerOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível atualizar o status do agendamento.",
+        variant: "destructive",
+      });
     },
   });
 
-  // Filter appointments for the selected date
-  const appointmentsForSelectedDate = appointments?.filter(
-    (appointment) => 
-      selectedDate && 
-      format(appointment.requestedDate, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
-  );
-
-  // Get dates with appointments for highlighting in calendar
-  const datesWithAppointments = appointments?.map(
-    (appointment) => new Date(appointment.requestedDate)
-  );
-
-  const handleOpenAppointmentDetails = (appointmentId: string) => {
-    setSelectedAppointmentId(appointmentId);
+  // Handle status change
+  const handleStatusChange = async (appointmentId: string, status: AppointmentStatus) => {
+    updateStatusMutation.mutate({ appointmentId, status });
   };
 
-  const handleCloseAppointmentDetails = () => {
-    setSelectedAppointmentId(null);
+  // Handle appointment click
+  const handleAppointmentClick = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setDrawerOpen(true);
+  };
+
+  // Format date helper
+  const formatAppointmentDate = (date: string) => {
+    try {
+      return format(new Date(date), "dd/MM/yyyy", { locale: ptBR });
+    } catch (e) {
+      return date;
+    }
+  };
+
+  // Get badge based on status
+  const getStatusBadge = (status: AppointmentStatus) => {
+    switch (status) {
+      case "pending":
+        return <Badge variant="secondary">Pendente</Badge>;
+      case "approved":
+        return <Badge variant="default">Aprovado</Badge>;
+      case "rejected":
+        return <Badge variant="destructive">Rejeitado</Badge>;
+      case "completed":
+        return <Badge variant="outline">Concluído</Badge>;
+      case "cancelled":
+        return <Badge variant="destructive">Cancelado</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
   };
 
   return (
@@ -74,252 +115,119 @@ export default function AppointmentScheduler() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Agendamentos</h1>
           <p className="text-sm text-muted-foreground">
-            Gerencie solicitações de agendamentos com o prefeito
+            Gerenciar agendamentos do prefeito
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Tabs 
-            defaultValue={view} 
-            value={view}
-            onValueChange={(v) => setView(v as "calendar" | "list")}
-            className="hidden md:flex"
-          >
-            <TabsList>
-              <TabsTrigger value="calendar">
-                <CalendarDays className="h-4 w-4 mr-2" />
-                Calendário
-              </TabsTrigger>
-              <TabsTrigger value="list">
-                <List className="h-4 w-4 mr-2" />
-                Lista
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          <Button onClick={() => setIsNewAppointmentOpen(true)}>
-            <CalendarPlus className="mr-2 h-4 w-4" />
-            Novo Agendamento
-          </Button>
-        </div>
+        <NewAppointmentDialog />
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1 order-2 lg:order-1">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                  <CardTitle>
-                    {selectedDate ? format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Agendamentos"}
-                  </CardTitle>
-                  <CardDescription>
-                    {view === "calendar" 
-                      ? "Selecione uma data para ver os agendamentos" 
-                      : "Visualize todos os agendamentos"
-                    }
-                  </CardDescription>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Select 
-                    value={statusFilter} 
-                    onValueChange={(value: string) => setStatusFilter(value as AppointmentStatus | "all")}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <Filter className="h-4 w-4 mr-2" />
-                      <SelectValue placeholder="Filtrar por status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="pending">Pendentes</SelectItem>
-                      <SelectItem value="approved">Aprovados</SelectItem>
-                      <SelectItem value="rejected">Rejeitados</SelectItem>
-                      <SelectItem value="completed">Concluídos</SelectItem>
-                      <SelectItem value="cancelled">Cancelados</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Tabs 
-                    defaultValue={view} 
-                    value={view}
-                    onValueChange={(v) => setView(v as "calendar" | "list")}
-                    className="md:hidden"
-                  >
-                    <TabsList>
-                      <TabsTrigger value="calendar">
-                        <CalendarDays className="h-4 w-4" />
-                      </TabsTrigger>
-                      <TabsTrigger value="list">
-                        <List className="h-4 w-4" />
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center h-40">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-              ) : view === "calendar" ? (
-                <>
-                  <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
-                    <div className="flex-1 overflow-hidden">
-                      <h3 className="text-sm font-medium mb-3">
-                        Agendamentos para {selectedDate ? format(selectedDate, "dd/MM/yyyy", { locale: ptBR }) : "hoje"}
-                      </h3>
-                      
-                      {appointmentsForSelectedDate && appointmentsForSelectedDate.length > 0 ? (
-                        <div className="space-y-3">
-                          {appointmentsForSelectedDate.map(appointment => (
-                            <div 
-                              key={appointment.id} 
-                              className="p-3 border rounded-lg cursor-pointer hover:bg-accent"
-                              onClick={() => handleOpenAppointmentDetails(appointment.id)}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h4 className="font-medium">{appointment.subject}</h4>
-                                  <p className="text-sm text-muted-foreground">
-                                    {appointment.requesterName}
-                                  </p>
-                                </div>
-                                <div className="flex flex-col items-end">
-                                  <span className="text-sm font-medium">
-                                    {appointment.requestedTime}
-                                  </span>
-                                  <Badge variant={
-                                    appointment.status === "approved" ? "default" :
-                                    appointment.status === "rejected" ? "destructive" :
-                                    appointment.status === "completed" ? "outline" :
-                                    appointment.status === "cancelled" ? "destructive" :
-                                    "secondary"
-                                  }>
-                                    {appointment.status === "pending" && "Pendente"}
-                                    {appointment.status === "approved" && "Aprovado"}
-                                    {appointment.status === "rejected" && "Rejeitado"}
-                                    {appointment.status === "completed" && "Concluído"}
-                                    {appointment.status === "cancelled" && "Cancelado"}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-8 text-center">
-                          <CalendarPlus className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                          <h4 className="text-lg font-medium">Nenhum agendamento</h4>
-                          <p className="text-muted-foreground max-w-xs mt-1">
-                            Não há agendamentos para esta data. Clique em "Novo Agendamento" para criar um.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-3">
-                  {appointments && appointments.length > 0 ? (
-                    appointments.map(appointment => (
-                      <div 
-                        key={appointment.id} 
-                        className="p-3 border rounded-lg cursor-pointer hover:bg-accent"
-                        onClick={() => handleOpenAppointmentDetails(appointment.id)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium">{appointment.subject}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {appointment.requesterName} • {format(appointment.requestedDate, "dd/MM/yyyy", { locale: ptBR })}
-                            </p>
-                          </div>
-                          <div className="flex flex-col items-end">
-                            <span className="text-sm font-medium">
-                              {appointment.requestedTime}
-                            </span>
-                            <Badge variant={
-                              appointment.status === "approved" ? "default" :
-                              appointment.status === "rejected" ? "destructive" :
-                              appointment.status === "completed" ? "outline" :
-                              appointment.status === "cancelled" ? "destructive" :
-                              "secondary"
-                            }>
-                              {appointment.status === "pending" && "Pendente"}
-                              {appointment.status === "approved" && "Aprovado"}
-                              {appointment.status === "rejected" && "Rejeitado"}
-                              {appointment.status === "completed" && "Concluído"}
-                              {appointment.status === "cancelled" && "Cancelado"}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <CalendarPlus className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                      <h4 className="text-lg font-medium">Nenhum agendamento</h4>
-                      <p className="text-muted-foreground max-w-xs mt-1">
-                        Não há agendamentos disponíveis com os filtros selecionados.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <p className="text-sm text-muted-foreground">
-                Total: {appointments?.length || 0} agendamentos
-              </p>
-            </CardFooter>
-          </Card>
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Agendamentos</CardTitle>
+          <CardDescription>Lista de agendamentos agendados com o prefeito</CardDescription>
 
-        {view === "calendar" && (
-          <div className="lg:w-[350px] min-w-[350px] order-1 lg:order-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Calendário</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="calendar-wrapper">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className="border rounded-md"
-                    modifiers={{
-                      hasAppointment: datesWithAppointments || [],
-                    }}
-                    modifiersStyles={{
-                      hasAppointment: {
-                        fontWeight: 'bold',
-                        backgroundColor: 'rgba(var(--primary) / 0.2)',
-                        borderRadius: '4px'
-                      }
-                    }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+          <div className="flex items-center gap-4 mt-4">
+            <Button
+              variant={filterStatus === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterStatus("all")}
+            >
+              Todos
+            </Button>
+            <Button
+              variant={filterStatus === "pending" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterStatus("pending")}
+            >
+              Pendentes
+            </Button>
+            <Button
+              variant={filterStatus === "approved" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterStatus("approved")}
+            >
+              Aprovados
+            </Button>
+            <Button
+              variant={filterStatus === "completed" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterStatus("completed")}
+            >
+              Concluídos
+            </Button>
           </div>
-        )}
-      </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : appointments && appointments.length > 0 ? (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Assunto</TableHead>
+                    <TableHead>Solicitante</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Horário</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Local</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {appointments.map((appointment) => (
+                    <TableRow key={appointment.id}>
+                      <TableCell className="font-medium">
+                        {appointment.subject}
+                      </TableCell>
+                      <TableCell>{appointment.requester_name}</TableCell>
+                      <TableCell>
+                        {formatAppointmentDate(appointment.requested_date)}
+                      </TableCell>
+                      <TableCell>{appointment.requested_time}</TableCell>
+                      <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                      <TableCell>{appointment.location || "-"}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAppointmentClick(appointment)}
+                        >
+                          Detalhes
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <p className="text-muted-foreground">
+                Nenhum agendamento encontrado.
+              </p>
+              <NewAppointmentDialog buttonVariant="outline" className="mt-4" />
+            </div>
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-between border-t pt-4">
+          <div className="text-sm text-muted-foreground">
+            {appointments?.length || 0} agendamentos
+          </div>
+        </CardFooter>
+      </Card>
 
-      <NewAppointmentDialog
-        open={isNewAppointmentOpen}
-        onOpenChange={setIsNewAppointmentOpen}
-        onSuccess={() => {
-          // Handle success
-        }}
-      />
-
-      <AppointmentDetails
-        appointmentId={selectedAppointmentId}
-        isOpen={!!selectedAppointmentId}
-        onClose={handleCloseAppointmentDetails}
+      {/* Appointment Drawer */}
+      <AppointmentDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        appointment={selectedAppointment}
+        onApprove={appointmentId => handleStatusChange(appointmentId, "approved")}
+        onReject={appointmentId => handleStatusChange(appointmentId, "rejected")}
+        onComplete={appointmentId => handleStatusChange(appointmentId, "completed")}
       />
     </div>
   );

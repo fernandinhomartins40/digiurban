@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { searchCitizenServices } from '@/services/mayorOffice/citizenServicesService';
-import { CitizenServiceDetails } from '@/components/gabinete/cidadaos/CitizenServiceDetails';
+import { CitizenServiceDrawer } from '@/components/gabinete/cidadaos/CitizenServiceDrawer';
 
 export default function CitizenServices() {
   // State for search and filters
@@ -50,6 +50,7 @@ export default function CitizenServices() {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [selectedServiceType, setSelectedServiceType] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
   // Handle the search action
   const handleSearch = () => {
@@ -76,6 +77,7 @@ export default function CitizenServices() {
   const handleServiceClick = (serviceId: string, serviceType: string) => {
     setSelectedServiceId(serviceId);
     setSelectedServiceType(serviceType);
+    setIsDrawerOpen(true);
   };
 
   // Format date from ISO to readable format
@@ -326,15 +328,12 @@ export default function CitizenServices() {
         </Card>
       )}
 
-      {/* Service details component */}
-      <CitizenServiceDetails
+      {/* Service details drawer */}
+      <CitizenServiceDrawer
         serviceId={selectedServiceId}
         serviceType={selectedServiceType}
-        isOpen={!!selectedServiceId}
-        onClose={() => {
-          setSelectedServiceId(null);
-          setSelectedServiceType(null);
-        }}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
       />
     </div>
   );

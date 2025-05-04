@@ -10,17 +10,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { PolicyStatus } from "@/types/mayorOffice";
+import { PolicyStatus, Policy } from "@/types/mayorOffice";
 import { getPublicPolicies } from "@/services/mayorOffice";
 import { useAuth } from "@/contexts/AuthContext";
 import { PolicyFilter, PolicyTabs } from "@/components/gabinete/politicas/PolicyFilter";
 import { PolicyList } from "@/components/gabinete/politicas/PolicyList";
 import { NewPolicyDialog } from "@/components/gabinete/politicas/NewPolicyDialog";
+import { PolicyDrawer } from "@/components/gabinete/politicas/PolicyDrawer";
 
 export default function PublicPolicies() {
   const { user } = useAuth();
   const [selectedStatus, setSelectedStatus] = useState<PolicyStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Fetch public policies
   const { data: policies, isLoading } = useQuery({
@@ -30,6 +33,12 @@ export default function PublicPolicies() {
       return getPublicPolicies(status);
     },
   });
+  
+  // Handle policy click
+  const handlePolicyClick = (policy: Policy) => {
+    setSelectedPolicy(policy);
+    setIsDrawerOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -70,7 +79,8 @@ export default function PublicPolicies() {
             <PolicyList 
               policies={policies} 
               isLoading={isLoading} 
-              searchQuery={searchQuery} 
+              searchQuery={searchQuery}
+              onPolicyClick={handlePolicyClick}
             />
           </div>
         </CardContent>
@@ -81,6 +91,13 @@ export default function PublicPolicies() {
           </div>
         </CardFooter>
       </Card>
+      
+      {/* Policy Drawer */}
+      <PolicyDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        policy={selectedPolicy}
+      />
     </div>
   );
 }
