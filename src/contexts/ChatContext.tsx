@@ -69,6 +69,32 @@ export interface ChatConversation {
   tags?: string[];
 }
 
+export interface ChatNotification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  type: "message" | "protocol" | "system" | "info";
+  conversationId?: string;
+  protocolId?: string;
+  senderId?: string;
+}
+
+export interface ChatSettingsType {
+  theme: string;
+  messageOrder: "newest" | "oldest";
+  showTypingIndicator: boolean;
+  enableAutocomplete: boolean;
+  spellCheck: boolean;
+  browserNotifications: boolean;
+  notificationSounds: boolean;
+  notificationVolume: number;
+  sendReadReceipts: boolean;
+  showOnlineStatus: boolean;
+  messageHistory: string;
+}
+
 interface ChatContextType {
   conversations: ChatConversation[];
   contacts: ChatContact[];
@@ -78,6 +104,12 @@ interface ChatContextType {
   loading: boolean;
   error: string | null;
   unreadCount: number;
+  
+  // New notification state
+  notifications: ChatNotification[];
+  
+  // New settings state
+  chatSettings: ChatSettingsType;
   
   // Actions
   setActiveConversation: (conversationId: string | null) => void;
@@ -99,6 +131,16 @@ interface ChatContextType {
   addTagToConversation: (conversationId: string, tag: string) => void;
   removeTagFromConversation: (conversationId: string, tag: string) => void;
   addProtocolToConversation: (conversationId: string, protocolId: string) => Promise<void>;
+  
+  // New notification actions
+  markAllNotificationsAsRead: (notificationIds: string[]) => void;
+  deleteNotification: (notificationId: string) => void;
+  clearAllNotifications: () => void;
+  viewNotifications: () => void;
+  
+  // New settings actions
+  updateChatSettings: (settings: ChatSettingsType) => void;
+  openChatSettings: () => void;
 }
 
 // Create the initial context
@@ -344,6 +386,61 @@ const MOCK_MESSAGES: Record<string, ChatMessage[]> = {
   ]
 };
 
+// Mock notifications for demo
+const MOCK_NOTIFICATIONS: ChatNotification[] = [
+  {
+    id: "notif-1",
+    title: "Nova mensagem",
+    message: "Secretaria de Saúde enviou uma nova mensagem sobre sua consulta.",
+    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    read: false,
+    type: "message",
+    conversationId: "conv1"
+  },
+  {
+    id: "notif-2",
+    title: "Protocolo atualizado",
+    message: "O protocolo #2025-000124 foi atualizado com uma nova informação.",
+    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    read: true,
+    type: "protocol",
+    protocolId: "2025-000124",
+    conversationId: "conv2"
+  },
+  {
+    id: "notif-3",
+    title: "Conversa encerrada",
+    message: "A conversa 'Documentação Fiscal' foi encerrada pelo administrador.",
+    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    read: false,
+    type: "system",
+    conversationId: "conv5"
+  },
+  {
+    id: "notif-4",
+    title: "Manutenção programada",
+    message: "O sistema estará indisponível para manutenção entre 01:00 e 03:00 da madrugada.",
+    timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    read: true,
+    type: "info"
+  }
+];
+
+// Default chat settings
+const DEFAULT_CHAT_SETTINGS: ChatSettingsType = {
+  theme: "sistema",
+  messageOrder: "newest",
+  showTypingIndicator: true,
+  enableAutocomplete: true,
+  spellCheck: true,
+  browserNotifications: true,
+  notificationSounds: true,
+  notificationVolume: 80,
+  sendReadReceipts: true,
+  showOnlineStatus: true,
+  messageHistory: "forever"
+};
+
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated, userType } = useAuth();
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
@@ -354,6 +451,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  
+  // New notification state
+  const [notifications, setNotifications] = useState<ChatNotification[]>(MOCK_NOTIFICATIONS);
+  
+  // New settings state
+  const [chatSettings, setChatSettings] = useState<ChatSettingsType>(DEFAULT_CHAT_SETTINGS);
+  
+  // New state for controlling UI components
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Load conversations and contacts based on user type
   useEffect(() => {
@@ -717,6 +824,54 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       [conversationId]: [...(prev[conversationId] || []), systemMessage],
     }));
   };
+  
+  // New notification functions
+  const markAllNotificationsAsRead = (notificationIds: string[]) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notificationIds.includes(notification.id) 
+          ? { ...notification, read: true } 
+          : notification
+      )
+    );
+    
+    toast({
+      description: "Notificações marcadas como lidas",
+    });
+  };
+  
+  const deleteNotification = (notificationId: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    
+    toast({
+      description: "Notificação removida",
+    });
+  };
+  
+  const clearAllNotifications = () => {
+    setNotifications([]);
+    
+    toast({
+      description: "Todas as notificações foram removidas",
+    });
+  };
+  
+  const viewNotifications = () => {
+    setIsNotificationsOpen(true);
+  };
+  
+  // New settings functions
+  const updateChatSettings = (settings: ChatSettingsType) => {
+    setChatSettings(settings);
+    
+    toast({
+      description: "Configurações de chat atualizadas",
+    });
+  };
+  
+  const openChatSettings = () => {
+    setIsSettingsOpen(true);
+  };
 
   return (
     <ChatContext.Provider value={{
@@ -728,6 +883,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       loading,
       error,
       unreadCount,
+      notifications,
+      chatSettings,
       setActiveConversation,
       setActiveContact,
       sendMessage,
@@ -741,9 +898,27 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toggleContactFavorite,
       addTagToConversation,
       removeTagFromConversation,
-      addProtocolToConversation
+      addProtocolToConversation,
+      markAllNotificationsAsRead,
+      deleteNotification,
+      clearAllNotifications,
+      viewNotifications,
+      updateChatSettings,
+      openChatSettings
     }}>
       {children}
+      {isNotificationsOpen && (
+        <NotificationsDrawer
+          open={isNotificationsOpen}
+          onOpenChange={setIsNotificationsOpen}
+        />
+      )}
+      {isSettingsOpen && (
+        <ChatSettingsSheet
+          open={isSettingsOpen}
+          onOpenChange={setIsSettingsOpen}
+        />
+      )}
     </ChatContext.Provider>
   );
 };

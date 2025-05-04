@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { useChat } from "@/contexts/ChatContext";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, ArrowLeft, Search, Filter } from "lucide-react";
+import { MessageCircle, ArrowLeft, Search, Filter, Bell, Settings } from "lucide-react";
 import { ChatContactList } from "@/components/chat/ChatContactList";
 import { ChatConversationList } from "@/components/chat/ChatConversationList";
 import { ConversationDetail } from "@/components/chat/ConversationDetail";
@@ -11,6 +10,9 @@ import { ChatSearch } from "@/components/chat/ChatSearch";
 import { ChatFilters } from "@/components/chat/ChatFilters";
 import { NewChatDialog } from "@/components/chat/NewChatDialog";
 import { EmptyState } from "@/components/chat/EmptyState";
+import { Badge } from "@/components/ui/badge";
+import { NotificationsDrawer } from "@/components/chat/NotificationsDrawer";
+import { ChatSettingsSheet } from "@/components/chat/ChatSettingsSheet";
 
 export default function CitizenChatPage() {
   const { 
@@ -20,13 +22,18 @@ export default function CitizenChatPage() {
     setActiveConversation,
     setActiveContact,
     loading,
-    contacts
+    contacts,
+    unreadCount,
+    viewNotifications,
+    openChatSettings
   } = useChat();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "closed">("all");
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
+  const [showNotificationsDrawer, setShowNotificationsDrawer] = useState(false);
+  const [showSettingsSheet, setShowSettingsSheet] = useState(false);
   
   // Check for mobile view on mount and window resize
   useEffect(() => {
@@ -49,6 +56,16 @@ export default function CitizenChatPage() {
 
   const handleBackFromContact = () => {
     setActiveContact(null);
+  };
+  
+  const handleOpenNotifications = () => {
+    setShowNotificationsDrawer(true);
+    viewNotifications(); // Mark as viewed in context
+  };
+  
+  const handleOpenSettings = () => {
+    setShowSettingsSheet(true);
+    openChatSettings(); // Open settings in context
   };
 
   if (loading) {
@@ -81,9 +98,37 @@ export default function CitizenChatPage() {
             Acompanhe suas solicitações e conversas com a prefeitura
           </p>
         </div>
-        <Button onClick={() => setShowNewChatDialog(true)}>
-          Iniciar conversa
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            title="Configurações"
+            onClick={handleOpenSettings}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+          <div className="relative">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              title="Notificações"
+              onClick={handleOpenNotifications}
+            >
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-4 w-4 text-[10px] flex items-center justify-center p-0 rounded-full"
+                >
+                  {unreadCount}
+                </Badge>
+              )}
+            </Button>
+          </div>
+          <Button onClick={() => setShowNewChatDialog(true)}>
+            Iniciar conversa
+          </Button>
+        </div>
       </div>
 
       <div className="border rounded-lg flex-1 overflow-hidden">
@@ -209,6 +254,16 @@ export default function CitizenChatPage() {
         open={showNewChatDialog}
         onOpenChange={setShowNewChatDialog}
         initialContactId={activeContactId}
+      />
+      
+      <NotificationsDrawer 
+        open={showNotificationsDrawer}
+        onOpenChange={setShowNotificationsDrawer}
+      />
+      
+      <ChatSettingsSheet
+        open={showSettingsSheet}
+        onOpenChange={setShowSettingsSheet}
       />
     </div>
   );

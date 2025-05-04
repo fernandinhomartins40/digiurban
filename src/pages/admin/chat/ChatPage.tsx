@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useChat } from "@/contexts/ChatContext";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,8 @@ import { NewChatDialog } from "@/components/chat/NewChatDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { NotificationsDrawer } from "@/components/chat/NotificationsDrawer";
+import { ChatSettingsSheet } from "@/components/chat/ChatSettingsSheet";
 
 export default function AdminChatPage() {
   const { 
@@ -35,13 +36,17 @@ export default function AdminChatPage() {
     activeContactId,
     setActiveContact,
     loading,
-    unreadCount
+    unreadCount,
+    viewNotifications,
+    openChatSettings
   } = useChat();
   
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "closed">("all");
   const [isMobileView, setIsMobileView] = useState(false);
+  const [showNotificationsDrawer, setShowNotificationsDrawer] = useState(false);
+  const [showSettingsSheet, setShowSettingsSheet] = useState(false);
   
   // Check for mobile view on mount and window resize
   useEffect(() => {
@@ -65,6 +70,16 @@ export default function AdminChatPage() {
   const handleBackFromContact = () => {
     setActiveContact(null);
   };
+  
+  const handleOpenNotifications = () => {
+    setShowNotificationsDrawer(true);
+    viewNotifications(); // Mark as viewed in context
+  };
+  
+  const handleOpenSettings = () => {
+    setShowSettingsSheet(true);
+    openChatSettings(); // Open settings in context
+  };
 
   if (loading) {
     return (
@@ -84,11 +99,21 @@ export default function AdminChatPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" title="Configurações">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            title="Configurações"
+            onClick={handleOpenSettings}
+          >
             <Settings className="h-4 w-4" />
           </Button>
           <div className="relative">
-            <Button variant="outline" size="icon" title="Notificações">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              title="Notificações"
+              onClick={handleOpenNotifications}
+            >
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (
                 <Badge 
@@ -259,6 +284,16 @@ export default function AdminChatPage() {
         open={showNewChatDialog}
         onOpenChange={setShowNewChatDialog}
         initialContactId={activeContactId}
+      />
+      
+      <NotificationsDrawer 
+        open={showNotificationsDrawer}
+        onOpenChange={setShowNotificationsDrawer}
+      />
+      
+      <ChatSettingsSheet
+        open={showSettingsSheet}
+        onOpenChange={setShowSettingsSheet}
       />
     </div>
   );
