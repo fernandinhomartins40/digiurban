@@ -202,7 +202,11 @@ export function ConversationDetail({ onBack }: ConversationDetailProps) {
               <MessageItem
                 key={message.id}
                 message={message}
-                isCurrentUser={message.sender === "citizen"}
+                isCurrentUser={message.sender === "admin"}
+                onReactionAdded={(messageId, emoji) => {
+                  console.log("Reaction added:", messageId, emoji);
+                  // Implement reaction handling here
+                }}
               />
             ))}
             <div ref={messagesEndRef} />
