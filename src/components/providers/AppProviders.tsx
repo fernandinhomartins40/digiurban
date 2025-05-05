@@ -11,19 +11,20 @@ interface AppProvidersProps {
   children: React.ReactNode;
 }
 
-export function AppProviders({ children }: AppProvidersProps) {
-  // Create a new QueryClient instance INSIDE the component
-  // This ensures React hooks are called properly in component render context
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        // Updated configuration to remove unsupported properties
-        retry: 1,
-        refetchOnWindowFocus: false,
-      },
+// Create a new QueryClient instance outside the component
+// This ensures it's not recreated on every render
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Using current best practices for React Query configuration
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
-  });
+  },
+});
 
+export function AppProviders({ children }: AppProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">

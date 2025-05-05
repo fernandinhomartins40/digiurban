@@ -17,7 +17,7 @@ export default function AppointmentScheduler() {
   const [filterStatus, setFilterStatus] = useState<AppointmentStatus | "all">("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
-  const { handleStatusChange } = useAppointmentActions();
+  const { handleStatusChange, handleNotesChange } = useAppointmentActions();
 
   // Handle appointment click
   const handleAppointmentClick = (appointment: Appointment) => {
@@ -25,7 +25,7 @@ export default function AppointmentScheduler() {
     setDrawerOpen(true);
   };
 
-  // Create wrapper functions to match the expected types
+  // Create wrapper functions to match the expected types for AppointmentDrawer
   const handleApprove = (appointmentId: string): Promise<void> => {
     return handleStatusChange(appointmentId, "approved");
   };

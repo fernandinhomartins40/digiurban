@@ -1,26 +1,32 @@
-import React from "react";
+
+import React, { memo } from "react";
 import { cn } from "@/lib/utils";
+import { ChartCard, DashboardLineChart } from "./common/DashboardCharts";
 
 interface InsightsChartProps {
   className?: string;
 }
 
-export function InsightsChart({ className }: InsightsChartProps) {
+const chartData = [
+  { month: "Jan", visitors: 1000, sales: 800, revenue: 12000 },
+  { month: "Feb", visitors: 1200, sales: 930, revenue: 14000 },
+  { month: "Mar", visitors: 1100, sales: 890, revenue: 13500 },
+  { month: "Apr", visitors: 1400, sales: 1100, revenue: 17000 },
+  { month: "May", visitors: 1700, sales: 1300, revenue: 20000 },
+  { month: "Jun", visitors: 1600, sales: 1200, revenue: 18000 },
+  { month: "Jul", visitors: 1900, sales: 1400, revenue: 22000 },
+];
+
+export const InsightsChart = memo(({ className }: InsightsChartProps) => {
+  // Time period state could be added here if needed for filtering
+
   return (
     <div className={cn("flex w-full gap-5 mt-5", className)}>
-      <div className="bg-white min-w-60 w-full flex-1 shrink basis-[0%] p-5 rounded-lg">
-        <div className="flex w-full items-center text-lg text-[#17181A] font-semibold leading-[1.6] justify-between">
-          <div className="self-stretch flex min-w-60 w-full items-center gap-2 flex-wrap flex-1 shrink basis-[0%] my-auto">
-            <div className="self-stretch my-auto">Insights Overview</div>
-            <img
-              src="https://cdn.builder.io/api/v1/image/assets/83c0acc0061e4ab38eab22442d214ed1/7abefb083d4be800902d4fdf325d16c5c24a7000?placeholderIfAbsent=true"
-              className="aspect-[1] object-contain w-3.5 self-stretch shrink-0 my-auto"
-              alt="Info"
-            />
-          </div>
-        </div>
-
-        {/* Time Period Selector */}
+      <ChartCard 
+        title="Insights Overview"
+        description="Performance metrics over time"
+        className="bg-white min-w-60 w-full flex-1 shrink basis-[0%] rounded-lg"
+      >
         <div className="flex w-full flex-col items-stretch text-sm font-medium leading-none justify-center mt-5">
           <div className="flex w-full items-center gap-[40px_100px] justify-between flex-wrap">
             <div className="shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)] self-stretch flex min-w-60 gap-[-1px] text-[#99B2C6] my-auto rounded-lg">
@@ -51,13 +57,23 @@ export function InsightsChart({ className }: InsightsChartProps) {
           </div>
         </div>
 
-        {/* Chart Image */}
-        <img
-          src="https://cdn.builder.io/api/v1/image/assets/83c0acc0061e4ab38eab22442d214ed1/ecdbaaabbbee1f9f6d5bc5a03b76fbb59a7a5b33?placeholderIfAbsent=true"
-          className="aspect-[3.03] object-contain w-full mt-5"
-          alt="Analytics Chart"
-        />
-      </div>
+        <div className="mt-5">
+          <DashboardLineChart 
+            data={chartData}
+            xAxisDataKey="month"
+            lines={[
+              { dataKey: "visitors", stroke: "#0088FE", name: "Visitors" },
+              { dataKey: "sales", stroke: "#00C49F", name: "Sales" },
+              { dataKey: "revenue", stroke: "#FFBB28", name: "Revenue" }
+            ]}
+            height={300}
+          />
+        </div>
+      </ChartCard>
     </div>
   );
-}
+});
+
+InsightsChart.displayName = "InsightsChart";
+
+export default InsightsChart;
