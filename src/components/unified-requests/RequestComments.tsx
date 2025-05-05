@@ -33,9 +33,10 @@ export function RequestComments({ request, onAddComment }: RequestCommentsProps)
     }
   };
   
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string | Date | undefined) => {
+    if (!date) return "Data inválida";
     try {
-      return format(date, "dd/MM/yyyy HH:mm", { locale: ptBR });
+      return format(new Date(date), "dd/MM/yyyy HH:mm", { locale: ptBR });
     } catch (e) {
       return "Data inválida";
     }

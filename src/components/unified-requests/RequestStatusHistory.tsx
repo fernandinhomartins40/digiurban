@@ -11,9 +11,10 @@ interface RequestStatusHistoryProps {
 }
 
 export function RequestStatusHistory({ request }: RequestStatusHistoryProps) {
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string | Date | undefined) => {
+    if (!date) return "Data inválida";
     try {
-      return format(date, "dd/MM/yyyy HH:mm", { locale: ptBR });
+      return format(new Date(date), "dd/MM/yyyy HH:mm", { locale: ptBR });
     } catch (e) {
       return "Data inválida";
     }
@@ -39,7 +40,11 @@ export function RequestStatusHistory({ request }: RequestStatusHistoryProps) {
       description: "",
       person: "Sistema"
     }] : [])
-  ].sort((a, b) => a.date.getTime() - b.date.getTime());
+  ].sort((a, b) => {
+    const dateA = a.date ? new Date(a.date).getTime() : 0;
+    const dateB = b.date ? new Date(b.date).getTime() : 0;
+    return dateA - dateB;
+  });
   
   return (
     <div className="py-4 space-y-4">

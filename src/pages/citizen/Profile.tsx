@@ -9,7 +9,7 @@ export default function CitizenProfile() {
   const { user } = useAuth();
 
   // Safe access to user properties with TypeScript guards
-  const userProfile = user?.user_metadata || {};
+  const userMetadata = user?.user_metadata || {};
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -32,7 +32,7 @@ export default function CitizenProfile() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Nome</p>
-              <p>{user?.name || userProfile.name || "Nome não disponível"}</p>
+              <p>{user?.name || userMetadata.name || "Nome não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">E-mail</p>
@@ -40,11 +40,11 @@ export default function CitizenProfile() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">CPF</p>
-              <p>{userProfile.cpf || "CPF não disponível"}</p>
+              <p>{userMetadata.cpf || "CPF não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Telefone</p>
-              <p>{userProfile.phone || "Telefone não disponível"}</p>
+              <p>{userMetadata.phone || "Telefone não disponível"}</p>
             </div>
           </div>
           
@@ -62,27 +62,27 @@ export default function CitizenProfile() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">CEP</p>
-              <p>{userProfile.zipcode || "CEP não disponível"}</p>
+              <p>{userMetadata.zipcode || "CEP não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Logradouro</p>
-              <p>{userProfile.street || "Endereço não disponível"}</p>
+              <p>{userMetadata.street || "Endereço não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Número</p>
-              <p>{userProfile.number || "Número não disponível"}</p>
+              <p>{userMetadata.number || "Número não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Bairro</p>
-              <p>{userProfile.neighborhood || "Bairro não disponível"}</p>
+              <p>{userMetadata.neighborhood || "Bairro não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Cidade</p>
-              <p>{userProfile.city || "Cidade não disponível"}</p>
+              <p>{userMetadata.city || "Cidade não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Estado</p>
-              <p>{userProfile.state || "Estado não disponível"}</p>
+              <p>{userMetadata.state || "Estado não disponível"}</p>
             </div>
           </div>
           

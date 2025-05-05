@@ -1,269 +1,213 @@
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 import { 
   UnifiedRequest, 
-  RequestStatus, 
-  PriorityLevel, 
+  CreateRequestDTO, 
+  RequestStatus,
   RequesterType,
-  CreateRequestDTO 
+  PriorityLevel
 } from "@/types/requests";
 import { 
   getUnifiedRequests, 
   getRequestById, 
-  createUnifiedRequest, 
-  updateUnifiedRequest, 
-  forwardRequestToDepartment, 
+  createUnifiedRequest,
+  updateUnifiedRequest,
+  forwardRequestToDepartment,
   addCommentToRequest,
   uploadRequestAttachment
 } from "@/services/requestsService";
 
-export function useUnifiedRequests() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [requests, setRequests] = useState<UnifiedRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<UnifiedRequest | null>(null);
+export const useUnifiedRequests = () => {
+  const queryClient = useQueryClient();
   
   // Filters
-  const [departmentFilter, setDepartmentFilter] = useState<string | undefined>(undefined);
-  const [statusFilter, setStatusFilter] = useState<RequestStatus | undefined>(undefined);
-  const [requesterTypeFilter, setRequesterTypeFilter] = useState<RequesterType | undefined>(undefined);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState<string | undefined>();
+  const [statusFilter, setStatusFilter] = useState<RequestStatus | undefined>();
+  const [requesterTypeFilter, setRequesterTypeFilter] = useState<RequesterType | undefined>();
+  const [searchTerm, setSearchTerm] = useState<string>("");
   
-  // Fetch requests with current filters
-  const fetchRequests = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getUnifiedRequests(
-        departmentFilter,
-        statusFilter,
-        requesterTypeFilter,
-        searchTerm || undefined
-      );
-      setRequests(data);
-    } catch (error) {
-      console.error("Error fetching requests:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Selected request
+  const [selectedRequest, setSelectedRequest] = useState<UnifiedRequest | null>(null);
   
-  // Fetch a specific request by ID
-  const fetchRequestById = async (id: string) => {
-    setIsLoading(true);
+  // Fetch requests with filters
+  const { 
+    data: requests,
+    isLoading,
+    refetch
+  } = useQuery({
+    queryKey: ['unified-requests', departmentFilter, statusFilter, requesterTypeFilter, searchTerm],
+    queryFn: () => getUnifiedRequests(
+      departmentFilter,
+      statusFilter,
+      requesterTypeFilter,
+      searchTerm || undefined
+    )
+  });
+  
+  // Fetch a single request by ID
+  const fetchRequestById = useCallback(async (id: string) => {
     try {
       const request = await getRequestById(id);
-      setSelectedRequest(request);
-      return request;
+      if (request) {
+        setSelectedRequest(request);
+        return request;
+      }
     } catch (error) {
-      console.error("Error fetching request:", error);
-      return null;
-    } finally {
-      setIsLoading(false);
+      console.error('Error fetching request details:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os detalhes da solicitação',
+        variant: 'destructive'
+      });
     }
-  };
+    return null;
+  }, []);
   
   // Create a new request
-  const handleCreateRequest = async (requestData: CreateRequestDTO) => {
-    if (!user) {
-      toast({
-        title: "Erro",
-        description: "Usuário não autenticado",
-        variant: "destructive",
-      });
-      return null;
-    }
-    
-    setIsLoading(true);
+  const handleCreateRequest = useCallback(async (data: CreateRequestDTO) => {
     try {
-      const newRequest = await createUnifiedRequest({
-        ...requestData,
-        requester_id: user.id
+      const result = await createUnifiedRequest({
+        ...data,
+        requester_type: data.requester_type,
+        requester_id: data.requester_id
       });
       
-      if (newRequest) {
-        // Refresh the list
-        fetchRequests();
-        
+      if (result) {
         toast({
-          title: "Solicitação criada",
-          description: "Sua solicitação foi criada com sucesso",
+          title: 'Solicitação criada',
+          description: 'Sua solicitação foi criada com sucesso',
         });
+        
+        // Refresh the requests list
+        refetch();
+        return true;
       }
-      
-      return newRequest;
     } catch (error) {
-      console.error("Error creating request:", error);
+      console.error('Error creating request:', error);
       toast({
-        title: "Erro",
-        description: "Não foi possível criar a solicitação",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Não foi possível criar a solicitação',
+        variant: 'destructive'
       });
-      return null;
-    } finally {
-      setIsLoading(false);
     }
-  };
+    return false;
+  }, [refetch]);
   
   // Update request status
-  const handleUpdateRequestStatus = async (requestId: string, status: RequestStatus) => {
-    setIsLoading(true);
+  const handleUpdateRequestStatus = useCallback(async (id: string, status: RequestStatus) => {
     try {
-      // Fix: Pass an object with id and status properties to match UpdateRequestDTO
-      const success = await updateUnifiedRequest(requestId, { 
-        id: requestId, 
-        status 
-      });
+      const result = await updateUnifiedRequest(id, { status });
       
-      if (success) {
-        // If updating the currently selected request
-        if (selectedRequest && selectedRequest.id === requestId) {
-          setSelectedRequest({
-            ...selectedRequest,
-            status,
-            updated_at: new Date(),
-            completed_at: status === 'completed' ? new Date() : selectedRequest.completed_at
-          });
-        }
-        
-        // Refresh the list
-        fetchRequests();
-        
+      if (result) {
         toast({
-          title: "Status atualizado",
-          description: `O status da solicitação foi atualizado para ${status}`,
+          title: 'Status atualizado',
+          description: `Status alterado para "${status}"`,
         });
+        
+        // Refresh the requests list and selected request
+        refetch();
+        if (selectedRequest?.id === id) {
+          fetchRequestById(id);
+        }
+        return true;
       }
-      
-      return success;
     } catch (error) {
-      console.error("Error updating request status:", error);
+      console.error('Error updating request status:', error);
       toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o status da solicitação",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Não foi possível atualizar o status',
+        variant: 'destructive'
       });
-      return false;
-    } finally {
-      setIsLoading(false);
     }
-  };
+    return false;
+  }, [refetch, fetchRequestById, selectedRequest]);
   
   // Forward request to another department
-  const handleForwardRequest = async (requestId: string, targetDepartment: string, comments?: string) => {
-    setIsLoading(true);
+  const handleForwardRequest = useCallback(async (id: string, targetDepartment: string, comments?: string) => {
     try {
-      const success = await forwardRequestToDepartment(requestId, targetDepartment, comments);
+      const result = await forwardRequestToDepartment(id, targetDepartment, comments);
       
-      if (success) {
-        // Refresh the list
-        fetchRequests();
-        
-        // If forwarding the selected request, update its status
-        if (selectedRequest && selectedRequest.id === requestId) {
-          setSelectedRequest({
-            ...selectedRequest,
-            status: 'forwarded',
-            updated_at: new Date(),
-            target_department: targetDepartment,
-            previous_department: selectedRequest.target_department
-          });
-        }
-        
+      if (result) {
         toast({
-          title: "Solicitação encaminhada",
-          description: `A solicitação foi encaminhada para ${targetDepartment}`,
+          title: 'Solicitação encaminhada',
+          description: `Encaminhada para ${targetDepartment}`,
         });
+        
+        // Refresh the requests list
+        refetch();
+        return true;
       }
-      
-      return success;
     } catch (error) {
-      console.error("Error forwarding request:", error);
+      console.error('Error forwarding request:', error);
       toast({
-        title: "Erro",
-        description: "Não foi possível encaminhar a solicitação",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Não foi possível encaminhar a solicitação',
+        variant: 'destructive'
       });
-      return false;
-    } finally {
-      setIsLoading(false);
     }
-  };
+    return false;
+  }, [refetch]);
   
-  // Add comment to a request
-  const handleAddComment = async (requestId: string, commentText: string, isInternal: boolean = false) => {
-    setIsLoading(true);
+  // Add comment to request
+  const handleAddComment = useCallback(async (id: string, comment: string, isInternal: boolean = false) => {
     try {
-      const success = await addCommentToRequest(requestId, commentText, isInternal);
+      const result = await addCommentToRequest(id, comment, isInternal);
       
-      if (success) {
-        // Refresh the selected request to get the new comment
-        if (selectedRequest && selectedRequest.id === requestId) {
-          await fetchRequestById(requestId);
-        }
-        
+      if (result) {
         toast({
-          title: "Comentário adicionado",
-          description: "Seu comentário foi adicionado com sucesso",
+          title: 'Comentário adicionado',
+          description: 'Seu comentário foi adicionado com sucesso',
         });
+        
+        // Refresh the selected request to show the new comment
+        if (selectedRequest?.id === id) {
+          fetchRequestById(id);
+        }
+        return true;
       }
-      
-      return success;
     } catch (error) {
-      console.error("Error adding comment:", error);
+      console.error('Error adding comment:', error);
       toast({
-        title: "Erro",
-        description: "Não foi possível adicionar o comentário",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Não foi possível adicionar o comentário',
+        variant: 'destructive'
       });
-      return false;
-    } finally {
-      setIsLoading(false);
     }
-  };
+    return false;
+  }, [fetchRequestById, selectedRequest]);
   
-  // Upload attachment
-  const handleUploadAttachment = async (requestId: string, file: File) => {
-    setIsLoading(true);
+  // Upload attachment to request
+  const handleUploadAttachment = useCallback(async (id: string, file: File) => {
     try {
-      const success = await uploadRequestAttachment(requestId, file);
+      const result = await uploadRequestAttachment(id, file);
       
-      if (success) {
-        // Refresh the selected request to get the new attachment
-        if (selectedRequest && selectedRequest.id === requestId) {
-          await fetchRequestById(requestId);
-        }
-        
+      if (result) {
         toast({
-          title: "Arquivo anexado",
-          description: "O arquivo foi anexado com sucesso",
+          title: 'Arquivo anexado',
+          description: 'Seu arquivo foi anexado com sucesso',
         });
+        
+        // Refresh the selected request to show the new attachment
+        if (selectedRequest?.id === id) {
+          fetchRequestById(id);
+        }
+        return true;
       }
-      
-      return success;
     } catch (error) {
-      console.error("Error uploading attachment:", error);
+      console.error('Error uploading attachment:', error);
       toast({
-        title: "Erro",
-        description: "Não foi possível anexar o arquivo",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Não foi possível anexar o arquivo',
+        variant: 'destructive'
       });
-      return false;
-    } finally {
-      setIsLoading(false);
     }
-  };
-  
-  // Load requests on mount or when filters change
-  useEffect(() => {
-    if (user) {
-      fetchRequests();
-    }
-  }, [user, departmentFilter, statusFilter, requesterTypeFilter, searchTerm]);
+    return false;
+  }, [fetchRequestById, selectedRequest]);
   
   return {
+    // Data
     requests,
     isLoading,
     selectedRequest,
@@ -280,12 +224,14 @@ export function useUnifiedRequests() {
     setSearchTerm,
     
     // Actions
-    fetchRequests,
     fetchRequestById,
     handleCreateRequest,
     handleUpdateRequestStatus,
     handleForwardRequest,
     handleAddComment,
-    handleUploadAttachment
+    handleUploadAttachment,
+    
+    // Refresh
+    refetch
   };
-}
+};

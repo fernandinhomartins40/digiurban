@@ -18,8 +18,8 @@ import { EmptyRequests } from "./EmptyRequests";
 import { 
   getStatusColor, 
   getPriorityColor, 
-  getStatusName, 
-  getPriorityName,
+  mapStatusName, 
+  mapPriorityName,
   getRequesterTypeName
 } from "@/utils/requestMappers";
 
@@ -41,6 +41,14 @@ export function RequestList({
   if (!requests || requests.length === 0) {
     return <EmptyRequests />;
   }
+
+  const formatDate = (date: string | Date) => {
+    try {
+      return format(new Date(date), "dd/MM/yyyy", { locale: ptBR });
+    } catch (e) {
+      return "Data inválida";
+    }
+  };
 
   return (
     <div className="rounded-md border overflow-hidden">
@@ -72,16 +80,16 @@ export function RequestList({
               <TableCell>{request.target_department}</TableCell>
               <TableCell>
                 <Badge className={getPriorityColor(request.priority)}>
-                  {getPriorityName(request.priority)}
+                  {mapPriorityName(request.priority)}
                 </Badge>
               </TableCell>
               <TableCell>
                 <Badge className={getStatusColor(request.status)}>
-                  {getStatusName(request.status)}
+                  {mapStatusName(request.status)}
                 </Badge>
               </TableCell>
               <TableCell>
-                {format(request.created_at, "dd/MM/yyyy", { locale: ptBR })}
+                {formatDate(request.created_at)}
               </TableCell>
               <TableCell className="text-right">
                 <Button

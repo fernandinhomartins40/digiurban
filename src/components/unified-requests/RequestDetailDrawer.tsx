@@ -43,7 +43,7 @@ import {
   Forward,
   MessageSquare,
 } from "lucide-react";
-import { getStatusName, getPriorityName, getStatusColor, getPriorityColor } from "@/utils/requestMappers";
+import { mapStatusName, mapPriorityName, getStatusColor, getPriorityColor } from "@/utils/requestMappers";
 import { RequestComments } from "./RequestComments";
 import { RequestAttachments } from "./RequestAttachments";
 import { RequestStatusHistory } from "./RequestStatusHistory";
@@ -78,10 +78,10 @@ export function RequestDetailDrawer({
   
   if (!request) return null;
 
-  const formatDate = (date: Date | undefined) => {
+  const formatDate = (date: string | Date | undefined) => {
     if (!date) return "Não definida";
     try {
-      return format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+      return format(new Date(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
     } catch (e) {
       return "Data inválida";
     }
@@ -140,11 +140,11 @@ export function RequestDetailDrawer({
               <h3 className="text-lg font-semibold mb-2">{request.title}</h3>
               <div className="flex flex-wrap gap-2 mt-2">
                 <Badge className={getStatusColor(request.status)}>
-                  {getStatusName(request.status)}
+                  {mapStatusName(request.status)}
                 </Badge>
                 {request.priority && (
                   <Badge className={getPriorityColor(request.priority)}>
-                    {getPriorityName(request.priority)}
+                    {mapPriorityName(request.priority)}
                   </Badge>
                 )}
               </div>
