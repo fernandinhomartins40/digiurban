@@ -1,9 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Info } from "lucide-react";
 import { UserTabs } from "@/components/users/UserTabs";
 import { UserFormSheet } from "@/components/users/UserFormSheet";
 import { UserRolesManagement } from "@/components/users/UserRolesManagement";
@@ -13,10 +13,12 @@ import { AnalyticsTabContent } from "@/components/users/tabs/AnalyticsTabContent
 import { UserManagementHeader } from "@/components/users/UserManagementHeader";
 import { useUserManagement } from "@/hooks/users/useUserManagement";
 import { useLocation } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function UserManagement() {
   const { user } = useAuth();
   const location = useLocation();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   // Get current tab from URL query params
   const params = new URLSearchParams(location.search);
@@ -26,7 +28,7 @@ export default function UserManagement() {
   // Use custom hook for user management
   const {
     users,
-    isLoading,
+    isLoading: usersLoading,
     isFormOpen,
     setIsFormOpen,
     editingUser,
@@ -41,13 +43,34 @@ export default function UserManagement() {
     handleDeleteUser,
     handleResetPassword,
     handleSubmitUser,
-    fetchAdminUsers
+    fetchAdminUsers,
+    isSubmitting
   } = useUserManagement();
 
-  // Check if user is allowed to manage users (only prefeito can)
-  const isPrefeitoUser = user?.role === "prefeito";
+  // Check authorization
+  useEffect(() => {
+    const checkAuthorization = async () => {
+      if (user) {
+        // Only prefeito user is allowed to access this page
+        setIsAuthorized(user.role === 'prefeito');
+      } else {
+        setIsAuthorized(false);
+      }
+    };
 
-  if (!isPrefeitoUser) {
+    checkAuthorization();
+  }, [user]);
+
+  if (isAuthorized === null) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Verificando permissões...</span>
+      </div>
+    );
+  }
+
+  if (isAuthorized === false) {
     return (
       <div className="flex items-center justify-center h-full">
         <Alert variant="destructive" className="max-w-md">
@@ -61,7 +84,7 @@ export default function UserManagement() {
     );
   }
 
-  if (isLoading) {
+  if (usersLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -77,7 +100,21 @@ export default function UserManagement() {
         onRefresh={fetchAdminUsers} 
       />
 
-      <UserTabs activeTab={activeTab}>
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-2">
+            <Info size={20} className="text-blue-500 mt-0.5" />
+            <div>
+              <h3 className="font-medium">Gestão de Usuários</h3>
+              <p className="text-sm text-muted-foreground">
+                Aqui você pode gerenciar os usuários administrativos do sistema. Apenas o Prefeito tem acesso a este módulo.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <UserTabs activeTab={activeTab} onTabChange={setActiveTab}>
         <TabsContent value="users" className="space-y-4">
           <UsersTabContent 
             users={users}
@@ -87,6 +124,7 @@ export default function UserManagement() {
             onEditUser={handleEditUser}
             onDeleteUser={handleDeleteUser}
             onResetPassword={handleResetPassword}
+            isLoading={usersLoading}
           />
         </TabsContent>
         
@@ -112,6 +150,7 @@ export default function UserManagement() {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSubmit={handleSubmitUser}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

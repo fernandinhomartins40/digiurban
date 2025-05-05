@@ -17,12 +17,13 @@ export function useUserManagement() {
     isFormOpen, 
     setIsFormOpen, 
     editingUser, 
+    isLoading: actionLoading,
     handleAddUser, 
     handleEditUser, 
     handleDeleteUser, 
     handleResetPassword 
   } = useUserOperations({ users, setUsers, fetchAdminUsers });
-  const { handleSubmitUser } = useUserSubmit({ users, setUsers });
+  const { handleSubmitUser, isSubmitting } = useUserSubmit({ users, setUsers });
 
   // Sample access logs - in a real app, these would come from the database
   const [accessLogs] = useState<any[]>([
@@ -76,6 +77,8 @@ export function useUserManagement() {
     handleDeleteUser,
     handleResetPassword,
     handleSubmitUser,
-    fetchAdminUsers
+    fetchAdminUsers,
+    actionLoading,
+    isSubmitting
   };
 }

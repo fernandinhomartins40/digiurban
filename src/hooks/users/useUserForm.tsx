@@ -1,9 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { AdminUser, AdminPermission } from "@/types/auth";
-import { toast } from "@/hooks/use-toast";
 
-// Template permissions data (moved from UserFormSheet)
+// Sample role templates for dropdown selection
 export const ROLE_TEMPLATES = [
   { id: "1", name: "Administrador de Departamento" },
   { id: "2", name: "Servidor Regular" },
@@ -31,28 +30,25 @@ export const TEMPLATE_PERMISSIONS = {
   ]
 };
 
-export interface UserFormData {
-  name: string;
-  email: string;
-  department: string;
-  position: string;
-  role: string;
-  password: string;
-  confirmPassword: string;
-  permissions: AdminPermission[];
-  roleTemplateId: string;
-}
-
 interface UseUserFormProps {
   user?: AdminUser;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (userData: any) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
-export function useUserForm({ user, isOpen, onClose, onSubmit }: UseUserFormProps) {
+export function useUserForm({
+  user,
+  isOpen,
+  onClose,
+  onSubmit,
+  isSubmitting = false,
+}: UseUserFormProps) {
   const isEditing = !!user;
-  const [formData, setFormData] = useState<UserFormData>({
+  
+  const [formData, setFormData] = useState({
+    id: user?.id || "",
     name: user?.name || "",
     email: user?.email || "",
     department: user?.department || "",
@@ -65,39 +61,27 @@ export function useUserForm({ user, isOpen, onClose, onSubmit }: UseUserFormProp
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
-  // Reset form when user changes
+  // Reset form when the dialog opens/closes or the user changes
   useEffect(() => {
-    if (user) {
+    if (isOpen) {
       setFormData({
-        name: user.name || "",
-        email: user.email || "",
-        department: user.department || "",
-        position: user.position || "",
-        role: user.role || "admin",
+        id: user?.id || "",
+        name: user?.name || "",
+        email: user?.email || "",
+        department: user?.department || "",
+        position: user?.position || "",
+        role: user?.role || "admin",
         password: "",
         confirmPassword: "",
-        permissions: user.permissions || [],
+        permissions: user?.permissions || [],
         roleTemplateId: "",
       });
-    } else {
-      setFormData({
-        name: "",
-        email: "",
-        department: "",
-        position: "",
-        role: "admin",
-        password: "",
-        confirmPassword: "",
-        permissions: [],
-        roleTemplateId: "",
-      });
+      setFormErrors({});
+      setShowConfirmation(false);
     }
-    setFormErrors({});
-    setShowConfirmation(false);
-  }, [user, isOpen]);
+  }, [isOpen, user]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -127,6 +111,14 @@ export function useUserForm({ user, isOpen, onClose, onSubmit }: UseUserFormProp
       ...formData,
       [name]: value,
     });
+    
+    // Clear error when field is updated
+    if (formErrors[name]) {
+      setFormErrors({
+        ...formErrors,
+        [name]: ""
+      });
+    }
   };
 
   const handleRoleChange = (value: string) => {
@@ -175,23 +167,18 @@ export function useUserForm({ user, isOpen, onClose, onSubmit }: UseUserFormProp
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
       await onSubmit(formData);
       onClose();
     } catch (error) {
       console.error("Error submitting form:", error);
-    } finally {
-      setIsSubmitting(false);
+      // Form will stay open so user can correct errors
     }
   };
 
   return {
     formData,
     formErrors,
-    isSubmitting,
-    isEditing,
     showConfirmation,
     setShowConfirmation,
     handleInputChange,

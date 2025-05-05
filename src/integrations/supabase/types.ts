@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_operations_log: {
+        Row: {
+          created_at: string
+          details: Json | null
+          id: string
+          operation_type: string
+          performed_by: string
+          target_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          operation_type: string
+          performed_by: string
+          target_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          operation_type?: string
+          performed_by?: string
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_permissions: {
         Row: {
           admin_id: string
@@ -3530,6 +3557,10 @@ export type Database = {
       generate_unified_request_protocol: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      is_prefeito: {
+        Args: { user_id: string }
+        Returns: boolean
       }
       user_has_permission: {
         Args: {

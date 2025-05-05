@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
-import { AdminUser, AdminPermission } from "@/types/auth";
+import { AdminUser } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UseUserOperationsProps {
@@ -13,6 +13,7 @@ interface UseUserOperationsProps {
 export function useUserOperations({ users, setUsers, fetchAdminUsers }: UseUserOperationsProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUser | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState<{[key: string]: boolean}>({});
 
   const handleAddUser = () => {
     setEditingUser(undefined);
@@ -26,10 +27,24 @@ export function useUserOperations({ users, setUsers, fetchAdminUsers }: UseUserO
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      // Delete user from auth (this will cascade to profiles and permissions)
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      setIsLoading({...isLoading, [userId]: true});
+      
+      // Get current auth session to include in the request
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        throw new Error("Você precisa estar autenticado para realizar esta operação");
+      }
+      
+      // Call the edge function to delete the user
+      const { data, error } = await supabase.functions.invoke('admin-user-operations', {
+        body: { 
+          operation: 'deleteUser',
+          userId
+        }
+      });
       
       if (error) throw error;
+      if (data.error) throw new Error(data.error);
       
       // Update UI state
       setUsers(users.filter(user => user.id !== userId));
@@ -45,20 +60,29 @@ export function useUserOperations({ users, setUsers, fetchAdminUsers }: UseUserO
         description: error.message || "Não foi possível remover o usuário.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(prev => {
+        const newState = {...prev};
+        delete newState[userId];
+        return newState;
+      });
     }
   };
 
   const handleResetPassword = async (userId: string) => {
     try {
-      // Get user email
-      const userToReset = users.find(u => u.id === userId);
-      if (!userToReset) throw new Error("Usuário não encontrado");
+      setIsLoading({...isLoading, [`reset_${userId}`]: true});
       
-      const { error } = await supabase.auth.resetPasswordForEmail(userToReset.email, {
-        redirectTo: window.location.origin + "/reset-password",
+      // Call the edge function to reset the password
+      const { data, error } = await supabase.functions.invoke('admin-user-operations', {
+        body: { 
+          operation: 'resetPassword',
+          userId
+        }
       });
       
       if (error) throw error;
+      if (data.error) throw new Error(data.error);
       
       toast({
         title: "Email enviado",
@@ -71,6 +95,12 @@ export function useUserOperations({ users, setUsers, fetchAdminUsers }: UseUserO
         description: error.message || "Não foi possível enviar o email de redefinição de senha.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(prev => {
+        const newState = {...prev};
+        delete newState[`reset_${userId}`];
+        return newState;
+      });
     }
   };
 
@@ -78,6 +108,7 @@ export function useUserOperations({ users, setUsers, fetchAdminUsers }: UseUserO
     isFormOpen,
     setIsFormOpen,
     editingUser,
+    isLoading,
     handleAddUser,
     handleEditUser,
     handleDeleteUser,

@@ -4,46 +4,27 @@ project_id = "vvuwhkaxrwrdgydxvprr"
 [api]
 enabled = true
 port = 54321
-schemas = ["public", "storage"]
-extra_search_path = ["public", "extensions"]
-max_rows = 1000
+schemas = ["public", "storage", "graphql_public"]
 
 [db]
 port = 54322
-shadow_port = 54320
-major_version = 15
+
+[realtime]
+enabled = true
 
 [studio]
 enabled = true
 port = 54323
-api_url = "http://localhost"
 
 [inbucket]
 enabled = true
 port = 54324
 
-[auth]
-enabled = true
-port = 54325
-uri_allow_list = ["https://localhost:3000"]
-
 [storage]
 enabled = true
-port = 54326
 
-[[storage.buckets]]
-name = "tfd_documents"
-public = false
-
-[realtime]
+[auth]
 enabled = true
-port = 54327
 
-[edge_functions]
-enabled = true
-port = 54328
-
-[analytics]
-enabled = false
-port = 54329
-vector_port = 54330
+[functions.admin-user-operations]
+verify_jwt = true

@@ -14,6 +14,7 @@ import { UserFilters, UserFilterValues } from "@/components/users/UserFilters";
 import { UserActionMenu } from "@/components/users/UserActionMenu";
 import { AdminUser } from "@/types/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Loader2 } from "lucide-react";
 
 interface UsersTabContentProps {
   users: AdminUser[];
@@ -21,8 +22,10 @@ interface UsersTabContentProps {
   setFilters: (filters: UserFilterValues) => void;
   departments: string[];
   onEditUser: (user: AdminUser) => void;
-  onDeleteUser: (userId: string) => void;
-  onResetPassword: (userId: string) => void;
+  onDeleteUser: (userId: string) => Promise<void>;
+  onResetPassword: (userId: string) => Promise<void>;
+  isLoading?: boolean;
+  isLoadingActions?: {[key: string]: boolean};
 }
 
 export function UsersTabContent({
@@ -32,7 +35,9 @@ export function UsersTabContent({
   departments,
   onEditUser,
   onDeleteUser,
-  onResetPassword
+  onResetPassword,
+  isLoading = false,
+  isLoadingActions = {},
 }: UsersTabContentProps) {
   const isMobile = useIsMobile();
 
@@ -93,7 +98,18 @@ export function UsersTabContent({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.length === 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={isMobile ? 3 : 6} className="text-center py-10">
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="text-muted-foreground">
+                        Carregando usuários...
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredUsers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={isMobile ? 3 : 6} className="text-center py-10">
                     <div className="flex flex-col items-center gap-2">
@@ -135,6 +151,7 @@ export function UsersTabContent({
                         onEdit={onEditUser}
                         onDelete={onDeleteUser}
                         onResetPassword={onResetPassword}
+                        isLoading={isLoadingActions}
                       />
                     </TableCell>
                   </TableRow>

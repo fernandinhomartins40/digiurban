@@ -21,6 +21,7 @@ interface UserFormSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (userData: any) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
 export function UserFormSheet({
@@ -28,12 +29,11 @@ export function UserFormSheet({
   isOpen,
   onClose,
   onSubmit,
+  isSubmitting = false,
 }: UserFormSheetProps) {
   const {
     formData,
     formErrors,
-    isSubmitting,
-    isEditing,
     showConfirmation,
     setShowConfirmation,
     handleInputChange,
@@ -46,8 +46,11 @@ export function UserFormSheet({
     user,
     isOpen,
     onClose,
-    onSubmit
+    onSubmit,
+    isSubmitting
   });
+
+  const isEditing = !!user;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
