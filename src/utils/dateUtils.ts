@@ -1,5 +1,5 @@
 
-import { format } from "date-fns";
+import { format, Locale } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 /**

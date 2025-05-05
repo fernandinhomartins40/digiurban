@@ -4,14 +4,17 @@ import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAdminUser } from "@/types/auth";
 
 export default function CitizenProfile() {
   const { user } = useAuth();
 
   // Safely access metadata - Account for different user types
-  // First check if it's a CitizenUser type with user_metadata, otherwise fall back to regular user_metadata field
-  const userMetadata = user?.user_metadata || {};
-
+  // We need to handle different user types carefully
+  const userMetadata = isAdminUser(user) 
+    ? (user?.user_metadata || {})  // Try to access user_metadata if exists
+    : (user?.user_metadata || {}); // For citizen users
+  
   return (
     <div className="container mx-auto py-6 space-y-6">
       <Helmet>

@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
@@ -99,8 +100,9 @@ export const useUnifiedRequests = () => {
   // Update request status
   const handleUpdateRequestStatus = useCallback(async (id: string, status: RequestStatus) => {
     try {
+      // Include the id in the update data object to match the UpdateRequestDTO type
       const result = await updateUnifiedRequest(id, { 
-        id, // Add the id to match the UpdateRequestDTO type
+        id, 
         status 
       });
       

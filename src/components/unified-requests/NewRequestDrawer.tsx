@@ -72,9 +72,13 @@ export function NewRequestDrawer({
   const handleSubmit = async (values: RequestFormValues) => {
     // Create a complete request DTO with the required fields
     const requestData: CreateRequestDTO = {
-      ...values,
+      title: values.title, // Make sure all required fields are non-optional
+      description: values.description,
+      target_department: values.target_department,
       requester_type: user?.role === 'citizen' ? 'citizen' : 'department',
-      requester_id: user?.id || ''
+      requester_id: user?.id || '',
+      priority: values.priority,
+      due_date: values.due_date || undefined
     };
     
     const result = await onSubmit(requestData);
