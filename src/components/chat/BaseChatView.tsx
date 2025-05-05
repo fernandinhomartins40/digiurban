@@ -9,33 +9,37 @@ import { Button } from "@/components/ui/button";
 import { Search, Users, MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Mock data for demonstration
+// Mock data for demonstration - fixed type issues
 const mockContacts: Contact[] = [
   { id: "c1", name: "Departamento de Saúde", type: "department", status: "online" },
   { id: "c2", name: "Departamento de Educação", type: "department", status: "away" },
-  { id: "c3", name: "João Silva", type: "user", userName: "joaosilva", departmentName: "Finanças", status: "online", favorite: true },
-  { id: "c4", name: "Maria Oliveira", type: "user", userName: "mariaoliveira", departmentName: "Administração", status: "offline" },
+  { id: "c3", name: "João Silva", type: "citizen", userName: "joaosilva", departmentName: "Finanças", status: "online", favorite: true },
+  { id: "c4", name: "Maria Oliveira", type: "citizen", userName: "mariaoliveira", departmentName: "Administração", status: "offline" },
 ];
 
 const mockConversations: Conversation[] = [
   { 
     id: "conv1", 
+    type: "admin", 
+    title: "Departamento de Saúde",
     participantId: "c1", 
     participantName: "Departamento de Saúde", 
     unreadCount: 2,
     lastMessage: "Precisamos discutir o novo programa de vacinação",
     lastMessageTime: "2023-05-05T10:30:00",
-    type: "department",
+    messages: [],
     protocolIds: ["SAUDE-2023-000123"]
   },
   { 
     id: "conv2", 
+    type: "citizen",
+    title: "João Silva", 
     participantId: "c3", 
     participantName: "João Silva", 
     unreadCount: 0,
     lastMessage: "Obrigado pelas informações.",
     lastMessageTime: "2023-05-04T16:45:00",
-    type: "citizen",
+    messages: [],
     protocolIds: ["FIN-2023-000456", "ADM-2023-000789"]
   },
 ];
