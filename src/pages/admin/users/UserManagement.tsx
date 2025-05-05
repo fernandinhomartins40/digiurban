@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -19,15 +18,19 @@ import { UserActionMenu } from "@/components/users/UserActionMenu";
 import { UserStatsCard } from "@/components/users/UserStatsCard";
 import { DepartmentUserStats } from "@/components/users/DepartmentUserStats";
 import { AccessLogTable } from "@/components/users/AccessLogTable";
+import { UserRolesManagement } from "@/components/users/UserRolesManagement";
 import { AdminUser, AdminPermission } from "@/types/auth";
 import { AlertCircle, Loader2, UserPlus, RefreshCcw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function UserManagement() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -38,6 +41,17 @@ export default function UserManagement() {
     role: null,
     status: null,
   });
+
+  // Get current tab from URL query params
+  const params = new URLSearchParams(location.search);
+  const defaultTab = params.get("tab") || "users";
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    navigate(`/admin/users?tab=${value}`, { replace: true });
+  };
 
   // Sample access logs - in a real app, these would come from the database
   const [accessLogs, setAccessLogs] = useState<any[]>([
@@ -427,7 +441,7 @@ export default function UserManagement() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Gerenciamento de Usuários</h1>
           <p className="text-muted-foreground">
-            Gerencie os usuários administrativos do sistema e suas permissões.
+            Gerencie os usuários administrativos do sistema, suas funções e permissões.
           </p>
         </div>
         <div className="flex gap-2">
@@ -442,9 +456,10 @@ export default function UserManagement() {
         </div>
       </div>
 
-      <Tabs defaultValue="users">
+      <Tabs defaultValue={activeTab} value={activeTab} onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="users">Usuários</TabsTrigger>
+          <TabsTrigger value="roles">Funções</TabsTrigger>
           <TabsTrigger value="analytics">Análises</TabsTrigger>
           <TabsTrigger value="logs">Registros</TabsTrigger>
         </TabsList>
@@ -524,6 +539,10 @@ export default function UserManagement() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="roles" className="space-y-4">
+          <UserRolesManagement />
         </TabsContent>
         
         <TabsContent value="analytics" className="space-y-6">

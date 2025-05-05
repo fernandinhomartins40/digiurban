@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminUser, AdminPermission } from "@/types/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +22,35 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { UserPermissionsForm } from "./UserPermissionsForm";
 import { PermissionTemplates } from "./PermissionTemplates";
+import { supabase } from "@/integrations/supabase/client";
+
+// Sample role templates for dropdown selection
+const ROLE_TEMPLATES = [
+  { id: "1", name: "Administrador de Departamento" },
+  { id: "2", name: "Servidor Regular" },
+  { id: "3", name: "Acesso Mínimo" },
+];
+
+// Sample permissions for each role template - in a real implementation, these would come from the database
+const TEMPLATE_PERMISSIONS = {
+  "1": [
+    { moduleId: "administracao", create: true, read: true, update: true, delete: true },
+    { moduleId: "financas", create: false, read: true, update: false, delete: false },
+    { moduleId: "correio", create: true, read: true, update: true, delete: true },
+    { moduleId: "chat", create: true, read: true, update: true, delete: false },
+  ],
+  "2": [
+    { moduleId: "administracao", create: false, read: true, update: false, delete: false },
+    { moduleId: "financas", create: false, read: true, update: false, delete: false },
+    { moduleId: "correio", create: true, read: true, update: true, delete: false },
+    { moduleId: "chat", create: true, read: true, update: true, delete: false },
+  ],
+  "3": [
+    { moduleId: "administracao", create: false, read: true, update: false, delete: false },
+    { moduleId: "correio", create: false, read: true, update: false, delete: false },
+    { moduleId: "chat", create: false, read: true, update: false, delete: false },
+  ]
+};
 
 interface UserFormDialogProps {
   user?: AdminUser;
@@ -47,6 +75,7 @@ export function UserFormDialog({
     password: "",
     confirmPassword: "",
     permissions: user?.permissions || [],
+    roleTemplateId: "",
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -106,6 +135,16 @@ export function UserFormDialog({
     setFormData({
       ...formData,
       permissions,
+    });
+  };
+
+  const handleRoleTemplateChange = (templateId: string) => {
+    if (!templateId) return;
+    
+    setFormData({
+      ...formData,
+      roleTemplateId: templateId,
+      permissions: TEMPLATE_PERMISSIONS[templateId as keyof typeof TEMPLATE_PERMISSIONS] || [],
     });
   };
 
@@ -291,7 +330,25 @@ export function UserFormDialog({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Permissões</h3>
-                <PermissionTemplates onApplyTemplate={handleApplyTemplate} />
+                <div className="flex gap-2">
+                  <PermissionTemplates onApplyTemplate={handleApplyTemplate} />
+                  
+                  <Select 
+                    value={formData.roleTemplateId} 
+                    onValueChange={handleRoleTemplateChange}
+                  >
+                    <SelectTrigger className="w-[220px]">
+                      <SelectValue placeholder="Selecione uma função predefinida" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLE_TEMPLATES.map((template) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <UserPermissionsForm
                 permissions={formData.permissions}

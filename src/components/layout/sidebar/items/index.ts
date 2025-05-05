@@ -2,6 +2,7 @@
 import { SidebarItemProps } from "@/types/sidebar";
 import { getDashboardItem } from "./DashboardItem";
 import { getChatItem } from "./ChatItem";
+import { getUserRolesItem } from "./UserRolesItem";
 import { getGabineteItem } from "./GabineteItem";
 import { getCorreioItem } from "./CorreioItem";
 import { getAdministracaoItem } from "./AdministracaoItem";
@@ -24,6 +25,7 @@ import { getOuvidoriaItem } from "./OuvidoriaItem";
 export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => [
   getDashboardItem(),
   getChatItem(unreadCount),
+  getUserRolesItem(), // Added user roles item after chat
   getGabineteItem(),
   getCorreioItem(unreadCount),
   getAdministracaoItem(),
