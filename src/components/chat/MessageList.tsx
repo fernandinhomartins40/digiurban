@@ -40,7 +40,7 @@ export function MessageList({ messages, onLoadMoreMessages }: MessageListProps) 
             <MessageItem
               key={message.id}
               message={message}
-              isCurrentUser={message.sender === "citizen"}
+              isCurrentUser={message.sender === "admin"}
             />
           ))}
           <div ref={messagesEndRef} />
