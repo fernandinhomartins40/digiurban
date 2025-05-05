@@ -1,7 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 // Maximum session idle time (30 minutes)
 export const MAX_IDLE_TIME = 30 * 60 * 1000;
@@ -173,12 +173,13 @@ export class SessionManager {
       description: 'Sua sessão irá expirar em breve. Deseja continuar conectado?',
       variant: 'default',
       action: (
-        <button 
+        <ToastAction
+          altText="Renovar Sessão"
           onClick={() => this.refreshSession()}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded"
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
         >
           Renovar Sessão
-        </button>
+        </ToastAction>
       )
     });
   }
