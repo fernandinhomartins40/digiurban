@@ -50,7 +50,7 @@ export const createOptimizedQueryClient = () => {
         
         // Using meta to handle errors instead of onError directly
         meta: {
-          onError: (error: any) => {
+          errorHandler: (error: any) => {
             logApiError(error, 'query');
           },
         },
@@ -58,7 +58,7 @@ export const createOptimizedQueryClient = () => {
       mutations: {
         // Use meta for error handling in mutations too
         meta: {
-          onError: (error: any) => {
+          errorHandler: (error: any) => {
             logApiError(error, 'mutation');
           },
         },

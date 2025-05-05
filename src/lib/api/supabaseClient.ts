@@ -86,7 +86,7 @@ export function logApiError(error: ApiError | any, context?: any) {
 
 // Generic API request wrapper
 export async function apiRequest<T>(
-  requestFn: () => Promise<{ data: T | null; error: any }>,
+  requestFn: () => Promise<{ data: any; error: any }>,
   options: {
     errorMessage?: string;
     context?: string;
@@ -106,10 +106,10 @@ export async function apiRequest<T>(
 
   while (attempts <= retries) {
     try {
-      const { data, error } = await requestFn();
+      const response = await requestFn();
       
-      if (error) {
-        const categorizedError = categorizeError(error);
+      if (response.error) {
+        const categorizedError = categorizeError(response.error);
         logApiError(categorizedError, context);
         
         // Don't retry auth/permission errors
@@ -133,7 +133,7 @@ export async function apiRequest<T>(
         return { data: null, error: categorizedError, status: 'error' };
       }
       
-      return { data, error: null, status: 'success' };
+      return { data: response.data as T, error: null, status: 'success' };
     } catch (error) {
       const categorizedError = categorizeError(error);
       logApiError(categorizedError, context);
@@ -179,14 +179,16 @@ export const api = {
   async get<T>(tableName: string, options?: any): Promise<ApiResponse<T>> {
     return apiRequest<T>(
       async () => {
-        // Use type assertion to tell TypeScript this is valid
-        let query = supabase.from(tableName as any).select('*');
+        // Use explicit cast to handle the dynamic table name
+        const query = supabase.from(tableName);
+        
+        let finalQuery = query.select('*');
         
         if (options?.select) {
-          query = query.select(options.select);
+          finalQuery = query.select(options.select);
         }
         
-        return await query;
+        return await finalQuery;
       },
       { context: `GET ${tableName}`, ...options }
     );
@@ -198,24 +200,26 @@ export const api = {
       return apiRequest(
         async () => {
           // Create and execute the query
-          let query = supabase.from('mayor_dashboard_stats');
+          const query = supabase.from('mayor_dashboard_stats');
           
-          // Build the query with proper methods
+          // Build the query with type-safe methods
+          let finalQuery = query.select('*');
+          
+          // Apply filters if provided
           if (startDate) {
-            query = query.gte('stat_date', startDate.toISOString().split('T')[0]);
+            finalQuery = finalQuery.gte('stat_date', startDate.toISOString().split('T')[0]);
           }
           
           if (endDate) {
-            query = query.lte('stat_date', endDate.toISOString().split('T')[0]);
+            finalQuery = finalQuery.lte('stat_date', endDate.toISOString().split('T')[0]);
           }
           
           if (department) {
-            query = query.eq('sector_id', department);
+            finalQuery = finalQuery.eq('sector_id', department);
           }
           
           // Execute the final query
-          const result = await query.select('*');
-          return result;
+          return await finalQuery.order('stat_date', { ascending: false });
         },
         { context: 'dashboard.getMetrics' }
       );

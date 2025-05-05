@@ -62,12 +62,12 @@ class RealtimeClient {
     channel.on(
       'postgres_changes',
       {
-        event: event as any,
+        event: event as 'INSERT' | 'UPDATE' | 'DELETE' | '*',
         schema: schema,
         table: table,
         filter: filter || undefined
       },
-      (payload: RealtimePostgresChangesPayload<any>) => {
+      (payload) => {
         // Apply additional filtering if provided
         if (filterCallback && !filterCallback(payload)) {
           return;
