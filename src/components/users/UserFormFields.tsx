@@ -2,7 +2,20 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { UserFormData } from "@/hooks/users/useUserForm";
+
+// Define UserFormData type explicitly instead of importing
+interface UserFormData {
+  id: string;
+  name: string;
+  email: string;
+  department: string;
+  position: string;
+  role: string;
+  password: string;
+  confirmPassword: string;
+  permissions: any[];
+  roleTemplateId: string;
+}
 
 interface UserFormFieldsProps {
   formData: UserFormData;

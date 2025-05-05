@@ -5,14 +5,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 interface UserTabsProps {
   activeTab: string;
+  onTabChange: (value: string) => void;
   children: React.ReactNode;
 }
 
-export function UserTabs({ activeTab, children }: UserTabsProps) {
+export function UserTabs({ activeTab, onTabChange, children }: UserTabsProps) {
   const navigate = useNavigate();
 
   // Update URL when tab changes
   const handleTabChange = (value: string) => {
+    onTabChange(value); // Call the prop function
     navigate(`/admin/users?tab=${value}`, { replace: true });
   };
 

@@ -12,7 +12,7 @@ interface UseUserSubmitProps {
 export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmitUser = async (userData: any) => {
+  const handleSubmitUser = async (userData: any): Promise<void> => {
     try {
       setIsSubmitting(true);
       
@@ -65,7 +65,6 @@ export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
         });
       }
       
-      return true;
     } catch (error: any) {
       console.error("Error managing user:", error);
       toast({
