@@ -35,19 +35,18 @@ const queryClient = new QueryClient({
   },
 });
 
-// Add a global error handler for all queries
-queryClient.setDefaultOptions({
-  queries: {
-    onError: (error: Error) => {
-      console.error("Query error:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao carregar os dados",
-        variant: "destructive",
-      });
-    }
+// Set up global error handling through the query cache
+queryClient.getQueryCache().config = {
+  ...queryClient.getQueryCache().config,
+  onError: (error: Error) => {
+    console.error("Query error:", error);
+    toast({
+      title: "Erro",
+      description: "Ocorreu um erro ao carregar os dados",
+      variant: "destructive",
+    });
   }
-});
+};
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
