@@ -18,7 +18,7 @@ export function AppProviders({ children }: AppProvidersProps) {
     defaultOptions: {
       queries: {
         // Explicitly disable suspense to fix "component suspended while responding to synchronous input" errors
-        suspense: false,
+        // Remove the suspense property since it's causing a TypeScript error
         useErrorBoundary: false,
         retry: 1,
         refetchOnWindowFocus: false,

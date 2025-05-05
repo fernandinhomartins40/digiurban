@@ -31,6 +31,23 @@ export default function AppointmentScheduler() {
     setDrawerOpen(true);
   };
 
+  // Create wrapper functions to match the expected types
+  const handleApprove = (appointmentId: string): Promise<void> => {
+    return handleStatusChange(appointmentId, "approved");
+  };
+
+  const handleReject = (appointmentId: string): Promise<void> => {
+    return handleStatusChange(appointmentId, "rejected");
+  };
+
+  const handleComplete = (appointmentId: string): Promise<void> => {
+    return handleStatusChange(appointmentId, "completed");
+  };
+
+  const handleUpdateNotes = (appointmentId: string, notes: string): Promise<void> => {
+    return handleNotesChange(appointmentId, notes);
+  };
+
   return (
     <div className="space-y-6">
       <Helmet>
@@ -92,10 +109,10 @@ export default function AppointmentScheduler() {
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         appointment={selectedAppointment}
-        onApprove={(appointmentId) => handleStatusChange(appointmentId, "approved")}
-        onReject={(appointmentId) => handleStatusChange(appointmentId, "rejected")}
-        onComplete={(appointmentId) => handleStatusChange(appointmentId, "completed")}
-        onUpdateNotes={handleNotesChange}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onComplete={handleComplete}
+        onUpdateNotes={handleUpdateNotes}
         isUpdatingStatus={isUpdatingStatus}
         isUpdatingNotes={isUpdatingNotes}
       />

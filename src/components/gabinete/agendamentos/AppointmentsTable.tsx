@@ -88,7 +88,7 @@ export function AppointmentsTable({
               <TableCell>
                 <Badge 
                   variant={
-                    appointment.status === "approved" ? "success" :
+                    appointment.status === "approved" ? "default" :
                     appointment.status === "rejected" ? "destructive" :
                     appointment.status === "completed" ? "outline" :
                     "secondary"

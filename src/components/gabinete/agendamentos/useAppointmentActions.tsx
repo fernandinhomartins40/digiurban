@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   updateMayorAppointmentStatus,
@@ -9,13 +9,12 @@ import {
 import { Appointment, AppointmentStatus } from "@/types/mayorOffice";
 
 export function useAppointmentActions() {
-  const toast = useToast();
   const queryClient = useQueryClient();
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isUpdatingNotes, setIsUpdatingNotes] = useState(false);
 
   // Handle appointment status change
-  const handleStatusChange = async (appointmentId: string, status: AppointmentStatus) => {
+  const handleStatusChange = async (appointmentId: string, status: AppointmentStatus): Promise<void> => {
     try {
       setIsUpdatingStatus(true);
       
@@ -42,7 +41,6 @@ export function useAppointmentActions() {
         description: statusMessages[status] || "Status atualizado com sucesso",
       });
       
-      return true;
     } catch (error) {
       console.error("Error updating appointment status:", error);
       toast({
@@ -50,14 +48,13 @@ export function useAppointmentActions() {
         description: "Não foi possível atualizar o status do agendamento.",
         variant: "destructive",
       });
-      return false;
     } finally {
       setIsUpdatingStatus(false);
     }
   };
 
   // Handle appointment notes change
-  const handleNotesChange = async (appointmentId: string, notes: string) => {
+  const handleNotesChange = async (appointmentId: string, notes: string): Promise<void> => {
     try {
       setIsUpdatingNotes(true);
       
@@ -76,7 +73,6 @@ export function useAppointmentActions() {
         description: "As anotações do agendamento foram atualizadas com sucesso",
       });
       
-      return true;
     } catch (error) {
       console.error("Error updating appointment notes:", error);
       toast({
@@ -84,7 +80,6 @@ export function useAppointmentActions() {
         description: "Não foi possível atualizar as anotações do agendamento.",
         variant: "destructive",
       });
-      return false;
     } finally {
       setIsUpdatingNotes(false);
     }
