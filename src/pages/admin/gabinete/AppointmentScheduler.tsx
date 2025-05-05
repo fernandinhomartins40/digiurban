@@ -83,9 +83,9 @@ export default function AppointmentScheduler() {
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         appointment={selectedAppointment}
-        onApprove={appointmentId => handleStatusChange(appointmentId, "approved")}
-        onReject={appointmentId => handleStatusChange(appointmentId, "rejected")}
-        onComplete={appointmentId => handleStatusChange(appointmentId, "completed")}
+        onApprove={(appointmentId) => handleStatusChange(appointmentId, "approved")}
+        onReject={(appointmentId) => handleStatusChange(appointmentId, "rejected")}
+        onComplete={(appointmentId) => handleStatusChange(appointmentId, "completed")}
       />
     </div>
   );

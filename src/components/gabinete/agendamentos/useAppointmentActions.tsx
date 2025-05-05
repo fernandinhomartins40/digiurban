@@ -29,13 +29,11 @@ export function useAppointmentActions() {
   });
 
   // Function to handle status changes
-  const handleStatusChange = async (appointmentId: string, status: AppointmentStatus) => {
+  const handleStatusChange = async (appointmentId: string, status: AppointmentStatus): Promise<void> => {
     try {
       await updateStatusMutation.mutateAsync({ appointmentId, status });
-      return true;
     } catch (error) {
       console.error("Error updating appointment status:", error);
-      return false;
     }
   };
 
