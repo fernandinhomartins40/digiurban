@@ -79,7 +79,7 @@ export function maskCpf(cpf: string): string {
  * @returns New object with sanitized properties
  */
 export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
-  const result = { ...obj };
+  const result: Record<string, any> = { ...obj };
   
   Object.keys(result).forEach(key => {
     if (typeof result[key] === 'string') {
@@ -89,5 +89,5 @@ export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
     }
   });
   
-  return result;
+  return result as T;
 }

@@ -48,8 +48,8 @@ export const createOptimizedQueryClient = () => {
         // Only refetch on window focus if data is stale
         refetchOnWindowFocus: "always",
         
-        // Suspense compatibility
-        suspense: false,
+        // Remove suspense since it's not available in the current version
+        // suspense: false,
         
         // Make sure errors are properly structured
         onError: (error: any) => {

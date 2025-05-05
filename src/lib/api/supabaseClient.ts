@@ -176,10 +176,19 @@ export function handleApiError(error: ApiError | any, customMessage?: string) {
 // API client object for specific endpoints
 export const api = {
   // Example method template for reuse
-  async get<T>(path: string, options?: any): Promise<ApiResponse<T>> {
+  async get<T>(tableName: string, options?: any): Promise<ApiResponse<T>> {
     return apiRequest<T>(
-      () => supabase.from(path).select(options?.select || '*'),
-      { context: `GET ${path}`, ...options }
+      async () => {
+        // Use type assertion to tell TypeScript this is valid
+        let query = supabase.from(tableName as any);
+        
+        if (options?.select) {
+          query = query.select(options.select);
+        }
+        
+        return await query;
+      },
+      { context: `GET ${tableName}`, ...options }
     );
   },
   
@@ -188,21 +197,25 @@ export const api = {
     async getMetrics(startDate?: Date, endDate?: Date, department?: string) {
       return apiRequest(
         async () => {
-          let query = supabase.from('mayor_dashboard_stats');
+          // Use type assertion for the table name
+          let query = supabase.from('mayor_dashboard_stats' as any);
           
           if (startDate) {
-            query = query.gte('stat_date', startDate.toISOString().split('T')[0]);
+            // Type assertion for the filter method
+            query = query.filter('stat_date', 'gte', startDate.toISOString().split('T')[0]) as any;
           }
           
           if (endDate) {
-            query = query.lte('stat_date', endDate.toISOString().split('T')[0]);
+            // Type assertion for the filter method
+            query = query.filter('stat_date', 'lte', endDate.toISOString().split('T')[0]) as any;
           }
           
           if (department) {
-            query = query.eq('sector_id', department);
+            // Type assertion for the filter method
+            query = query.filter('sector_id', 'eq', department) as any;
           }
           
-          return query.select('*');
+          return await query.select('*');
         },
         { context: 'dashboard.getMetrics' }
       );

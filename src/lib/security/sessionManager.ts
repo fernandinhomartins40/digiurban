@@ -171,11 +171,15 @@ export class SessionManager {
     toast({
       title: 'Sessão expirando',
       description: 'Sua sessão irá expirar em breve. Deseja continuar conectado?',
-      variant: 'warning',
-      action: {
-        label: 'Renovar Sessão',
-        onClick: () => this.refreshSession()
-      }
+      variant: 'default',
+      action: (
+        <button 
+          onClick={() => this.refreshSession()}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded"
+        >
+          Renovar Sessão
+        </button>
+      )
     });
   }
   
