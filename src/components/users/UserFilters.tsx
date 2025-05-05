@@ -68,14 +68,14 @@ export function UserFilters({ onFilterChange, departments }: UserFiltersProps) {
         </div>
         
         <Select
-          value={filters.department || ""}
-          onValueChange={(value) => handleFilterChange('department', value || null)}
+          value={filters.department || "all"}
+          onValueChange={(value) => handleFilterChange('department', value === "all" ? null : value)}
         >
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Departamento" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os departamentos</SelectItem>
+            <SelectItem value="all">Todos os departamentos</SelectItem>
             {departments.map((dept) => (
               <SelectItem key={dept} value={dept}>{dept}</SelectItem>
             ))}
@@ -83,14 +83,14 @@ export function UserFilters({ onFilterChange, departments }: UserFiltersProps) {
         </Select>
 
         <Select 
-          value={filters.role || ""}
-          onValueChange={(value) => handleFilterChange('role', value || null)}
+          value={filters.role || "all"}
+          onValueChange={(value) => handleFilterChange('role', value === "all" ? null : value)}
         >
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Função" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as funções</SelectItem>
+            <SelectItem value="all">Todas as funções</SelectItem>
             <SelectItem value="admin">Administrador</SelectItem>
             <SelectItem value="prefeito">Prefeito</SelectItem>
           </SelectContent>
