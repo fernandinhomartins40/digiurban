@@ -6,7 +6,8 @@ import { useUserOperations } from "./useUserOperations";
 import { useUserSubmit } from "./useUserSubmit";
 import { useUserFilters, UserFilterValues } from "./useUserFilters";
 
-export { UserFilterValues } from "./useUserFilters";
+// Use the "type" keyword when re-exporting types with isolatedModules enabled
+export type { UserFilterValues } from "./useUserFilters";
 
 export function useUserManagement() {
   const { users, setUsers, isLoading, fetchAdminUsers } = useAdminUsers();
