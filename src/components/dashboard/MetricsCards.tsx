@@ -5,9 +5,11 @@ import { DashboardMetricCards, MetricCardProps } from "./common/DashboardMetricC
 
 interface MetricsCardsProps {
   className?: string;
+  metrics?: MetricCardProps[];
 }
 
-const metricCardsData: MetricCardProps[] = [
+// Default metrics data if none is provided
+const defaultMetricsData: MetricCardProps[] = [
   {
     title: "Recent Product Sales",
     value: "$214,018",
@@ -49,11 +51,13 @@ const metricCardsData: MetricCardProps[] = [
   }
 ];
 
-export const MetricsCards = memo(({ className }: MetricsCardsProps) => {
+export const MetricsCards = memo(({ className, metrics }: MetricsCardsProps) => {
+  const metricsData = metrics || defaultMetricsData;
+  
   return (
     <div className={cn("flex w-full gap-5 flex-wrap mt-5", className)}>
       <DashboardMetricCards 
-        metrics={metricCardsData}
+        metrics={metricsData}
         className="w-full"
       />
     </div>

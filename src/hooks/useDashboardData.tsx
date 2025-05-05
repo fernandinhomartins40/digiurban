@@ -56,14 +56,18 @@ export const useDashboardData = <T,>(
   options?: {
     enabled?: boolean;
     refetchInterval?: number | false;
+    onSuccess?: (data: T) => void;
+    onError?: (error: Error) => void;
+    staleTime?: number;
+    retry?: number | boolean;
   }
 ) => {
   return useQuery({
     queryKey,
     queryFn,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: options?.staleTime || 5 * 60 * 1000, // 5 minutes default
     refetchOnWindowFocus: false,
-    retry: 1,
+    retry: options?.retry ?? 1,
     ...options,
   });
 };

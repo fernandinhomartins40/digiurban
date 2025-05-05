@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { NewChatPanel } from "@/components/chat/NewChatPanel"; 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ChatProvider } from "@/contexts/ChatContext"; 
+import { toast } from "@/hooks/use-toast";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -20,6 +21,17 @@ const queryClient = new QueryClient({
       retry: 1,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+  // Global error handler for all queries
+  queryCache: {
+    onError: (error) => {
+      console.error("Query error:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao carregar os dados",
+        variant: "destructive",
+      });
     },
   },
 });

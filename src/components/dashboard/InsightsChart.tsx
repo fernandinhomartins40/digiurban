@@ -1,13 +1,15 @@
 
-import React, { memo } from "react";
+import React, { memo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChartCard, DashboardLineChart } from "./common/DashboardCharts";
 
 interface InsightsChartProps {
   className?: string;
+  data?: any[];
 }
 
-const chartData = [
+// Default chart data if none is provided
+const defaultChartData = [
   { month: "Jan", visitors: 1000, sales: 800, revenue: 12000 },
   { month: "Feb", visitors: 1200, sales: 930, revenue: 14000 },
   { month: "Mar", visitors: 1100, sales: 890, revenue: 13500 },
@@ -17,8 +19,9 @@ const chartData = [
   { month: "Jul", visitors: 1900, sales: 1400, revenue: 22000 },
 ];
 
-export const InsightsChart = memo(({ className }: InsightsChartProps) => {
-  // Time period state could be added here if needed for filtering
+export const InsightsChart = memo(({ className, data }: InsightsChartProps) => {
+  const [timeRange, setTimeRange] = useState<string>("12 month");
+  const chartData = data || defaultChartData;
 
   return (
     <div className={cn("flex w-full gap-5 mt-5", className)}>
@@ -30,16 +33,48 @@ export const InsightsChart = memo(({ className }: InsightsChartProps) => {
         <div className="flex w-full flex-col items-stretch text-sm font-medium leading-none justify-center mt-5">
           <div className="flex w-full items-center gap-[40px_100px] justify-between flex-wrap">
             <div className="shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)] self-stretch flex min-w-60 gap-[-1px] text-[#99B2C6] my-auto rounded-lg">
-              <button className="self-stretch bg-[#F1F5F7] gap-2 overflow-hidden text-[#17181A] w-[100px] px-4 py-2.5 rounded-[8px_0px_0px_8px]">
+              <button 
+                className={cn(
+                  "self-stretch gap-2 overflow-hidden w-[100px] px-4 py-2.5",
+                  timeRange === "12 month" 
+                    ? "bg-[#F1F5F7] text-[#17181A] rounded-[8px_0px_0px_8px]" 
+                    : "bg-white"
+                )}
+                onClick={() => setTimeRange("12 month")}
+              >
                 12 month
               </button>
-              <button className="self-stretch bg-white gap-2 overflow-hidden w-[100px] px-4 py-2.5">
+              <button 
+                className={cn(
+                  "self-stretch gap-2 overflow-hidden w-[100px] px-4 py-2.5",
+                  timeRange === "30 days" 
+                    ? "bg-[#F1F5F7] text-[#17181A]" 
+                    : "bg-white"
+                )}
+                onClick={() => setTimeRange("30 days")}
+              >
                 30 days
               </button>
-              <button className="self-stretch bg-white gap-2 overflow-hidden w-[100px] px-4 py-2.5">
+              <button 
+                className={cn(
+                  "self-stretch gap-2 overflow-hidden w-[100px] px-4 py-2.5",
+                  timeRange === "7 days" 
+                    ? "bg-[#F1F5F7] text-[#17181A]" 
+                    : "bg-white"
+                )}
+                onClick={() => setTimeRange("7 days")}
+              >
                 7 days
               </button>
-              <button className="self-stretch bg-white gap-2 overflow-hidden w-[100px] px-4 py-2.5 rounded-[0px_8px_8px_0px]">
+              <button 
+                className={cn(
+                  "self-stretch gap-2 overflow-hidden w-[100px] px-4 py-2.5 rounded-[0px_8px_8px_0px]",
+                  timeRange === "24 hours" 
+                    ? "bg-[#F1F5F7] text-[#17181A]" 
+                    : "bg-white"
+                )}
+                onClick={() => setTimeRange("24 hours")}
+              >
                 24 hours
               </button>
             </div>

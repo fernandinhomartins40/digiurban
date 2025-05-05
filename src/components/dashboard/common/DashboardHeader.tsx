@@ -22,6 +22,7 @@ interface DashboardHeaderProps {
   onSectorChange?: (sector: string) => void;
   showDownload?: boolean;
   onDownload?: () => void;
+  className?: string;
 }
 
 export function DashboardHeader({
@@ -37,9 +38,10 @@ export function DashboardHeader({
   onSectorChange,
   showDownload = true,
   onDownload,
+  className,
 }: DashboardHeaderProps) {
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${className}`}>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         {description && (
