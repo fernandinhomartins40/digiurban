@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UserFilters, UserFilterValues } from "@/components/users/UserFilters";
-import { UserFormDialog } from "@/components/users/UserFormDialog";
+import { UserFormSheet } from "@/components/users/UserFormSheet";
 import { UserActionMenu } from "@/components/users/UserActionMenu";
 import { UserStatsCard } from "@/components/users/UserStatsCard";
 import { DepartmentUserStats } from "@/components/users/DepartmentUserStats";
@@ -596,7 +596,8 @@ export default function UserManagement() {
         </TabsContent>
       </Tabs>
 
-      <UserFormDialog
+      {/* Replace the Dialog with the Sheet component */}
+      <UserFormSheet
         user={editingUser}
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
