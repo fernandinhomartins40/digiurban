@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { getDashboardStats } from "@/services/mayorOffice/dashboardService";
@@ -12,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Download } from "lucide-react";
+import { CalendarIcon, Download, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, subDays, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -45,6 +44,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 // Dados de exemplo para os gráficos
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
@@ -74,120 +75,52 @@ const statusData = [
   { name: "Cancelado", value: 6 },
 ];
 
-export default function MayorDashboard() {
-  const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "custom">("30d");
-  const [startDate, setStartDate] = useState<Date | undefined>(subDays(new Date(), 30));
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
-  const [selectedSector, setSelectedSector] = useState<string | undefined>(undefined);
+// Loading state component
+const DashboardLoading = () => (
+  <div className="flex flex-col items-center justify-center h-64">
+    <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+    <p className="text-muted-foreground">Carregando dados do dashboard...</p>
+  </div>
+);
 
-  // Obter dados do dashboard com base nos filtros
-  const { data: dashboardStats, isLoading } = useQuery({
+// Error state component
+const DashboardError = ({ error }: { error: Error }) => (
+  <Alert variant="destructive" className="my-4">
+    <AlertCircle className="h-4 w-4" />
+    <AlertDescription>
+      Erro ao carregar dados: {error.message}
+    </AlertDescription>
+  </Alert>
+);
+
+// Dashboard content component that handles the actual dashboard rendering
+const DashboardContent = ({ 
+  startDate, 
+  endDate, 
+  selectedSector 
+}: { 
+  startDate?: Date, 
+  endDate?: Date, 
+  selectedSector?: string 
+}) => {
+  // Use React Query with suspense disabled
+  const { data: dashboardStats, isLoading, error } = useQuery({
     queryKey: ["mayorDashboardStats", startDate, endDate, selectedSector],
     queryFn: () => getDashboardStats(startDate, endDate, selectedSector),
+    suspense: false, // Disable suspense mode
+    useErrorBoundary: false,
   });
 
-  // Manipuladores para alterações de filtro
-  const handleDateRangeChange = (range: "7d" | "30d" | "90d" | "custom") => {
-    setDateRange(range);
-    if (range === "7d") {
-      setStartDate(subDays(new Date(), 7));
-      setEndDate(new Date());
-    } else if (range === "30d") {
-      setStartDate(subDays(new Date(), 30));
-      setEndDate(new Date());
-    } else if (range === "90d") {
-      setStartDate(subDays(new Date(), 90));
-      setEndDate(new Date());
-    }
-  };
+  if (isLoading) {
+    return <DashboardLoading />;
+  }
+
+  if (error) {
+    return <DashboardError error={error as Error} />;
+  }
 
   return (
-    <div className="space-y-6">
-      <Helmet>
-        <title>Dashboard | Gabinete do Prefeito</title>
-      </Helmet>
-
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard do Gabinete</h1>
-          <p className="text-sm text-muted-foreground">
-            Visão geral dos indicadores e desempenho do gabinete do prefeito
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Select
-            value={selectedSector}
-            onValueChange={setSelectedSector}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Todos os setores" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={undefined}>Todos os setores</SelectItem>
-              <SelectItem value="gabinete">Gabinete</SelectItem>
-              <SelectItem value="saude">Saúde</SelectItem>
-              <SelectItem value="educacao">Educação</SelectItem>
-              <SelectItem value="obras">Obras</SelectItem>
-              <SelectItem value="urbanismo">Urbanismo</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <div className="flex gap-2">
-            <Tabs
-              value={dateRange}
-              onValueChange={(value) => handleDateRangeChange(value as "7d" | "30d" | "90d" | "custom")}
-              className="w-fit"
-            >
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="7d">7D</TabsTrigger>
-                <TabsTrigger value="30d">30D</TabsTrigger>
-                <TabsTrigger value="90d">90D</TabsTrigger>
-                <TabsTrigger value="custom">
-                  <CalendarIcon className="h-4 w-4" />
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            {dateRange === "custom" && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-auto justify-start text-left font-normal">
-                    {startDate && endDate ? (
-                      <>
-                        {format(startDate, "P", { locale: ptBR })} -{" "}
-                        {format(endDate, "P", { locale: ptBR })}
-                      </>
-                    ) : (
-                      <span>Escolha um período</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="range"
-                    selected={{
-                      from: startDate,
-                      to: endDate,
-                    }}
-                    onSelect={(range) => {
-                      setStartDate(range?.from);
-                      setEndDate(range?.to);
-                    }}
-                    defaultMonth={startDate}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
-            )}
-
-            <Button variant="outline" size="icon">
-              <Download className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
+    <>
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -379,6 +312,7 @@ export default function MayorDashboard() {
         </Card>
       </div>
 
+      {/* Status and Activities */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
         <Card className="col-span-1">
           <CardHeader>
@@ -454,6 +388,126 @@ export default function MayorDashboard() {
           </CardFooter>
         </Card>
       </div>
+    </>
+  );
+};
+
+export default function MayorDashboard() {
+  const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "custom">("30d");
+  const [startDate, setStartDate] = useState<Date | undefined>(subDays(new Date(), 30));
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [selectedSector, setSelectedSector] = useState<string | undefined>(undefined);
+
+  // Manipuladores para alterações de filtro
+  const handleDateRangeChange = (range: "7d" | "30d" | "90d" | "custom") => {
+    setDateRange(range);
+    if (range === "7d") {
+      setStartDate(subDays(new Date(), 7));
+      setEndDate(new Date());
+    } else if (range === "30d") {
+      setStartDate(subDays(new Date(), 30));
+      setEndDate(new Date());
+    } else if (range === "90d") {
+      setStartDate(subDays(new Date(), 90));
+      setEndDate(new Date());
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Helmet>
+        <title>Dashboard | Gabinete do Prefeito</title>
+      </Helmet>
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard do Gabinete</h1>
+          <p className="text-sm text-muted-foreground">
+            Visão geral dos indicadores e desempenho do gabinete do prefeito
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Select
+            value={selectedSector}
+            onValueChange={setSelectedSector}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Todos os setores" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={undefined}>Todos os setores</SelectItem>
+              <SelectItem value="gabinete">Gabinete</SelectItem>
+              <SelectItem value="saude">Saúde</SelectItem>
+              <SelectItem value="educacao">Educação</SelectItem>
+              <SelectItem value="obras">Obras</SelectItem>
+              <SelectItem value="urbanismo">Urbanismo</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="flex gap-2">
+            <Tabs
+              value={dateRange}
+              onValueChange={(value) => handleDateRangeChange(value as "7d" | "30d" | "90d" | "custom")}
+              className="w-fit"
+            >
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="7d">7D</TabsTrigger>
+                <TabsTrigger value="30d">30D</TabsTrigger>
+                <TabsTrigger value="90d">90D</TabsTrigger>
+                <TabsTrigger value="custom">
+                  <CalendarIcon className="h-4 w-4" />
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {dateRange === "custom" && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-auto justify-start text-left font-normal">
+                    {startDate && endDate ? (
+                      <>
+                        {format(startDate, "P", { locale: ptBR })} -{" "}
+                        {format(endDate, "P", { locale: ptBR })}
+                      </>
+                    ) : (
+                      <span>Escolha um período</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="range"
+                    selected={{
+                      from: startDate,
+                      to: endDate,
+                    }}
+                    onSelect={(range) => {
+                      setStartDate(range?.from);
+                      setEndDate(range?.to);
+                    }}
+                    defaultMonth={startDate}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
+
+            <Button variant="outline" size="icon">
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Use React.Suspense to handle loading states */}
+      <React.Suspense fallback={<DashboardLoading />}>
+        <DashboardContent 
+          startDate={startDate} 
+          endDate={endDate} 
+          selectedSector={selectedSector} 
+        />
+      </React.Suspense>
     </div>
   );
 }
