@@ -1,4 +1,3 @@
-
 import React, { useState, Suspense } from "react";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
@@ -103,11 +102,10 @@ const DashboardContent = ({
   endDate?: Date, 
   selectedSector?: string 
 }) => {
-  // Use React Query with suspense disabled
+  // Use React Query but handle the loading/error states manually
   const { data: dashboardStats, isLoading, error } = useQuery({
     queryKey: ["mayorDashboardStats", startDate, endDate, selectedSector],
-    queryFn: () => getDashboardStats(startDate, endDate, selectedSector),
-    useErrorBoundary: false
+    queryFn: () => getDashboardStats(startDate, endDate, selectedSector)
   });
 
   if (isLoading) {
@@ -139,7 +137,7 @@ const DashboardContent = ({
             >
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+              <path d="M22 21v-2a4 4 0 0 1 0 7.75" />
             </svg>
           </CardHeader>
           <CardContent>
