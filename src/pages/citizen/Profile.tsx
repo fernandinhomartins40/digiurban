@@ -8,6 +8,9 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function CitizenProfile() {
   const { user } = useAuth();
 
+  // Safe access to user properties with TypeScript guards
+  const userProfile = user?.user_metadata || {};
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <Helmet>
@@ -29,7 +32,7 @@ export default function CitizenProfile() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Nome</p>
-              <p>{user?.name || "Nome não disponível"}</p>
+              <p>{user?.name || userProfile.name || "Nome não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">E-mail</p>
@@ -37,11 +40,11 @@ export default function CitizenProfile() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">CPF</p>
-              <p>{user?.cpf || "CPF não disponível"}</p>
+              <p>{userProfile.cpf || "CPF não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Telefone</p>
-              <p>{user?.phone || "Telefone não disponível"}</p>
+              <p>{userProfile.phone || "Telefone não disponível"}</p>
             </div>
           </div>
           
@@ -59,27 +62,27 @@ export default function CitizenProfile() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">CEP</p>
-              <p>{user?.address?.cep || "CEP não disponível"}</p>
+              <p>{userProfile.zipcode || "CEP não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Logradouro</p>
-              <p>{user?.address?.street || "Endereço não disponível"}</p>
+              <p>{userProfile.street || "Endereço não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Número</p>
-              <p>{user?.address?.number || "Número não disponível"}</p>
+              <p>{userProfile.number || "Número não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Bairro</p>
-              <p>{user?.address?.neighborhood || "Bairro não disponível"}</p>
+              <p>{userProfile.neighborhood || "Bairro não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Cidade</p>
-              <p>{user?.address?.city || "Cidade não disponível"}</p>
+              <p>{userProfile.city || "Cidade não disponível"}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Estado</p>
-              <p>{user?.address?.state || "Estado não disponível"}</p>
+              <p>{userProfile.state || "Estado não disponível"}</p>
             </div>
           </div>
           

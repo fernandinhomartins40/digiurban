@@ -96,6 +96,13 @@ export const getRequestById = async (id: string): Promise<UnifiedRequest | null>
  */
 export const createUnifiedRequest = async (requestData: CreateRequestDTO): Promise<UnifiedRequest | null> => {
   try {
+    // Convert Date objects to ISO strings for the database
+    const due_date = requestData.due_date ? 
+      (typeof requestData.due_date === 'string' ? 
+        requestData.due_date : 
+        requestData.due_date.toISOString()) : 
+      null;
+    
     // Insert into unified_requests table
     const { data, error } = await supabase
       .from('unified_requests')
@@ -107,7 +114,7 @@ export const createUnifiedRequest = async (requestData: CreateRequestDTO): Promi
         target_department: requestData.target_department,
         citizen_id: requestData.citizen_id || null,
         priority: requestData.priority || 'normal',
-        due_date: requestData.due_date || null,
+        due_date,
         status: 'open'
       })
       .select()

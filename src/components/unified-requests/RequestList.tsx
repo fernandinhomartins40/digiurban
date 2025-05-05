@@ -61,15 +61,15 @@ export function RequestList({
           {requests.map((request) => (
             <TableRow key={request.id}>
               <TableCell className="font-mono text-xs">
-                {request.protocolNumber}
+                {request.protocol_number}
               </TableCell>
               <TableCell className="font-medium max-w-xs truncate">
                 {request.title}
               </TableCell>
               <TableCell>
-                {getRequesterTypeName(request.requesterType)}
+                {getRequesterTypeName(request.requester_type)}
               </TableCell>
-              <TableCell>{request.targetDepartment}</TableCell>
+              <TableCell>{request.target_department}</TableCell>
               <TableCell>
                 <Badge className={getPriorityColor(request.priority)}>
                   {getPriorityName(request.priority)}
@@ -81,7 +81,7 @@ export function RequestList({
                 </Badge>
               </TableCell>
               <TableCell>
-                {format(request.createdAt, "dd/MM/yyyy", { locale: ptBR })}
+                {format(request.created_at, "dd/MM/yyyy", { locale: ptBR })}
               </TableCell>
               <TableCell className="text-right">
                 <Button

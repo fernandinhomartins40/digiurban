@@ -3,7 +3,7 @@ import React from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { UnifiedRequest } from "@/types/requests";
-import { getStatusName } from "@/utils/requestMappers";
+import { mapStatusName } from "@/utils/requestMappers";
 import { Clock, AlertCircle } from "lucide-react";
 
 interface RequestStatusHistoryProps {
@@ -22,19 +22,19 @@ export function RequestStatusHistory({ request }: RequestStatusHistoryProps) {
   // Add creation event to history
   const events = [
     {
-      date: request.createdAt,
+      date: request.created_at,
       title: "Solicitação criada",
-      description: `Solicitação aberta com status "${getStatusName('open')}"`,
-      person: request.requesterName || "Sistema"
+      description: `Solicitação aberta com status "${mapStatusName('open')}"`,
+      person: request.requester_name || "Sistema"
     },
-    ...(request.statusHistory || []).map(history => ({
-      date: history.createdAt,
-      title: `Status alterado para "${getStatusName(history.newStatus)}"`,
+    ...(request.status_history || []).map(history => ({
+      date: history.created_at,
+      title: `Status alterado para "${mapStatusName(history.new_status)}"`,
       description: history.comments || "",
-      person: history.changedByName || "Sistema"
+      person: history.changed_by_name || "Sistema"
     })),
-    ...(request.completedAt ? [{
-      date: request.completedAt,
+    ...(request.completed_at ? [{
+      date: request.completed_at,
       title: "Solicitação concluída",
       description: "",
       person: "Sistema"

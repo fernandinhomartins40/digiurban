@@ -39,7 +39,7 @@ export function RequestAttachments({
     try {
       const { data, error } = await supabase.storage
         .from('request-attachments')
-        .download(attachment.filePath);
+        .download(attachment.file_path);
       
       if (error) throw error;
       
@@ -47,7 +47,7 @@ export function RequestAttachments({
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = attachment.fileName;
+      a.download = attachment.file_name;
       document.body.appendChild(a);
       a.click();
       URL.revokeObjectURL(url);
@@ -66,7 +66,8 @@ export function RequestAttachments({
   };
   
   const getFormattedFileSize = (size: number) => {
-    return filesize(size) as string;
+    // Convert to string explicitly to fix TypeScript error
+    return String(filesize(size));
   };
   
   return (
@@ -83,11 +84,11 @@ export function RequestAttachments({
               <div className="flex items-center">
                 <FileIcon className="h-8 w-8 text-muted-foreground mr-3" />
                 <div>
-                  <p className="font-medium text-sm">{attachment.fileName}</p>
+                  <p className="font-medium text-sm">{attachment.file_name}</p>
                   <div className="flex text-xs text-muted-foreground">
-                    <span>{getFormattedFileSize(attachment.fileSize)}</span>
+                    <span>{getFormattedFileSize(attachment.file_size)}</span>
                     <span className="mx-1">•</span>
-                    <span>{formatDate(attachment.uploadedAt)}</span>
+                    <span>{formatDate(attachment.uploaded_at)}</span>
                   </div>
                 </div>
               </div>

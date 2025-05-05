@@ -51,20 +51,20 @@ export function RequestComments({ request, onAddComment }: RequestCommentsProps)
             <div key={comment.id} className="border rounded-lg p-3 bg-muted/30">
               <div className="flex justify-between items-start">
                 <div className="font-medium text-sm">
-                  {comment.authorName || 
-                   (comment.authorType === 'citizen' ? 'Cidadão' : 
-                    comment.authorType === 'department' ? 'Departamento' : 'Gabinete')}
-                  {comment.isInternal && (
+                  {comment.author_name || 
+                   (comment.author_type === 'citizen' ? 'Cidadão' : 
+                    comment.author_type === 'department' ? 'Departamento' : 'Gabinete')}
+                  {comment.is_internal && (
                     <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 rounded-full px-2 py-0.5">
                       Interno
                     </span>
                   )}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {formatDate(comment.createdAt)}
+                  {formatDate(comment.created_at)}
                 </div>
               </div>
-              <p className="mt-2 text-sm whitespace-pre-wrap">{comment.commentText}</p>
+              <p className="mt-2 text-sm whitespace-pre-wrap">{comment.comment_text}</p>
             </div>
           ))}
         </div>

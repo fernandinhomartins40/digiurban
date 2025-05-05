@@ -42,9 +42,9 @@ import { CreateRequestDTO } from "@/types/requests";
 const requestFormSchema = z.object({
   title: z.string().min(3, "O título deve ter pelo menos 3 caracteres"),
   description: z.string().min(10, "A descrição deve ter pelo menos 10 caracteres"),
-  targetDepartment: z.string().min(1, "O setor responsável é obrigatório"),
+  target_department: z.string().min(1, "O setor responsável é obrigatório"),
   priority: z.enum(["low", "normal", "high", "urgent"]),
-  citizenId: z.string().optional(),
+  citizen_id: z.string().optional(),
 });
 
 type RequestFormValues = z.infer<typeof requestFormSchema>;
@@ -71,7 +71,7 @@ export function NewRequestDrawer({
     defaultValues: {
       title: "",
       description: "",
-      targetDepartment: "",
+      target_department: "",
       priority: "normal",
     },
   });
@@ -83,12 +83,12 @@ export function NewRequestDrawer({
       const requestData: CreateRequestDTO = {
         title: data.title,
         description: data.description,
-        targetDepartment: data.targetDepartment,
+        target_department: data.target_department,
         priority: data.priority,
-        citizenId: data.citizenId,
-        requesterType: 'department', // Default as department, service will handle this
-        requesterId: '', // Will be set by the service
-        dueDate: date ? format(date, "yyyy-MM-dd") : undefined,
+        citizen_id: data.citizen_id,
+        requester_type: 'department', // Default as department, service will handle this
+        requester_id: '', // Will be set by the service
+        due_date: date ? format(date, "yyyy-MM-dd") : undefined,
       };
       
       await onSubmit(requestData);
@@ -132,7 +132,7 @@ export function NewRequestDrawer({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="targetDepartment"
+                  name="target_department"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Setor Responsável</FormLabel>

@@ -123,7 +123,7 @@ export function RequestDetailDrawer({
             Detalhes da Solicitação
           </SheetTitle>
           <SheetDescription>
-            {request.protocolNumber && `Protocolo: ${request.protocolNumber}`}
+            {request.protocol_number && `Protocolo: ${request.protocol_number}`}
           </SheetDescription>
         </SheetHeader>
 
@@ -157,19 +157,19 @@ export function RequestDetailDrawer({
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  <strong>Data Limite:</strong> {formatDate(request.dueDate)}
+                  <strong>Data Limite:</strong> {formatDate(request.due_date)}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Building className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  <strong>Departamento:</strong> {request.targetDepartment}
+                  <strong>Departamento:</strong> {request.target_department}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
-                  <strong>Criado em:</strong> {formatDate(request.createdAt)}
+                  <strong>Criado em:</strong> {formatDate(request.created_at)}
                 </span>
               </div>
             </div>
@@ -183,23 +183,23 @@ export function RequestDetailDrawer({
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">
-                    <strong>Tipo:</strong> {request.requesterType === 'citizen' ? 'Cidadão' : 
-                                           request.requesterType === 'department' ? 'Departamento' : 'Gabinete'}
+                    <strong>Tipo:</strong> {request.requester_type === 'citizen' ? 'Cidadão' : 
+                                         request.requester_type === 'department' ? 'Departamento' : 'Gabinete'}
                   </span>
                 </div>
-                {request.requesterName && (
+                {request.requester_name && (
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      <strong>Nome:</strong> {request.requesterName}
+                      <strong>Nome:</strong> {request.requester_name}
                     </span>
                   </div>
                 )}
-                {request.citizenName && (
+                {request.citizen_name && (
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      <strong>Cidadão:</strong> {request.citizenName}
+                      <strong>Cidadão:</strong> {request.citizen_name}
                     </span>
                   </div>
                 )}
@@ -239,7 +239,7 @@ export function RequestDetailDrawer({
                         <SelectValue placeholder="Selecione um departamento" />
                       </SelectTrigger>
                       <SelectContent>
-                        {departments.filter(d => d !== request.targetDepartment).map((dept) => (
+                        {departments.filter(d => d !== request.target_department).map((dept) => (
                           <SelectItem key={dept} value={dept}>
                             {dept}
                           </SelectItem>

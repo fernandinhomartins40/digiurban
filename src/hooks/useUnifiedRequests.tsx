@@ -80,7 +80,7 @@ export function useUnifiedRequests() {
     try {
       const newRequest = await createUnifiedRequest({
         ...requestData,
-        requesterId: user.id
+        requester_id: user.id
       });
       
       if (newRequest) {

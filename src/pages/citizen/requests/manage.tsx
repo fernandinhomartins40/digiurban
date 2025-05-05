@@ -154,8 +154,8 @@ export default function CitizenRequestManagementPage() {
         onSubmit={(data) => {
           return handleCreateRequest({
             ...data,
-            requesterType: 'citizen',
-            requesterId: user?.id || ''
+            requester_type: 'citizen',
+            requester_id: user?.id || ''
           });
         }}
       />
