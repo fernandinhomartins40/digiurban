@@ -4,9 +4,9 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext"; 
 import { Toaster } from "@/components/ui/toaster";
 import { NewChatPanel } from "@/components/chat/NewChatPanel"; 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { ChatProvider } from "@/contexts/ChatContext"; 
-import { toast } from "@/hooks/use-toast";
+import { createOptimizedQueryClient } from "@/lib/api/queryClient";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -14,39 +14,7 @@ interface AppProvidersProps {
 
 // Create a new QueryClient instance outside the component
 // This ensures it's not recreated on every render
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // Using current best practices for React Query configuration
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-    mutations: {
-      onError: (error) => {
-        console.error("Mutation error:", error);
-        toast({
-          title: "Erro",
-          description: "Ocorreu um erro ao processar sua solicitação",
-          variant: "destructive",
-        });
-      },
-    }
-  },
-});
-
-// Set up global error handling through the query cache
-queryClient.getQueryCache().config = {
-  ...queryClient.getQueryCache().config,
-  onError: (error: Error) => {
-    console.error("Query error:", error);
-    toast({
-      title: "Erro",
-      description: "Ocorreu um erro ao carregar os dados",
-      variant: "destructive",
-    });
-  }
-};
+const queryClient = createOptimizedQueryClient();
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
