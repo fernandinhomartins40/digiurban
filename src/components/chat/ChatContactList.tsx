@@ -37,6 +37,12 @@ export function ChatContactList({ contacts, onSelect }: ChatContactListProps) {
                 )}
               </div>
               
+              {contact.userName && (
+                <p className="text-xs text-muted-foreground">
+                  @{contact.userName}
+                </p>
+              )}
+              
               {contact.departmentName && (
                 <p className="text-xs text-muted-foreground">
                   {contact.departmentName}
@@ -46,7 +52,8 @@ export function ChatContactList({ contacts, onSelect }: ChatContactListProps) {
             
             <div className={cn(
               "h-2 w-2 rounded-full",
-              contact.status === 'online' ? "bg-green-500" : "bg-gray-300"
+              contact.status === 'online' ? "bg-green-500" : 
+              contact.status === 'away' ? "bg-yellow-500" : "bg-gray-300"
             )} />
           </div>
         ))}

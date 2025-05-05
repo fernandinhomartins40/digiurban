@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Conversation } from "@/contexts/ChatContext";
 import { cn } from "@/lib/utils";
-import { User, Users } from "lucide-react";
+import { User, Users, Link } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -40,10 +40,7 @@ export function ConversationList({
       {conversations.map((conversation) => (
         <div
           key={conversation.id}
-          className={cn(
-            "flex items-center p-3 rounded-md cursor-pointer hover:bg-muted/60 transition-colors",
-            conversation.status === "closed" && "opacity-70"
-          )}
+          className="flex items-center p-3 rounded-md cursor-pointer hover:bg-muted/60 transition-colors"
           onClick={() => onSelect(conversation.id)}
         >
           <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mr-3">
@@ -52,7 +49,7 @@ export function ConversationList({
           
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-start">
-              <span className="font-medium truncate">{conversation.title}</span>
+              <span className="font-medium truncate">{conversation.participantName}</span>
               {conversation.lastMessageTime && (
                 <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
                   {formatLastMessageTime(conversation.lastMessageTime)}
@@ -60,10 +57,20 @@ export function ConversationList({
               )}
             </div>
             
+            {/* Show protocols if available */}
             {conversation.protocolIds && conversation.protocolIds.length > 0 && (
-              <span className="text-xs text-muted-foreground block">
-                Protocolo: {conversation.protocolIds[0]}
-              </span>
+              <div className="flex gap-1 flex-wrap my-1">
+                {conversation.protocolIds.slice(0, 2).map((protocol, index) => (
+                  <Badge key={index} variant="outline" className="text-xs py-0 h-4">
+                    <Link className="h-3 w-3 mr-1" /> {protocol}
+                  </Badge>
+                ))}
+                {conversation.protocolIds.length > 2 && (
+                  <Badge variant="outline" className="text-xs py-0 h-4">
+                    +{conversation.protocolIds.length - 2}
+                  </Badge>
+                )}
+              </div>
             )}
             
             {conversation.lastMessage && (

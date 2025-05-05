@@ -11,9 +11,9 @@ import {
   PaperclipIcon,
   X,
   Tag,
+  Link,
 } from "lucide-react";
-import { useChat, Message, Conversation, Contact } from "@/contexts/ChatContext";
-import { MessageBubble } from "./MessageBubble";
+import { useChat, Message, Conversation } from "@/contexts/ChatContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MessageItem } from "./MessageItem";
 import {
@@ -28,6 +28,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { LinkProtocolDialog } from "./LinkProtocolDialog";
 
 interface ConversationDetailProps {
   onBack: () => void;
@@ -40,7 +42,6 @@ export function ConversationDetail({ onBack }: ConversationDetailProps) {
     activeConversation,
     contacts,
     sendMessage,
-    closeConversation,
     loadMoreMessages,
     addTagToConversation,
   } = useChat();
@@ -49,10 +50,12 @@ export function ConversationDetail({ onBack }: ConversationDetailProps) {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [showTagPopover, setShowTagPopover] = useState(false);
   const [newTag, setNewTag] = useState("");
+  const [showProtocolDialog, setShowProtocolDialog] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const currentUser = { id: "current-user-id" }; // This should come from auth context
 
@@ -113,16 +116,18 @@ export function ConversationDetail({ onBack }: ConversationDetailProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Conversation header */}
-      <div className="flex items-center justify-between p-3 border-b">
+      <div className="flex items-center justify-between p-3 border-b bg-background sticky top-0 z-10">
         <div className="flex items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-2 md:hidden"
-            onClick={onBack}
-          >
-            <ArrowLeft size={20} />
-          </Button>
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2"
+              onClick={onBack}
+            >
+              <ArrowLeft size={20} />
+            </Button>
+          )}
           <Avatar className="h-10 w-10 mr-3">
             <AvatarFallback>
               {activeConversation.participantName?.charAt(0) || "U"}
@@ -139,12 +144,6 @@ export function ConversationDetail({ onBack }: ConversationDetailProps) {
         </div>
 
         <div className="flex items-center">
-          {activeConversation.protocolIds && activeConversation.protocolIds.length > 0 && (
-            <Badge variant="outline" className="mr-2">
-              Protocolo: {activeConversation.protocolIds[0]}
-            </Badge>
-          )}
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -152,29 +151,29 @@ export function ConversationDetail({ onBack }: ConversationDetailProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => setShowTagPopover(true)}
-              >
+              <DropdownMenuItem onClick={() => setShowTagPopover(true)}>
                 Adicionar tag
               </DropdownMenuItem>
-              {activeConversation.status !== "closed" && (
-                <DropdownMenuItem
-                  onClick={() => closeConversation(activeConversationId)}
-                >
-                  Encerrar conversa
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem onClick={() => setShowProtocolDialog(true)}>
+                Vincular protocolo
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
-      {/* Tags */}
-      {activeConversation.tags && activeConversation.tags.length > 0 && (
+      {/* Tags and Protocols */}
+      {(activeConversation.tags?.length > 0 || activeConversation.protocolIds?.length > 0) && (
         <div className="p-2 flex flex-wrap gap-1 border-b">
-          {activeConversation.tags.map((tag, index) => (
-            <Badge key={index} variant="secondary">
-              {tag}
+          {activeConversation.tags?.map((tag, index) => (
+            <Badge key={`tag-${index}`} variant="secondary">
+              <Tag className="h-3 w-3 mr-1" /> {tag}
+            </Badge>
+          ))}
+          
+          {activeConversation.protocolIds?.map((protocol, index) => (
+            <Badge key={`protocol-${index}`} variant="outline">
+              <Link className="h-3 w-3 mr-1" /> {protocol}
             </Badge>
           ))}
         </div>
@@ -214,68 +213,61 @@ export function ConversationDetail({ onBack }: ConversationDetailProps) {
         )}
       </div>
 
-      {/* Input area */}
-      {activeConversation.status !== "closed" ? (
-        <>
-          {/* Attachments preview */}
-          {attachments.length > 0 && (
-            <div className="px-4 py-2 border-t flex flex-wrap gap-2">
-              {attachments.map((file, index) => (
-                <div
-                  key={index}
-                  className="bg-muted rounded-md p-1 pl-2 flex items-center text-xs"
-                >
-                  <span className="truncate max-w-[150px]">{file.name}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => removeAttachment(index)}
-                  >
-                    <X size={14} />
-                  </Button>
-                </div>
-              ))}
+      {/* Attachments preview */}
+      {attachments.length > 0 && (
+        <div className="px-4 py-2 border-t flex flex-wrap gap-2">
+          {attachments.map((file, index) => (
+            <div
+              key={index}
+              className="bg-muted rounded-md p-1 pl-2 flex items-center text-xs"
+            >
+              <span className="truncate max-w-[150px]">{file.name}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => removeAttachment(index)}
+              >
+                <X size={14} />
+              </Button>
             </div>
-          )}
-
-          {/* Message input */}
-          <div className="p-4 border-t flex items-center gap-2">
-            <input
-              type="file"
-              multiple
-              className="hidden"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <PaperclipIcon size={20} />
-            </Button>
-            <Input
-              className="flex-1"
-              placeholder="Digite sua mensagem..."
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              onKeyDown={handleKeyPress}
-            />
-            <Button
-              size="icon"
-              onClick={handleSendMessage}
-              disabled={!messageText.trim() && attachments.length === 0}
-            >
-              <Send size={18} />
-            </Button>
-          </div>
-        </>
-      ) : (
-        <div className="p-4 text-center border-t text-muted-foreground">
-          <p>Esta conversa foi encerrada.</p>
+          ))}
         </div>
       )}
+
+      {/* Message input */}
+      <div className="p-4 border-t">
+        <input
+          type="file"
+          multiple
+          className="hidden"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+        />
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <PaperclipIcon size={20} />
+          </Button>
+          <Input
+            className="flex-1"
+            placeholder="Digite sua mensagem..."
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            onKeyDown={handleKeyPress}
+          />
+          <Button
+            size="icon"
+            onClick={handleSendMessage}
+            disabled={!messageText.trim() && attachments.length === 0}
+          >
+            <Send size={18} />
+          </Button>
+        </div>
+      </div>
 
       {/* Tag popover */}
       <Popover open={showTagPopover} onOpenChange={setShowTagPopover}>
@@ -299,6 +291,13 @@ export function ConversationDetail({ onBack }: ConversationDetailProps) {
           </div>
         </PopoverContent>
       </Popover>
+
+      {/* Protocol dialog */}
+      <LinkProtocolDialog
+        open={showProtocolDialog}
+        onOpenChange={setShowProtocolDialog}
+        conversationId={activeConversationId}
+      />
     </div>
   );
 }

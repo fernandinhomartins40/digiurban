@@ -39,7 +39,7 @@ export interface Conversation {
   title: string;
   participantId: string;
   participantName: string;
-  status?: 'active' | 'closed';
+  status?: string;
   messages: Message[];
   unreadCount: number;
   lastMessage?: string;
@@ -59,6 +59,7 @@ export interface Contact {
   status: 'online' | 'offline' | 'away';
   departmentName?: string;
   favorite?: boolean;
+  userName?: string;
 }
 
 // Export the type alias for components to use
@@ -102,14 +103,18 @@ interface ChatContextType {
   selectConversation: (id: string) => void;
   setActiveConversation: (id: string | null) => void;
   createConversation: (participantId: string, participantName: string, type: string) => Promise<any>;
-  closeConversation: (id: string) => Promise<void>;
   loadMoreMessages: (id: string) => Promise<void>;
   addTagToConversation: (id: string, tag: string) => Promise<void>;
   updateChatSettings: (settings: ChatSettings) => void;
-  addProtocolToConversation?: (conversationId: string, protocolId: string) => Promise<void>;
+  addProtocolToConversation: (conversationId: string, protocolId: string) => Promise<void>;
+  removeProtocolFromConversation?: (conversationId: string, protocolId: string) => Promise<void>;
   markAllNotificationsAsRead?: (notificationIds: string[]) => void;
   deleteNotification?: (id: string) => void;
   clearAllNotifications?: () => void;
+  replyToMessage?: (conversationId: string, messageId: string, text: string) => Promise<void>;
+  addReactionToMessage?: (conversationId: string, messageId: string, reaction: string) => Promise<void>;
+  removeReactionFromMessage?: (conversationId: string, messageId: string, reaction: string) => Promise<void>;
+  searchMessages?: (query: string) => Promise<Message[]>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -184,19 +189,36 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             type: 'admin',
             status: 'online',
             departmentName: 'Tecnologia',
-            favorite: true
+            favorite: true,
+            userName: 'suporte'
           },
           {
             id: 'dept-1',
             name: 'Departamento de Saúde',
             type: 'department',
-            status: 'online'
+            status: 'online',
+            userName: 'saude'
           },
           {
             id: 'dept-2',
             name: 'Departamento de Educação',
             type: 'department',
-            status: 'online'
+            status: 'online',
+            userName: 'educacao'
+          },
+          {
+            id: 'user-1',
+            name: 'João Silva',
+            type: 'citizen',
+            status: 'offline',
+            userName: 'joao.silva'
+          },
+          {
+            id: 'user-2',
+            name: 'Maria Oliveira',
+            type: 'citizen',
+            status: 'online',
+            userName: 'maria.oliveira'
           }
         ]);
       }
@@ -351,15 +373,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return newConversation;
   };
 
-  const closeConversation = async (id: string) => {
-    setConversations(prev => 
-      prev.map(conv => conv.id === id ? {
-        ...conv,
-        status: 'closed'
-      } : conv)
-    );
-  };
-
   const loadMoreMessages = async (id: string) => {
     // In a real application, load more messages from your database
     console.log('Loading more messages for conversation', id);
@@ -382,14 +395,85 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       prev.map(conv => conv.id === conversationId ? {
         ...conv,
         protocolIds: conv.protocolIds ? 
-          [...conv.protocolIds, protocolId] : 
+          [...conv.protocolIds.filter(p => p !== protocolId), protocolId] : 
           [protocolId]
+      } : conv)
+    );
+  };
+
+  const removeProtocolFromConversation = async (conversationId: string, protocolId: string) => {
+    setConversations(prev => 
+      prev.map(conv => conv.id === conversationId ? {
+        ...conv,
+        protocolIds: conv.protocolIds ? 
+          conv.protocolIds.filter(p => p !== protocolId) : 
+          []
       } : conv)
     );
   };
 
   const updateChatSettings = (settings: ChatSettings) => {
     setChatSettings(settings);
+  };
+
+  // New function to reply to a message
+  const replyToMessage = async (conversationId: string, messageId: string, text: string) => {
+    return sendMessage(conversationId, text, [], messageId);
+  };
+
+  // New function to add a reaction to a message
+  const addReactionToMessage = async (conversationId: string, messageId: string, reaction: string) => {
+    try {
+      const conversationMessages = messages[conversationId];
+      if (!conversationMessages) return;
+
+      const updatedMessages = conversationMessages.map(msg => {
+        if (msg.id === messageId) {
+          const newReaction: Reaction = {
+            emoji: reaction,
+            userId: user?.id || 'unknown',
+            userName: user?.name || 'Unknown User',
+            type: reaction
+          };
+
+          return {
+            ...msg,
+            reactions: msg.reactions ? [...msg.reactions, newReaction] : [newReaction]
+          };
+        }
+        return msg;
+      });
+
+      // Update messages state
+      setMessages(prev => ({
+        ...prev,
+        [conversationId]: updatedMessages
+      }));
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+    }
+  };
+
+  // New function to search messages
+  const searchMessages = async (query: string): Promise<Message[]> => {
+    try {
+      // In a real application, search messages in your database
+      let searchResults: Message[] = [];
+      
+      // For demo purposes, we'll search in all current messages
+      Object.values(messages).forEach(conversationMessages => {
+        const filteredMessages = conversationMessages.filter(msg => 
+          (msg.text && msg.text.toLowerCase().includes(query.toLowerCase())) ||
+          (msg.content && msg.content.toLowerCase().includes(query.toLowerCase()))
+        );
+        searchResults = [...searchResults, ...filteredMessages];
+      });
+      
+      return searchResults;
+    } catch (error) {
+      console.error('Error searching messages:', error);
+      return [];
+    }
   };
 
   // Notification handling functions
@@ -431,14 +515,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         selectConversation,
         setActiveConversation,
         createConversation,
-        closeConversation,
         loadMoreMessages,
         addTagToConversation,
         updateChatSettings,
         addProtocolToConversation,
+        removeProtocolFromConversation,
         markAllNotificationsAsRead,
         deleteNotification,
-        clearAllNotifications
+        clearAllNotifications,
+        replyToMessage,
+        addReactionToMessage,
+        searchMessages
       }}
     >
       {children}
