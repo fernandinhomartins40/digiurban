@@ -1,16 +1,13 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useChat, Conversation } from "@/contexts/ChatContext";
 import { ConversationList } from "./ConversationList";
 import { ConversationDetail } from "./ConversationDetail";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmptyState } from "./EmptyState";
-import { MessageSquare, User, Users, Plus } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChatContactList } from "./ChatContactList";
-import { NewChatDialog } from "./NewChatDialog";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Separator } from "@/components/ui/separator";
+import { Plus } from "lucide-react";
 
 export function CitizenChatView() {
   const { user } = useAuth();
@@ -19,21 +16,11 @@ export function CitizenChatView() {
     messages, 
     setActiveConversation,
     conversations,
-    contacts,
     createConversation,
   } = useChat();
   
-  const isMobile = useIsMobile();
+  const [isMobile, setIsMobile] = useState(false);
   const [showMobileDetail, setShowMobileDetail] = useState(false);
-  const [activeTab, setActiveTab] = useState<"chats" | "contacts">("chats");
-  const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
-
-  // Effect to handle mobile view transitions
-  useEffect(() => {
-    if (!isMobile && showMobileDetail) {
-      setShowMobileDetail(false);
-    }
-  }, [isMobile]);
 
   const handleCreateConversation = async () => {
     if (!user) return;
@@ -46,46 +33,14 @@ export function CitizenChatView() {
       );
       
       setActiveConversation(newConversation.id);
-      if (isMobile) {
-        setShowMobileDetail(true);
-      }
     } catch (error) {
       console.error('Error creating conversation:', error);
     }
   };
 
-  const handleOpenNewChatDialog = () => {
-    setIsNewChatDialogOpen(true);
-  };
-
   const handleSelectConversation = (id: string) => {
     setActiveConversation(id);
-    if (isMobile) {
-      setShowMobileDetail(true);
-    }
-  };
-
-  const handleSelectContact = (contactId: string, contactName: string) => {
-    // Check if there's already a conversation with this contact
-    const existingConversation = conversations.find(
-      conv => conv.participantId === contactId && conv.type !== "internal"
-    );
-
-    if (existingConversation) {
-      setActiveConversation(existingConversation.id);
-    } else {
-      // Create a new conversation with this contact
-      createConversation(contactId, contactName, "admin")
-        .then((newConversation) => {
-          setActiveConversation(newConversation.id);
-        })
-        .catch((error) => {
-          console.error("Error creating conversation:", error);
-        });
-    }
-    if (isMobile) {
-      setShowMobileDetail(true);
-    }
+    setShowMobileDetail(true);
   };
 
   const handleBackToList = () => {
@@ -97,95 +52,53 @@ export function CitizenChatView() {
   const showDetail = !isMobile || showMobileDetail;
 
   return (
-    <div className="flex h-full overflow-hidden bg-background rounded-lg">
-      {/* Sidebar - Contacts and Conversations */}
+    <div className="flex h-full overflow-hidden bg-background">
+      {/* Sidebar - Conversation List */}
       {showList && (
-        <div className={`${showDetail ? "w-full md:w-1/3 border-r" : "w-full"} flex flex-col h-full`}>
-          <div className="p-2 border-b">
-            <Tabs 
-              defaultValue="chats" 
-              value={activeTab} 
-              onValueChange={(v) => setActiveTab(v as "chats" | "contacts")}
-              className="w-full"
-            >
-              <TabsList className="grid grid-cols-2 w-full">
-                <TabsTrigger value="chats" className="flex items-center justify-center">
-                  <MessageSquare className="h-4 w-4 mr-2" /> Conversas
-                </TabsTrigger>
-                <TabsTrigger value="contacts" className="flex items-center justify-center">
-                  <User className="h-4 w-4 mr-2" /> Contatos
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="chats" className="mt-2">
-                <div className="px-2 pb-2">
-                  {/* New Conversation Button - Now opens the dialog */}
-                  <div className="mb-4">
-                    <Button 
-                      onClick={handleOpenNewChatDialog}
-                      className="w-full"
-                      size="sm"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Nova Conversa
-                    </Button>
-                  </div>
-                  
-                  {conversations.length > 0 ? (
-                    <ConversationList
-                      conversations={conversations}
-                      onSelect={handleSelectConversation}
-                    />
-                  ) : (
-                    <EmptyState
-                      title="Nenhuma conversa iniciada"
-                      description="Inicie uma nova conversa para entrar em contato com nossos atendentes"
-                      icon={<MessageSquare className="h-12 w-12 text-muted-foreground" />}
-                    />
-                  )}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="contacts" className="mt-2">
-                <div className="px-2 pb-2">
-                  {contacts.length > 0 ? (
-                    <ChatContactList 
-                      contacts={contacts} 
-                      onSelect={handleSelectContact}
-                    />
-                  ) : (
-                    <EmptyState
-                      title="Nenhum contato"
-                      description="Você ainda não tem contatos disponíveis"
-                      icon={<Users className="h-12 w-12 text-muted-foreground" />}
-                    />
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
+        <div className={`${showDetail ? "w-1/3 border-r" : "w-full"} flex flex-col h-full`}>
+          <div className="p-4 flex justify-between items-center border-b">
+            <h2 className="font-semibold">Minhas Conversas</h2>
+            <Button size="sm" onClick={handleCreateConversation}>
+              <Plus className="h-4 w-4 mr-1" /> Nova
+            </Button>
+          </div>
+          <div className="flex-1 overflow-auto">
+            {conversations.length > 0 ? (
+              <div className="p-2">
+                <ConversationList 
+                  conversations={conversations}
+                  onSelect={handleSelectConversation}
+                />
+              </div>
+            ) : (
+              <EmptyState 
+                title="Nenhuma conversa iniciada"
+                description="Inicie uma nova conversa para entrar em contato com nossos atendentes"
+                action={
+                  <Button onClick={handleCreateConversation}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Iniciar Conversa
+                  </Button>
+                }
+              />
+            )}
           </div>
         </div>
       )}
 
       {/* Main Content - Conversation Detail */}
       {showDetail && (
-        <div className={`${showList && !isMobile ? "hidden md:flex md:w-2/3" : "w-full"} flex flex-col h-full`}>
+        <div className={`${showList ? "w-2/3" : "w-full"} flex flex-col h-full`}>
           {activeConversationId ? (
             <ConversationDetail onBack={handleBackToList} />
           ) : (
             <EmptyState 
               title="Selecione uma conversa"
-              description="Escolha uma conversa da lista ou um contato para iniciar uma nova conversa"
+              description="Escolha uma conversa da lista ou inicie uma nova para começar"
             />
           )}
         </div>
       )}
-
-      {/* New Chat Dialog */}
-      <NewChatDialog
-        open={isNewChatDialogOpen}
-        onOpenChange={setIsNewChatDialogOpen}
-      />
     </div>
   );
 }

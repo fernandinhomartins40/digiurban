@@ -29,24 +29,23 @@ export function MessageItem({
   };
   
   return (
-    <div className={`group flex gap-3 items-end mb-4 ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
+    <div className={`group flex gap-2 items-end mb-4 ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
       {!isCurrentUser && (
-        <Avatar className="w-8 h-8 flex-shrink-0">
+        <Avatar className="w-8 h-8">
           <AvatarFallback>
             {message.senderName?.charAt(0) || 'U'}
           </AvatarFallback>
         </Avatar>
       )}
       
-      <div className={`relative max-w-[75%] ${isCurrentUser ? 'mr-1' : 'ml-1'}`}>
+      <div className="relative max-w-[75%]">
         <MessageBubble message={message} isCurrentUser={isCurrentUser} />
         
         {/* Reaction button */}
         <button
           className={`absolute bottom-0 ${isCurrentUser ? 'left-0 -translate-x-full -translate-y-1/2' : 'right-0 translate-x-full -translate-y-1/2'} 
-          opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full bg-background border shadow-sm hover:bg-accent`}
+          opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full bg-background border shadow-sm hover:bg-accent`}
           onClick={() => setShowReactionPicker(!showReactionPicker)}
-          aria-label="Add reaction"
         >
           <SmilePlus size={16} />
         </button>
@@ -54,12 +53,12 @@ export function MessageItem({
         {/* Reaction picker */}
         {showReactionPicker && (
           <div className={`absolute ${isCurrentUser ? '-left-4 -translate-x-full' : '-right-4 translate-x-full'} 
-          bottom-0 bg-background border rounded-lg shadow-md p-2 z-10`}>
+          bottom-0 bg-background border rounded-lg shadow-md p-2`}>
             <div className="flex gap-1">
               {['👍', '❤️', '😂', '😮', '😢'].map(emoji => (
                 <button 
                   key={emoji}
-                  className="p-1.5 hover:bg-accent rounded-md"
+                  className="p-1 hover:bg-accent rounded-md"
                   onClick={() => handleReaction(emoji)}
                 >
                   {emoji}
@@ -71,7 +70,7 @@ export function MessageItem({
         
         {/* Display reactions */}
         {reactions && reactions.length > 0 && (
-          <div className={`mt-1 flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+          <div className={`mt-1 flex justify-${isCurrentUser ? 'end' : 'start'}`}>
             <MessageReactions reactions={reactions} />
           </div>
         )}
