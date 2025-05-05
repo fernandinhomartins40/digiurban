@@ -22,19 +22,33 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
     },
-  },
-  // Global error handler for all queries
-  queryCache: {
-    onError: (error) => {
-      console.error("Query error:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao carregar os dados",
-        variant: "destructive",
-      });
-    },
+    mutations: {
+      onError: (error) => {
+        console.error("Mutation error:", error);
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao processar sua solicitação",
+          variant: "destructive",
+        });
+      },
+    }
   },
 });
+
+// Add a global error handler for all queries
+const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+  if (event.type === 'error' && event.error instanceof Error) {
+    console.error("Query error:", event.error);
+    toast({
+      title: "Erro",
+      description: "Ocorreu um erro ao carregar os dados",
+      variant: "destructive",
+    });
+  }
+});
+
+// Note: In a real application, you might want to clean up this subscription
+// This could be done in a useEffect if AppProviders was a functional component
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
