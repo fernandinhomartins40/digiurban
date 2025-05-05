@@ -17,9 +17,7 @@ export function AppProviders({ children }: AppProvidersProps) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        // Explicitly disable suspense to fix "component suspended while responding to synchronous input" errors
-        // Remove the suspense property since it's causing a TypeScript error
-        useErrorBoundary: false,
+        // Updated configuration to remove unsupported properties
         retry: 1,
         refetchOnWindowFocus: false,
       },
