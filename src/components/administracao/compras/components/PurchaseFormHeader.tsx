@@ -46,7 +46,7 @@ export function PurchaseFormHeader({ control, departmentsList }: PurchaseFormHea
           render={({ field }) => (
             <FormItem>
               <FormLabel>Prioridade</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value || "normal"}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a prioridade" />

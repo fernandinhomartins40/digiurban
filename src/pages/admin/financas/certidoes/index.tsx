@@ -97,7 +97,7 @@ export default function Certidoes() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="tipoCertidao">Tipo de Certidão</Label>
-                  <Select>
+                  <Select defaultValue="negativa">
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o tipo de certidão" />
                     </SelectTrigger>

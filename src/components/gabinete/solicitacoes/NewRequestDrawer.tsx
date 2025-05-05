@@ -122,13 +122,14 @@ export function NewRequestDrawer({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Setor Responsável</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || "default"}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione um setor" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="default" disabled>Selecione um setor</SelectItem>
                           {departments.map((dept) => (
                             <SelectItem key={dept} value={dept}>
                               {dept}
