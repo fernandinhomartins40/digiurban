@@ -11,11 +11,16 @@ import CalendarioPage from "@/pages/admin/educacao/calendario/index";
 import ComunicacaoPage from "@/pages/admin/educacao/comunicacao/index";
 import MerendaPage from "@/pages/admin/educacao/merenda/index";
 import OcorrenciasPage from "@/pages/admin/educacao/ocorrencias/index";
+import EducacaoDashboard from "@/pages/admin/educacao/Dashboard";
 
 export const educacaoRoutes: RouteObject[] = [
   {
     path: "educacao",
     element: <EducacaoIndex />,
+  },
+  {
+    path: "educacao/dashboard",
+    element: <EducacaoDashboard />,
   },
   {
     path: "educacao/escolas",

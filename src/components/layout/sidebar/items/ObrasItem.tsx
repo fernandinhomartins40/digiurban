@@ -9,6 +9,10 @@ export const getObrasItem = (): SidebarItemProps => ({
   moduleId: "obras",
   children: [
     {
+      title: "Dashboard",
+      path: "/admin/obras/dashboard",
+    },
+    {
       title: "Pequenas Obras",
       path: "/admin/obras/pequenas",
     },

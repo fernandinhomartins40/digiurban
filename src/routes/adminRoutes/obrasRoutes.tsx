@@ -4,11 +4,16 @@ import ObrasPublicasIndex from "@/pages/admin/obras/index";
 import PequenasObrasIndex from "@/pages/admin/obras/pequenas/index";
 import MapaObrasIndex from "@/pages/admin/obras/mapa/index";
 import FeedbackCidadaoIndex from "@/pages/admin/obras/feedback/index";
+import ObrasDashboard from "@/pages/admin/obras/Dashboard";
 
 export const obrasRoutes: RouteObject[] = [
   {
     path: "obras",
     element: <ObrasPublicasIndex />,
+  },
+  {
+    path: "obras/dashboard",
+    element: <ObrasDashboard />,
   },
   {
     path: "obras/pequenas",

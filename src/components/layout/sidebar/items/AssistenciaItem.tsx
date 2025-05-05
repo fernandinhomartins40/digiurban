@@ -9,6 +9,10 @@ export const getAssistenciaItem = (): SidebarItemProps => ({
   moduleId: "assistencia",
   children: [
     {
+      title: "Dashboard",
+      path: "/admin/assistencia/dashboard",
+    },
+    {
       title: "Benefícios",
       path: "/admin/assistencia/beneficios",
     },

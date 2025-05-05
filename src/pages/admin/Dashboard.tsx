@@ -1,171 +1,290 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Users, FileText, Bell, Clock } from "lucide-react";
+import { DashboardHeader } from "@/components/dashboard/common/DashboardHeader";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { MetricCard } from "@/components/dashboard/common/DashboardMetricCards";
+import { useMainDashboard } from "@/hooks/useMainDashboard";
+import { ChartCard, DashboardBarChart, DashboardLineChart, DashboardPieChart } from "@/components/dashboard/common/DashboardCharts";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export default function AdminDashboard() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Visão geral do sistema digiurban para administração municipal.
-        </p>
-      </div>
+  const {
+    dateRange,
+    startDate,
+    endDate,
+    handleDateRangeChange,
+    setStartDate,
+    setEndDate,
+    metricsData,
+    chartData,
+    isLoading,
+    isError,
+    error,
+    handleRetry
+  } = useMainDashboard();
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Solicitações Pendentes
-            </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-muted-foreground">
-              +5 nas últimas 24h
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Usuários Ativos
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,453</div>
-            <p className="text-xs text-muted-foreground">
-              +124 no último mês
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Atividade do Sistema
-            </CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+573</div>
-            <p className="text-xs text-muted-foreground">
-              Interações hoje
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Alertas
-            </CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">7</div>
-            <p className="text-xs text-muted-foreground">
-              Requerem atenção
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+  // Prepare metrics for the dashboard
+  const metrics = metricsData ? [
+    {
+      title: "Solicitações Pendentes",
+      value: metricsData.pendingRequests,
+      icon: <FileText className="h-4 w-4 text-muted-foreground" />,
+      change: "+5 nas últimas 24h",
+      trend: "up" as const,
+    },
+    {
+      title: "Usuários Ativos",
+      value: metricsData.activeUsers,
+      icon: <Users className="h-4 w-4 text-muted-foreground" />,
+      change: "+124 no último mês",
+      trend: "up" as const,
+    },
+    {
+      title: "Atividade do Sistema",
+      value: metricsData.systemActivity,
+      icon: <Activity className="h-4 w-4 text-muted-foreground" />,
+      change: "Interações hoje",
+      trend: "neutral" as const,
+    },
+    {
+      title: "Alertas",
+      value: metricsData.alerts,
+      icon: <Bell className="h-4 w-4 text-muted-foreground" />,
+      change: "Requerem atenção",
+      trend: "neutral" as const,
+    },
+  ] : [];
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Atividades Recentes</CardTitle>
-            <CardDescription>
-              Últimas atividades no sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-4">
-              {[1, 2, 3, 4, 5].map((_, i) => (
-                <li key={i} className="flex items-start gap-4 border-b pb-4 last:border-0">
-                  <div className="mt-1 bg-primary/10 p-2 rounded-full">
-                    <Clock className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">Nova solicitação de certidão</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        João da Silva
-                      </span>
-                      <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
-                        Há 12 min
-                      </span>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+  // Dashboard header component
+  const header = (
+    <DashboardHeader
+      title="Dashboard Administrativo"
+      description="Visão geral do sistema digiurban para administração municipal"
+      dateRange={dateRange}
+      startDate={startDate}
+      endDate={endDate}
+      onDateRangeChange={handleDateRangeChange}
+      onDateRangeSelect={(range) => {
+        setStartDate(range?.from);
+        setEndDate(range?.to);
+      }}
+      showDownload={true}
+    />
+  );
 
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Módulos Populares</CardTitle>
-            <CardDescription>
-              Módulos mais acessados no último mês
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">Finanças</p>
-                  <span className="text-sm">85%</span>
-                </div>
-                <div className="h-2 rounded-full bg-gray-100">
-                  <div className="h-2 rounded-full bg-primary" style={{ width: "85%" }} />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">Saúde</p>
-                  <span className="text-sm">72%</span>
-                </div>
-                <div className="h-2 rounded-full bg-gray-100">
-                  <div className="h-2 rounded-full bg-primary" style={{ width: "72%" }} />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">Educação</p>
-                  <span className="text-sm">65%</span>
-                </div>
-                <div className="h-2 rounded-full bg-gray-100">
-                  <div className="h-2 rounded-full bg-primary" style={{ width: "65%" }} />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">Assistência Social</p>
-                  <span className="text-sm">53%</span>
-                </div>
-                <div className="h-2 rounded-full bg-gray-100">
-                  <div className="h-2 rounded-full bg-primary" style={{ width: "53%" }} />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">Serviços Públicos</p>
-                  <span className="text-sm">47%</span>
-                </div>
-                <div className="h-2 rounded-full bg-gray-100">
-                  <div className="h-2 rounded-full bg-primary" style={{ width: "47%" }} />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+  // Metrics section
+  const metricsSection = (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {metrics.map((metric, index) => (
+        <MetricCard key={index} {...metric} />
+      ))}
     </div>
+  );
+
+  // Recent Activities component
+  const RecentActivitiesList = ({ activities }: { activities: any[] }) => (
+    <ul className="space-y-4">
+      {activities.map((activity) => (
+        <li key={activity.id} className="flex items-start gap-4 border-b pb-4 last:border-0">
+          <div className="mt-1 bg-primary/10 p-2 rounded-full">
+            <Clock className="h-4 w-4 text-primary" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">{activity.action}</p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {activity.user} • {activity.department}
+              </span>
+              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                {activity.time}
+              </span>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+
+  // Module Usage component
+  const ModuleUsageList = ({ modules }: { modules: any[] }) => (
+    <div className="space-y-4">
+      {modules.map((module) => (
+        <div key={module.name} className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">{module.name}</p>
+            <span className="text-sm">{module.percent}%</span>
+          </div>
+          <div className="h-2 rounded-full bg-gray-100">
+            <div className="h-2 rounded-full bg-primary" style={{ width: `${module.percent}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Department cards
+  const DepartmentCards = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-md">Saúde</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-2xl font-bold">248</p>
+              <p className="text-xs text-muted-foreground">Atendimentos hoje</p>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+              <Activity className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button asChild variant="ghost" size="sm" className="w-full">
+            <Link to="/admin/saude/dashboard">Ver Dashboard</Link>
+          </Button>
+        </CardFooter>
+      </Card>
+      
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-md">Educação</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-2xl font-bold">1,248</p>
+              <p className="text-xs text-muted-foreground">Alunos ativos</p>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+              <Users className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button asChild variant="ghost" size="sm" className="w-full">
+            <Link to="/admin/educacao/dashboard">Ver Dashboard</Link>
+          </Button>
+        </CardFooter>
+      </Card>
+      
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-md">Assistência Social</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-2xl font-bold">425</p>
+              <p className="text-xs text-muted-foreground">Famílias atendidas</p>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center">
+              <Bell className="h-6 w-6 text-amber-600" />
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button asChild variant="ghost" size="sm" className="w-full">
+            <Link to="/admin/assistencia/dashboard">Ver Dashboard</Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+
+  // Charts section
+  const chartsSection = chartData ? (
+    <>
+      <DepartmentCards />
+      
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+        {/* Activity Trend chart */}
+        <ChartCard
+          title="Tendência de Atividade"
+          description="Solicitações e usuários ativos ao longo do tempo"
+        >
+          <DashboardLineChart
+            data={chartData.activityTrend}
+            lines={[
+              { dataKey: "requests", stroke: "#8884d8", name: "Solicitações" },
+              { dataKey: "users", stroke: "#82ca9d", name: "Usuários" }
+            ]}
+            xAxisDataKey="month"
+            height={300}
+          />
+        </ChartCard>
+
+        {/* Department Activity */}
+        <ChartCard
+          title="Atividade por Departamento"
+          description="Distribuição de atividades por departamento"
+        >
+          <DashboardBarChart
+            data={chartData.departmentActivity}
+            bars={[{ dataKey: "value", fill: "#8884d8", name: "Atividades" }]}
+            xAxisDataKey="name"
+            height={300}
+          />
+        </ChartCard>
+      </div>
+
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+        {/* Requests by Status */}
+        <ChartCard
+          title="Solicitações por Status"
+          description="Distribuição das solicitações por status atual"
+        >
+          <DashboardPieChart
+            data={chartData.requestsByStatus}
+            dataKey="value"
+            nameKey="name"
+            height={300}
+          />
+        </ChartCard>
+
+        {/* Module Usage and Recent Activities */}
+        <div className="grid gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Módulos Populares</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ModuleUsageList modules={chartData.moduleUsage} />
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Atividades Recentes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RecentActivitiesList activities={chartData.recentActivities} />
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" size="sm" className="w-full">
+                Ver todas as atividades
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
+    </>
+  ) : null;
+
+  return (
+    <DashboardLayout
+      title="Dashboard Administrativo"
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      onRetry={handleRetry}
+      header={header}
+      metrics={metricsSection}
+      charts={chartsSection}
+    />
   );
 }
