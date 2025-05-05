@@ -1,11 +1,12 @@
 
 import { RouteObject } from "react-router-dom";
-import MayorDashboard from "@/pages/admin/gabinete/Dashboard";
-import AppointmentScheduler from "@/pages/admin/gabinete/AppointmentScheduler";
-import DirectRequests from "@/pages/admin/gabinete/DirectRequests";
-import PublicPolicies from "@/pages/admin/gabinete/PublicPolicies";
-import StrategicPrograms from "@/pages/admin/gabinete/StrategicPrograms";
-import CitizenServices from "@/pages/admin/gabinete/CitizenServices";
+import { lazy } from "react";
+
+// Lazy load components
+const MayorDashboard = lazy(() => import("@/pages/admin/gabinete/Dashboard"));
+const DirectRequests = lazy(() => import("@/pages/admin/gabinete/DirectRequests"));
+const Appointments = lazy(() => import("@/pages/admin/gabinete/Appointments"));
+const AllRequests = lazy(() => import("@/pages/admin/gabinete/AllRequests"));
 
 export const gabineteRoutes: RouteObject[] = [
   {
@@ -13,23 +14,15 @@ export const gabineteRoutes: RouteObject[] = [
     element: <MayorDashboard />,
   },
   {
-    path: "gabinete/agendamentos",
-    element: <AppointmentScheduler />,
-  },
-  {
     path: "gabinete/solicitacoes",
     element: <DirectRequests />,
   },
   {
-    path: "gabinete/politicas",
-    element: <PublicPolicies />,
+    path: "gabinete/agenda",
+    element: <Appointments />,
   },
   {
-    path: "gabinete/programas",
-    element: <StrategicPrograms />,
-  },
-  {
-    path: "gabinete/cidadaos",
-    element: <CitizenServices />,
-  },
+    path: "gabinete/todas-solicitacoes",
+    element: <AllRequests />,
+  }
 ];

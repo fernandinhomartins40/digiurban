@@ -1,54 +1,79 @@
 
-import { PriorityLevel, RequestStatus } from "@/types/mayorOffice";
+import { RequestStatus, PriorityLevel, RequesterType } from "@/types/requests";
 
-/**
- * Maps the request status code to a human-readable name
- */
-export const mapStatusName = (status: string): string => {
-  const statusMap: Record<string, string> = {
-    open: "Aberta",
-    in_progress: "Em Progresso",
-    completed: "Concluída",
-    cancelled: "Cancelada",
-  };
-  return statusMap[status] || status;
-};
+export function getStatusName(status: RequestStatus): string {
+  switch (status) {
+    case "open":
+      return "Aberto";
+    case "in_progress":
+      return "Em Andamento";
+    case "completed":
+      return "Concluído";
+    case "cancelled":
+      return "Cancelado";
+    case "forwarded":
+      return "Encaminhado";
+    default:
+      return status;
+  }
+}
 
-/**
- * Maps the request priority code to a human-readable name
- */
-export const mapPriorityName = (priority: string): string => {
-  const priorityMap: Record<string, string> = {
-    low: "Baixa",
-    normal: "Normal",
-    high: "Alta",
-    urgent: "Urgente",
-  };
-  return priorityMap[priority] || priority;
-};
+export function getPriorityName(priority: PriorityLevel): string {
+  switch (priority) {
+    case "low":
+      return "Baixa";
+    case "normal":
+      return "Normal";
+    case "high":
+      return "Alta";
+    case "urgent":
+      return "Urgente";
+    default:
+      return priority;
+  }
+}
 
-/**
- * Returns the appropriate Tailwind CSS class for priority level badge
- */
-export const getPriorityColor = (priority: string): string => {
-  const colorMap: Record<string, string> = {
-    low: "bg-blue-100 text-blue-800",
-    normal: "bg-green-100 text-green-800",
-    high: "bg-amber-100 text-amber-800",
-    urgent: "bg-red-100 text-red-800",
-  };
-  return colorMap[priority] || "bg-gray-100 text-gray-800";
-};
+export function getRequesterTypeName(type: RequesterType): string {
+  switch (type) {
+    case "citizen":
+      return "Cidadão";
+    case "department":
+      return "Departamento";
+    case "mayor":
+      return "Gabinete";
+    default:
+      return type;
+  }
+}
 
-/**
- * Returns the appropriate Tailwind CSS class for status badge
- */
-export const getStatusColor = (status: string): string => {
-  const colorMap: Record<string, string> = {
-    open: "bg-blue-100 text-blue-800",
-    in_progress: "bg-amber-100 text-amber-800",
-    completed: "bg-green-100 text-green-800",
-    cancelled: "bg-gray-100 text-gray-800",
-  };
-  return colorMap[status] || "bg-gray-100 text-gray-800";
-};
+export function getStatusColor(status: RequestStatus): string {
+  switch (status) {
+    case "open":
+      return "bg-blue-100 text-blue-800 hover:bg-blue-200";
+    case "in_progress":
+      return "bg-amber-100 text-amber-800 hover:bg-amber-200";
+    case "completed":
+      return "bg-green-100 text-green-800 hover:bg-green-200";
+    case "cancelled":
+      return "bg-red-100 text-red-800 hover:bg-red-200";
+    case "forwarded":
+      return "bg-purple-100 text-purple-800 hover:bg-purple-200";
+    default:
+      return "bg-gray-100 text-gray-800 hover:bg-gray-200";
+  }
+}
+
+export function getPriorityColor(priority: PriorityLevel): string {
+  switch (priority) {
+    case "low":
+      return "bg-gray-100 text-gray-800 hover:bg-gray-200";
+    case "normal":
+      return "bg-blue-100 text-blue-800 hover:bg-blue-200";
+    case "high":
+      return "bg-amber-100 text-amber-800 hover:bg-amber-200";
+    case "urgent":
+      return "bg-red-100 text-red-800 hover:bg-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 hover:bg-gray-200";
+  }
+}

@@ -2789,6 +2789,123 @@ export type Database = {
           },
         ]
       }
+      request_attachments: {
+        Row: {
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          request_id: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          request_id: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          request_id?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_attachments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "unified_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_comments: {
+        Row: {
+          author_id: string
+          author_type: string
+          comment_text: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          request_id: string
+        }
+        Insert: {
+          author_id: string
+          author_type: string
+          comment_text: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          request_id: string
+        }
+        Update: {
+          author_id?: string
+          author_type?: string
+          comment_text?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_comments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "unified_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_status_history: {
+        Row: {
+          changed_by: string
+          comments: string | null
+          created_at: string
+          id: string
+          new_status: string
+          previous_status: string
+          request_id: string
+        }
+        Insert: {
+          changed_by: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          new_status: string
+          previous_status: string
+          request_id: string
+        }
+        Update: {
+          changed_by?: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          new_status?: string
+          previous_status?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_status_history_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "unified_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_attendances: {
         Row: {
           attendance_date: string | null
@@ -3195,6 +3312,71 @@ export type Database = {
         }
         Relationships: []
       }
+      unified_requests: {
+        Row: {
+          citizen_id: string | null
+          completed_at: string | null
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          original_request_id: string | null
+          previous_department: string | null
+          priority: string
+          protocol_number: string
+          requester_id: string
+          requester_type: string
+          status: string
+          target_department: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          citizen_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          original_request_id?: string | null
+          previous_department?: string | null
+          priority?: string
+          protocol_number: string
+          requester_id: string
+          requester_type: string
+          status?: string
+          target_department: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          citizen_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          original_request_id?: string | null
+          previous_department?: string | null
+          priority?: string
+          protocol_number?: string
+          requester_id?: string
+          requester_type?: string
+          status?: string
+          target_department?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unified_requests_original_request_id_fkey"
+            columns: ["original_request_id"]
+            isOneToOne: false
+            referencedRelation: "unified_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visit_attachments: {
         Row: {
           file_name: string
@@ -3342,6 +3524,10 @@ export type Database = {
         Returns: string
       }
       generate_transport_request_protocol: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_unified_request_protocol: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

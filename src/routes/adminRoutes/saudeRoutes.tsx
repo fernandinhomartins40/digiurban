@@ -1,40 +1,33 @@
 
 import { RouteObject } from "react-router-dom";
-import SaudeIndex from "@/pages/admin/saude/index";
-import AtendimentosPage from "@/pages/admin/saude/atendimentos/index";
-import MedicamentosPage from "@/pages/admin/saude/medicamentos/index";
-import TFDPage from "@/pages/admin/saude/tfd/index";
-import ProgramasPage from "@/pages/admin/saude/programas/index";
-import CampanhasPage from "@/pages/admin/saude/campanhas/index";
-import ACSPage from "@/pages/admin/saude/acs/index";
+import { lazy } from "react";
+
+// Lazy load components
+const HealthDashboard = lazy(() => import("@/pages/admin/saude/Dashboard"));
+const Appointments = lazy(() => import("@/pages/admin/saude/atendimentos"));
+const TFDManagement = lazy(() => import("@/pages/admin/saude/tfd"));
+const HealthPrograms = lazy(() => import("@/pages/admin/saude/programas"));
+const HealthRequests = lazy(() => import("@/pages/admin/saude/requests"));
 
 export const saudeRoutes: RouteObject[] = [
   {
-    path: "saude",
-    element: <SaudeIndex />,
+    path: "saude/dashboard",
+    element: <HealthDashboard />,
   },
   {
     path: "saude/atendimentos",
-    element: <AtendimentosPage />,
-  },
-  {
-    path: "saude/medicamentos",
-    element: <MedicamentosPage />,
+    element: <Appointments />,
   },
   {
     path: "saude/tfd",
-    element: <TFDPage />,
+    element: <TFDManagement />,
   },
   {
     path: "saude/programas",
-    element: <ProgramasPage />,
+    element: <HealthPrograms />,
   },
   {
-    path: "saude/campanhas",
-    element: <CampanhasPage />,
-  },
-  {
-    path: "saude/acs",
-    element: <ACSPage />,
+    path: "saude/requests",
+    element: <HealthRequests />,
   },
 ];

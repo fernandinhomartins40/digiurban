@@ -1,11 +1,14 @@
 
 import { RouteObject } from "react-router-dom";
+import { lazy } from "react";
 import { CitizenLayout } from "@/components/layout/CitizenLayout";
-import CitizenDashboard from "@/pages/citizen/dashboard";
-import CitizenChatPage from "@/pages/citizen/chat/ChatPage";
-import CitizenRequestsPage from "@/pages/citizen/requests";
-import NewCitizenRequestPage from "@/pages/citizen/requests/new";
-import RequestDetailPage from "@/pages/citizen/requests/[id]";
+
+// Lazy load components
+const CitizenDashboard = lazy(() => import("@/pages/citizen/Dashboard"));
+const CitizenRequests = lazy(() => import("@/pages/citizen/requests"));
+const NewCitizenRequest = lazy(() => import("@/pages/citizen/requests/new"));
+const ManageCitizenRequests = lazy(() => import("@/pages/citizen/requests/manage"));
+const CitizenProfile = lazy(() => import("@/pages/citizen/Profile"));
 
 export const citizenRoutes: RouteObject[] = [
   {
@@ -18,40 +21,20 @@ export const citizenRoutes: RouteObject[] = [
       },
       {
         path: "requests",
-        children: [
-          {
-            path: "",
-            element: <CitizenRequestsPage />,
-          },
-          {
-            path: "new",
-            element: <NewCitizenRequestPage />,
-          },
-          {
-            path: ":id",
-            element: <RequestDetailPage />,
-          }
-        ]
+        element: <CitizenRequests />,
       },
       {
-        path: "chat",
-        element: <CitizenChatPage />,
-      },
-      // These routes are placeholders, we will implement them later
-      {
-        path: "services",
-        element: <CitizenDashboard />, // Placeholder, to be replaced
+        path: "requests/new",
+        element: <NewCitizenRequest />,
       },
       {
-        path: "education",
-        element: <CitizenDashboard />, // Placeholder, to be replaced
+        path: "requests/manage",
+        element: <ManageCitizenRequests />,
       },
       {
-        path: "health",
-        element: <CitizenDashboard />, // Placeholder, to be replaced
+        path: "profile",
+        element: <CitizenProfile />,
       },
     ],
   },
 ];
-
-export default citizenRoutes;
