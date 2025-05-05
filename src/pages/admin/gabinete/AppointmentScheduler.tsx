@@ -1,203 +1,28 @@
 
 import React, { useState, Suspense } from "react";
 import { Helmet } from "react-helmet";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  getMayorAppointments,
-  updateMayorAppointmentStatus,
-} from "@/services/mayorOffice/appointmentsService";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Appointment, AppointmentStatus } from "@/types/mayorOffice";
 import { AppointmentDrawer } from "@/components/gabinete/agendamentos/AppointmentDrawer";
 import { NewAppointmentDialog } from "@/components/gabinete/agendamentos/NewAppointmentDialog";
-import { Loader2 } from "lucide-react";
-
-// Create a separate component for the appointments content
-// This helps with error boundaries and suspense
-function AppointmentsContent({ 
-  filterStatus, 
-  setSelectedAppointment, 
-  setDrawerOpen 
-}: { 
-  filterStatus: AppointmentStatus | "all",
-  setSelectedAppointment: React.Dispatch<React.SetStateAction<Appointment | null>>,
-  setDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>
-}) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  // Fetch appointments with proper error handling
-  const { data: appointments, isLoading, error } = useQuery({
-    queryKey: ["mayorAppointments", filterStatus],
-    queryFn: () => getMayorAppointments(filterStatus !== "all" ? filterStatus : undefined),
-  });
-
-  // Update appointment status mutation
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ appointmentId, status }: { appointmentId: string; status: AppointmentStatus }) =>
-      updateMayorAppointmentStatus(appointmentId, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["mayorAppointments"] });
-      toast({
-        title: "Status atualizado",
-        description: "O status do agendamento foi atualizado com sucesso.",
-      });
-      setDrawerOpen(false);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível atualizar o status do agendamento.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Handle appointment click
-  const handleAppointmentClick = (appointment: Appointment) => {
-    setSelectedAppointment(appointment);
-    setDrawerOpen(true);
-  };
-
-  // Format date helper
-  const formatAppointmentDate = (date: string) => {
-    try {
-      return format(new Date(date), "dd/MM/yyyy", { locale: ptBR });
-    } catch (e) {
-      return date;
-    }
-  };
-
-  // Get badge based on status
-  const getStatusBadge = (status: AppointmentStatus) => {
-    switch (status) {
-      case "pending":
-        return <Badge variant="secondary">Pendente</Badge>;
-      case "approved":
-        return <Badge variant="default">Aprovado</Badge>;
-      case "rejected":
-        return <Badge variant="destructive">Rejeitado</Badge>;
-      case "completed":
-        return <Badge variant="outline">Concluído</Badge>;
-      case "cancelled":
-        return <Badge variant="destructive">Cancelado</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-10">
-        <Loader2 className="h-8 w-8 animate-spin mr-2" />
-        <span>Carregando agendamentos...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-10 text-center">
-        <p className="text-destructive font-medium">Erro ao carregar agendamentos</p>
-        <p className="text-muted-foreground text-sm mt-1">
-          {error instanceof Error ? error.message : "Ocorreu um erro desconhecido"}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {appointments && appointments.length > 0 ? (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Assunto</TableHead>
-                <TableHead>Solicitante</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Horário</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Local</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {appointments.map((appointment) => (
-                <TableRow key={appointment.id}>
-                  <TableCell className="font-medium">
-                    {appointment.subject}
-                  </TableCell>
-                  <TableCell>{appointment.requesterName}</TableCell>
-                  <TableCell>
-                    {formatAppointmentDate(appointment.requestedDate.toString())}
-                  </TableCell>
-                  <TableCell>{appointment.requestedTime}</TableCell>
-                  <TableCell>{getStatusBadge(appointment.status)}</TableCell>
-                  <TableCell>{appointment.location || "-"}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAppointmentClick(appointment)}
-                    >
-                      Detalhes
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-10 text-center">
-          <p className="text-muted-foreground">
-            Nenhum agendamento encontrado.
-          </p>
-        </div>
-      )}
-    </>
-  );
-}
+import { AppointmentFilters } from "@/components/gabinete/agendamentos/AppointmentFilters";
+import { AppointmentsTable } from "@/components/gabinete/agendamentos/AppointmentsTable";
+import { useAppointmentActions } from "@/components/gabinete/agendamentos/useAppointmentActions";
 
 export default function AppointmentScheduler() {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [filterStatus, setFilterStatus] = useState<AppointmentStatus | "all">("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
+  const { handleStatusChange } = useAppointmentActions();
 
-  // Handle status change 
-  const handleStatusChange = async (appointmentId: string, status: AppointmentStatus) => {
-    try {
-      await updateMayorAppointmentStatus(appointmentId, status);
-      queryClient.invalidateQueries({ queryKey: ["mayorAppointments"] });
-      setDrawerOpen(false);
-    } catch (error) {
-      console.error("Error updating appointment status:", error);
-    }
+  // Handle appointment click
+  const handleAppointmentClick = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setDrawerOpen(true);
   };
 
   return (
@@ -225,38 +50,13 @@ export default function AppointmentScheduler() {
         <CardHeader>
           <CardTitle>Agendamentos</CardTitle>
           <CardDescription>Lista de agendamentos agendados com o prefeito</CardDescription>
-
-          <div className="flex items-center gap-4 mt-4">
-            <Button
-              variant={filterStatus === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterStatus("all")}
-            >
-              Todos
-            </Button>
-            <Button
-              variant={filterStatus === "pending" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterStatus("pending")}
-            >
-              Pendentes
-            </Button>
-            <Button
-              variant={filterStatus === "approved" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterStatus("approved")}
-            >
-              Aprovados
-            </Button>
-            <Button
-              variant={filterStatus === "completed" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterStatus("completed")}
-            >
-              Concluídos
-            </Button>
-          </div>
+          
+          <AppointmentFilters 
+            filterStatus={filterStatus} 
+            setFilterStatus={setFilterStatus} 
+          />
         </CardHeader>
+        
         <CardContent>
           <Suspense fallback={
             <div className="flex items-center justify-center py-10">
@@ -264,13 +64,13 @@ export default function AppointmentScheduler() {
               <span>Carregando...</span>
             </div>
           }>
-            <AppointmentsContent 
+            <AppointmentsTable 
               filterStatus={filterStatus} 
-              setSelectedAppointment={setSelectedAppointment} 
-              setDrawerOpen={setDrawerOpen}
+              onAppointmentClick={handleAppointmentClick} 
             />
           </Suspense>
         </CardContent>
+        
         <CardFooter className="flex justify-between border-t pt-4">
           <div className="text-sm text-muted-foreground">
             Gerenciamento de agendamentos

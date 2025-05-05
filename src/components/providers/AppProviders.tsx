@@ -20,7 +20,7 @@ export function AppProviders({ children }: AppProvidersProps) {
         // Use standard options without suspense
         retry: 1,
         refetchOnWindowFocus: false,
-        useErrorBoundary: false
+        suspense: false // Fixed the incorrect property from useErrorBoundary to suspense
       },
     },
   });
