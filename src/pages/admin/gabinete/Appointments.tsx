@@ -15,6 +15,7 @@ export default function AppointmentScheduler() {
   const queryClient = useQueryClient();
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [filterStatus, setFilterStatus] = useState<AppointmentStatus | "all">("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
   const { 
@@ -58,7 +59,9 @@ export default function AppointmentScheduler() {
           
           <AppointmentFilters 
             filterStatus={filterStatus} 
-            setFilterStatus={setFilterStatus} 
+            setFilterStatus={setFilterStatus}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
           />
         </CardHeader>
         
@@ -70,7 +73,8 @@ export default function AppointmentScheduler() {
             </div>
           }>
             <AppointmentsTable 
-              filterStatus={filterStatus} 
+              filterStatus={filterStatus}
+              searchTerm={searchTerm}
               onAppointmentClick={handleAppointmentClick} 
             />
           </Suspense>

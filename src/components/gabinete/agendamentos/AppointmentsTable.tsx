@@ -20,16 +20,21 @@ import { getMayorAppointments } from "@/services/mayorOffice/appointmentsService
 interface AppointmentsTableProps {
   filterStatus: AppointmentStatus | "all";
   onAppointmentClick: (appointment: Appointment) => void;
+  searchTerm?: string;
 }
 
 export function AppointmentsTable({ 
   filterStatus, 
-  onAppointmentClick 
+  onAppointmentClick,
+  searchTerm = ""
 }: AppointmentsTableProps) {
   // Fetch appointments
   const { data: appointments, isLoading, error } = useQuery({
-    queryKey: ["mayorAppointments", filterStatus],
-    queryFn: () => getMayorAppointments(filterStatus !== "all" ? filterStatus : undefined),
+    queryKey: ["mayorAppointments", filterStatus, searchTerm],
+    queryFn: () => getMayorAppointments(
+      filterStatus !== "all" ? filterStatus : undefined,
+      searchTerm
+    ),
   });
 
   // Format date helper
