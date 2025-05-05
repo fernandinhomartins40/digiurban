@@ -11,13 +11,14 @@ import {
 } from "@/components/ui/drawer";
 import { Separator } from "@/components/ui/separator";
 
-// Import our new component pieces
+// Import our component pieces
 import { AppointmentHeader } from "./appointment-drawer/AppointmentHeader";
 import { AppointmentDateTime } from "./appointment-drawer/AppointmentDateTime";
 import { RequesterInfo } from "./appointment-drawer/RequesterInfo";
 import { AppointmentDescription } from "./appointment-drawer/AppointmentDescription";
 import { AdminNotes } from "./appointment-drawer/AdminNotes";
 import { AppointmentActions } from "./appointment-drawer/AppointmentActions";
+import { AppointmentNotes } from "./appointment-drawer/AppointmentNotes";
 
 interface AppointmentDrawerProps {
   isOpen: boolean;
@@ -26,6 +27,9 @@ interface AppointmentDrawerProps {
   onApprove?: (id: string) => Promise<void>;
   onReject?: (id: string) => Promise<void>;
   onComplete?: (id: string) => Promise<void>;
+  onUpdateNotes?: (id: string, notes: string) => Promise<void>;
+  isUpdatingStatus?: boolean;
+  isUpdatingNotes?: boolean;
 }
 
 export function AppointmentDrawer({
@@ -35,8 +39,17 @@ export function AppointmentDrawer({
   onApprove,
   onReject,
   onComplete,
+  onUpdateNotes,
+  isUpdatingStatus = false,
+  isUpdatingNotes = false,
 }: AppointmentDrawerProps) {
   if (!appointment) return null;
+
+  const handleSaveNotes = async (notes: string) => {
+    if (onUpdateNotes) {
+      await onUpdateNotes(appointment.id, notes);
+    }
+  };
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
@@ -51,7 +64,7 @@ export function AppointmentDrawer({
             </DrawerDescription>
           </DrawerHeader>
 
-          <div className="px-4 py-2 space-y-4">
+          <div className="px-4 py-2 space-y-4 overflow-y-auto max-h-[60vh]">
             {/* Subject and Status Badges */}
             <AppointmentHeader appointment={appointment} />
 
@@ -69,7 +82,14 @@ export function AppointmentDrawer({
             <AppointmentDescription appointment={appointment} />
 
             {/* Admin Notes */}
-            <AdminNotes notes={appointment.adminNotes} />
+            {appointment.adminNotes && <AdminNotes notes={appointment.adminNotes} />}
+
+            {/* Notes Editing Form */}
+            <AppointmentNotes 
+              appointment={appointment} 
+              onSaveNotes={handleSaveNotes} 
+              isUpdating={isUpdatingNotes}
+            />
           </div>
 
           <DrawerFooter className="sm:flex-row sm:justify-between gap-2">

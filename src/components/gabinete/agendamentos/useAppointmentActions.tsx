@@ -1,6 +1,9 @@
 
 import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { updateMayorAppointmentStatus } from "@/services/mayorOffice/appointmentsService";
+import { 
+  updateMayorAppointmentStatus, 
+  updateMayorAppointmentNotes 
+} from "@/services/mayorOffice/appointmentsService";
 import { AppointmentStatus } from "@/types/mayorOffice";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,6 +31,26 @@ export function useAppointmentActions() {
     },
   });
 
+  // Update appointment notes mutation
+  const updateNotesMutation = useMutation({
+    mutationFn: ({ appointmentId, notes }: { appointmentId: string; notes: string }) =>
+      updateMayorAppointmentNotes(appointmentId, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mayorAppointments"] });
+      toast({
+        title: "Observações atualizadas",
+        description: "As observações do agendamento foram atualizadas com sucesso.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível atualizar as observações do agendamento.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Function to handle status changes
   const handleStatusChange = async (appointmentId: string, status: AppointmentStatus): Promise<void> => {
     try {
@@ -37,8 +60,19 @@ export function useAppointmentActions() {
     }
   };
 
+  // Function to handle notes changes
+  const handleNotesChange = async (appointmentId: string, notes: string): Promise<void> => {
+    try {
+      await updateNotesMutation.mutateAsync({ appointmentId, notes });
+    } catch (error) {
+      console.error("Error updating appointment notes:", error);
+    }
+  };
+
   return {
     handleStatusChange,
-    isUpdating: updateStatusMutation.isPending
+    handleNotesChange,
+    isUpdatingStatus: updateStatusMutation.isPending,
+    isUpdatingNotes: updateNotesMutation.isPending
   };
 }
