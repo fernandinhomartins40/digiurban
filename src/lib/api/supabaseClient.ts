@@ -73,11 +73,14 @@ export function categorizeError(error: any): ApiError {
 }
 
 // Logging function that we can expand later
-export function logApiError(error: ApiError, context?: any) {
-  console.error(`API Error [${error.category}]:`, error.message, { 
+export function logApiError(error: ApiError | any, context?: any) {
+  // Ensure error is an ApiError
+  const apiError = error.category ? error : categorizeError(error);
+  
+  console.error(`API Error [${apiError.category}]:`, apiError.message, { 
     context, 
-    details: error.details,
-    stack: error.stack
+    details: apiError.details,
+    stack: apiError.stack
   });
 }
 
@@ -152,8 +155,10 @@ export async function apiRequest<T>(
 }
 
 // Helper function to show toast notification for errors
-export function handleApiError(error: ApiError, customMessage?: string) {
-  const message = customMessage || error.message;
+export function handleApiError(error: ApiError | any, customMessage?: string) {
+  // Ensure error is an ApiError
+  const apiError = error.category ? error : categorizeError(error);
+  const message = customMessage || apiError.message;
   
   toast({
     title: "Erro",
@@ -162,7 +167,7 @@ export function handleApiError(error: ApiError, customMessage?: string) {
   });
   
   // Additional actions based on error category
-  if (error.category === ErrorCategory.AUTHENTICATION) {
+  if (apiError.category === ErrorCategory.AUTHENTICATION) {
     // Could trigger a sign-out or refresh token
     console.log('Authentication error detected, consider refreshing session');
   }
@@ -178,23 +183,23 @@ export const api = {
     );
   },
   
-  // Add more API methods as needed
+  // Dashboard metrics API
   dashboard: {
     async getMetrics(startDate?: Date, endDate?: Date, department?: string) {
       return apiRequest(
-        () => {
-          let query = supabase.from('dashboard_metrics');
+        async () => {
+          let query = supabase.from('mayor_dashboard_stats');
           
           if (startDate) {
-            query = query.gte('date', startDate.toISOString());
+            query = query.gte('stat_date', startDate.toISOString().split('T')[0]);
           }
           
           if (endDate) {
-            query = query.lte('date', endDate.toISOString());
+            query = query.lte('stat_date', endDate.toISOString().split('T')[0]);
           }
           
           if (department) {
-            query = query.eq('department', department);
+            query = query.eq('sector_id', department);
           }
           
           return query.select('*');

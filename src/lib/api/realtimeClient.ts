@@ -1,8 +1,10 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
-// Enum for the types of database operations we can subscribe to
+/**
+ * Realtime database operations
+ */
 export enum DatabaseOperation {
   INSERT = 'INSERT',
   UPDATE = 'UPDATE',
@@ -10,119 +12,129 @@ export enum DatabaseOperation {
   ALL = '*'
 }
 
-// Type for our subscription callbacks
-export type SubscriptionCallback<T = any> = (
-  payload: RealtimePostgresChangesPayload<T>
-) => void;
-
-// Interface for our subscription options
+/**
+ * Subscription options for realtime
+ */
 export interface SubscriptionOptions {
+  event?: DatabaseOperation;
   schema?: string;
   filter?: string;
-  event?: DatabaseOperation;
+  filterCallback?: (payload: RealtimePostgresChangesPayload<any>) => boolean;
 }
 
-// Class to manage realtime subscriptions
-class RealtimeManager {
+type RealtimeCallback = (payload: RealtimePostgresChangesPayload<any>) => void;
+
+/**
+ * Helper class to manage Supabase Realtime subscriptions
+ */
+class RealtimeClient {
   private channels: Map<string, RealtimeChannel> = new Map();
-  private subscriptions: Map<string, Set<SubscriptionCallback>> = new Map();
   
-  constructor() {
-    // Setup any global handlers if needed
-    window.addEventListener('beforeunload', () => this.cleanupAll());
+  /**
+   * Create a channel ID based on table and options
+   */
+  private createChannelId(table: string, options: SubscriptionOptions = {}): string {
+    const { event = '*', schema = 'public', filter = '' } = options;
+    return `${schema}:${table}:${event}:${filter}`;
   }
   
-  // Subscribe to changes on a table
-  subscribe<T = any>(
+  /**
+   * Subscribe to table changes
+   */
+  subscribe(
     table: string,
-    callback: SubscriptionCallback<T>,
+    callback: RealtimeCallback,
     options: SubscriptionOptions = {}
   ): () => void {
-    const {
-      schema = 'public',
-      event = DatabaseOperation.ALL,
-      filter
-    } = options;
+    const { event = DatabaseOperation.ALL, schema = 'public', filter = '', filterCallback } = options;
+    const channelId = this.createChannelId(table, options);
     
-    // Create a unique key for this subscription
-    const subscriptionKey = `${schema}:${table}:${event}${filter ? `:${filter}` : ''}`;
-    
-    // Create a new channel if one doesn't exist
-    if (!this.channels.has(subscriptionKey)) {
-      const channel = supabase
-        .channel(`changes:${subscriptionKey}`)
-        .on(
-          'postgres_changes',
-          {
-            event: event === DatabaseOperation.ALL ? '*' : event,
-            schema,
-            table,
-            filter
-          },
-          (payload) => {
-            // Call all callbacks registered for this subscription
-            const callbacks = this.subscriptions.get(subscriptionKey);
-            if (callbacks) {
-              callbacks.forEach(cb => cb(payload));
-            }
-          }
-        )
-        .subscribe();
-      
-      this.channels.set(subscriptionKey, channel);
-      this.subscriptions.set(subscriptionKey, new Set());
+    // Check if we already have this channel
+    if (this.channels.has(channelId)) {
+      console.warn(`Channel ${channelId} already exists. Reusing existing channel.`);
+      return () => this.unsubscribe(channelId);
     }
     
-    // Add this callback to the set of callbacks
-    const callbacks = this.subscriptions.get(subscriptionKey)!;
-    callbacks.add(callback);
+    // Create a new channel
+    const channel = supabase.channel(channelId);
     
-    // Return an unsubscribe function
-    return () => {
-      const callbacks = this.subscriptions.get(subscriptionKey);
-      if (callbacks) {
-        callbacks.delete(callback);
-        
-        // If there are no more callbacks, remove the channel
-        if (callbacks.size === 0) {
-          const channel = this.channels.get(subscriptionKey);
-          if (channel) {
-            supabase.removeChannel(channel);
-            this.channels.delete(subscriptionKey);
-            this.subscriptions.delete(subscriptionKey);
-          }
+    // Configure the channel
+    channel.on(
+      'postgres_changes',
+      {
+        event: event,
+        schema: schema,
+        table: table,
+        filter: filter || undefined
+      },
+      (payload) => {
+        // Apply additional filtering if provided
+        if (filterCallback && !filterCallback(payload)) {
+          return;
         }
+        
+        // Execute the callback
+        callback(payload);
       }
-    };
+    ).subscribe((status) => {
+      if (status !== 'SUBSCRIBED') {
+        console.warn(`Realtime subscription to ${channelId} status: ${status}`);
+      } else {
+        console.log(`Successfully subscribed to ${channelId}`);
+      }
+    });
+    
+    // Store the channel for later reference
+    this.channels.set(channelId, channel);
+    
+    // Return unsubscribe function
+    return () => this.unsubscribe(channelId);
   }
   
-  // Get the number of active subscriptions
-  get subscriptionCount(): number {
-    return this.channels.size;
-  }
-  
-  // Cleanup all subscriptions
-  cleanupAll(): void {
-    for (const channel of this.channels.values()) {
+  /**
+   * Unsubscribe from a channel
+   */
+  unsubscribe(channelId: string): void {
+    const channel = this.channels.get(channelId);
+    
+    if (channel) {
       supabase.removeChannel(channel);
+      this.channels.delete(channelId);
+      console.log(`Unsubscribed from ${channelId}`);
     }
+  }
+  
+  /**
+   * Unsubscribe from all channels
+   */
+  unsubscribeAll(): void {
+    this.channels.forEach((channel, id) => {
+      supabase.removeChannel(channel);
+      console.log(`Unsubscribed from ${id}`);
+    });
     
     this.channels.clear();
-    this.subscriptions.clear();
+  }
+  
+  /**
+   * Enable realtime for a table using RPC
+   * Note: This requires appropriate permissions
+   */
+  async enableRealtimeForTable(table: string): Promise<boolean> {
+    try {
+      // Execute stored procedure to enable realtime
+      const { data, error } = await supabase.rpc('enable_realtime', {
+        table_name: table
+      });
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error(`Failed to enable realtime for ${table}:`, error);
+      return false;
+    }
   }
 }
 
-// Singleton instance of our realtime manager
-export const realtime = new RealtimeManager();
-
-// Helper hook for using realtime
-export function enableRealtimeTables(tables: string[]): Promise<void> {
-  // Enable realtime for the specified tables
-  const promises = tables.map(table => 
-    supabase.rpc('enable_realtime', { table_name: table })
-  );
-  
-  return Promise.all(promises).then(() => {
-    console.log(`Realtime enabled for tables: ${tables.join(', ')}`);
-  });
-}
+// Export a singleton instance
+export const realtime = new RealtimeClient();

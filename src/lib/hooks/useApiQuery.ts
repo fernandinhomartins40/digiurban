@@ -1,7 +1,7 @@
 
 import { useQuery, UseQueryResult, UseQueryOptions } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { ApiResponse, handleApiError } from "../api/supabaseClient";
+import { ApiResponse, handleApiError, ApiError } from "../api/supabaseClient";
 import { trackApiCall } from "../monitoring/performance";
 
 // Enhanced options interface with our custom properties
@@ -51,12 +51,13 @@ export function useApiQuery<TData>(
   };
   
   // Use the React Query hook with our wrapped function
-  const queryResult = useQuery<TData, any>(
+  const queryResult = useQuery<TData, any>({
     queryKey,
-    wrappedQueryFn,
-    {
-      ...queryOptions,
-      onError: (error) => {
+    queryFn: wrappedQueryFn,
+    ...queryOptions,
+    meta: {
+      ...queryOptions.meta,
+      onError: (error: any) => {
         // Call custom error handler if provided
         if (onApiError) {
           onApiError(error);
@@ -66,14 +67,9 @@ export function useApiQuery<TData>(
         if (showToastOnError) {
           handleApiError(error, customErrorMessage);
         }
-        
-        // Call original onError if provided
-        if (queryOptions.onError) {
-          queryOptions.onError(error);
-        }
-      },
+      }
     }
-  );
+  });
   
   // Track refetching state separately from overall loading state
   useEffect(() => {
@@ -87,5 +83,5 @@ export function useApiQuery<TData>(
   return {
     ...queryResult,
     isRefetching,
-  };
+  } as UseQueryResult<TData, any> & { isRefetching: boolean };
 }

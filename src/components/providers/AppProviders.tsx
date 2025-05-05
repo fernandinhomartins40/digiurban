@@ -7,6 +7,7 @@ import { NewChatPanel } from "@/components/chat/NewChatPanel";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ChatProvider } from "@/contexts/ChatContext"; 
 import { createOptimizedQueryClient } from "@/lib/api/queryClient";
+import { SecurityProvider } from "@/components/providers/SecurityProvider";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -20,13 +21,15 @@ export function AppProviders({ children }: AppProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
-        <AuthProvider>
-          <ChatProvider>
-            {children}
-            <Toaster />
-            <NewChatPanel />
-          </ChatProvider>
-        </AuthProvider>
+        <SecurityProvider>
+          <AuthProvider>
+            <ChatProvider>
+              {children}
+              <Toaster />
+              <NewChatPanel />
+            </ChatProvider>
+          </AuthProvider>
+        </SecurityProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

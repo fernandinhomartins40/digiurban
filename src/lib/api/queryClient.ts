@@ -24,7 +24,7 @@ export const createOptimizedQueryClient = () => {
       queries: {
         // Conservative defaults
         staleTime: CACHE_TIMES.REGULAR,
-        cacheTime: CACHE_TIMES.REFERENCE,
+        gcTime: CACHE_TIMES.REFERENCE, // Using gcTime instead of cacheTime which is deprecated
         
         // Optimistic but safe retry settings
         retry: (failureCount, error: any) => {
@@ -52,12 +52,12 @@ export const createOptimizedQueryClient = () => {
         suspense: false,
         
         // Make sure errors are properly structured
-        onError: (error) => {
+        onError: (error: any) => {
           logApiError(error, 'query');
         },
       },
       mutations: {
-        onError: (error) => {
+        onError: (error: any) => {
           logApiError(error, 'mutation');
         },
         

@@ -56,39 +56,37 @@ export function useApiMutation<TData, TVariables = void, TContext = unknown>(
     }
   };
   
-  return useMutation<TData, any, TVariables, TContext>(
-    wrappedMutationFn,
-    {
-      ...mutationOptions,
-      onError: (error, variables, context) => {
-        // Call custom error handler if provided
-        if (onApiError) {
-          onApiError(error);
-        }
-        
-        // Show toast notification if enabled
-        if (showToastOnError) {
-          handleApiError(error, customErrorMessage);
-        }
-        
-        // Call original onError if provided
-        if (mutationOptions.onError) {
-          mutationOptions.onError(error, variables, context);
-        }
-      },
-      onSuccess: (data, variables, context) => {
-        // Invalidate related queries if specified
-        if (invalidateQueries && invalidateQueries.length > 0) {
-          invalidateQueries.forEach(query => {
-            queryClient.invalidateQueries({ queryKey: [query] });
-          });
-        }
-        
-        // Call original onSuccess if provided
-        if (mutationOptions.onSuccess) {
-          mutationOptions.onSuccess(data, variables, context);
-        }
-      },
-    }
-  );
+  return useMutation<TData, any, TVariables, TContext>({
+    mutationFn: wrappedMutationFn,
+    ...mutationOptions,
+    onError: (error, variables, context) => {
+      // Call custom error handler if provided
+      if (onApiError) {
+        onApiError(error);
+      }
+      
+      // Show toast notification if enabled
+      if (showToastOnError) {
+        handleApiError(error, customErrorMessage);
+      }
+      
+      // Call original onError if provided
+      if (mutationOptions.onError) {
+        mutationOptions.onError(error, variables, context);
+      }
+    },
+    onSuccess: (data, variables, context) => {
+      // Invalidate related queries if specified
+      if (invalidateQueries && invalidateQueries.length > 0) {
+        invalidateQueries.forEach(query => {
+          queryClient.invalidateQueries({ queryKey: [query] });
+        });
+      }
+      
+      // Call original onSuccess if provided
+      if (mutationOptions.onSuccess) {
+        mutationOptions.onSuccess(data, variables, context);
+      }
+    },
+  });
 }
