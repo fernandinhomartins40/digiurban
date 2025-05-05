@@ -7,13 +7,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isAdminUser } from "@/types/auth";
 
 export default function CitizenProfile() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
 
-  // Safely access metadata - Account for different user types
-  // We need to handle different user types carefully
-  const userMetadata = isAdminUser(user) 
-    ? (user?.user_metadata || {})  // Try to access user_metadata if exists
-    : (user?.user_metadata || {}); // For citizen users
+  // Safely access metadata from the session object which contains user_metadata
+  // This is different from the user object in our custom User type
+  const userMetadata = session?.user?.user_metadata || {};
   
   return (
     <div className="container mx-auto py-6 space-y-6">
