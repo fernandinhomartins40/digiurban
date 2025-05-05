@@ -14,11 +14,15 @@ export const getGabineteItem = (): SidebarItemProps => ({
     },
     {
       title: "Agendamentos",
-      path: "/admin/gabinete/agendamentos",
+      path: "/admin/gabinete/agenda",
     },
     {
       title: "Solicitações Diretas",
       path: "/admin/gabinete/solicitacoes",
+    },
+    {
+      title: "Todas as Solicitações",
+      path: "/admin/gabinete/todas-solicitacoes",
     },
     {
       title: "Políticas Públicas",

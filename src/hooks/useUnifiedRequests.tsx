@@ -86,11 +86,21 @@ export function useUnifiedRequests() {
       if (newRequest) {
         // Refresh the list
         fetchRequests();
+        
+        toast({
+          title: "Solicitação criada",
+          description: "Sua solicitação foi criada com sucesso",
+        });
       }
       
       return newRequest;
     } catch (error) {
       console.error("Error creating request:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar a solicitação",
+        variant: "destructive",
+      });
       return null;
     } finally {
       setIsLoading(false);
@@ -101,7 +111,11 @@ export function useUnifiedRequests() {
   const handleUpdateRequestStatus = async (requestId: string, status: RequestStatus) => {
     setIsLoading(true);
     try {
-      const success = await updateUnifiedRequest(requestId, { status });
+      // Fix: Pass an object with id and status properties to match UpdateRequestDTO
+      const success = await updateUnifiedRequest(requestId, { 
+        id: requestId, 
+        status 
+      });
       
       if (success) {
         // If updating the currently selected request
@@ -109,18 +123,28 @@ export function useUnifiedRequests() {
           setSelectedRequest({
             ...selectedRequest,
             status,
-            updatedAt: new Date(),
-            completedAt: status === 'completed' ? new Date() : selectedRequest.completedAt
+            updated_at: new Date(),
+            completed_at: status === 'completed' ? new Date() : selectedRequest.completed_at
           });
         }
         
         // Refresh the list
         fetchRequests();
+        
+        toast({
+          title: "Status atualizado",
+          description: `O status da solicitação foi atualizado para ${status}`,
+        });
       }
       
       return success;
     } catch (error) {
       console.error("Error updating request status:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status da solicitação",
+        variant: "destructive",
+      });
       return false;
     } finally {
       setIsLoading(false);
@@ -142,14 +166,26 @@ export function useUnifiedRequests() {
           setSelectedRequest({
             ...selectedRequest,
             status: 'forwarded',
-            updatedAt: new Date()
+            updated_at: new Date(),
+            target_department: targetDepartment,
+            previous_department: selectedRequest.target_department
           });
         }
+        
+        toast({
+          title: "Solicitação encaminhada",
+          description: `A solicitação foi encaminhada para ${targetDepartment}`,
+        });
       }
       
       return success;
     } catch (error) {
       console.error("Error forwarding request:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível encaminhar a solicitação",
+        variant: "destructive",
+      });
       return false;
     } finally {
       setIsLoading(false);
@@ -167,11 +203,21 @@ export function useUnifiedRequests() {
         if (selectedRequest && selectedRequest.id === requestId) {
           await fetchRequestById(requestId);
         }
+        
+        toast({
+          title: "Comentário adicionado",
+          description: "Seu comentário foi adicionado com sucesso",
+        });
       }
       
       return success;
     } catch (error) {
       console.error("Error adding comment:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível adicionar o comentário",
+        variant: "destructive",
+      });
       return false;
     } finally {
       setIsLoading(false);
@@ -189,11 +235,21 @@ export function useUnifiedRequests() {
         if (selectedRequest && selectedRequest.id === requestId) {
           await fetchRequestById(requestId);
         }
+        
+        toast({
+          title: "Arquivo anexado",
+          description: "O arquivo foi anexado com sucesso",
+        });
       }
       
       return success;
     } catch (error) {
       console.error("Error uploading attachment:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível anexar o arquivo",
+        variant: "destructive",
+      });
       return false;
     } finally {
       setIsLoading(false);

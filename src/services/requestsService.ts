@@ -1,34 +1,27 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { 
-  UnifiedRequest, 
-  RequestComment, 
-  RequestAttachment, 
-  RequestStatusChange,
+import {
+  UnifiedRequest,
   CreateRequestDTO,
   UpdateRequestDTO,
   RequestStatus,
-  PriorityLevel,
-  RequesterType
+  RequesterType,
+  AuthorType
 } from "@/types/requests";
 
-// Get all requests with filters
-export async function getUnifiedRequests(
+/**
+ * Fetch unified requests with optional filtering
+ */
+export const getUnifiedRequests = async (
   departmentFilter?: string,
   statusFilter?: RequestStatus,
   requesterTypeFilter?: RequesterType,
   searchTerm?: string
-): Promise<UnifiedRequest[]> {
+): Promise<UnifiedRequest[]> => {
   try {
     let query = supabase
-      .from("unified_requests")
-      .select(`
-        *,
-        request_comments(*),
-        request_attachments(*),
-        request_status_history(*)
-      `);
+      .from('unified_requests')
+      .select('*');
     
     // Apply filters
     if (departmentFilter) {
@@ -47,456 +40,301 @@ export async function getUnifiedRequests(
       query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,protocol_number.ilike.%${searchTerm}%`);
     }
     
-    // Sort by creation date, newest first
-    query = query.order("created_at", { ascending: false });
+    // Order by most recent first
+    query = query.order('created_at', { ascending: false });
     
     const { data, error } = await query;
-
-    if (error) throw error;
-
-    return (data || []).map(mapDbRequestToUnifiedRequest);
-  } catch (error: any) {
-    console.error("Error fetching unified requests:", error.message);
-    toast({
-      title: "Erro ao carregar solicitações",
-      description: error.message,
-      variant: "destructive",
-    });
-    return [];
-  }
-}
-
-// Get requests for the current logged in user (citizen or department)
-export async function getMyRequests(): Promise<UnifiedRequest[]> {
-  try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
     
-    if (userError) throw userError;
-    
-    const userId = userData.user?.id;
-    if (!userId) throw new Error("Usuário não autenticado");
-    
-    // Check if user is an admin
-    const { data: adminData } = await supabase
-      .from("admin_profiles")
-      .select("department")
-      .eq("id", userId)
-      .single();
-    
-    let query = supabase
-      .from("unified_requests")
-      .select(`
-        *,
-        request_comments(*),
-        request_attachments(*),
-        request_status_history(*)
-      `);
-    
-    if (adminData?.department) {
-      // For admin users, get requests for their department
-      query = query.eq('target_department', adminData.department);
-    } else {
-      // For citizen users, get their own requests
-      query = query.or(`requester_id.eq.${userId},citizen_id.eq.${userId}`);
+    if (error) {
+      console.error('Error fetching unified requests:', error);
+      return [];
     }
     
-    // Sort by creation date, newest first
-    query = query.order("created_at", { ascending: false });
-    
-    const { data, error } = await query;
-
-    if (error) throw error;
-
-    return (data || []).map(mapDbRequestToUnifiedRequest);
-  } catch (error: any) {
-    console.error("Error fetching my requests:", error.message);
-    toast({
-      title: "Erro ao carregar solicitações",
-      description: error.message,
-      variant: "destructive",
-    });
+    return data as UnifiedRequest[];
+  } catch (error) {
+    console.error('Exception fetching unified requests:', error);
     return [];
   }
-}
+};
 
-// Get a specific request by ID
-export async function getRequestById(requestId: string): Promise<UnifiedRequest | null> {
+/**
+ * Fetch a single request by ID
+ */
+export const getRequestById = async (id: string): Promise<UnifiedRequest | null> => {
   try {
     const { data, error } = await supabase
-      .from("unified_requests")
+      .from('unified_requests')
       .select(`
         *,
         request_comments(*),
         request_attachments(*),
         request_status_history(*)
       `)
-      .eq("id", requestId)
-      .single();
-
-    if (error) throw error;
-
-    return mapDbRequestToUnifiedRequest(data);
-  } catch (error: any) {
-    console.error("Error fetching request by ID:", error.message);
-    toast({
-      title: "Erro ao carregar solicitação",
-      description: error.message,
-      variant: "destructive",
-    });
-    return null;
-  }
-}
-
-// Create a new unified request
-export async function createUnifiedRequest(request: CreateRequestDTO): Promise<UnifiedRequest | null> {
-  try {
-    const { data, error } = await supabase
-      .from("unified_requests")
-      .insert({
-        title: request.title,
-        description: request.description,
-        requester_type: request.requesterType,
-        requester_id: request.requesterId,
-        target_department: request.targetDepartment,
-        citizen_id: request.citizenId,
-        priority: request.priority,
-        due_date: request.dueDate,
-        status: 'open', // Default status
-        protocol_number: '' // Will be auto-generated by the DB trigger
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    toast({
-      title: "Solicitação criada",
-      description: `Solicitação ${data.protocol_number} criada com sucesso!`,
-    });
-
-    return mapDbRequestToUnifiedRequest(data);
-  } catch (error: any) {
-    console.error("Error creating unified request:", error.message);
-    toast({
-      title: "Erro ao criar solicitação",
-      description: error.message,
-      variant: "destructive",
-    });
-    return null;
-  }
-}
-
-// Update an existing request
-export async function updateUnifiedRequest(requestId: string, updates: UpdateRequestDTO): Promise<boolean> {
-  try {
-    const { data: existingRequest, error: fetchError } = await supabase
-      .from("unified_requests")
-      .select("status")
-      .eq("id", requestId)
+      .eq('id', id)
       .single();
     
-    if (fetchError) throw fetchError;
-    
-    // If status is changing, add entry to status history
-    if (updates.status && updates.status !== existingRequest.status) {
-      const { error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      
-      // Get current user
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-      
-      // Add status history entry
-      await supabase
-        .from("request_status_history")
-        .insert({
-          request_id: requestId,
-          previous_status: existingRequest.status,
-          new_status: updates.status,
-          changed_by: userId,
-          comments: "Status atualizado"
-        });
-      
-      // If status is 'completed', set completedAt date
-      if (updates.status === 'completed') {
-        updates = {
-          ...updates,
-          completedAt: new Date().toISOString()
-        };
-      }
+    if (error) {
+      console.error('Error fetching request by ID:', error);
+      return null;
     }
     
-    // Update the request
-    const updateValues = {
-      ...(updates.title && { title: updates.title }),
-      ...(updates.description && { description: updates.description }),
-      ...(updates.targetDepartment && { target_department: updates.targetDepartment }),
-      ...(updates.priority && { priority: updates.priority }),
-      ...(updates.status && { status: updates.status }),
-      ...(updates.dueDate && { due_date: updates.dueDate }),
-      ...(updates.status === 'completed' && { completed_at: new Date().toISOString() }),
-      updated_at: new Date().toISOString()
-    };
-
-    const { error } = await supabase
-      .from("unified_requests")
-      .update(updateValues)
-      .eq("id", requestId);
-
-    if (error) throw error;
-
-    toast({
-      title: "Solicitação atualizada",
-      description: "Solicitação atualizada com sucesso!",
-    });
-
-    return true;
-  } catch (error: any) {
-    console.error("Error updating unified request:", error.message);
-    toast({
-      title: "Erro ao atualizar solicitação",
-      description: error.message,
-      variant: "destructive",
-    });
-    return false;
+    // Format the data to match the UnifiedRequest interface
+    return {
+      ...data,
+      comments: data.request_comments,
+      attachments: data.request_attachments,
+      status_history: data.request_status_history
+    } as UnifiedRequest;
+  } catch (error) {
+    console.error('Exception fetching request by ID:', error);
+    return null;
   }
-}
+};
 
-// Forward a request to another department
-export async function forwardRequestToDepartment(
-  requestId: string, 
-  targetDepartment: string, 
-  comments?: string
-): Promise<boolean> {
+/**
+ * Create a new unified request
+ */
+export const createUnifiedRequest = async (requestData: CreateRequestDTO): Promise<UnifiedRequest | null> => {
   try {
-    const { data: requestData, error: requestError } = await supabase
-      .from("unified_requests")
-      .select("*")
-      .eq("id", requestId)
-      .single();
-    
-    if (requestError) throw requestError;
-    
-    // Get current user
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    
-    // Create a new request as a forwarded version
+    // Insert into unified_requests table
     const { data, error } = await supabase
-      .from("unified_requests")
+      .from('unified_requests')
       .insert({
         title: requestData.title,
         description: requestData.description,
-        requester_type: 'department',
-        requester_id: userId,
-        target_department: targetDepartment,
-        citizen_id: requestData.citizen_id,
-        priority: requestData.priority,
-        due_date: requestData.due_date,
-        status: 'open',
-        original_request_id: requestId,
-        previous_department: requestData.target_department
+        requester_type: requestData.requester_type,
+        requester_id: requestData.requester_id,
+        target_department: requestData.target_department,
+        citizen_id: requestData.citizen_id || null,
+        priority: requestData.priority || 'normal',
+        due_date: requestData.due_date || null,
+        status: 'open'
       })
       .select()
       .single();
     
-    if (error) throw error;
-    
-    // Update the original request status to 'forwarded'
-    await updateUnifiedRequest(requestId, { status: 'forwarded' });
-    
-    // Add a comment if provided
-    if (comments) {
-      await supabase
-        .from("request_comments")
-        .insert({
-          request_id: data.id,
-          author_id: userId,
-          author_type: 'department',
-          comment_text: comments,
-          is_internal: true
-        });
+    if (error) {
+      console.error('Error creating unified request:', error);
+      return null;
     }
     
-    toast({
-      title: "Solicitação encaminhada",
-      description: `Solicitação encaminhada para ${targetDepartment} com sucesso!`,
-    });
+    // Create initial status history entry
+    await supabase
+      .from('request_status_history')
+      .insert({
+        request_id: data.id,
+        previous_status: 'open',
+        new_status: 'open',
+        changed_by: requestData.requester_id,
+        comments: 'Solicitação criada'
+      });
     
-    return true;
-  } catch (error: any) {
-    console.error("Error forwarding request:", error.message);
-    toast({
-      title: "Erro ao encaminhar solicitação",
-      description: error.message,
-      variant: "destructive",
-    });
-    return false;
+    return data as UnifiedRequest;
+  } catch (error) {
+    console.error('Exception creating unified request:', error);
+    return null;
   }
-}
+};
 
-// Add a comment to a request
-export async function addCommentToRequest(
+/**
+ * Update a request's status or other properties
+ */
+export const updateUnifiedRequest = async (
   requestId: string,
-  commentText: string,
-  isInternal: boolean = false
-): Promise<boolean> {
+  updateData: UpdateRequestDTO
+): Promise<boolean> => {
   try {
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+    // Fix: add the id to updateData
+    const dataToUpdate = {
+      ...updateData,
+      id: requestId, // Adding the ID explicitly to match UpdateRequestDTO
+      updated_at: new Date().toISOString()
+    };
     
-    if (!userId) throw new Error("Usuário não autenticado");
-    
-    // Determine author type based on profile
-    let authorType: AuthorType = 'citizen';
-    
-    const { data: adminData } = await supabase
-      .from("admin_profiles")
-      .select("role, department")
-      .eq("id", userId)
-      .maybeSingle();
-    
-    if (adminData) {
-      authorType = adminData.role === 'prefeito' ? 'mayor' : 'department';
+    // Add completed_at if status is being updated to completed
+    if (updateData.status === 'completed') {
+      dataToUpdate.completed_at = new Date().toISOString();
     }
     
     const { error } = await supabase
-      .from("request_comments")
+      .from('unified_requests')
+      .update(dataToUpdate)
+      .eq('id', requestId);
+    
+    if (error) {
+      console.error('Error updating unified request:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Exception updating unified request:', error);
+    return false;
+  }
+};
+
+/**
+ * Forward a request to another department
+ */
+export const forwardRequestToDepartment = async (
+  requestId: string,
+  targetDepartment: string,
+  comments?: string
+): Promise<boolean> => {
+  try {
+    // Get current request to save its department as previous_department
+    const { data: currentRequest, error: fetchError } = await supabase
+      .from('unified_requests')
+      .select('target_department, status')
+      .eq('id', requestId)
+      .single();
+    
+    if (fetchError) {
+      console.error('Error fetching request for forwarding:', fetchError);
+      return false;
+    }
+    
+    // Update the request with new department and forwarded status
+    const { error: updateError } = await supabase
+      .from('unified_requests')
+      .update({
+        target_department: targetDepartment,
+        previous_department: currentRequest.target_department,
+        status: 'forwarded',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', requestId);
+    
+    if (updateError) {
+      console.error('Error forwarding request:', updateError);
+      return false;
+    }
+    
+    // Add status history entry
+    const { error: historyError } = await supabase
+      .from('request_status_history')
       .insert({
         request_id: requestId,
-        author_id: userId,
+        previous_status: currentRequest.status,
+        new_status: 'forwarded',
+        changed_by: (await supabase.auth.getUser()).data.user?.id || '',
+        comments: comments || `Encaminhado para ${targetDepartment}`
+      });
+    
+    if (historyError) {
+      console.error('Error adding status history for forwarding:', historyError);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Exception forwarding request:', error);
+    return false;
+  }
+};
+
+/**
+ * Add a comment to a request
+ */
+export const addCommentToRequest = async (
+  requestId: string,
+  commentText: string,
+  isInternal: boolean = false
+): Promise<boolean> => {
+  try {
+    const user = (await supabase.auth.getUser()).data.user;
+    
+    if (!user) {
+      console.error('No authenticated user found');
+      return false;
+    }
+    
+    // Determine author type based on current user
+    let authorType: AuthorType;
+    
+    // This is a simplified example - in a real app, you'd determine this from user data
+    const { data: userData, error: userError } = await supabase
+      .from('admin_profiles')
+      .select('department, role')
+      .eq('id', user.id)
+      .single();
+    
+    if (userError || !userData) {
+      // If not found in admin_profiles, assume it's a citizen
+      authorType = 'citizen';
+    } else if (userData.role === 'prefeito') {
+      authorType = 'mayor';
+    } else {
+      authorType = 'department';
+    }
+    
+    const { error } = await supabase
+      .from('request_comments')
+      .insert({
+        request_id: requestId,
+        author_id: user.id,
         author_type: authorType,
         comment_text: commentText,
         is_internal: isInternal
       });
     
-    if (error) throw error;
-    
-    toast({
-      title: "Comentário adicionado",
-      description: "Seu comentário foi adicionado com sucesso.",
-    });
+    if (error) {
+      console.error('Error adding comment to request:', error);
+      return false;
+    }
     
     return true;
-  } catch (error: any) {
-    console.error("Error adding comment:", error.message);
-    toast({
-      title: "Erro ao adicionar comentário",
-      description: error.message,
-      variant: "destructive",
-    });
+  } catch (error) {
+    console.error('Exception adding comment to request:', error);
     return false;
   }
-}
+};
 
-// Upload an attachment to a request
-export async function uploadRequestAttachment(
+/**
+ * Upload an attachment to a request
+ */
+export const uploadRequestAttachment = async (
   requestId: string,
   file: File
-): Promise<boolean> {
+): Promise<boolean> => {
   try {
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+    const user = (await supabase.auth.getUser()).data.user;
     
-    if (!userId) throw new Error("Usuário não autenticado");
+    if (!user) {
+      console.error('No authenticated user found');
+      return false;
+    }
     
-    // Upload file to Supabase Storage
-    const filePath = `request-attachments/${requestId}/${Date.now()}_${file.name}`;
+    // Upload file to storage
+    const filePath = `requests/${requestId}/${Date.now()}_${file.name}`;
     const { error: uploadError } = await supabase.storage
-      .from('request-attachments')
+      .from('attachments')
       .upload(filePath, file);
     
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Error uploading file:', uploadError);
+      return false;
+    }
     
-    // Add record to request_attachments table
-    const { error } = await supabase
-      .from("request_attachments")
+    // Create attachment record
+    const { error: recordError } = await supabase
+      .from('request_attachments')
       .insert({
         request_id: requestId,
         file_name: file.name,
         file_path: filePath,
         file_type: file.type,
         file_size: file.size,
-        uploaded_by: userId
+        uploaded_by: user.id
       });
     
-    if (error) throw error;
-    
-    toast({
-      title: "Arquivo anexado",
-      description: "Arquivo anexado com sucesso.",
-    });
+    if (recordError) {
+      console.error('Error creating attachment record:', recordError);
+      return false;
+    }
     
     return true;
-  } catch (error: any) {
-    console.error("Error uploading attachment:", error.message);
-    toast({
-      title: "Erro ao anexar arquivo",
-      description: error.message,
-      variant: "destructive",
-    });
+  } catch (error) {
+    console.error('Exception uploading attachment:', error);
     return false;
   }
-}
-
-// Helper function to convert database rows to frontend types
-function mapDbRequestToUnifiedRequest(data: any): UnifiedRequest {
-  return {
-    id: data.id,
-    protocolNumber: data.protocol_number,
-    title: data.title,
-    description: data.description,
-    createdAt: new Date(data.created_at),
-    updatedAt: new Date(data.updated_at),
-    
-    requesterType: data.requester_type,
-    requesterId: data.requester_id,
-    targetDepartment: data.target_department,
-    
-    citizenId: data.citizen_id,
-    
-    status: data.status,
-    priority: data.priority,
-    
-    dueDate: data.due_date ? new Date(data.due_date) : undefined,
-    completedAt: data.completed_at ? new Date(data.completed_at) : undefined,
-    
-    originalRequestId: data.original_request_id,
-    previousDepartment: data.previous_department,
-    
-    // Map related collections if they exist
-    comments: data.request_comments ? 
-      data.request_comments.map((comment: any) => ({
-        id: comment.id,
-        requestId: comment.request_id,
-        authorId: comment.author_id,
-        authorType: comment.author_type,
-        commentText: comment.comment_text,
-        isInternal: comment.is_internal,
-        createdAt: new Date(comment.created_at)
-      })) : [],
-      
-    attachments: data.request_attachments ? 
-      data.request_attachments.map((attachment: any) => ({
-        id: attachment.id,
-        requestId: attachment.request_id,
-        fileName: attachment.file_name,
-        filePath: attachment.file_path,
-        fileType: attachment.file_type,
-        fileSize: attachment.file_size,
-        uploadedBy: attachment.uploaded_by,
-        uploadedAt: new Date(attachment.uploaded_at)
-      })) : [],
-      
-    statusHistory: data.request_status_history ? 
-      data.request_status_history.map((history: any) => ({
-        id: history.id,
-        requestId: history.request_id,
-        previousStatus: history.previous_status,
-        newStatus: history.new_status,
-        changedBy: history.changed_by,
-        comments: history.comments,
-        createdAt: new Date(history.created_at)
-      })) : []
-  };
-}
+};
