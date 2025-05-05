@@ -1,3 +1,4 @@
+
 import React, { useState, Suspense } from "react";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Download, Loader2 } from "lucide-react";
+import { CalendarIcon, Download, Loader2, AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, subDays, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -45,7 +46,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 
 // Dados de exemplo para os gráficos
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
@@ -107,8 +107,7 @@ const DashboardContent = ({
   const { data: dashboardStats, isLoading, error } = useQuery({
     queryKey: ["mayorDashboardStats", startDate, endDate, selectedSector],
     queryFn: () => getDashboardStats(startDate, endDate, selectedSector),
-    suspense: false, // Disable suspense mode
-    useErrorBoundary: false,
+    useErrorBoundary: false
   });
 
   if (isLoading) {
@@ -500,14 +499,14 @@ export default function MayorDashboard() {
         </div>
       </div>
 
-      {/* Use React.Suspense to handle loading states */}
-      <React.Suspense fallback={<DashboardLoading />}>
+      {/* Render the dashboard content with proper fallback UI */}
+      <Suspense fallback={<DashboardLoading />}>
         <DashboardContent 
           startDate={startDate} 
           endDate={endDate} 
           selectedSector={selectedSector} 
         />
-      </React.Suspense>
+      </Suspense>
     </div>
   );
 }
