@@ -1,4 +1,5 @@
-import React, { useState, Suspense } from "react";
+
+import React, { useState, useMemo } from "react";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { getDashboardStats } from "@/services/mayorOffice/dashboardService";
@@ -46,7 +47,7 @@ import {
 } from "@/components/ui/popover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Dados de exemplo para os gráficos
+// Move static data outside of component to prevent re-creation on each render
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 const performanceData = [
@@ -92,6 +93,282 @@ const DashboardError = ({ error }: { error: Error }) => (
   </Alert>
 );
 
+// Separate KPIs component to improve rendering performance
+const KPICards = React.memo(() => (
+  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">
+          Solicitações
+        </CardTitle>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          className="h-4 w-4 text-muted-foreground"
+        >
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 1 0 7.75" />
+        </svg>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">231</div>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            +12% em relação ao mês anterior
+          </p>
+          <div className="text-sm font-medium text-green-600">↑ 12%</div>
+        </div>
+      </CardContent>
+    </Card>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">
+          Tempo Médio de Resposta
+        </CardTitle>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          className="h-4 w-4 text-muted-foreground"
+        >
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">2.4 dias</div>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            -0.5 dias em relação ao mês anterior
+          </p>
+          <div className="text-sm font-medium text-green-600">↓ 19%</div>
+        </div>
+      </CardContent>
+    </Card>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">
+          Taxa de Resolução
+        </CardTitle>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          className="h-4 w-4 text-muted-foreground"
+        >
+          <rect width="20" height="14" x="2" y="5" rx="2" />
+          <path d="M2 10h20" />
+        </svg>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">78%</div>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            +3% em relação ao mês anterior
+          </p>
+          <div className="text-sm font-medium text-green-600">↑ 3%</div>
+        </div>
+      </CardContent>
+    </Card>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">
+          Satisfação
+        </CardTitle>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          className="h-4 w-4 text-muted-foreground"
+        >
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">4.6/5</div>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            +0.2 em relação ao mês anterior
+          </p>
+          <div className="text-sm font-medium text-green-600">↑ 4%</div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+));
+
+// Performance Chart component
+const PerformanceChart = React.memo(() => (
+  <Card className="col-span-1">
+    <CardHeader>
+      <CardTitle>Desempenho Mensal</CardTitle>
+      <CardDescription>
+        Visão geral do volume de atividades ao longo dos meses
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="px-2">
+      <div className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={performanceData}
+            margin={{
+              top: 5,
+              right: 30,
+              left: 20,
+              bottom: 5,
+            }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="solicitacoes"
+              stroke="#8884d8"
+              activeDot={{ r: 8 }}
+            />
+            <Line type="monotone" dataKey="processos" stroke="#82ca9d" />
+            <Line type="monotone" dataKey="atendimentos" stroke="#ffc658" />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </CardContent>
+  </Card>
+));
+
+// Department Requests Chart component
+const DepartmentRequestsChart = React.memo(() => (
+  <Card className="col-span-1">
+    <CardHeader>
+      <CardTitle>Solicitações por Departamento</CardTitle>
+      <CardDescription>
+        Distribuição das solicitações por departamento
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="px-2">
+      <div className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={departmentRequests}
+            margin={{
+              top: 5,
+              right: 30,
+              left: 20,
+              bottom: 5,
+            }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="valor" fill="#8884d8" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </CardContent>
+  </Card>
+));
+
+// Status Chart component
+const StatusChart = React.memo(() => (
+  <Card className="col-span-1">
+    <CardHeader>
+      <CardTitle>Status das Solicitações</CardTitle>
+      <CardDescription>
+        Visão geral do status atual das solicitações
+      </CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="h-[300px] flex justify-center">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={statusData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {statusData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    </CardContent>
+  </Card>
+));
+
+// Activities component
+const RecentActivities = React.memo(() => (
+  <Card className="col-span-1 md:col-span-2">
+    <CardHeader>
+      <CardTitle>Atividades Recentes</CardTitle>
+      <CardDescription>
+        Últimas atividades registradas no gabinete
+      </CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-4">
+        {[1, 2, 3, 4].map((_, i) => (
+          <div key={i} className="flex items-center">
+            <div className={cn(
+              "mr-2 h-2 w-2 rounded-full",
+              i === 0 ? "bg-red-500" : i === 1 ? "bg-yellow-500" : "bg-green-500"
+            )} />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-medium leading-none">
+                {i === 0 && "Nova solicitação urgente recebida"}
+                {i === 1 && "Reunião agendada com Secretário de Obras"}
+                {i === 2 && "Política pública de educação atualizada"}
+                {i === 3 && "Solicitação #2340 foi finalizada"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                há {i === 0 ? "5 minutos" : i === 1 ? "2 horas" : i === 2 ? "5 horas" : "1 dia"}
+              </p>
+            </div>
+            <div>
+              <Button variant="ghost" size="sm">
+                Ver
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </CardContent>
+    <CardFooter>
+      <Button variant="outline" className="w-full">
+        Ver todas as atividades
+      </Button>
+    </CardFooter>
+  </Card>
+));
+
 // Dashboard content component that handles the actual dashboard rendering
 const DashboardContent = ({ 
   startDate, 
@@ -118,272 +395,16 @@ const DashboardContent = ({
 
   return (
     <>
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Solicitações
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 1 0 7.75" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">231</div>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                +12% em relação ao mês anterior
-              </p>
-              <div className="text-sm font-medium text-green-600">↑ 12%</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Tempo Médio de Resposta
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2.4 dias</div>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                -0.5 dias em relação ao mês anterior
-              </p>
-              <div className="text-sm font-medium text-green-600">↓ 19%</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Taxa de Resolução
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <rect width="20" height="14" x="2" y="5" rx="2" />
-              <path d="M2 10h20" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">78%</div>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                +3% em relação ao mês anterior
-              </p>
-              <div className="text-sm font-medium text-green-600">↑ 3%</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Satisfação
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">4.6/5</div>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">
-                +0.2 em relação ao mês anterior
-              </p>
-              <div className="text-sm font-medium text-green-600">↑ 4%</div>
-            </div>
-          </CardContent>
-        </Card>
+      <KPICards />
+      
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 mt-4">
+        <PerformanceChart />
+        <DepartmentRequestsChart />
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Desempenho Mensal</CardTitle>
-            <CardDescription>
-              Visão geral do volume de atividades ao longo dos meses
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-2">
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={performanceData}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="solicitacoes"
-                    stroke="#8884d8"
-                    activeDot={{ r: 8 }}
-                  />
-                  <Line type="monotone" dataKey="processos" stroke="#82ca9d" />
-                  <Line type="monotone" dataKey="atendimentos" stroke="#ffc658" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Solicitações por Departamento</CardTitle>
-            <CardDescription>
-              Distribuição das solicitações por departamento
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-2">
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={departmentRequests}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="valor" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Status and Activities */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Status das Solicitações</CardTitle>
-            <CardDescription>
-              Visão geral do status atual das solicitações
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] flex justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-1 md:col-span-2">
-          <CardHeader>
-            <CardTitle>Atividades Recentes</CardTitle>
-            <CardDescription>
-              Últimas atividades registradas no gabinete
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3, 4].map((_, i) => (
-                <div key={i} className="flex items-center">
-                  <div className={cn(
-                    "mr-2 h-2 w-2 rounded-full",
-                    i === 0 ? "bg-red-500" : i === 1 ? "bg-yellow-500" : "bg-green-500"
-                  )} />
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {i === 0 && "Nova solicitação urgente recebida"}
-                      {i === 1 && "Reunião agendada com Secretário de Obras"}
-                      {i === 2 && "Política pública de educação atualizada"}
-                      {i === 3 && "Solicitação #2340 foi finalizada"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      há {i === 0 ? "5 minutos" : i === 1 ? "2 horas" : i === 2 ? "5 horas" : "1 dia"}
-                    </p>
-                  </div>
-                  <div>
-                    <Button variant="ghost" size="sm">
-                      Ver
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full">
-              Ver todas as atividades
-            </Button>
-          </CardFooter>
-        </Card>
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-3 mt-4">
+        <StatusChart />
+        <RecentActivities />
       </div>
     </>
   );
@@ -395,8 +416,8 @@ export default function MayorDashboard() {
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [selectedSector, setSelectedSector] = useState<string | undefined>(undefined);
 
-  // Manipuladores para alterações de filtro
-  const handleDateRangeChange = (range: "7d" | "30d" | "90d" | "custom") => {
+  // Memoize date calculations to prevent unnecessary recalculations
+  const handleDateRangeChange = useMemo(() => (range: "7d" | "30d" | "90d" | "custom") => {
     setDateRange(range);
     if (range === "7d") {
       setStartDate(subDays(new Date(), 7));
@@ -408,7 +429,7 @@ export default function MayorDashboard() {
       setStartDate(subDays(new Date(), 90));
       setEndDate(new Date());
     }
-  };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -497,14 +518,11 @@ export default function MayorDashboard() {
         </div>
       </div>
 
-      {/* Render the dashboard content with proper fallback UI */}
-      <Suspense fallback={<DashboardLoading />}>
-        <DashboardContent 
-          startDate={startDate} 
-          endDate={endDate} 
-          selectedSector={selectedSector} 
-        />
-      </Suspense>
+      <DashboardContent 
+        startDate={startDate} 
+        endDate={endDate} 
+        selectedSector={selectedSector} 
+      />
     </div>
   );
 }

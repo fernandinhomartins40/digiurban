@@ -1,5 +1,7 @@
 
 import { Appointment, AppointmentStatus } from "@/types/mayorOffice";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 // Mock data for development
 const mockAppointments: Appointment[] = [
@@ -52,75 +54,105 @@ const mockAppointments: Appointment[] = [
   }
 ];
 
-// Mock service for mayor appointments
+// Improved service for mayor appointments with proper error handling
 export async function getMayorAppointments(
   status?: AppointmentStatus,
   searchTerm?: string
 ): Promise<Appointment[]> {
-  // In a real app, this would call an API with query parameters
-  
-  // For now, simulate filtering with our mock data
-  let filteredAppointments = [...mockAppointments];
-  
-  // Filter by status if provided
-  if (status) {
-    filteredAppointments = filteredAppointments.filter(
-      appointment => appointment.status === status
-    );
+  try {
+    // In a real app, this would call an API with query parameters
+    // For now, simulate filtering with our mock data
+    let filteredAppointments = [...mockAppointments];
+    
+    // Filter by status if provided
+    if (status) {
+      filteredAppointments = filteredAppointments.filter(
+        appointment => appointment.status === status
+      );
+    }
+    
+    // Filter by search term if provided
+    if (searchTerm && searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase().trim();
+      filteredAppointments = filteredAppointments.filter(
+        appointment => 
+          appointment.requesterName.toLowerCase().includes(term) || 
+          appointment.subject.toLowerCase().includes(term)
+      );
+    }
+    
+    return filteredAppointments;
+  } catch (error) {
+    console.error("Error fetching mayor appointments:", error);
+    toast({
+      title: "Erro ao carregar agendamentos",
+      description: "Não foi possível buscar os agendamentos. Tente novamente mais tarde.",
+      variant: "destructive",
+    });
+    return [];
   }
-  
-  // Filter by search term if provided
-  if (searchTerm && searchTerm.trim() !== "") {
-    const term = searchTerm.toLowerCase().trim();
-    filteredAppointments = filteredAppointments.filter(
-      appointment => 
-        appointment.requesterName.toLowerCase().includes(term) || 
-        appointment.subject.toLowerCase().includes(term)
-    );
-  }
-  
-  return filteredAppointments;
 }
 
 export async function updateMayorAppointmentStatus(
   appointmentId: string,
   status: AppointmentStatus
-): Promise<Appointment> {
-  // This would typically call an API to update an appointment's status
-  // For now, just mocking a response
-  return {
-    id: appointmentId,
-    status,
-    subject: "Mock Appointment",
-    requesterName: "Mock User",
-    requesterEmail: "mock@example.com",
-    requestedDate: new Date(),
-    requestedTime: "10:00",
-    durationMinutes: 30,
-    priority: "normal",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+): Promise<Appointment | null> {
+  try {
+    // Find the appointment in the mock data
+    const appointmentIndex = mockAppointments.findIndex(a => a.id === appointmentId);
+    
+    if (appointmentIndex === -1) {
+      throw new Error("Appointment not found");
+    }
+    
+    // Update the appointment status
+    mockAppointments[appointmentIndex] = {
+      ...mockAppointments[appointmentIndex],
+      status,
+      updatedAt: new Date()
+    };
+    
+    // Return the updated appointment
+    return mockAppointments[appointmentIndex];
+  } catch (error) {
+    console.error("Error updating appointment status:", error);
+    toast({
+      title: "Erro ao atualizar status",
+      description: "Não foi possível atualizar o status do agendamento.",
+      variant: "destructive",
+    });
+    return null;
+  }
 }
 
 export async function updateMayorAppointmentNotes(
   appointmentId: string,
   notes: string
-): Promise<Appointment> {
-  // This would typically call an API to update appointment notes
-  // For now, just mocking a response
-  return {
-    id: appointmentId,
-    status: "pending",
-    subject: "Mock Appointment",
-    requesterName: "Mock User",
-    requesterEmail: "mock@example.com",
-    requestedDate: new Date(),
-    requestedTime: "10:00",
-    durationMinutes: 30,
-    priority: "normal",
-    adminNotes: notes,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+): Promise<Appointment | null> {
+  try {
+    // Find the appointment in the mock data
+    const appointmentIndex = mockAppointments.findIndex(a => a.id === appointmentId);
+    
+    if (appointmentIndex === -1) {
+      throw new Error("Appointment not found");
+    }
+    
+    // Update the appointment notes
+    mockAppointments[appointmentIndex] = {
+      ...mockAppointments[appointmentIndex],
+      adminNotes: notes,
+      updatedAt: new Date()
+    };
+    
+    // Return the updated appointment
+    return mockAppointments[appointmentIndex];
+  } catch (error) {
+    console.error("Error updating appointment notes:", error);
+    toast({
+      title: "Erro ao atualizar anotações",
+      description: "Não foi possível atualizar as anotações do agendamento.",
+      variant: "destructive",
+    });
+    return null;
+  }
 }
