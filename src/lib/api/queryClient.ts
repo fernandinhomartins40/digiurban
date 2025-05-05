@@ -48,7 +48,7 @@ export const createOptimizedQueryClient = () => {
         // Only refetch on window focus if data is stale
         refetchOnWindowFocus: "always",
         
-        // Using meta to handle errors instead of onError directly
+        // Using meta to handle errors
         meta: {
           errorHandler: (error: any) => {
             logApiError(error, 'query');

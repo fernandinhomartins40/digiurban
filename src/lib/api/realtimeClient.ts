@@ -58,7 +58,7 @@ class RealtimeClient {
     // Create a new channel
     const channel = supabase.channel(channelId);
     
-    // Configure the channel with proper type casting
+    // Configure the channel for postgres changes
     channel.on(
       'postgres_changes',
       {
@@ -67,7 +67,7 @@ class RealtimeClient {
         table: table,
         filter: filter || undefined
       },
-      (payload) => {
+      (payload: RealtimePostgresChangesPayload<any>) => {
         // Apply additional filtering if provided
         if (filterCallback && !filterCallback(payload)) {
           return;
@@ -117,21 +117,13 @@ class RealtimeClient {
   }
   
   /**
-   * Enable realtime for a table using RPC
+   * Enable realtime for a table
    * Note: This requires appropriate permissions
    */
   async enableRealtimeForTable(table: string): Promise<boolean> {
     try {
-      // For now, let's comment out this functionality since the RPC doesn't exist
+      // For now, we'll just log this since the RPC may not exist yet
       console.log(`Enabling realtime for ${table} is not currently supported.`);
-      /*
-      // Execute stored procedure to enable realtime
-      const { data, error } = await supabase.rpc('enable_realtime', {
-        table_name: table
-      });
-      
-      if (error) throw error;
-      */
       return true;
     } catch (error) {
       console.error(`Failed to enable realtime for ${table}:`, error);
