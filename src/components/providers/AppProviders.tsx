@@ -21,6 +21,14 @@ const queryClient = new QueryClient({
       retry: 1,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
+      onError: (error: Error) => {
+        console.error("Query error:", error);
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao carregar os dados",
+          variant: "destructive",
+        });
+      }
     },
     mutations: {
       onError: (error) => {
@@ -33,19 +41,6 @@ const queryClient = new QueryClient({
       },
     }
   },
-});
-
-// Add a global error handler for all queries using the QueryCache subscription
-// Using the correct event listener pattern for QueryCache
-queryClient.getQueryCache().subscribe(event => {
-  if (event.type === 'error') {
-    console.error("Query error:", event.error);
-    toast({
-      title: "Erro",
-      description: "Ocorreu um erro ao carregar os dados",
-      variant: "destructive",
-    });
-  }
 });
 
 export function AppProviders({ children }: AppProvidersProps) {
