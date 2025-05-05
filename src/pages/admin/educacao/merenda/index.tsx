@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
@@ -42,7 +41,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function MerendaPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filterShift, setFilterShift] = useState<string>("");
+  const [filterShift, setFilterShift] = useState<string>("all");
   const [showMealDetail, setShowMealDetail] = useState<boolean>(false);
   const [showMealForm, setShowMealForm] = useState<boolean>(false);
   const [selectedMeal, setSelectedMeal] = useState<SchoolMeal | null>(null);
@@ -67,7 +66,7 @@ export default function MerendaPage() {
     }
     
     // Filter by shift
-    if (filterShift && menu.shift !== filterShift) {
+    if (filterShift && filterShift !== "all" && menu.shift !== filterShift) {
       return false;
     }
     
@@ -174,6 +173,7 @@ export default function MerendaPage() {
       case 'lunch': return 'Almoço';
       case 'snack': return 'Lanche';
       case 'dinner': return 'Jantar';
+      case 'all': return 'Todas as refeições';
       default: return shift;
     }
   };
@@ -207,11 +207,10 @@ export default function MerendaPage() {
           <SelectTrigger className="w-full md:w-[180px]">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4" />
-              <span>{filterShift ? getShiftLabel(filterShift) : "Filtrar refeição"}</span>
+              <span>{getShiftLabel(filterShift)}</span>
             </div>
           </SelectTrigger>
           <SelectContent>
-            {/* FIX: Replace empty string value with a non-empty value */}
             <SelectItem value="all">Todas as refeições</SelectItem>
             <SelectItem value="breakfast">Café da manhã</SelectItem>
             <SelectItem value="lunch">Almoço</SelectItem>
@@ -315,16 +314,13 @@ export default function MerendaPage() {
             <CardHeader>
               <CardTitle>Dietas Especiais</CardTitle>
               <CardDescription>
-                Gerenciamento de alunos com restrições alimentares
+                Gerenciamento de dietas especiais e restrições alimentares dos alunos.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-6">
-                <h3 className="text-lg font-semibold mb-2">Módulo em Desenvolvimento</h3>
-                <p className="text-muted-foreground">
-                  Esta seção para gerenciamento de dietas especiais está em desenvolvimento.
-                </p>
-              </div>
+              <p className="text-center py-8 text-muted-foreground">
+                Funcionalidade em desenvolvimento. Em breve você poderá gerenciar dietas especiais aqui.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -332,18 +328,15 @@ export default function MerendaPage() {
         <TabsContent value="estoque" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Controle de Estoque</CardTitle>
+              <CardTitle>Estoque de Alimentos</CardTitle>
               <CardDescription>
-                Monitoramento de ingredientes e suprimentos
+                Controle de estoque e validade dos alimentos para merenda escolar.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-6">
-                <h3 className="text-lg font-semibold mb-2">Módulo em Desenvolvimento</h3>
-                <p className="text-muted-foreground">
-                  Esta seção para controle de estoque da merenda escolar está em desenvolvimento.
-                </p>
-              </div>
+              <p className="text-center py-8 text-muted-foreground">
+                Funcionalidade em desenvolvimento. Em breve você poderá gerenciar o estoque de alimentos aqui.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
