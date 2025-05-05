@@ -10,7 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from 'uuid';
+
+// Local storage key for alert rules
+const LOCAL_STORAGE_RULES_KEY = 'dashboard_alert_rules';
 
 export function AlertsConfig() {
   const { toast } = useToast();
@@ -34,24 +37,12 @@ export function AlertsConfig() {
     async function loadAlertRules() {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
-          .from('dashboard_alert_rules')
-          .select('*')
-          .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        // Get rules from local storage
+        const storedRules = localStorage.getItem(LOCAL_STORAGE_RULES_KEY);
+        const rules = storedRules ? JSON.parse(storedRules) : [];
         
-        setAlertRules((data || []).map(rule => ({
-          id: rule.id,
-          name: rule.name,
-          metricName: rule.metric_name,
-          condition: rule.condition,
-          threshold: rule.threshold,
-          department: rule.department,
-          isActive: rule.is_active,
-          createdAt: new Date(rule.created_at),
-          createdBy: rule.created_by
-        })));
+        setAlertRules(rules);
       } catch (error) {
         console.error('Error loading alert rules:', error);
         toast({
@@ -116,24 +107,9 @@ export function AlertsConfig() {
       });
       
       // Refresh the list
-      const { data, error } = await supabase
-        .from('dashboard_alert_rules')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      setAlertRules((data || []).map(rule => ({
-        id: rule.id,
-        name: rule.name,
-        metricName: rule.metric_name,
-        condition: rule.condition,
-        threshold: rule.threshold,
-        department: rule.department,
-        isActive: rule.is_active,
-        createdAt: new Date(rule.created_at),
-        createdBy: rule.created_by
-      })));
+      const storedRules = localStorage.getItem(LOCAL_STORAGE_RULES_KEY);
+      const updatedRules = storedRules ? JSON.parse(storedRules) : [];
+      setAlertRules(updatedRules);
       
       // Reset form
       setNewRule({
@@ -159,18 +135,17 @@ export function AlertsConfig() {
   // Handle toggle rule active state
   const handleToggleActive = async (id: string, currentState: boolean) => {
     try {
-      const { error } = await supabase
-        .from('dashboard_alert_rules')
-        .update({ is_active: !currentState })
-        .eq('id', id);
+      // Update the rule in local storage
+      const storedRules = localStorage.getItem(LOCAL_STORAGE_RULES_KEY);
+      const rules = storedRules ? JSON.parse(storedRules) : [];
       
-      if (error) throw error;
-      
-      setAlertRules(prevRules => 
-        prevRules.map(rule => 
-          rule.id === id ? { ...rule, isActive: !currentState } : rule
-        )
+      const updatedRules = rules.map((rule: AlertRule) => 
+        rule.id === id ? { ...rule, isActive: !currentState } : rule
       );
+      
+      localStorage.setItem(LOCAL_STORAGE_RULES_KEY, JSON.stringify(updatedRules));
+      
+      setAlertRules(updatedRules);
       
       toast({
         title: "Regra atualizada",

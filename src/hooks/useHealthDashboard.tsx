@@ -3,6 +3,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { subDays } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import { useDateRangeFilter } from "./useDashboardData";
 
 // Mock data fetching function - to be replaced with actual API calls
 const fetchHealthMetrics = async (
@@ -10,17 +11,16 @@ const fetchHealthMetrics = async (
   endDate?: Date,
   unit?: string
 ) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Fetching health metrics with params:", { startDate, endDate, unit });
   
-  // Return mock data
+  // Return empty data structure that will be filled with real data later
   return {
-    totalAppointments: 1248,
-    pendingAppointments: 125,
-    completedAppointments: 1123,
-    averageWaitTime: "2.3 dias",
-    campaigns: 4,
-    servicesPerformed: 1532
+    totalAppointments: 0,
+    pendingAppointments: 0,
+    completedAppointments: 0,
+    averageWaitTime: "0 dias",
+    campaigns: 0,
+    servicesPerformed: 0
   };
 };
 
@@ -29,61 +29,29 @@ const fetchHealthChartData = async (
   endDate?: Date,
   unit?: string
 ) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Fetching health chart data with params:", { startDate, endDate, unit });
   
-  // Return mock data
+  // Return empty chart data structure that will be filled with real data later
   return {
-    appointmentsByUnit: [
-      { name: "UBS Central", value: 450 },
-      { name: "UBS Norte", value: 320 },
-      { name: "UBS Sul", value: 280 },
-      { name: "UBS Leste", value: 198 },
-    ],
-    appointmentsByType: [
-      { name: "Clínico Geral", value: 630 },
-      { name: "Pediatria", value: 320 },
-      { name: "Ginecologia", value: 250 },
-      { name: "Odontologia", value: 180 },
-      { name: "Outros", value: 122 },
-    ],
-    appointmentsTrend: [
-      { month: "Jan", atendimentos: 220, encaminhamentos: 45 },
-      { month: "Fev", atendimentos: 240, encaminhamentos: 52 },
-      { month: "Mar", atendimentos: 280, encaminhamentos: 63 },
-      { month: "Abr", atendimentos: 305, encaminhamentos: 59 },
-      { month: "Mai", atendimentos: 350, encaminhamentos: 71 },
-      { month: "Jun", atendimentos: 310, encaminhamentos: 65 },
-      { month: "Jul", atendimentos: 285, encaminhamentos: 58 },
-    ],
+    appointmentsByUnit: [],
+    appointmentsByType: [],
+    appointmentsTrend: [],
   };
 };
 
 export function useHealthDashboard() {
-  // Date range filter state
-  const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "custom">("30d");
-  const [startDate, setStartDate] = useState<Date | undefined>(subDays(new Date(), 30));
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  // Use the shared date range filter hook
+  const {
+    dateRange,
+    startDate,
+    endDate,
+    setDateRange,
+    setStartDate,
+    setEndDate,
+    handleDateRangeChange
+  } = useDateRangeFilter("30d");
+  
   const [selectedUnit, setSelectedUnit] = useState<string | undefined>(undefined);
-
-  // Handle date range changes
-  const handleDateRangeChange = useMemo(
-    () => (range: "7d" | "30d" | "90d" | "custom") => {
-      setDateRange(range);
-      if (range === "7d") {
-        setStartDate(subDays(new Date(), 7));
-        setEndDate(new Date());
-      } else if (range === "30d") {
-        setStartDate(subDays(new Date(), 30));
-        setEndDate(new Date());
-      } else if (range === "90d") {
-        setStartDate(subDays(new Date(), 90));
-        setEndDate(new Date());
-      }
-      // If custom, we don't change the dates here
-    },
-    []
-  );
 
   // Fetch metrics data
   const {

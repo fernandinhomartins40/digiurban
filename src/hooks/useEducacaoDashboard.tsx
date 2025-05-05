@@ -1,7 +1,6 @@
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { subDays } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useDateRangeFilter } from "./useDashboardData";
 
@@ -11,17 +10,16 @@ const fetchEducacaoMetrics = async (
   endDate?: Date,
   unit?: string
 ) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Fetching educação metrics with params:", { startDate, endDate, unit });
   
-  // Return mock data
+  // Return empty data structure that will be filled with real data later
   return {
-    totalStudents: 1248,
-    attendanceRate: "87%",
-    activePrograms: 12,
-    teachersCount: 68,
-    schoolsCount: 14,
-    averageScore: 7.8
+    totalStudents: 0,
+    attendanceRate: "0%",
+    activePrograms: 0,
+    teachersCount: 0,
+    schoolsCount: 0,
+    averageScore: 0
   };
 };
 
@@ -30,44 +28,14 @@ const fetchEducacaoChartData = async (
   endDate?: Date,
   unit?: string
 ) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Fetching educação chart data with params:", { startDate, endDate, unit });
   
-  // Return mock data
+  // Return empty chart data structure that will be filled with real data later
   return {
-    studentsBySchool: [
-      { name: "EMEF Central", value: 320 },
-      { name: "EMEF Norte", value: 240 },
-      { name: "EMEI Sul", value: 180 },
-      { name: "EMEI Leste", value: 150 },
-      { name: "EMEF Oeste", value: 280 },
-      { name: "Creche Municipal", value: 78 },
-    ],
-    attendanceByGrade: [
-      { name: "1º Ano", value: 92 },
-      { name: "2º Ano", value: 89 },
-      { name: "3º Ano", value: 87 },
-      { name: "4º Ano", value: 85 },
-      { name: "5º Ano", value: 83 },
-      { name: "6º Ano", value: 81 },
-      { name: "7º Ano", value: 78 },
-      { name: "8º Ano", value: 76 },
-      { name: "9º Ano", value: 75 },
-    ],
-    performanceTrend: [
-      { month: "Jan", frequencia: 85, desempenho: 7.5 },
-      { month: "Fev", frequencia: 86, desempenho: 7.6 },
-      { month: "Mar", frequencia: 84, desempenho: 7.4 },
-      { month: "Abr", frequencia: 87, desempenho: 7.7 },
-      { month: "Mai", frequencia: 89, desempenho: 7.9 },
-      { month: "Jun", frequencia: 88, desempenho: 8.0 },
-      { month: "Jul", frequencia: 87, desempenho: 7.8 },
-    ],
-    transportDistribution: [
-      { name: "Não utiliza", value: 720 },
-      { name: "Ônibus escolar", value: 380 },
-      { name: "Van escolar", value: 148 },
-    ]
+    studentsBySchool: [],
+    attendanceByGrade: [],
+    performanceTrend: [],
+    transportDistribution: []
   };
 };
 

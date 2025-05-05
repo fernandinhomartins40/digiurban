@@ -1,7 +1,6 @@
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { subDays } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useDateRangeFilter } from "./useDashboardData";
 
@@ -11,17 +10,16 @@ const fetchObrasMetrics = async (
   endDate?: Date,
   type?: string
 ) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Fetching obras públicas metrics with params:", { startDate, endDate, type });
   
-  // Return mock data
+  // Return empty data structure that will be filled with real data later
   return {
-    ongoingProjects: 18,
-    completedProjects: 7,
-    planningProjects: 5,
-    budgetUtilization: "64%",
-    averageProgress: "48%",
-    totalInvestment: "R$ 12.450.000,00"
+    ongoingProjects: 0,
+    completedProjects: 0,
+    planningProjects: 0,
+    budgetUtilization: "0%",
+    averageProgress: "0%",
+    totalInvestment: "R$ 0,00"
   };
 };
 
@@ -30,44 +28,14 @@ const fetchObrasChartData = async (
   endDate?: Date,
   type?: string
 ) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Fetching obras públicas chart data with params:", { startDate, endDate, type });
   
-  // Return mock data
+  // Return empty chart data structure that will be filled with real data later
   return {
-    projectsByType: [
-      { name: "Infraestrutura Viária", value: 8 },
-      { name: "Educação", value: 6 },
-      { name: "Saúde", value: 4 },
-      { name: "Assistência Social", value: 2 },
-      { name: "Lazer", value: 3 },
-      { name: "Outros", value: 7 },
-    ],
-    projectsByRegion: [
-      { name: "Centro", value: 5 },
-      { name: "Norte", value: 8 },
-      { name: "Sul", value: 6 },
-      { name: "Leste", value: 7 },
-      { name: "Oeste", value: 4 },
-    ],
-    projectProgress: [
-      { name: "Pavimentação Rua XV", value: 85 },
-      { name: "UBS Norte", value: 65 },
-      { name: "Escola Municipal Leste", value: 45 },
-      { name: "Reforma Praça Central", value: 95 },
-      { name: "Drenagem Bairro Sul", value: 30 },
-      { name: "Ponte do Rio", value: 15 },
-      { name: "Quadra Poliesportiva", value: 5 },
-    ],
-    budgetDistribution: [
-      { month: "Jan", planejado: 850000, executado: 780000 },
-      { month: "Fev", planejado: 920000, executado: 850000 },
-      { month: "Mar", planejado: 1050000, executado: 980000 },
-      { month: "Abr", planejado: 980000, executado: 920000 },
-      { month: "Mai", planejado: 1120000, executado: 1050000 },
-      { month: "Jun", planejado: 1080000, executado: 950000 },
-      { month: "Jul", planejado: 950000, executado: 870000 },
-    ]
+    projectsByType: [],
+    projectsByRegion: [],
+    projectProgress: [],
+    budgetDistribution: []
   };
 };
 

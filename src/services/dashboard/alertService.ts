@@ -1,6 +1,7 @@
 
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+// Since dashboard_alert_rules and dashboard_alert_notifications tables don't exist yet,
+// we'll use local storage to simulate the functionality until proper DB tables are created
 
 export type AlertCondition = 'greater_than' | 'less_than' | 'equal_to' | 'not_equal_to';
 
@@ -28,6 +29,50 @@ export interface AlertNotification {
   department: string;
 }
 
+// In-memory storage until database tables are created
+const LOCAL_STORAGE_RULES_KEY = 'dashboard_alert_rules';
+const LOCAL_STORAGE_NOTIFICATIONS_KEY = 'dashboard_alert_notifications';
+
+// Helper to get stored rules
+const getStoredRules = (): AlertRule[] => {
+  try {
+    const storedRules = localStorage.getItem(LOCAL_STORAGE_RULES_KEY);
+    return storedRules ? JSON.parse(storedRules) : [];
+  } catch (error) {
+    console.error('Error retrieving stored alert rules:', error);
+    return [];
+  }
+};
+
+// Helper to save rules
+const saveRules = (rules: AlertRule[]): void => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_RULES_KEY, JSON.stringify(rules));
+  } catch (error) {
+    console.error('Error saving alert rules:', error);
+  }
+};
+
+// Helper to get stored notifications
+const getStoredNotifications = (): AlertNotification[] => {
+  try {
+    const storedNotifications = localStorage.getItem(LOCAL_STORAGE_NOTIFICATIONS_KEY);
+    return storedNotifications ? JSON.parse(storedNotifications) : [];
+  } catch (error) {
+    console.error('Error retrieving stored alert notifications:', error);
+    return [];
+  }
+};
+
+// Helper to save notifications
+const saveNotifications = (notifications: AlertNotification[]): void => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_NOTIFICATIONS_KEY, JSON.stringify(notifications));
+  } catch (error) {
+    console.error('Error saving alert notifications:', error);
+  }
+};
+
 /**
  * Evaluates metric data against defined alert rules
  * @param metricName The name of the metric to evaluate
@@ -40,15 +85,12 @@ export async function evaluateMetricForAlerts(
   department: string
 ): Promise<void> {
   try {
-    // Fetch applicable alert rules
-    const { data: rules, error } = await supabase
-      .from('dashboard_alert_rules')
-      .select('*')
-      .eq('metric_name', metricName)
-      .eq('department', department)
-      .eq('is_active', true);
-    
-    if (error) throw error;
+    // Fetch applicable alert rules from local storage
+    const rules = getStoredRules().filter(
+      rule => rule.metricName === metricName && 
+             rule.department === department && 
+             rule.isActive
+    );
     
     if (!rules || rules.length === 0) return;
     
@@ -73,19 +115,21 @@ export async function evaluateMetricForAlerts(
       
       if (isTriggered) {
         // Create alert notification
-        const { error: insertError } = await supabase
-          .from('dashboard_alert_notifications')
-          .insert({
-            rule_id: rule.id,
-            metric_name: metricName,
-            metric_value: value,
-            threshold: rule.threshold,
-            condition: rule.condition,
-            department: department,
-            is_read: false,
-          });
+        const notification: AlertNotification = {
+          id: Date.now().toString(),
+          ruleId: rule.id,
+          metricName: metricName,
+          metricValue: value,
+          threshold: rule.threshold,
+          condition: rule.condition,
+          timestamp: new Date(),
+          isRead: false,
+          department: department
+        };
         
-        if (insertError) throw insertError;
+        const notifications = getStoredNotifications();
+        notifications.push(notification);
+        saveNotifications(notifications);
         
         // Show toast notification
         toast({
@@ -105,25 +149,10 @@ export async function evaluateMetricForAlerts(
  */
 export async function getUnreadAlertNotifications(): Promise<AlertNotification[]> {
   try {
-    const { data, error } = await supabase
-      .from('dashboard_alert_notifications')
-      .select('*')
-      .eq('is_read', false)
-      .order('timestamp', { ascending: false });
-    
-    if (error) throw error;
-    
-    return (data || []).map(notification => ({
-      id: notification.id,
-      ruleId: notification.rule_id,
-      metricName: notification.metric_name,
-      metricValue: notification.metric_value,
-      threshold: notification.threshold,
-      condition: notification.condition,
-      timestamp: new Date(notification.timestamp),
-      isRead: notification.is_read,
-      department: notification.department
-    }));
+    const notifications = getStoredNotifications();
+    return notifications
+      .filter(notification => !notification.isRead)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   } catch (error) {
     console.error('Error fetching unread alert notifications:', error);
     return [];
@@ -136,12 +165,11 @@ export async function getUnreadAlertNotifications(): Promise<AlertNotification[]
  */
 export async function markAlertAsRead(id: string): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('dashboard_alert_notifications')
-      .update({ is_read: true })
-      .eq('id', id);
-    
-    if (error) throw error;
+    const notifications = getStoredNotifications();
+    const updatedNotifications = notifications.map(notification => 
+      notification.id === id ? { ...notification, isRead: true } : notification
+    );
+    saveNotifications(updatedNotifications);
   } catch (error) {
     console.error('Error marking alert as read:', error);
   }
@@ -153,23 +181,17 @@ export async function markAlertAsRead(id: string): Promise<void> {
  */
 export async function createAlertRule(rule: Omit<AlertRule, 'id' | 'createdAt'>): Promise<string | null> {
   try {
-    const { data, error } = await supabase
-      .from('dashboard_alert_rules')
-      .insert({
-        name: rule.name,
-        metric_name: rule.metricName,
-        condition: rule.condition,
-        threshold: rule.threshold,
-        department: rule.department,
-        is_active: rule.isActive,
-        created_by: rule.createdBy
-      })
-      .select('id')
-      .single();
+    const newRule: AlertRule = {
+      id: Date.now().toString(),
+      createdAt: new Date(),
+      ...rule
+    };
     
-    if (error) throw error;
+    const rules = getStoredRules();
+    rules.push(newRule);
+    saveRules(rules);
     
-    return data?.id || null;
+    return newRule.id;
   } catch (error) {
     console.error('Error creating alert rule:', error);
     return null;

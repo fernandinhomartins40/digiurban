@@ -22,6 +22,7 @@ interface DashboardHeaderProps {
   onSectorChange?: (sector: string) => void;
   showDownload?: boolean;
   onDownload?: () => void;
+  rightContent?: React.ReactNode;
   className?: string;
 }
 
@@ -38,6 +39,7 @@ export function DashboardHeader({
   onSectorChange,
   showDownload = true,
   onDownload,
+  rightContent,
   className,
 }: DashboardHeaderProps) {
   return (
@@ -121,6 +123,12 @@ export function DashboardHeader({
             </Button>
           )}
         </div>
+        
+        {rightContent && (
+          <div className="ml-2">
+            {rightContent}
+          </div>
+        )}
       </div>
     </div>
   );

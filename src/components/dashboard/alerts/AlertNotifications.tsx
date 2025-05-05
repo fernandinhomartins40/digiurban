@@ -64,7 +64,7 @@ export function AlertNotifications() {
   // Format date for display
   const formatDate = (date: Date) => {
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = now.getTime() - new Date(date).getTime();
     const diffMins = Math.round(diffMs / 60000);
     const diffHours = Math.round(diffMins / 60);
     const diffDays = Math.round(diffHours / 24);

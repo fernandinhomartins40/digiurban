@@ -1,7 +1,5 @@
 
-import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { subDays } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useDateRangeFilter } from "./useDashboardData";
 
@@ -10,16 +8,15 @@ const fetchMainDashboardMetrics = async (
   startDate?: Date,
   endDate?: Date
 ) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Fetching main dashboard metrics with params:", { startDate, endDate });
   
-  // Return mock data
+  // Return empty data structure that will be filled with real data later
   return {
-    totalRequests: 458,
-    pendingRequests: 42,
-    activeUsers: 1542,
-    systemActivity: 4785,
-    alerts: 8,
+    totalRequests: 0,
+    pendingRequests: 0,
+    activeUsers: 0,
+    systemActivity: 0,
+    alerts: 0,
   };
 };
 
@@ -27,48 +24,15 @@ const fetchMainDashboardChartData = async (
   startDate?: Date,
   endDate?: Date
 ) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Fetching main dashboard chart data with params:", { startDate, endDate });
   
-  // Return mock data
+  // Return empty chart data structure that will be filled with real data later
   return {
-    departmentActivity: [
-      { name: "Saúde", value: 68 },
-      { name: "Educação", value: 62 },
-      { name: "Assistência", value: 48 },
-      { name: "Obras", value: 42 },
-      { name: "Finanças", value: 75 },
-      { name: "Administração", value: 58 },
-    ],
-    requestsByStatus: [
-      { name: "Concluído", value: 245 },
-      { name: "Em Andamento", value: 135 },
-      { name: "Pendente", value: 42 },
-      { name: "Cancelado", value: 36 },
-    ],
-    activityTrend: [
-      { month: "Jan", requests: 320, users: 1250 },
-      { month: "Fev", requests: 345, users: 1320 },
-      { month: "Mar", requests: 368, users: 1380 },
-      { month: "Abr", requests: 385, users: 1450 },
-      { month: "Mai", requests: 415, users: 1510 },
-      { month: "Jun", requests: 428, users: 1532 },
-      { month: "Jul", requests: 458, users: 1542 },
-    ],
-    recentActivities: [
-      { id: 1, user: "João Silva", action: "Nova solicitação", department: "Saúde", time: "12 min atrás" },
-      { id: 2, user: "Maria Oliveira", action: "Aprovação de documento", department: "Educação", time: "45 min atrás" },
-      { id: 3, user: "Carlos Pereira", action: "Resposta ao cidadão", department: "Ouvidoria", time: "1 hora atrás" },
-      { id: 4, user: "Ana Souza", action: "Atualização de cadastro", department: "Assistência", time: "3 horas atrás" },
-      { id: 5, user: "Roberto Lima", action: "Upload de documento", department: "Finanças", time: "5 horas atrás" },
-    ],
-    moduleUsage: [
-      { name: "Finanças", percent: 85 },
-      { name: "Saúde", percent: 72 },
-      { name: "Educação", percent: 65 },
-      { name: "Assistência", percent: 53 },
-      { name: "Obras", percent: 47 },
-    ]
+    departmentActivity: [],
+    requestsByStatus: [],
+    activityTrend: [],
+    recentActivities: [],
+    moduleUsage: []
   };
 };
 

@@ -1,7 +1,6 @@
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { subDays } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useDateRangeFilter } from "./useDashboardData";
 
@@ -11,17 +10,16 @@ const fetchAssistenciaMetrics = async (
   endDate?: Date,
   unit?: string
 ) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Fetching assistência social metrics with params:", { startDate, endDate, unit });
   
-  // Return mock data
+  // Return empty data structure that will be filled with real data later
   return {
-    familiesAssisted: 425,
-    activePrograms: 8,
-    beneficiaries: 1280,
-    emergencyAssistance: 42,
-    foodBasketsDistributed: 156,
-    monthlyInvestment: "R$ 187.450,00"
+    familiesAssisted: 0,
+    activePrograms: 0,
+    beneficiaries: 0,
+    emergencyAssistance: 0,
+    foodBasketsDistributed: 0,
+    monthlyInvestment: "R$ 0,00"
   };
 };
 
@@ -30,37 +28,14 @@ const fetchAssistenciaChartData = async (
   endDate?: Date,
   unit?: string
 ) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Fetching assistência social chart data with params:", { startDate, endDate, unit });
   
-  // Return mock data
+  // Return empty chart data structure that will be filled with real data later
   return {
-    benefitsByType: [
-      { name: "Bolsa Família", value: 680 },
-      { name: "BPC", value: 320 },
-      { name: "Auxílio Emergencial", value: 105 },
-      { name: "Outros", value: 175 },
-    ],
-    familiesByVulnerability: [
-      { name: "Extrema Pobreza", value: 185 },
-      { name: "Pobreza", value: 145 },
-      { name: "Vulnerabilidade Temporária", value: 95 },
-    ],
-    assistanceTrend: [
-      { month: "Jan", atendimentos: 245, beneficiarios: 1220 },
-      { month: "Fev", atendimentos: 268, beneficiarios: 1240 },
-      { month: "Mar", atendimentos: 255, beneficiarios: 1235 },
-      { month: "Abr", atendimentos: 280, beneficiarios: 1260 },
-      { month: "Mai", atendimentos: 310, beneficiarios: 1290 },
-      { month: "Jun", atendimentos: 295, beneficiarios: 1275 },
-      { month: "Jul", atendimentos: 315, beneficiarios: 1280 },
-    ],
-    attendanceByLocation: [
-      { name: "CRAS Central", value: 145 },
-      { name: "CRAS Norte", value: 120 },
-      { name: "CRAS Sul", value: 85 },
-      { name: "CREAS", value: 75 },
-    ]
+    benefitsByType: [],
+    familiesByVulnerability: [],
+    assistanceTrend: [],
+    attendanceByLocation: []
   };
 };
 
