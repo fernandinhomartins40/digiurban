@@ -1,10 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plus, Pencil, Trash2, Save } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -13,19 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { UserPermissionsForm } from "./UserPermissionsForm";
 import { AdminPermission } from "@/types/auth";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { UserRoleFormSheet } from "./UserRoleFormSheet";
 import { supabase } from "@/integrations/supabase/client";
 
 interface RoleTemplate {
@@ -40,11 +28,6 @@ export function UserRolesManagement() {
   const [roleTemplates, setRoleTemplates] = useState<RoleTemplate[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState<RoleTemplate | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    permissions: [] as AdminPermission[],
-  });
 
   // Sample role templates for now - in a real implementation, these would come from the database
   useEffect(() => {
@@ -88,21 +71,11 @@ export function UserRolesManagement() {
 
   const handleAddRole = () => {
     setCurrentTemplate(null);
-    setFormData({
-      name: "",
-      description: "",
-      permissions: []
-    });
     setIsFormOpen(true);
   };
 
   const handleEditRole = (template: RoleTemplate) => {
     setCurrentTemplate(template);
-    setFormData({
-      name: template.name,
-      description: template.description,
-      permissions: [...template.permissions]
-    });
     setIsFormOpen(true);
   };
 
@@ -126,24 +99,7 @@ export function UserRolesManagement() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
-
-  const handlePermissionsChange = (permissions: AdminPermission[]) => {
-    setFormData({
-      ...formData,
-      permissions
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async (formData: any) => {
     if (!formData.name) {
       toast({
         title: "Nome obrigatório",
@@ -294,70 +250,13 @@ export function UserRolesManagement() {
         </CardContent>
       </Card>
 
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {currentTemplate ? "Editar Função" : "Adicionar Nova Função"}
-            </DialogTitle>
-            <DialogDescription>
-              {currentTemplate
-                ? "Modifique as informações e permissões da função."
-                : "Configure uma nova função predefinida com permissões específicas."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome da Função</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Administrador Financeiro"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
-                <Input
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Descreva o propósito e escopo desta função"
-                />
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Permissões da Função</h3>
-                <Alert>
-                  <AlertDescription>
-                    Configure as permissões padrão para esta função. Ao criar um usuário e atribuir esta função, 
-                    estas permissões serão aplicadas automaticamente.
-                  </AlertDescription>
-                </Alert>
-                <UserPermissionsForm
-                  permissions={formData.permissions}
-                  onPermissionsChange={handlePermissionsChange}
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                <Save className="h-4 w-4 mr-2" />
-                {currentTemplate ? "Salvar Alterações" : "Criar Função"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* New Sheet component instead of Dialog */}
+      <UserRoleFormSheet
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSubmit={handleSubmit}
+        currentTemplate={currentTemplate}
+      />
     </div>
   );
 }
