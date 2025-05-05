@@ -180,7 +180,7 @@ export const api = {
     return apiRequest<T>(
       async () => {
         // Use type assertion to tell TypeScript this is valid
-        let query = supabase.from(tableName as any);
+        let query = supabase.from(tableName as any).select('*');
         
         if (options?.select) {
           query = query.select(options.select);
@@ -197,25 +197,25 @@ export const api = {
     async getMetrics(startDate?: Date, endDate?: Date, department?: string) {
       return apiRequest(
         async () => {
-          // Use type assertion for the table name
-          let query = supabase.from('mayor_dashboard_stats' as any);
+          // Create and execute the query
+          let query = supabase.from('mayor_dashboard_stats');
           
+          // Build the query with proper methods
           if (startDate) {
-            // Type assertion for the filter method
-            query = query.filter('stat_date', 'gte', startDate.toISOString().split('T')[0]) as any;
+            query = query.gte('stat_date', startDate.toISOString().split('T')[0]);
           }
           
           if (endDate) {
-            // Type assertion for the filter method
-            query = query.filter('stat_date', 'lte', endDate.toISOString().split('T')[0]) as any;
+            query = query.lte('stat_date', endDate.toISOString().split('T')[0]);
           }
           
           if (department) {
-            // Type assertion for the filter method
-            query = query.filter('sector_id', 'eq', department) as any;
+            query = query.eq('sector_id', department);
           }
           
-          return await query.select('*');
+          // Execute the final query
+          const result = await query.select('*');
+          return result;
         },
         { context: 'dashboard.getMetrics' }
       );

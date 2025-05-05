@@ -48,17 +48,19 @@ export const createOptimizedQueryClient = () => {
         // Only refetch on window focus if data is stale
         refetchOnWindowFocus: "always",
         
-        // Remove suspense since it's not available in the current version
-        // suspense: false,
-        
-        // Make sure errors are properly structured
-        onError: (error: any) => {
-          logApiError(error, 'query');
+        // Using meta to handle errors instead of onError directly
+        meta: {
+          onError: (error: any) => {
+            logApiError(error, 'query');
+          },
         },
       },
       mutations: {
-        onError: (error: any) => {
-          logApiError(error, 'mutation');
+        // Use meta for error handling in mutations too
+        meta: {
+          onError: (error: any) => {
+            logApiError(error, 'mutation');
+          },
         },
         
         // Retry failed writes with a more conservative approach

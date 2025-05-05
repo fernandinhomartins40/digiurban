@@ -58,16 +58,16 @@ class RealtimeClient {
     // Create a new channel
     const channel = supabase.channel(channelId);
     
-    // Configure the channel - using appropriate types for on() method
+    // Configure the channel with proper type casting
     channel.on(
-      'postgres_changes' as any,
+      'postgres_changes',
       {
-        event: event,
+        event: event as any,
         schema: schema,
         table: table,
         filter: filter || undefined
       },
-      (payload) => {
+      (payload: RealtimePostgresChangesPayload<any>) => {
         // Apply additional filtering if provided
         if (filterCallback && !filterCallback(payload)) {
           return;

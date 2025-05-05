@@ -1,3 +1,5 @@
+
+import React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
@@ -168,6 +170,8 @@ export class SessionManager {
    * Warn user about impending session expiry
    */
   private warnSessionExpiry() {
+    const handleRefresh = () => this.refreshSession();
+    
     toast({
       title: 'Sessão expirando',
       description: 'Sua sessão irá expirar em breve. Deseja continuar conectado?',
@@ -175,7 +179,7 @@ export class SessionManager {
       action: (
         <ToastAction
           altText="Renovar Sessão"
-          onClick={() => this.refreshSession()}
+          onClick={handleRefresh}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
         >
           Renovar Sessão

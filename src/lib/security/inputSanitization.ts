@@ -79,15 +79,15 @@ export function maskCpf(cpf: string): string {
  * @returns New object with sanitized properties
  */
 export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
-  const result: Record<string, any> = { ...obj };
+  const result = { ...obj } as Record<string, any>;
   
-  Object.keys(result).forEach(key => {
+  for (const key in result) {
     if (typeof result[key] === 'string') {
       result[key] = sanitizeFormInput(result[key]);
     } else if (typeof result[key] === 'object' && result[key] !== null) {
       result[key] = sanitizeObject(result[key]);
     }
-  });
+  }
   
   return result as T;
 }
