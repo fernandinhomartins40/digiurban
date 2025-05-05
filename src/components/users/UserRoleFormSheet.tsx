@@ -1,4 +1,3 @@
-
 import React from "react";
 import { AdminPermission } from "@/types/auth";
 import { Button } from "@/components/ui/button";
@@ -15,13 +14,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Save } from "lucide-react";
 import { UserPermissionsForm } from "./UserPermissionsForm";
-
-interface RoleTemplate {
-  id: string;
-  name: string;
-  description: string;
-  permissions: AdminPermission[];
-}
+import { RoleTemplate } from "./types";
 
 interface UserRoleFormSheetProps {
   isOpen: boolean;

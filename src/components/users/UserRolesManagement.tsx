@@ -1,27 +1,13 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
-import { AdminPermission } from "@/types/auth";
 import { UserRoleFormSheet } from "./UserRoleFormSheet";
-import { supabase } from "@/integrations/supabase/client";
-
-interface RoleTemplate {
-  id: string;
-  name: string;
-  description: string;
-  permissions: AdminPermission[];
-}
+import { RoleTemplatesTable } from "./RoleTemplatesTable";
+import { RolesLoadingState } from "./RolesLoadingState";
+import { RoleTemplate } from "./types";
 
 export function UserRolesManagement() {
   const [isLoading, setIsLoading] = useState(true);
@@ -148,26 +134,8 @@ export function UserRolesManagement() {
     }
   };
 
-  const countPermissions = (permissions: AdminPermission[]) => {
-    const totalModules = permissions.length;
-    const readCount = permissions.filter(p => p.read).length;
-    const writeCount = permissions.filter(p => p.create || p.update).length;
-    const deleteCount = permissions.filter(p => p.delete).length;
-    
-    return { totalModules, readCount, writeCount, deleteCount };
-  };
-
   if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center h-40">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="ml-2">Carregando funções...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <RolesLoadingState />;
   }
 
   return (
@@ -186,71 +154,14 @@ export function UserRolesManagement() {
           </Button>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome da Função</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Permissões</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {roleTemplates.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
-                    Nenhuma função predefinida encontrada. Adicione uma nova função.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                roleTemplates.map((template) => {
-                  const { totalModules, readCount, writeCount, deleteCount } = countPermissions(template.permissions);
-                  
-                  return (
-                    <TableRow key={template.id}>
-                      <TableCell className="font-medium">{template.name}</TableCell>
-                      <TableCell>{template.description}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline" className="bg-blue-50">
-                            {readCount}/{totalModules} Leitura
-                          </Badge>
-                          <Badge variant="outline" className="bg-green-50">
-                            {writeCount}/{totalModules} Escrita
-                          </Badge>
-                          <Badge variant="outline" className="bg-red-50">
-                            {deleteCount}/{totalModules} Exclusão
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditRole(template)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteRole(template.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+          <RoleTemplatesTable 
+            roleTemplates={roleTemplates} 
+            onEdit={handleEditRole} 
+            onDelete={handleDeleteRole} 
+          />
         </CardContent>
       </Card>
 
-      {/* New Sheet component instead of Dialog */}
       <UserRoleFormSheet
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
