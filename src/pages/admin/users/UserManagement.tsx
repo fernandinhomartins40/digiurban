@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -13,85 +13,187 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { UserFilters, UserFilterValues } from "@/components/users/UserFilters";
+import { UserFormDialog } from "@/components/users/UserFormDialog";
+import { UserActionMenu } from "@/components/users/UserActionMenu";
+import { UserStatsCard } from "@/components/users/UserStatsCard";
+import { DepartmentUserStats } from "@/components/users/DepartmentUserStats";
+import { AccessLogTable } from "@/components/users/AccessLogTable";
+import { AdminUser, AdminPermission } from "@/types/auth";
+import { AlertCircle, Loader2, UserPlus, RefreshCcw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { UserPlus, MoreHorizontal, Edit, Trash2, AlertCircle, Loader2 } from "lucide-react";
-import { AdminUser, AdminPermission, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function UserManagement() {
   const { user } = useAuth();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [editingUser, setEditingUser] = useState<AdminUser | undefined>(undefined);
+  const [filters, setFilters] = useState<UserFilterValues>({
+    searchTerm: "",
+    department: null,
+    role: null,
+    status: null,
+  });
+
+  // Sample access logs - in a real app, these would come from the database
+  const [accessLogs, setAccessLogs] = useState<any[]>([
+    {
+      id: "1",
+      userId: "1",
+      userName: "João Silva",
+      actionType: "login",
+      timestamp: "2023-05-05T10:30:00",
+      details: "Login via email/senha",
+    },
+    {
+      id: "2",
+      userId: "2",
+      userName: "Maria Souza",
+      actionType: "update",
+      timestamp: "2023-05-05T11:45:00",
+      details: "Atualização de permissões para o usuário Carlos Santos",
+    },
+    {
+      id: "3",
+      userId: "3",
+      userName: "Ana Pereira",
+      actionType: "create",
+      timestamp: "2023-05-04T14:20:00",
+      details: "Criação de novo usuário administrativo",
+    },
+    {
+      id: "4",
+      userId: "1",
+      userName: "João Silva",
+      actionType: "logout",
+      timestamp: "2023-05-04T17:00:00",
+    },
+  ]);
 
   // Fetch admin users
-  useEffect(() => {
-    const fetchAdminUsers = async () => {
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from('admin_profiles')
-          .select(`
-            *,
-            admin_permissions(*)
-          `)
-          .order('name');
+  const fetchAdminUsers = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('admin_profiles')
+        .select(`
+          *,
+          admin_permissions(*)
+        `)
+        .order('name');
 
-        if (error) {
-          throw error;
-        }
-
-        // Transform data to match our User type
-        const transformedUsers: AdminUser[] = data.map((admin: any) => ({
-          id: admin.id,
-          name: admin.name,
-          email: admin.email,
-          role: admin.role,
-          department: admin.department,
-          position: admin.position,
-          permissions: admin.admin_permissions.map((permission: any) => ({
-            moduleId: permission.module_id,
-            create: permission.create_permission,
-            read: permission.read_permission,
-            update: permission.update_permission,
-            delete: permission.delete_permission,
-          })),
-          createdAt: admin.created_at,
-          updatedAt: admin.updated_at
-        }));
-
-        setUsers(transformedUsers);
-      } catch (error) {
-        console.error('Error fetching admin users:', error);
-        toast({
-          title: "Erro ao carregar usuários",
-          description: "Não foi possível carregar a lista de usuários administrativos.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
+      if (error) {
+        throw error;
       }
-    };
 
+      // Transform data to match our User type
+      const transformedUsers: AdminUser[] = data.map((admin: any) => ({
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+        department: admin.department,
+        position: admin.position,
+        permissions: admin.admin_permissions.map((permission: any) => ({
+          moduleId: permission.module_id,
+          create: permission.create_permission,
+          read: permission.read_permission,
+          update: permission.update_permission,
+          delete: permission.delete_permission,
+        })),
+        createdAt: admin.created_at,
+        updatedAt: admin.updated_at
+      }));
+
+      setUsers(transformedUsers);
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
+      toast({
+        title: "Erro ao carregar usuários",
+        description: "Não foi possível carregar a lista de usuários administrativos.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAdminUsers();
   }, []);
+
+  // Filter users based on the filter values
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      // Search term filter
+      if (
+        filters.searchTerm &&
+        !user.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) &&
+        !user.email.toLowerCase().includes(filters.searchTerm.toLowerCase())
+      ) {
+        return false;
+      }
+
+      // Department filter
+      if (
+        filters.department &&
+        user.department !== filters.department
+      ) {
+        return false;
+      }
+
+      // Role filter
+      if (
+        filters.role &&
+        user.role !== filters.role
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [users, filters]);
+
+  // Department statistics
+  const departmentStats = useMemo(() => {
+    const deptMap: Record<string, number> = {};
+    
+    users.forEach(user => {
+      if (user.department) {
+        deptMap[user.department] = (deptMap[user.department] || 0) + 1;
+      }
+    });
+    
+    return Object.entries(deptMap).map(([department, userCount]) => ({
+      department,
+      userCount,
+    }));
+  }, [users]);
+
+  // Get unique departments for the filter dropdown
+  const departments = useMemo(() => {
+    const deptSet = new Set<string>();
+    
+    users.forEach(user => {
+      if (user.department) {
+        deptSet.add(user.department);
+      }
+    });
+    
+    return Array.from(deptSet);
+  }, [users]);
+
+  // Chart data
+  const departmentChartData = useMemo(() => {
+    return departmentStats.map(stat => ({
+      name: stat.department,
+      count: stat.userCount
+    }));
+  }, [departmentStats]);
 
   // Check if user is allowed to manage users (only prefeito can)
   const isPrefeitoUser = user?.role === "prefeito";
@@ -110,324 +212,19 @@ export default function UserManagement() {
     );
   }
 
-  const modules = [
-    { id: "correio", name: "Correio Interno" },
-    { id: "administracao", name: "Administração" },
-    { id: "financas", name: "Finanças" },
-    { id: "educacao", name: "Educação" },
-    { id: "saude", name: "Saúde" },
-    { id: "assistencia", name: "Assistência Social" },
-    { id: "obras", name: "Obras Públicas" },
-    { id: "servicos", name: "Serviços Públicos" },
-    { id: "meioambiente", name: "Meio Ambiente" },
-  ];
+  const handleAddUser = () => {
+    setEditingUser(undefined);
+    setIsFormOpen(true);
+  };
 
-  const AddUserDialog = () => {
-    const [formData, setFormData] = useState({
-      name: "",
-      email: "",
-      department: "",
-      position: "",
-      password: "",
-      confirmPassword: "",
-      permissions: modules.map(module => ({
-        moduleId: module.id,
-        create: false,
-        read: false,
-        update: false,
-        delete: false
-      }))
-    });
-    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    
-    const validateForm = () => {
-      const errors: Record<string, string> = {};
-      
-      if (!formData.name.trim()) errors.name = "Nome é obrigatório";
-      if (!formData.email.trim()) errors.email = "Email é obrigatório";
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) 
-        errors.email = "Email inválido";
-      
-      if (!formData.password) errors.password = "Senha é obrigatória";
-      else if (formData.password.length < 6) 
-        errors.password = "Senha deve ter pelo menos 6 caracteres";
-      
-      if (formData.password !== formData.confirmPassword) 
-        errors.confirmPassword = "As senhas não coincidem";
-        
-      return errors;
-    };
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
-      setFormData({
-        ...formData,
-        [name]: value
-      });
-    };
-
-    const handlePermissionChange = (moduleId: string, action: keyof Omit<AdminPermission, 'moduleId'>, checked: boolean) => {
-      setFormData({
-        ...formData,
-        permissions: formData.permissions.map(permission => 
-          permission.moduleId === moduleId 
-            ? { ...permission, [action]: checked } 
-            : permission
-        )
-      });
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      
-      // Validate form
-      const errors = validateForm();
-      if (Object.keys(errors).length > 0) {
-        setFormErrors(errors);
-        return;
-      }
-      
-      setIsSubmitting(true);
-      
-      try {
-        // 1. Register the user in Supabase Auth
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              name: formData.name,
-              user_type: 'admin',
-              department: formData.department,
-              position: formData.position,
-              role: 'admin' as UserRole // Explicitamente tipado como UserRole
-            }
-          }
-        });
-        
-        if (authError) throw authError;
-        
-        // 2. Add permissions (handled by trigger for basic user creation)
-        for (const permission of formData.permissions) {
-          const { error: permError } = await supabase
-            .from('admin_permissions')
-            .insert({
-              admin_id: authData.user!.id,
-              module_id: permission.moduleId,
-              create_permission: permission.create,
-              read_permission: permission.read,
-              update_permission: permission.update,
-              delete_permission: permission.delete
-            });
-            
-          if (permError) throw permError;
-        }
-        
-        // 3. Fetch the newly created user with permissions
-        const { data: newUserData, error: fetchError } = await supabase
-          .from('admin_profiles')
-          .select('*, admin_permissions(*)')
-          .eq('id', authData.user!.id)
-          .single();
-          
-        if (fetchError) throw fetchError;
-        
-        // 4. Transform and add to UI
-        const newUser: AdminUser = {
-          id: newUserData.id,
-          name: newUserData.name,
-          email: newUserData.email,
-          role: newUserData.role,
-          department: newUserData.department,
-          position: newUserData.position,
-          permissions: newUserData.admin_permissions.map((p: any) => ({
-            moduleId: p.module_id,
-            create: p.create_permission,
-            read: p.read_permission,
-            update: p.update_permission,
-            delete: p.delete_permission
-          })),
-          createdAt: newUserData.created_at,
-          updatedAt: newUserData.updated_at
-        };
-        
-        setUsers([...users, newUser]);
-        toast({
-          title: "Usuário adicionado",
-          description: "O usuário foi adicionado com sucesso."
-        });
-        setIsAddDialogOpen(false);
-      } catch (error: any) {
-        console.error("Error adding user:", error);
-        toast({
-          title: "Erro ao adicionar usuário",
-          description: error.message || "Não foi possível adicionar o usuário.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsSubmitting(false);
-      }
-    };
-
-    return (
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Adicionar Novo Usuário</DialogTitle>
-            <DialogDescription>
-              Cadastre um novo usuário e configure suas permissões no sistema.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo</Label>
-                <Input 
-                  id="name" 
-                  name="name" 
-                  value={formData.name} 
-                  onChange={handleInputChange} 
-                  className={formErrors.name ? "border-red-500" : ""}
-                />
-                {formErrors.name && <p className="text-xs text-red-500">{formErrors.name}</p>}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  name="email" 
-                  type="email" 
-                  value={formData.email} 
-                  onChange={handleInputChange}
-                  className={formErrors.email ? "border-red-500" : ""}
-                />
-                {formErrors.email && <p className="text-xs text-red-500">{formErrors.email}</p>}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input 
-                  id="password" 
-                  name="password" 
-                  type="password"
-                  value={formData.password} 
-                  onChange={handleInputChange} 
-                  className={formErrors.password ? "border-red-500" : ""}
-                />
-                {formErrors.password && <p className="text-xs text-red-500">{formErrors.password}</p>}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                <Input 
-                  id="confirmPassword" 
-                  name="confirmPassword" 
-                  type="password"
-                  value={formData.confirmPassword} 
-                  onChange={handleInputChange} 
-                  className={formErrors.confirmPassword ? "border-red-500" : ""}
-                />
-                {formErrors.confirmPassword && <p className="text-xs text-red-500">{formErrors.confirmPassword}</p>}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="department">Departamento</Label>
-                <Input 
-                  id="department" 
-                  name="department" 
-                  value={formData.department} 
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="position">Cargo</Label>
-                <Input 
-                  id="position" 
-                  name="position" 
-                  value={formData.position} 
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label>Permissões</Label>
-              <Table className="mt-2">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Módulo</TableHead>
-                    <TableHead className="text-center">Visualizar</TableHead>
-                    <TableHead className="text-center">Criar</TableHead>
-                    <TableHead className="text-center">Editar</TableHead>
-                    <TableHead className="text-center">Excluir</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {modules.map((module) => {
-                    const permission = formData.permissions.find(p => p.moduleId === module.id);
-                    
-                    return (
-                      <TableRow key={module.id}>
-                        <TableCell>{module.name}</TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox 
-                            checked={permission?.read || false} 
-                            onCheckedChange={(checked) => 
-                              handlePermissionChange(module.id, 'read', !!checked)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox 
-                            checked={permission?.create || false} 
-                            onCheckedChange={(checked) => 
-                              handlePermissionChange(module.id, 'create', !!checked)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox 
-                            checked={permission?.update || false} 
-                            onCheckedChange={(checked) => 
-                              handlePermissionChange(module.id, 'update', !!checked)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox 
-                            checked={permission?.delete || false} 
-                            onCheckedChange={(checked) => 
-                              handlePermissionChange(module.id, 'delete', !!checked)
-                            }
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-            
-            <DialogFooter>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Adicionar Usuário
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
+  const handleEditUser = (user: AdminUser) => {
+    setEditingUser(user);
+    setIsFormOpen(true);
   };
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      // Delete user from auth (this will cascade to profiles and permissions due to foreign keys)
-      // Note: In production, this would require admin privileges
+      // Delete user from auth (this will cascade to profiles and permissions)
       const { error } = await supabase.auth.admin.deleteUser(userId);
       
       if (error) throw error;
@@ -449,6 +246,172 @@ export default function UserManagement() {
     }
   };
 
+  const handleResetPassword = async (userId: string) => {
+    try {
+      // Get user email
+      const userToReset = users.find(u => u.id === userId);
+      if (!userToReset) throw new Error("Usuário não encontrado");
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(userToReset.email, {
+        redirectTo: window.location.origin + "/reset-password",
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Email enviado",
+        description: "Email de redefinição de senha enviado com sucesso."
+      });
+    } catch (error: any) {
+      console.error("Error resetting password:", error);
+      toast({
+        title: "Erro ao enviar email",
+        description: error.message || "Não foi possível enviar o email de redefinição de senha.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSubmitUser = async (userData: any) => {
+    try {
+      if (editingUser) {
+        // Update existing user
+        const { permissions, ...userDataWithoutPermissions } = userData;
+        
+        // Update profile
+        const { error: profileError } = await supabase
+          .from('admin_profiles')
+          .update({
+            name: userData.name,
+            email: userData.email,
+            department: userData.department,
+            position: userData.position,
+            role: userData.role,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingUser.id);
+          
+        if (profileError) throw profileError;
+        
+        // Update permissions - first delete existing ones
+        const { error: deletePermError } = await supabase
+          .from('admin_permissions')
+          .delete()
+          .eq('admin_id', editingUser.id);
+          
+        if (deletePermError) throw deletePermError;
+        
+        // Then insert new permissions
+        const permissionsToInsert = permissions.map((p: AdminPermission) => ({
+          admin_id: editingUser.id,
+          module_id: p.moduleId,
+          create_permission: p.create,
+          read_permission: p.read,
+          update_permission: p.update,
+          delete_permission: p.delete
+        }));
+        
+        const { error: insertPermError } = await supabase
+          .from('admin_permissions')
+          .insert(permissionsToInsert);
+          
+        if (insertPermError) throw insertPermError;
+        
+        // Update local state
+        setUsers(prevUsers => 
+          prevUsers.map(u => 
+            u.id === editingUser.id 
+              ? {...u, ...userDataWithoutPermissions}
+              : u
+          )
+        );
+        
+        toast({
+          title: "Usuário atualizado",
+          description: "As informações do usuário foram atualizadas com sucesso."
+        });
+      } else {
+        // Create new user
+        const { password, confirmPassword, permissions, ...userMetadata } = userData;
+        
+        // Register the user in Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: userData.email,
+          password: userData.password,
+          options: {
+            data: {
+              ...userMetadata,
+              user_type: 'admin'
+            }
+          }
+        });
+        
+        if (authError) throw authError;
+        
+        if (!authData.user) throw new Error("Erro ao criar usuário");
+        
+        // Add permissions (handled by trigger for basic user creation)
+        for (const permission of permissions) {
+          const { error: permError } = await supabase
+            .from('admin_permissions')
+            .insert({
+              admin_id: authData.user.id,
+              module_id: permission.moduleId,
+              create_permission: permission.create,
+              read_permission: permission.read,
+              update_permission: permission.update,
+              delete_permission: permission.delete
+            });
+            
+          if (permError) throw permError;
+        }
+        
+        // Fetch the newly created user
+        const { data: newUser, error: fetchError } = await supabase
+          .from('admin_profiles')
+          .select('*, admin_permissions(*)')
+          .eq('id', authData.user.id)
+          .single();
+          
+        if (fetchError) throw fetchError;
+        
+        // Transform and add to UI
+        const transformedUser: AdminUser = {
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          department: newUser.department,
+          position: newUser.position,
+          permissions: newUser.admin_permissions.map((p: any) => ({
+            moduleId: p.module_id,
+            create: p.create_permission,
+            read: p.read_permission,
+            update: p.update_permission,
+            delete: p.delete_permission
+          })),
+          createdAt: newUser.created_at,
+          updatedAt: newUser.updated_at
+        };
+        
+        setUsers(prevUsers => [...prevUsers, transformedUser]);
+        
+        toast({
+          title: "Usuário adicionado",
+          description: "O usuário foi adicionado com sucesso."
+        });
+      }
+    } catch (error: any) {
+      console.error("Error managing user:", error);
+      toast({
+        title: `Erro ao ${editingUser ? 'atualizar' : 'adicionar'} usuário`,
+        description: error.message || `Não foi possível ${editingUser ? 'atualizar' : 'adicionar'} o usuário.`,
+        variant: "destructive"
+      });
+      throw error; // Re-throw to let the form know there was an error
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -460,71 +423,166 @@ export default function UserManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-col sm:flex-row gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Gerenciamento de Usuários</h1>
           <p className="text-muted-foreground">
-            Gerencie os usuários do sistema e suas permissões.
+            Gerencie os usuários administrativos do sistema e suas permissões.
           </p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Adicionar Usuário
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={fetchAdminUsers}>
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Atualizar
+          </Button>
+          <Button onClick={handleAddUser}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            {isMobile ? "Adicionar" : "Adicionar Usuário"}
+          </Button>
+        </div>
       </div>
-      
-      {users.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Nenhum usuário administrativo cadastrado.</p>
-        </div>
-      ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Departamento</TableHead>
-                <TableHead>Cargo</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.department || "-"}</TableCell>
-                  <TableCell>{user.position || "-"}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDeleteUser(user.id)}>
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-      
-      <AddUserDialog />
+
+      <Tabs defaultValue="users">
+        <TabsList>
+          <TabsTrigger value="users">Usuários</TabsTrigger>
+          <TabsTrigger value="analytics">Análises</TabsTrigger>
+          <TabsTrigger value="logs">Registros</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="users" className="space-y-4">
+          <Card>
+            <CardContent className="p-6">
+              <UserFilters 
+                onFilterChange={setFilters} 
+                departments={departments}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead className={isMobile ? "hidden" : ""}>Departamento</TableHead>
+                    <TableHead className={isMobile ? "hidden" : ""}>Cargo</TableHead>
+                    <TableHead className={isMobile ? "hidden" : ""}>Função</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={isMobile ? 3 : 6} className="text-center py-10">
+                        <div className="flex flex-col items-center gap-2">
+                          <p className="text-muted-foreground">
+                            Nenhum usuário encontrado.
+                          </p>
+                          {(filters.searchTerm || filters.department || filters.role) && (
+                            <Button variant="ghost" onClick={() => setFilters({
+                              searchTerm: "",
+                              department: null,
+                              role: null,
+                              status: null,
+                            })}>
+                              Limpar filtros
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell className={isMobile ? "hidden" : ""}>{user.department || "-"}</TableCell>
+                        <TableCell className={isMobile ? "hidden" : ""}>{user.position || "-"}</TableCell>
+                        <TableCell className={isMobile ? "hidden" : ""}>
+                          <span className={`px-2 py-1 rounded-md text-xs ${
+                            user.role === 'prefeito' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {user.role === 'prefeito' ? 'Prefeito' : 'Administrador'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <UserActionMenu
+                            user={user}
+                            onEdit={handleEditUser}
+                            onDelete={handleDeleteUser}
+                            onResetPassword={handleResetPassword}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="analytics" className="space-y-6">
+          <UserStatsCard
+            totalUsers={users.length}
+            activeUsers={users.length} // In a real app, you'd track active users
+            departmentStats={departmentStats}
+          />
+          
+          <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+            <DepartmentUserStats 
+              departmentData={departmentChartData}
+            />
+            
+            <Card className="col-span-1 lg:col-span-1">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-4">Estatísticas de Permissões</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Distribuição de permissões por módulos:
+                </p>
+                
+                <div className="space-y-4">
+                  {[
+                    { module: "Administração", read: 15, write: 8, delete: 3 },
+                    { module: "Finanças", read: 12, write: 5, delete: 2 },
+                    { module: "RH", read: 10, write: 7, delete: 3 },
+                  ].map((stat) => (
+                    <div key={stat.module} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>{stat.module}</span>
+                        <span className="text-muted-foreground">
+                          {stat.read} usuários com acesso
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full bg-primary"
+                          style={{ width: `${(stat.read / users.length) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="logs">
+          <AccessLogTable logs={accessLogs} />
+        </TabsContent>
+      </Tabs>
+
+      <UserFormDialog
+        user={editingUser}
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSubmit={handleSubmitUser}
+      />
     </div>
   );
 }

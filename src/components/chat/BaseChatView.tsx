@@ -1,177 +1,200 @@
 
 import React, { useState, useEffect } from "react";
-import { useChat } from "@/contexts/ChatContext";
-import { ConversationList } from "./ConversationList";
-import { ConversationDetail } from "./ConversationDetail";
-import { ChatContactList } from "./ChatContactList";
-import { EmptyState } from "./EmptyState";
-import { Button } from "@/components/ui/button";
-import { MessageSquare, User, Users, Search, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChatContactList } from "./ChatContactList";
+import { ConversationList } from "./ConversationList";
 import { Input } from "@/components/ui/input";
+import { Conversation, Contact } from "@/contexts/ChatContext";
+import { Button } from "@/components/ui/button";
+import { Search, Users, MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-export interface BaseChatViewProps {
-  viewMode?: "admin" | "citizen";
+// Mock data for demonstration
+const mockContacts: Contact[] = [
+  { id: "c1", name: "Departamento de Saúde", type: "department", status: "online" },
+  { id: "c2", name: "Departamento de Educação", type: "department", status: "away" },
+  { id: "c3", name: "João Silva", type: "user", userName: "joaosilva", departmentName: "Finanças", status: "online", favorite: true },
+  { id: "c4", name: "Maria Oliveira", type: "user", userName: "mariaoliveira", departmentName: "Administração", status: "offline" },
+];
+
+const mockConversations: Conversation[] = [
+  { 
+    id: "conv1", 
+    participantId: "c1", 
+    participantName: "Departamento de Saúde", 
+    unreadCount: 2,
+    lastMessage: "Precisamos discutir o novo programa de vacinação",
+    lastMessageTime: "2023-05-05T10:30:00",
+    type: "department",
+    protocolIds: ["SAUDE-2023-000123"]
+  },
+  { 
+    id: "conv2", 
+    participantId: "c3", 
+    participantName: "João Silva", 
+    unreadCount: 0,
+    lastMessage: "Obrigado pelas informações.",
+    lastMessageTime: "2023-05-04T16:45:00",
+    type: "citizen",
+    protocolIds: ["FIN-2023-000456", "ADM-2023-000789"]
+  },
+];
+
+interface BaseChatViewProps {
+  viewMode: "admin" | "citizen";
 }
 
-export function BaseChatView({ viewMode = "admin" }: BaseChatViewProps) {
-  const {
-    activeConversationId,
-    setActiveConversation,
-    conversations,
-    contacts,
-    createConversation,
-  } = useChat();
-
-  const [activeTab, setActiveTab] = useState<"chats" | "contacts">("chats");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showDetail, setShowDetail] = useState(false);
+export function BaseChatView({ viewMode }: BaseChatViewProps) {
   const isMobile = useIsMobile();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<"conversations" | "contacts">("conversations");
+  const [filteredContacts, setFilteredContacts] = useState<Contact[]>(mockContacts);
+  const [filteredConversations, setFilteredConversations] = useState<Conversation[]>(mockConversations);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [showConversation, setShowConversation] = useState(false);
 
-  // Filter conversations by search query
-  const filteredConversations = conversations.filter((conv) =>
-    conv.participantName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Filter contacts by search query
-  const filteredContacts = contacts.filter((contact) =>
-    contact.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Handle selecting a conversation
-  const handleSelectConversation = (id: string) => {
-    setActiveConversation(id);
-    if (isMobile) {
-      setShowDetail(true);
-    }
-  };
-
-  // Handle selecting a contact
-  const handleSelectContact = (contactId: string, contactName: string) => {
-    // Check if there's already a conversation with this contact
-    const existingConversation = conversations.find(
-      (conv) => conv.participantId === contactId && conv.type !== "internal"
-    );
-
-    if (existingConversation) {
-      setActiveConversation(existingConversation.id);
+  // Filter contacts based on search term
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = mockContacts.filter(contact => 
+        contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contact.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contact.departmentName?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredContacts(filtered);
+      
+      const filteredConvs = mockConversations.filter(conv => 
+        conv.participantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        conv.lastMessage?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        conv.protocolIds?.some(protocol => protocol.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFilteredConversations(filteredConvs);
     } else {
-      // Create a new conversation with this contact
-      createConversation(contactId, contactName, viewMode === "admin" ? "citizen" : "internal")
-        .then((newConversation) => {
-          setActiveConversation(newConversation.id);
-        })
-        .catch((error) => {
-          console.error("Error creating conversation:", error);
-        });
+      setFilteredContacts(mockContacts);
+      setFilteredConversations(mockConversations);
     }
+  }, [searchTerm]);
 
+  const handleSelectContact = (id: string, name: string) => {
+    // Check if a conversation already exists with this contact
+    const existingConversation = mockConversations.find(conv => conv.participantId === id);
+    
+    if (existingConversation) {
+      setSelectedConversationId(existingConversation.id);
+    } else {
+      // In a real app, you'd create a new conversation here
+      console.log(`Starting new conversation with ${name} (ID: ${id})`);
+    }
+    
     if (isMobile) {
-      setShowDetail(true);
+      setShowConversation(true);
     }
   };
 
-  // Handle back navigation on mobile
-  const handleBack = () => {
+  const handleSelectConversation = (id: string) => {
+    setSelectedConversationId(id);
     if (isMobile) {
-      setShowDetail(false);
+      setShowConversation(true);
     }
   };
 
-  return (
-    <div className="flex h-full overflow-hidden bg-background">
-      {/* Sidebar - Contacts and Conversations */}
-      {(!isMobile || !showDetail) && (
-        <div className="w-full md:w-1/3 border-r flex flex-col h-full">
-          <div className="p-4 border-b">
-            <Tabs
-              defaultValue="chats"
-              value={activeTab}
-              onValueChange={(v) => setActiveTab(v as "chats" | "contacts")}
-              className="w-full"
-            >
-              <TabsList className="grid grid-cols-2">
-                <TabsTrigger value="chats">
-                  <MessageSquare className="h-4 w-4 mr-2" /> Conversas
-                </TabsTrigger>
-                <TabsTrigger value="contacts">
-                  <User className="h-4 w-4 mr-2" /> Contatos
-                </TabsTrigger>
-              </TabsList>
+  const handleBackToList = () => {
+    setShowConversation(false);
+  };
 
-              <div className="mt-4 flex items-center space-x-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Pesquisar..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
-                <Button size="icon">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <TabsContent value="chats" className="mt-4 p-0">
-                <div>
-                  {filteredConversations.length > 0 ? (
-                    <ConversationList
-                      conversations={filteredConversations}
-                      onSelect={handleSelectConversation}
-                    />
-                  ) : (
-                    <EmptyState
-                      title="Nenhuma conversa encontrada"
-                      description={
-                        searchQuery
-                          ? "Tente outro termo de pesquisa"
-                          : "Você ainda não tem conversas ativas"
-                      }
-                      icon={<MessageSquare className="h-12 w-12 text-muted-foreground" />}
-                    />
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="contacts" className="mt-4 p-0">
-                <div>
-                  {filteredContacts.length > 0 ? (
-                    <ChatContactList
-                      contacts={filteredContacts}
-                      onSelect={handleSelectContact}
-                    />
-                  ) : (
-                    <EmptyState
-                      title="Nenhum contato encontrado"
-                      description={
-                        searchQuery
-                          ? "Tente outro termo de pesquisa"
-                          : "Você ainda não tem contatos"
-                      }
-                      icon={<Users className="h-12 w-12 text-muted-foreground" />}
-                    />
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
+  const renderSidebar = () => (
+    <div className="flex flex-col h-full border-r">
+      <div className="p-4 border-b">
+        <div className="flex items-center space-x-2">
+          <div className="relative flex-grow">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar conversas ou contatos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Main Content - Conversation Detail */}
-      {(!isMobile || showDetail) && (
-        <div className="w-full md:w-2/3 flex flex-col h-full">
-          {activeConversationId ? (
-            <ConversationDetail onBack={handleBack} />
-          ) : (
-            <EmptyState
-              title="Selecione uma conversa"
-              description="Escolha uma conversa da lista ou um contato para iniciar uma nova conversa"
-            />
-          )}
+      <Tabs 
+        defaultValue="conversations" 
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as "conversations" | "contacts")}
+        className="flex-1 flex flex-col"
+      >
+        <TabsList className="grid grid-cols-2 mx-4 mt-2">
+          <TabsTrigger value="conversations" className="flex items-center">
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Conversas
+          </TabsTrigger>
+          <TabsTrigger value="contacts" className="flex items-center">
+            <Users className="h-4 w-4 mr-2" />
+            Contatos
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="conversations" className="flex-1 overflow-hidden mt-0 p-0">
+          <ConversationList 
+            conversations={filteredConversations} 
+            onSelect={handleSelectConversation} 
+          />
+        </TabsContent>
+        
+        <TabsContent value="contacts" className="flex-1 overflow-hidden mt-0 p-0">
+          <ChatContactList 
+            contacts={filteredContacts}
+            onSelect={handleSelectContact}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+
+  const renderConversation = () => (
+    <div className="flex flex-col h-full">
+      {isMobile && showConversation && (
+        <div className="p-2 border-b">
+          <Button variant="ghost" onClick={handleBackToList} className="p-2">
+            &larr; Voltar
+          </Button>
+        </div>
+      )}
+      
+      <div className="flex-1 p-4 flex items-center justify-center text-muted-foreground">
+        {selectedConversationId ? (
+          <div className="text-center">
+            <h3 className="text-lg font-medium">
+              Conversando com {mockConversations.find(c => c.id === selectedConversationId)?.participantName}
+            </h3>
+            <p className="text-sm mt-2">
+              Aqui seria exibida a conversa completa com esta pessoa ou departamento.
+            </p>
+          </div>
+        ) : (
+          <div className="text-center">
+            <h3 className="text-lg font-medium">Selecione uma conversa</h3>
+            <p className="text-sm mt-2">
+              Escolha uma conversa existente ou inicie uma nova a partir da lista de contatos.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex h-[calc(100vh-150px)]">
+      {(!isMobile || !showConversation) && (
+        <div className={`${isMobile ? 'w-full' : 'w-80'} h-full`}>
+          {renderSidebar()}
+        </div>
+      )}
+      
+      {(!isMobile || showConversation) && (
+        <div className={`${isMobile ? 'w-full' : 'flex-1'} h-full`}>
+          {renderConversation()}
         </div>
       )}
     </div>
