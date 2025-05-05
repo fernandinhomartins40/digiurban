@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
@@ -7,7 +6,8 @@ import {
   CreateRequestDTO, 
   RequestStatus,
   RequesterType,
-  PriorityLevel
+  PriorityLevel,
+  UpdateRequestDTO
 } from "@/types/requests";
 import { 
   getUnifiedRequests, 
@@ -18,6 +18,7 @@ import {
   addCommentToRequest,
   uploadRequestAttachment
 } from "@/services/requestsService";
+import { mapStatusName } from "@/utils/requestMappers";
 
 export const useUnifiedRequests = () => {
   const queryClient = useQueryClient();
@@ -98,12 +99,15 @@ export const useUnifiedRequests = () => {
   // Update request status
   const handleUpdateRequestStatus = useCallback(async (id: string, status: RequestStatus) => {
     try {
-      const result = await updateUnifiedRequest(id, { status });
+      const result = await updateUnifiedRequest(id, { 
+        id, // Add the id to match the UpdateRequestDTO type
+        status 
+      });
       
       if (result) {
         toast({
           title: 'Status atualizado',
-          description: `Status alterado para "${status}"`,
+          description: `Status alterado para "${mapStatusName(status)}"`,
         });
         
         // Refresh the requests list and selected request

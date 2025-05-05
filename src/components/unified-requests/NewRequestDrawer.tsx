@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CreateRequestDTO } from "@/types/requests";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Form schema
 const requestFormSchema = z.object({
@@ -55,6 +56,8 @@ export function NewRequestDrawer({
   departments,
   onSubmit,
 }: NewRequestDrawerProps) {
+  const { user } = useAuth();
+  
   const form = useForm<RequestFormValues>({
     resolver: zodResolver(requestFormSchema),
     defaultValues: {
@@ -67,7 +70,14 @@ export function NewRequestDrawer({
   });
 
   const handleSubmit = async (values: RequestFormValues) => {
-    const result = await onSubmit(values);
+    // Create a complete request DTO with the required fields
+    const requestData: CreateRequestDTO = {
+      ...values,
+      requester_type: user?.role === 'citizen' ? 'citizen' : 'department',
+      requester_id: user?.id || ''
+    };
+    
+    const result = await onSubmit(requestData);
     if (result) {
       form.reset();
       onClose();

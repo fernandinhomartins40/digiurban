@@ -8,7 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function CitizenProfile() {
   const { user } = useAuth();
 
-  // Safe access to user properties with TypeScript guards
+  // Safely access metadata - Account for different user types
+  // First check if it's a CitizenUser type with user_metadata, otherwise fall back to regular user_metadata field
   const userMetadata = user?.user_metadata || {};
 
   return (

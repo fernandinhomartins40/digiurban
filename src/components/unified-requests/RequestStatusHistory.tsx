@@ -1,25 +1,15 @@
 
 import React from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { UnifiedRequest } from "@/types/requests";
 import { mapStatusName } from "@/utils/requestMappers";
 import { Clock, AlertCircle } from "lucide-react";
+import { formatDate, toDate } from "@/utils/dateUtils"; 
 
 interface RequestStatusHistoryProps {
   request: UnifiedRequest;
 }
 
 export function RequestStatusHistory({ request }: RequestStatusHistoryProps) {
-  const formatDate = (date: string | Date | undefined) => {
-    if (!date) return "Data inválida";
-    try {
-      return format(new Date(date), "dd/MM/yyyy HH:mm", { locale: ptBR });
-    } catch (e) {
-      return "Data inválida";
-    }
-  };
-  
   // Add creation event to history
   const events = [
     {
@@ -41,9 +31,15 @@ export function RequestStatusHistory({ request }: RequestStatusHistoryProps) {
       person: "Sistema"
     }] : [])
   ].sort((a, b) => {
-    const dateA = a.date ? new Date(a.date).getTime() : 0;
-    const dateB = b.date ? new Date(b.date).getTime() : 0;
-    return dateA - dateB;
+    // Safely convert to timestamps for comparison
+    const dateA = toDate(a.date);
+    const dateB = toDate(b.date);
+    
+    if (!dateA && !dateB) return 0;
+    if (!dateA) return -1;
+    if (!dateB) return 1;
+    
+    return dateA.getTime() - dateB.getTime();
   });
   
   return (
@@ -61,7 +57,7 @@ export function RequestStatusHistory({ request }: RequestStatusHistoryProps) {
               <div>
                 <p className="text-sm font-medium">{event.title}</p>
                 <time className="text-xs text-muted-foreground">
-                  {formatDate(event.date)} • {event.person}
+                  {formatDate(event.date, "dd/MM/yyyy HH:mm")} • {event.person}
                 </time>
                 {event.description && (
                   <p className="mt-2 text-sm">{event.description}</p>
