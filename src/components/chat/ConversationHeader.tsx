@@ -33,18 +33,18 @@ export function ConversationHeader({
         <Button
           variant="ghost"
           size="icon"
-          className="mr-2 md:hidden flex-shrink-0"
+          className="mr-2 md:hidden"
           onClick={onBack}
         >
           <ArrowLeft size={20} />
         </Button>
-        <Avatar className="h-10 w-10 mr-3 flex-shrink-0">
+        <Avatar className="h-10 w-10 mr-3">
           <AvatarFallback>
             {conversation.participantName?.charAt(0) || "U"}
           </AvatarFallback>
         </Avatar>
-        <div className="overflow-hidden">
-          <h3 className="font-medium text-sm truncate">
+        <div>
+          <h3 className="font-medium text-sm">
             {conversation.participantName || "Usuário"}
           </h3>
           <p className="text-xs text-muted-foreground">
@@ -55,18 +55,18 @@ export function ConversationHeader({
 
       <div className="flex items-center">
         {conversation.protocolIds && conversation.protocolIds.length > 0 && (
-          <Badge variant="outline" className="mr-2 text-xs">
+          <Badge variant="outline" className="mr-2">
             Protocolo: {conversation.protocolIds[0]}
           </Badge>
         )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="flex-shrink-0">
+            <Button variant="ghost" size="icon">
               <MoreHorizontal size={20} />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[160px]">
+          <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onAddTag}>
               Adicionar tag
             </DropdownMenuItem>

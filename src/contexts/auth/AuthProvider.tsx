@@ -1,3 +1,4 @@
+
 import React, { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -259,7 +260,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setSession(null);
       setUserType(null);
-      navigate("/", { replace: true }); // Changed from "/login" to "/"
+      navigate("/login", { replace: true });
     } catch (error: any) {
       console.error("Logout error:", error.message);
       toast({

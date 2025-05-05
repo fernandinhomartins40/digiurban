@@ -36,7 +36,7 @@ export function ConversationList({
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       {conversations.map((conversation) => (
         <div
           key={conversation.id}
@@ -46,13 +46,13 @@ export function ConversationList({
           )}
           onClick={() => onSelect(conversation.id)}
         >
-          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mr-3 flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mr-3">
             {conversation.type === "citizen" ? <User size={20} /> : <Users size={20} />}
           </div>
           
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-start">
-              <span className="font-medium truncate text-sm">{conversation.title}</span>
+              <span className="font-medium truncate">{conversation.title}</span>
               {conversation.lastMessageTime && (
                 <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
                   {formatLastMessageTime(conversation.lastMessageTime)}
@@ -67,14 +67,14 @@ export function ConversationList({
             )}
             
             {conversation.lastMessage && (
-              <p className="text-xs text-muted-foreground truncate mt-0.5">
+              <p className="text-sm text-muted-foreground truncate">
                 {conversation.lastMessage}
               </p>
             )}
           </div>
           
           {conversation.unreadCount > 0 && (
-            <Badge className="ml-2 flex-shrink-0">{conversation.unreadCount}</Badge>
+            <Badge className="ml-2">{conversation.unreadCount}</Badge>
           )}
         </div>
       ))}

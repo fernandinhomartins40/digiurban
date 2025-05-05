@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { NavigateFunction } from "react-router-dom";
@@ -141,7 +142,7 @@ export function createAuthActions(
       setIsLoading(true);
       await supabase.auth.signOut();
       clearAuthState();
-      navigate("/", { replace: true }); // Changed from "/login" to "/"
+      navigate("/login", { replace: true });
     } catch (error: any) {
       console.error("Logout error:", error.message);
       toast({
