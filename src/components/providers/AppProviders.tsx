@@ -14,7 +14,15 @@ interface AppProvidersProps {
 export function AppProviders({ children }: AppProvidersProps) {
   // Create a new QueryClient instance INSIDE the component
   // This ensures React hooks are called properly in component render context
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        suspense: false, // Disable suspense by default to prevent the error
+        retry: 1,
+        refetchOnWindowFocus: false,
+      },
+    },
+  });
 
   return (
     <QueryClientProvider client={queryClient}>

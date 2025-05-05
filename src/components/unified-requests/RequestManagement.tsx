@@ -133,14 +133,14 @@ export function RequestManagement({
                 />
               </div>
 
-              <Select value={requesterTypeFilter || ""} onValueChange={(value) => 
-                setRequesterTypeFilter(value ? value as any : undefined)
+              <Select value={requesterTypeFilter || "all"} onValueChange={(value) => 
+                setRequesterTypeFilter(value === "all" ? undefined : value as any)
               }>
                 <SelectTrigger className="w-full md:w-[200px]">
                   <SelectValue placeholder="Filtrar por origem" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as origens</SelectItem>
+                  <SelectItem value="all">Todas as origens</SelectItem>
                   <SelectItem value="citizen">Cidadão</SelectItem>
                   <SelectItem value="department">Departamento</SelectItem>
                   <SelectItem value="mayor">Gabinete</SelectItem>
