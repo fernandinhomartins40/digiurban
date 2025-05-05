@@ -20,7 +20,7 @@ export function MessageList({ messages, onLoadMoreMessages }: MessageListProps) 
 
   return (
     <div
-      className="flex-1 overflow-y-auto p-4"
+      className="flex-1 overflow-y-auto p-4 space-y-4"
       ref={messageContainerRef}
       onScroll={(e) => {
         const { scrollTop } = e.currentTarget;

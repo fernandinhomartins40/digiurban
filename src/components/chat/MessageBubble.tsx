@@ -15,12 +15,12 @@ export function MessageBubble({ message, isCurrentUser }: MessageBubbleProps) {
   const formattedTime = format(timestamp, "HH:mm", { locale: ptBR });
 
   return (
-    <div className={cn("flex", isCurrentUser ? "justify-end" : "justify-start")}>
+    <div className={cn("max-w-full", isCurrentUser ? "items-end" : "items-start")}>
       <div
         className={cn(
-          "max-w-full rounded-lg px-4 py-3",
+          "rounded-lg px-4 py-2.5",
           isCurrentUser
-            ? "bg-primary text-white rounded-tr-none"
+            ? "bg-primary text-primary-foreground rounded-tr-none"
             : "bg-muted text-foreground rounded-tl-none"
         )}
       >

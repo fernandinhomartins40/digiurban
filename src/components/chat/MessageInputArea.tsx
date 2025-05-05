@@ -64,7 +64,7 @@ export function MessageInputArea({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6"
+                className="h-6 w-6 ml-1"
                 onClick={() => removeAttachment(index)}
               >
                 <X size={14} />
@@ -75,7 +75,7 @@ export function MessageInputArea({
       )}
 
       {/* Message input */}
-      <div className="p-4 border-t flex items-center gap-2">
+      <div className="p-3 border-t flex items-center gap-2">
         <input
           type="file"
           multiple
@@ -86,6 +86,7 @@ export function MessageInputArea({
         <Button
           variant="ghost"
           size="icon"
+          className="flex-shrink-0"
           onClick={() => fileInputRef.current?.click()}
         >
           <PaperclipIcon size={20} />
@@ -99,6 +100,7 @@ export function MessageInputArea({
         />
         <Button
           size="icon"
+          className="flex-shrink-0"
           onClick={handleSendMessage}
           disabled={!messageText.trim() && attachments.length === 0}
         >

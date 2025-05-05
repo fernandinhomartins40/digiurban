@@ -33,7 +33,12 @@ export function CitizenChatView() {
     if (!isMobile && showMobileDetail) {
       setShowMobileDetail(false);
     }
-  }, [isMobile]);
+    
+    // Auto-select conversation if there's only one and we're not on mobile
+    if (!isMobile && conversations.length === 1 && !activeConversationId) {
+      setActiveConversation(conversations[0].id);
+    }
+  }, [isMobile, conversations, activeConversationId, setActiveConversation]);
 
   const handleCreateConversation = async () => {
     if (!user) return;
@@ -100,8 +105,8 @@ export function CitizenChatView() {
     <div className="flex h-full overflow-hidden bg-background rounded-lg">
       {/* Sidebar - Contacts and Conversations */}
       {showList && (
-        <div className={`${showDetail ? "w-full md:w-1/3 border-r" : "w-full"} flex flex-col h-full`}>
-          <div className="p-2 border-b">
+        <div className={`${showDetail && !isMobile ? "w-1/3 border-r" : "w-full"} flex flex-col h-full`}>
+          <div className="p-3 border-b">
             <Tabs 
               defaultValue="chats" 
               value={activeTab} 
@@ -117,10 +122,10 @@ export function CitizenChatView() {
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="chats" className="mt-2">
-                <div className="px-2 pb-2">
-                  {/* New Conversation Button - Now opens the dialog */}
-                  <div className="mb-4">
+              <TabsContent value="chats" className="mt-3">
+                <div className="px-2">
+                  {/* New Conversation Button */}
+                  <div className="mb-3">
                     <Button 
                       onClick={handleOpenNewChatDialog}
                       className="w-full"
@@ -146,8 +151,8 @@ export function CitizenChatView() {
                 </div>
               </TabsContent>
               
-              <TabsContent value="contacts" className="mt-2">
-                <div className="px-2 pb-2">
+              <TabsContent value="contacts" className="mt-3">
+                <div className="px-2">
                   {contacts.length > 0 ? (
                     <ChatContactList 
                       contacts={contacts} 

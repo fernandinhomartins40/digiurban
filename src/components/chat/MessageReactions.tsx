@@ -23,20 +23,20 @@ export function MessageReactions({ reactions }: MessageReactionsProps) {
   const reactionTypes = Object.keys(reactionCounts);
   
   return (
-    <div className="flex items-center gap-1 mt-1">
+    <div className="flex flex-wrap items-center gap-1">
       {reactionTypes.map(type => (
         <div 
           key={type}
-          className="flex items-center bg-background border rounded-full py-0.5 px-1.5 text-xs shadow-sm"
+          className="flex items-center bg-background border rounded-full py-0.5 px-2 text-xs shadow-sm hover:bg-accent transition-colors"
           title={reactions
             .filter(r => r.type === type)
             .map(r => r.userName)
             .join(", ")
           }
         >
-          <span>{type}</span>
+          <span className="mr-0.5">{type}</span>
           {reactionCounts[type] > 1 && (
-            <span className="ml-1">{reactionCounts[type]}</span>
+            <span className="font-medium">{reactionCounts[type]}</span>
           )}
         </div>
       ))}

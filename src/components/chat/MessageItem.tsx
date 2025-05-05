@@ -29,9 +29,9 @@ export function MessageItem({
   };
   
   return (
-    <div className={`group flex gap-3 items-end mb-4 ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
+    <div className={`group flex gap-3 mb-4 ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
       {!isCurrentUser && (
-        <Avatar className="w-8 h-8 flex-shrink-0">
+        <Avatar className="h-8 w-8 flex-shrink-0 mt-1">
           <AvatarFallback>
             {message.senderName?.charAt(0) || 'U'}
           </AvatarFallback>
