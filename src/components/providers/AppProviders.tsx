@@ -17,9 +17,10 @@ export function AppProviders({ children }: AppProvidersProps) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        suspense: false, // Disable suspense by default to prevent the error
+        // Use standard options without suspense
         retry: 1,
         refetchOnWindowFocus: false,
+        useErrorBoundary: false
       },
     },
   });

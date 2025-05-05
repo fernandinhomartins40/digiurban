@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { Helmet } from "react-helmet";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -31,18 +31,24 @@ import {
 import { Appointment, AppointmentStatus } from "@/types/mayorOffice";
 import { AppointmentDrawer } from "@/components/gabinete/agendamentos/AppointmentDrawer";
 import { NewAppointmentDialog } from "@/components/gabinete/agendamentos/NewAppointmentDialog";
+import { Loader2 } from "lucide-react";
 
-export default function AppointmentScheduler() {
-  const { user } = useAuth();
+// Create a separate component for the appointments content
+// This helps with error boundaries and suspense
+function AppointmentsContent({ 
+  filterStatus, 
+  setSelectedAppointment, 
+  setDrawerOpen 
+}: { 
+  filterStatus: AppointmentStatus | "all",
+  setSelectedAppointment: React.Dispatch<React.SetStateAction<Appointment | null>>,
+  setDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>
+}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [filterStatus, setFilterStatus] = useState<AppointmentStatus | "all">("all");
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
 
-  // Fetch appointments
-  const { data: appointments, isLoading } = useQuery({
+  // Fetch appointments with proper error handling
+  const { data: appointments, isLoading, error } = useQuery({
     queryKey: ["mayorAppointments", filterStatus],
     queryFn: () => getMayorAppointments(filterStatus !== "all" ? filterStatus : undefined),
   });
@@ -67,11 +73,6 @@ export default function AppointmentScheduler() {
       });
     },
   });
-
-  // Handle status change
-  const handleStatusChange = async (appointmentId: string, status: AppointmentStatus) => {
-    updateStatusMutation.mutate({ appointmentId, status });
-  };
 
   // Handle appointment click
   const handleAppointmentClick = (appointment: Appointment) => {
@@ -103,6 +104,99 @@ export default function AppointmentScheduler() {
         return <Badge variant="destructive">Cancelado</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-10">
+        <Loader2 className="h-8 w-8 animate-spin mr-2" />
+        <span>Carregando agendamentos...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-center">
+        <p className="text-destructive font-medium">Erro ao carregar agendamentos</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          {error instanceof Error ? error.message : "Ocorreu um erro desconhecido"}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {appointments && appointments.length > 0 ? (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Assunto</TableHead>
+                <TableHead>Solicitante</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Horário</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Local</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {appointments.map((appointment) => (
+                <TableRow key={appointment.id}>
+                  <TableCell className="font-medium">
+                    {appointment.subject}
+                  </TableCell>
+                  <TableCell>{appointment.requesterName}</TableCell>
+                  <TableCell>
+                    {formatAppointmentDate(appointment.requestedDate.toString())}
+                  </TableCell>
+                  <TableCell>{appointment.requestedTime}</TableCell>
+                  <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                  <TableCell>{appointment.location || "-"}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAppointmentClick(appointment)}
+                    >
+                      Detalhes
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <p className="text-muted-foreground">
+            Nenhum agendamento encontrado.
+          </p>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function AppointmentScheduler() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [filterStatus, setFilterStatus] = useState<AppointmentStatus | "all">("all");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
+
+  // Handle status change 
+  const handleStatusChange = async (appointmentId: string, status: AppointmentStatus) => {
+    try {
+      await updateMayorAppointmentStatus(appointmentId, status);
+      queryClient.invalidateQueries({ queryKey: ["mayorAppointments"] });
+      setDrawerOpen(false);
+    } catch (error) {
+      console.error("Error updating appointment status:", error);
     }
   };
 
@@ -164,69 +258,22 @@ export default function AppointmentScheduler() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          <Suspense fallback={
             <div className="flex items-center justify-center py-10">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <Loader2 className="h-8 w-8 animate-spin mr-2" />
+              <span>Carregando...</span>
             </div>
-          ) : appointments && appointments.length > 0 ? (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Assunto</TableHead>
-                    <TableHead>Solicitante</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Horário</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Local</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {appointments.map((appointment) => (
-                    <TableRow key={appointment.id}>
-                      <TableCell className="font-medium">
-                        {appointment.subject}
-                      </TableCell>
-                      <TableCell>{appointment.requesterName}</TableCell>
-                      <TableCell>
-                        {formatAppointmentDate(appointment.requestedDate.toString())}
-                      </TableCell>
-                      <TableCell>{appointment.requestedTime}</TableCell>
-                      <TableCell>{getStatusBadge(appointment.status)}</TableCell>
-                      <TableCell>{appointment.location || "-"}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleAppointmentClick(appointment)}
-                        >
-                          Detalhes
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <p className="text-muted-foreground">
-                Nenhum agendamento encontrado.
-              </p>
-              <NewAppointmentDialog 
-                open={isNewAppointmentDialogOpen} 
-                onOpenChange={setIsNewAppointmentDialogOpen}
-                onSuccess={() => queryClient.invalidateQueries({ queryKey: ["mayorAppointments"] })}
-                buttonVariant="outline" 
-                className="mt-4"
-              />
-            </div>
-          )}
+          }>
+            <AppointmentsContent 
+              filterStatus={filterStatus} 
+              setSelectedAppointment={setSelectedAppointment} 
+              setDrawerOpen={setDrawerOpen}
+            />
+          </Suspense>
         </CardContent>
         <CardFooter className="flex justify-between border-t pt-4">
           <div className="text-sm text-muted-foreground">
-            {appointments?.length || 0} agendamentos
+            Gerenciamento de agendamentos
           </div>
         </CardFooter>
       </Card>
