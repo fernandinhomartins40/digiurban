@@ -36,9 +36,10 @@ const queryClient = new QueryClient({
 });
 
 // Add a global error handler for all queries using the QueryCache subscription
-queryClient.getQueryCache().subscribe({
-  onError: (error) => {
-    console.error("Query error:", error);
+// Using the correct event listener pattern for QueryCache
+queryClient.getQueryCache().subscribe(event => {
+  if (event.type === 'error') {
+    console.error("Query error:", event.error);
     toast({
       title: "Erro",
       description: "Ocorreu um erro ao carregar os dados",
