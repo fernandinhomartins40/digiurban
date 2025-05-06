@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useTransition } from "react";
 import { Activity, Users, FileText, Bell, Clock } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/common/DashboardHeader";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -10,13 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 export default function AdminDashboard() {
+  // Add transition state
+  const [isPending, startTransition] = useTransition();
+  
   const {
     dateRange,
     startDate,
     endDate,
-    handleDateRangeChange,
-    setStartDate,
-    setEndDate,
+    handleDateRangeChange: originalHandleDateRangeChange,
+    setStartDate: originalSetStartDate,
+    setEndDate: originalSetEndDate,
     metricsData,
     chartData,
     isLoading,
@@ -24,6 +28,25 @@ export default function AdminDashboard() {
     error,
     handleRetry
   } = useMainDashboard();
+  
+  // Wrap date functions in startTransition
+  const handleDateRangeChange = (range: "7d" | "30d" | "90d" | "custom") => {
+    startTransition(() => {
+      originalHandleDateRangeChange(range);
+    });
+  };
+  
+  const setStartDate = (date?: Date) => {
+    startTransition(() => {
+      originalSetStartDate(date);
+    });
+  };
+  
+  const setEndDate = (date?: Date) => {
+    startTransition(() => {
+      originalSetEndDate(date);
+    });
+  };
 
   // Prepare metrics for the dashboard
   const metrics = metricsData ? [
@@ -277,7 +300,7 @@ export default function AdminDashboard() {
   return (
     <DashboardLayout
       title="Dashboard Administrativo"
-      isLoading={isLoading}
+      isLoading={isLoading || isPending}
       isError={isError}
       error={error}
       onRetry={handleRetry}

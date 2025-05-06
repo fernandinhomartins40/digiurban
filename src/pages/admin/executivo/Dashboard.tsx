@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { FileText, AlertTriangle, TrendingUp, TrendingDown, ChartBar } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { DashboardHeader } from "@/components/dashboard/common/DashboardHeader";
@@ -27,14 +26,35 @@ import { useDateRangeFilter } from "@/hooks/useDashboardData";
 
 export default function ExecutiveDashboard() {
   const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  
   const {
     dateRange,
     startDate,
     endDate,
-    handleDateRangeChange,
-    setStartDate,
-    setEndDate,
+    handleDateRangeChange: originalHandleDateRangeChange,
+    setStartDate: originalSetStartDate,
+    setEndDate: originalSetEndDate,
   } = useDateRangeFilter("30d");
+  
+  // Wrap date range changes in startTransition
+  const handleDateRangeChange = (range: "7d" | "30d" | "90d" | "custom") => {
+    startTransition(() => {
+      originalHandleDateRangeChange(range);
+    });
+  };
+  
+  const setStartDate = (date?: Date) => {
+    startTransition(() => {
+      originalSetStartDate(date);
+    });
+  };
+  
+  const setEndDate = (date?: Date) => {
+    startTransition(() => {
+      originalSetEndDate(date);
+    });
+  };
 
   // Get data from individual department dashboards
   const { metricsData: obrasMetrics, chartData: obrasChartData } = useObrasDashboard();
@@ -44,6 +64,13 @@ export default function ExecutiveDashboard() {
 
   // Department for filtering
   const [selectedDepartment, setSelectedDepartment] = useState<string | undefined>(undefined);
+
+  // Wrap department filter changes in startTransition
+  const handleDepartmentChange = (value: string | undefined) => {
+    startTransition(() => {
+      setSelectedDepartment(value);
+    });
+  };
 
   const departments = [
     { value: "saude", label: "Saúde" },
@@ -164,7 +191,7 @@ export default function ExecutiveDashboard() {
       }}
       sectors={departments}
       selectedSector={selectedDepartment}
-      onSectorChange={setSelectedDepartment}
+      onSectorChange={handleDepartmentChange}
       rightContent={
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" onClick={handleExportData}>
@@ -264,10 +291,9 @@ export default function ExecutiveDashboard() {
     <DashboardLayout 
       title="Dashboard Executivo"
       header={header}
+      metrics={metricsSection}
+      isLoading={isPending}
     >
-      {/* Metrics row */}
-      {metricsSection}
-
       {/* Charts section */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3 mt-4">
         {/* Budget execution by department */}

@@ -13,9 +13,9 @@ import {
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { DashboardHeader } from "@/components/dashboard/common/DashboardHeader";
 import { MetricCard } from "@/components/dashboard/common/DashboardMetricCards";
-import { ChartCard, DashboardLineChart, DashboardBarChart, DashboardPieChart } from "@/components/dashboard/common/DashboardCharts";
-import { Button } from "@/components/ui/button";
+import { ChartCard, DashboardBarChart, DashboardLineChart, DashboardPieChart } from "@/components/dashboard/common/DashboardCharts";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function MayorDashboard() {
@@ -29,24 +29,21 @@ export default function MayorDashboard() {
   const [selectedSector, setSelectedSector] = React.useState<string | undefined>(undefined);
 
   // Handle date range changes wrapped in startTransition
-  const handleDateRangeChange = useMemo(
-    () => (range: "7d" | "30d" | "90d" | "custom") => {
-      startTransition(() => {
-        setDateRange(range);
-        if (range === "7d") {
-          setStartDate(subDays(new Date(), 7));
-          setEndDate(new Date());
-        } else if (range === "30d") {
-          setStartDate(subDays(new Date(), 30));
-          setEndDate(new Date());
-        } else if (range === "90d") {
-          setStartDate(subDays(new Date(), 90));
-          setEndDate(new Date());
-        }
-      });
-    },
-    []
-  );
+  const handleDateRangeChange = (range: "7d" | "30d" | "90d" | "custom") => {
+    startTransition(() => {
+      setDateRange(range);
+      if (range === "7d") {
+        setStartDate(subDays(new Date(), 7));
+        setEndDate(new Date());
+      } else if (range === "30d") {
+        setStartDate(subDays(new Date(), 30));
+        setEndDate(new Date());
+      } else if (range === "90d") {
+        setStartDate(subDays(new Date(), 90));
+        setEndDate(new Date());
+      }
+    });
+  };
 
   // Define sectors for the filter
   const sectors = [
