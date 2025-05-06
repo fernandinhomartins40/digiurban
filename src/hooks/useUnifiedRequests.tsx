@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useTransition } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { 
@@ -23,6 +23,7 @@ import { mapStatusName } from "@/utils/requestMappers";
 
 export const useUnifiedRequests = () => {
   const queryClient = useQueryClient();
+  const [isPending, startTransition] = useTransition();
   
   // Filters
   const [departmentFilter, setDepartmentFilter] = useState<string | undefined>();
@@ -33,10 +34,35 @@ export const useUnifiedRequests = () => {
   // Selected request
   const [selectedRequest, setSelectedRequest] = useState<UnifiedRequest | null>(null);
   
+  // Wrap filter state updates with startTransition
+  const handleSetDepartmentFilter = useCallback((value: string | undefined) => {
+    startTransition(() => {
+      setDepartmentFilter(value);
+    });
+  }, []);
+  
+  const handleSetStatusFilter = useCallback((value: RequestStatus | undefined) => {
+    startTransition(() => {
+      setStatusFilter(value);
+    });
+  }, []);
+  
+  const handleSetRequesterTypeFilter = useCallback((value: RequesterType | undefined) => {
+    startTransition(() => {
+      setRequesterTypeFilter(value);
+    });
+  }, []);
+  
+  const handleSetSearchTerm = useCallback((value: string) => {
+    startTransition(() => {
+      setSearchTerm(value);
+    });
+  }, []);
+  
   // Fetch requests with filters
   const { 
     data: requests,
-    isLoading,
+    isLoading: isLoadingQuery,
     refetch
   } = useQuery({
     queryKey: ['unified-requests', departmentFilter, statusFilter, requesterTypeFilter, searchTerm],
@@ -47,6 +73,9 @@ export const useUnifiedRequests = () => {
       searchTerm || undefined
     )
   });
+  
+  // Combine loading states
+  const isLoading = isLoadingQuery || isPending;
   
   // Fetch a single request by ID
   const fetchRequestById = useCallback(async (id: string) => {
@@ -221,13 +250,13 @@ export const useUnifiedRequests = () => {
     
     // Filters
     departmentFilter,
-    setDepartmentFilter,
+    setDepartmentFilter: handleSetDepartmentFilter,
     statusFilter,
-    setStatusFilter,
+    setStatusFilter: handleSetStatusFilter,
     requesterTypeFilter,
-    setRequesterTypeFilter,
+    setRequesterTypeFilter: handleSetRequesterTypeFilter,
     searchTerm,
-    setSearchTerm,
+    setSearchTerm: handleSetSearchTerm,
     
     // Actions
     fetchRequestById,

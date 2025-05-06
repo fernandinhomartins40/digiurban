@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnifiedRequests } from "@/hooks/useUnifiedRequests";
 import { UnifiedRequest, RequestStatus, PriorityLevel } from "@/types/requests";
@@ -32,6 +32,8 @@ interface RequestManagementProps {
   departmentFilter?: string;
   showNewRequestButton?: boolean;
   allowForwarding?: boolean;
+  useTransition?: (callback: () => void) => void;
+  isPending?: boolean;
 }
 
 export function RequestManagement({
@@ -39,15 +41,24 @@ export function RequestManagement({
   description = "Gerencie as solicitações",
   departmentFilter,
   showNewRequestButton = true,
-  allowForwarding = true
+  allowForwarding = true,
+  useTransition,
+  isPending = false
 }: RequestManagementProps) {
   const { user } = useAuth();
   const [isNewRequestDrawerOpen, setIsNewRequestDrawerOpen] = useState(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   
+  // If no external transition is provided, create one internally
+  const [internalIsPending, startInternalTransition] = useTransition();
+  
+  // Use either the provided transition or the internal one
+  const startTransition = useTransition || startInternalTransition;
+  const isLoading = isPending || internalIsPending;
+  
   const {
     requests,
-    isLoading,
+    isLoading: isLoadingRequests,
     selectedRequest,
     setSelectedRequest,
     
@@ -78,6 +89,25 @@ export function RequestManagement({
   const handleRequestClick = (request: UnifiedRequest) => {
     setSelectedRequest(request);
     setIsDetailDrawerOpen(true);
+  };
+  
+  // Wrap filter changes in startTransition to prevent UI freezes
+  const handleStatusFilterChange = (status: RequestStatus | undefined) => {
+    startTransition(() => {
+      setStatusFilter(status);
+    });
+  };
+  
+  const handleRequesterTypeFilterChange = (value: string | undefined) => {
+    startTransition(() => {
+      setRequesterTypeFilter(value === "all" ? undefined : value as any);
+    });
+  };
+  
+  const handleSearchTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    startTransition(() => {
+      setSearchTerm(e.target.value);
+    });
   };
   
   // Get available departments for dropdown
@@ -129,13 +159,14 @@ export function RequestManagement({
                   className="pl-8 w-full md:w-[250px]"
                   placeholder="Buscar solicitação..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearchTermChange}
                 />
               </div>
 
-              <Select value={requesterTypeFilter || "all"} onValueChange={(value) => 
-                setRequesterTypeFilter(value === "all" ? undefined : value as any)
-              }>
+              <Select 
+                value={requesterTypeFilter || "all"} 
+                onValueChange={handleRequesterTypeFilterChange}
+              >
                 <SelectTrigger className="w-full md:w-[200px]">
                   <SelectValue placeholder="Filtrar por origem" />
                 </SelectTrigger>
@@ -152,23 +183,35 @@ export function RequestManagement({
 
         <Tabs defaultValue="all" className="p-4">
           <TabsList className="grid grid-cols-4 mb-4">
-            <TabsTrigger value="all" onClick={() => setStatusFilter(undefined)}>
+            <TabsTrigger 
+              value="all" 
+              onClick={() => handleStatusFilterChange(undefined)}
+            >
               Todas
             </TabsTrigger>
-            <TabsTrigger value="open" onClick={() => setStatusFilter('open')}>
+            <TabsTrigger 
+              value="open" 
+              onClick={() => handleStatusFilterChange('open')}
+            >
               Abertas
             </TabsTrigger>
-            <TabsTrigger value="in_progress" onClick={() => setStatusFilter('in_progress')}>
+            <TabsTrigger 
+              value="in_progress" 
+              onClick={() => handleStatusFilterChange('in_progress')}
+            >
               Em Andamento
             </TabsTrigger>
-            <TabsTrigger value="completed" onClick={() => setStatusFilter('completed')}>
+            <TabsTrigger 
+              value="completed" 
+              onClick={() => handleStatusFilterChange('completed')}
+            >
               Concluídas
             </TabsTrigger>
           </TabsList>
           
           <RequestList
             requests={requests}
-            isLoading={isLoading}
+            isLoading={isLoadingRequests || isLoading}
             onRequestClick={handleRequestClick}
           />
         </Tabs>
