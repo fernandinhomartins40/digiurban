@@ -1,4 +1,3 @@
-
 import React, { useState, useTransition, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, AlertTriangle, TrendingUp, TrendingDown, ChartBar } from "lucide-react";
@@ -92,9 +91,16 @@ export default function ExecutiveDashboard() {
     { value: "obras", label: "Obras Públicas" },
   ];
 
-  // Handle export data
+  // Handle export data - modified to avoid Promise in startTransition
   const handleExportData = () => {
-    startTransition(async () => {
+    // First start transition with the state updates
+    startTransition(() => {
+      // Set any UI state needed here (like loading indicators)
+      // But don't put the async operation inside startTransition
+    });
+    
+    // Then do the async operation outside of startTransition
+    const exportData = async () => {
       try {
         // Combine data from all departments
         const combinedData = [
@@ -142,12 +148,21 @@ export default function ExecutiveDashboard() {
           variant: "destructive",
         });
       }
-    });
+    };
+    
+    // Execute the async function outside of startTransition
+    exportData();
   };
 
-  // Handle capture screenshot
+  // Handle capture screenshot - modified to avoid Promise in startTransition
   const handleCaptureScreenshot = () => {
-    startTransition(async () => {
+    // First update any UI state with startTransition
+    startTransition(() => {
+      // Set any UI state needed here
+    });
+    
+    // Then perform the async operation outside startTransition
+    const captureScreenshotAsync = async () => {
       try {
         await captureScreenshot("executive-dashboard", "dashboard-executivo");
         
@@ -163,7 +178,10 @@ export default function ExecutiveDashboard() {
           variant: "destructive",
         });
       }
-    });
+    };
+    
+    // Execute the async function
+    captureScreenshotAsync();
   };
 
   // Handle share dashboard

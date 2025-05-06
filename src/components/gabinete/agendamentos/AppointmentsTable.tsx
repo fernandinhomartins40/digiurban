@@ -36,8 +36,7 @@ export function AppointmentsTable({
         console.error("Error fetching appointments:", err);
         throw err;
       }
-    },
-    suspense: false, // Ensure this is false to prevent unwanted suspense
+    }
   });
 
   // Status badge colors
