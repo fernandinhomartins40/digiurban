@@ -59,10 +59,9 @@ class RealtimeClient {
     const channel = supabase.channel(channelId);
     
     // Configure the channel for postgres changes
-    // Fix: Use proper typing for the postgres_changes event
+    // Fix: The correct typing for postgres_changes event
     channel.on(
-      // @ts-ignore - The Supabase types might be outdated, forcing the correct string
-      'postgres_changes',
+      'postgres_changes' as any,  // Use type assertion as any to bypass TypeScript error
       {
         event: event as 'INSERT' | 'UPDATE' | 'DELETE' | '*',
         schema: schema,

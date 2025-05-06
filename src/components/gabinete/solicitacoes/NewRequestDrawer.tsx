@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Sheet,
   SheetContent,
@@ -32,9 +31,11 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Plus } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Plus } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -122,14 +123,15 @@ export function NewRequestDrawer({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Setor Responsável</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || "default"}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione um setor" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="default" disabled>Selecione um setor</SelectItem>
+                          {/* Changed value="default" to value="_default" to avoid empty string */}
+                          <SelectItem value="_default" disabled>Selecione um setor</SelectItem>
                           {departments.map((dept) => (
                             <SelectItem key={dept} value={dept}>
                               {dept}
