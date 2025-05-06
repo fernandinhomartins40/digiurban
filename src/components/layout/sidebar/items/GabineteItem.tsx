@@ -21,18 +21,6 @@ export const getGabineteItem = (): SidebarItemProps => ({
       path: "/admin/gabinete/solicitacoes",
     },
     {
-      title: "Todas as Solicitações",
-      path: "/admin/gabinete/todas-solicitacoes",
-    },
-    {
-      title: "Políticas Públicas",
-      path: "/admin/gabinete/politicas",
-    },
-    {
-      title: "Programas Estratégicos",
-      path: "/admin/gabinete/programas",
-    },
-    {
       title: "Serviços por Cidadão",
       path: "/admin/gabinete/cidadaos",
     },

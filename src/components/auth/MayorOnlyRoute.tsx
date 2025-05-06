@@ -10,7 +10,7 @@ interface MayorOnlyRouteProps {
 
 export const MayorOnlyRoute = ({ 
   children, 
-  redirectTo = '/admin/gabinete/todas-solicitacoes' 
+  redirectTo = '/admin/gabinete/solicitacoes' 
 }: MayorOnlyRouteProps) => {
   const { user, isLoading } = useAuth();
 

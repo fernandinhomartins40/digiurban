@@ -7,7 +7,6 @@ import { MayorOnlyRoute } from "@/components/auth/MayorOnlyRoute";
 const MayorDashboard = lazy(() => import("@/pages/admin/gabinete/Dashboard"));
 const DirectRequests = lazy(() => import("@/pages/admin/gabinete/DirectRequests"));
 const Appointments = lazy(() => import("@/pages/admin/gabinete/Appointments"));
-const AllRequests = lazy(() => import("@/pages/admin/gabinete/AllRequests"));
 
 export const gabineteRoutes: RouteObject[] = [
   {
@@ -21,9 +20,5 @@ export const gabineteRoutes: RouteObject[] = [
   {
     path: "gabinete/agenda",
     element: <Appointments />,
-  },
-  {
-    path: "gabinete/todas-solicitacoes",
-    element: <AllRequests />,
   }
 ];
