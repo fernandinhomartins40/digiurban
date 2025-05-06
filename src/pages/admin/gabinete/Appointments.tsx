@@ -2,13 +2,15 @@
 import React, { useState, Suspense, useTransition } from "react";
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, CalendarIcon, ListIcon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Appointment, AppointmentStatus } from "@/types/mayorOffice";
 import { AppointmentDrawer } from "@/components/gabinete/agendamentos/AppointmentDrawer";
 import { NewAppointmentDialog } from "@/components/gabinete/agendamentos/NewAppointmentDialog";
 import { AppointmentFilters } from "@/components/gabinete/agendamentos/AppointmentFilters";
 import { AppointmentsTable } from "@/components/gabinete/agendamentos/AppointmentsTable";
+import { AppointmentCalendarView } from "@/components/gabinete/agendamentos/AppointmentCalendarView";
 import { useAppointmentActions } from "@/components/gabinete/agendamentos/useAppointmentActions";
 
 export default function AppointmentScheduler() {
@@ -18,6 +20,7 @@ export default function AppointmentScheduler() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "calendar">("table");
   const { 
     handleStatusChange, 
     handleNotesChange, 
@@ -88,8 +91,25 @@ export default function AppointmentScheduler() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Agendamentos</CardTitle>
-          <CardDescription>Lista de agendamentos agendados com o prefeito</CardDescription>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <CardTitle>Agendamentos</CardTitle>
+              <CardDescription>Lista de agendamentos agendados com o prefeito</CardDescription>
+            </div>
+            
+            <Tabs defaultValue="table" className="w-[200px]" onValueChange={(value) => setViewMode(value as "table" | "calendar")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="table" className="flex items-center gap-2">
+                  <ListIcon className="h-4 w-4" />
+                  <span>Lista</span>
+                </TabsTrigger>
+                <TabsTrigger value="calendar" className="flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  <span>Calendário</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
           
           <AppointmentFilters 
             filterStatus={filterStatus} 
@@ -106,12 +126,20 @@ export default function AppointmentScheduler() {
               <span>Carregando...</span>
             </div>
           }>
-            <AppointmentsTable 
-              filterStatus={filterStatus}
-              searchTerm={searchTerm}
-              onAppointmentClick={handleAppointmentClick} 
-              isPending={isPending}
-            />
+            {viewMode === "table" ? (
+              <AppointmentsTable 
+                filterStatus={filterStatus}
+                searchTerm={searchTerm}
+                onAppointmentClick={handleAppointmentClick} 
+                isPending={isPending}
+              />
+            ) : (
+              <AppointmentCalendarView
+                filterStatus={filterStatus}
+                searchTerm={searchTerm}
+                onAppointmentClick={handleAppointmentClick}
+              />
+            )}
           </Suspense>
         </CardContent>
         
