@@ -2,7 +2,7 @@
 import React from "react";
 import { SidebarItem } from "./sidebar/SidebarItem";
 import { UserSection } from "./sidebar/UserSection";
-import { getSidebarItems } from "./sidebar/sidebarItems";
+import { getSidebarItems } from "./sidebar/items";
 import { useSidebarMail } from "./sidebar/useSidebarMail";
 
 interface AdminSidebarProps {
