@@ -86,7 +86,7 @@ export const DashboardComparisonChart = ({
         <YAxis width={yAxisWidth} />
         <Tooltip />
         <Legend />
-        {bars && bars.map((bar, index) => (
+        {Array.isArray(bars) && bars.map((bar, index) => (
           <Bar
             key={`bar-${index}`}
             dataKey={bar.dataKey}
@@ -95,7 +95,7 @@ export const DashboardComparisonChart = ({
             barSize={20}
           />
         ))}
-        {lines && lines.map((line, index) => (
+        {Array.isArray(lines) && lines.map((line, index) => (
           <Line
             key={`line-${index}`}
             type="monotone"

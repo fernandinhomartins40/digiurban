@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Heart, Users, Clock, Calendar, ArrowUp, ArrowDown, Stethoscope } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/common/DashboardHeader";
@@ -81,7 +80,7 @@ export default function HealthDashboard() {
       sectors={healthUnits}
       selectedSector={selectedUnit}
       onSectorChange={setSelectedUnit}
-      showDownload={true}
+      rightContent={<Button variant="outline" size="sm">Exportar</Button>}
     />
   );
 

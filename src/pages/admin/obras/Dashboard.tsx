@@ -7,6 +7,7 @@ import { MetricCard } from "@/components/dashboard/common/DashboardMetricCards";
 import { useObrasDashboard } from "@/hooks/useObrasDashboard";
 import { ChartCard, DashboardBarChart, DashboardLineChart, DashboardPieChart } from "@/components/dashboard/common/DashboardCharts";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export default function ObrasDashboard() {
   const {
@@ -83,7 +84,7 @@ export default function ObrasDashboard() {
       sectors={projectTypes}
       selectedSector={selectedType}
       onSectorChange={setSelectedType}
-      showDownload={true}
+      rightContent={<Button variant="outline" size="sm">Exportar</Button>}
     />
   );
 

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Activity, Users, FileText, Bell, Clock } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/common/DashboardHeader";
@@ -71,7 +70,7 @@ export default function AdminDashboard() {
         setStartDate(range?.from);
         setEndDate(range?.to);
       }}
-      showDownload={true}
+      rightContent={<Button variant="outline" size="sm">Exportar</Button>}
     />
   );
 

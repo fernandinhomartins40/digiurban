@@ -39,6 +39,7 @@ interface DashboardHeaderProps {
   selectedSector?: string;
   onSectorChange?: (value: string) => void;
   rightContent?: React.ReactNode;
+  showDownload?: boolean;
 }
 
 export function DashboardHeader({
@@ -53,6 +54,7 @@ export function DashboardHeader({
   selectedSector,
   onSectorChange,
   rightContent,
+  showDownload,
 }: DashboardHeaderProps) {
   const [date, setDate] = React.useState<DateRange | undefined>(
     startDate && endDate

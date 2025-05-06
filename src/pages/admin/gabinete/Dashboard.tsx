@@ -1,6 +1,4 @@
-
-import React from "react";
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { FileText, Bell, Activity, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { subDays } from "date-fns";
@@ -156,7 +154,7 @@ export default function MayorDashboard() {
       sectors={sectors}
       selectedSector={selectedSector}
       onSectorChange={setSelectedSector}
-      showDownload={true}
+      rightContent={<Button variant="outline" size="sm">Exportar</Button>}
     />
   );
 

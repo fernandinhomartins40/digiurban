@@ -6,6 +6,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { MetricCard } from "@/components/dashboard/common/DashboardMetricCards";
 import { useAssistenciaDashboard } from "@/hooks/useAssistenciaDashboard";
 import { ChartCard, DashboardBarChart, DashboardLineChart, DashboardPieChart } from "@/components/dashboard/common/DashboardCharts";
+import { Button } from "@/components/ui/button";
 
 export default function AssistenciaDashboard() {
   const {
@@ -81,7 +82,7 @@ export default function AssistenciaDashboard() {
       sectors={units}
       selectedSector={selectedUnit}
       onSectorChange={setSelectedUnit}
-      showDownload={true}
+      rightContent={<Button variant="outline" size="sm">Exportar</Button>}
     />
   );
 

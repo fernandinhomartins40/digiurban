@@ -6,6 +6,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { MetricCard } from "@/components/dashboard/common/DashboardMetricCards";
 import { useEducacaoDashboard } from "@/hooks/useEducacaoDashboard";
 import { ChartCard, DashboardBarChart, DashboardLineChart, DashboardPieChart } from "@/components/dashboard/common/DashboardCharts";
+import { Button } from "@/components/ui/button";
 
 export default function EducacaoDashboard() {
   const {
