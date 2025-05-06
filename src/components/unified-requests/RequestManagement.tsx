@@ -1,5 +1,5 @@
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnifiedRequests } from "@/hooks/useUnifiedRequests";
 import { UnifiedRequest, RequestStatus } from "@/types/requests";
@@ -76,15 +76,21 @@ export function RequestManagement({
     handleUpdateRequestStatus,
     handleForwardRequest,
     handleAddComment,
-    handleUploadAttachment
+    handleUploadAttachment,
+    
+    // Cleanup
+    cleanup
   } = useUnifiedRequests();
   
   // Set the department filter if provided
-  React.useEffect(() => {
+  useEffect(() => {
     if (departmentFilter) {
       setDepartmentFilter(departmentFilter);
     }
-  }, [departmentFilter, setDepartmentFilter]);
+    
+    // Cleanup when component unmounts
+    return cleanup;
+  }, [departmentFilter, setDepartmentFilter, cleanup]);
   
   const handleRequestClick = (request: UnifiedRequest) => {
     setSelectedRequest(request);

@@ -33,6 +33,31 @@ export const useUnifiedRequests = () => {
   // Selected request
   const [selectedRequest, setSelectedRequest] = useState<UnifiedRequest | null>(null);
   
+  // Use a stable reference for the query function to prevent unnecessary re-renders
+  const fetchRequests = useCallback(() => {
+    return getUnifiedRequests(
+      departmentFilter,
+      statusFilter,
+      requesterTypeFilter,
+      searchTerm || undefined
+    );
+  }, [departmentFilter, statusFilter, requesterTypeFilter, searchTerm]);
+  
+  // Fetch requests with filters
+  const { 
+    data: requests,
+    isLoading: isLoadingQuery,
+    refetch
+  } = useQuery({
+    queryKey: ['unified-requests', departmentFilter, statusFilter, requesterTypeFilter, searchTerm],
+    queryFn: fetchRequests,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+  
+  // Combine loading states
+  const isLoading = isLoadingQuery || isPending;
+  
   // Wrap filter state updates with startTransition
   const handleSetDepartmentFilter = useCallback((value: string | undefined) => {
     startTransition(() => {
@@ -57,24 +82,6 @@ export const useUnifiedRequests = () => {
       setSearchTerm(value);
     });
   }, []);
-  
-  // Fetch requests with filters
-  const { 
-    data: requests,
-    isLoading: isLoadingQuery,
-    refetch
-  } = useQuery({
-    queryKey: ['unified-requests', departmentFilter, statusFilter, requesterTypeFilter, searchTerm],
-    queryFn: () => getUnifiedRequests(
-      departmentFilter,
-      statusFilter,
-      requesterTypeFilter,
-      searchTerm || undefined
-    )
-  });
-  
-  // Combine loading states
-  const isLoading = isLoadingQuery || isPending;
   
   // Fetch a single request by ID
   const fetchRequestById = useCallback(async (id: string) => {
@@ -111,7 +118,7 @@ export const useUnifiedRequests = () => {
         });
         
         // Refresh the requests list
-        refetch();
+        queryClient.invalidateQueries({ queryKey: ['unified-requests'] });
         return true;
       }
     } catch (error) {
@@ -123,7 +130,7 @@ export const useUnifiedRequests = () => {
       });
     }
     return false;
-  }, [refetch]);
+  }, [queryClient]);
   
   // Update request status
   const handleUpdateRequestStatus = useCallback(async (id: string, status: RequestStatus) => {
@@ -141,7 +148,8 @@ export const useUnifiedRequests = () => {
         });
         
         // Refresh the requests list and selected request
-        refetch();
+        queryClient.invalidateQueries({ queryKey: ['unified-requests'] });
+        
         if (selectedRequest?.id === id) {
           fetchRequestById(id);
         }
@@ -156,7 +164,7 @@ export const useUnifiedRequests = () => {
       });
     }
     return false;
-  }, [refetch, fetchRequestById, selectedRequest]);
+  }, [fetchRequestById, queryClient, selectedRequest]);
   
   // Forward request to another department
   const handleForwardRequest = useCallback(async (id: string, targetDepartment: string, comments?: string) => {
@@ -170,7 +178,7 @@ export const useUnifiedRequests = () => {
         });
         
         // Refresh the requests list
-        refetch();
+        queryClient.invalidateQueries({ queryKey: ['unified-requests'] });
         return true;
       }
     } catch (error) {
@@ -182,7 +190,7 @@ export const useUnifiedRequests = () => {
       });
     }
     return false;
-  }, [refetch]);
+  }, [queryClient]);
   
   // Add comment to request
   const handleAddComment = useCallback(async (id: string, comment: string, isInternal: boolean = false) => {
@@ -240,6 +248,16 @@ export const useUnifiedRequests = () => {
     return false;
   }, [fetchRequestById, selectedRequest]);
   
+  // Safe cleanup function for when component unmounts
+  const cleanup = useCallback(() => {
+    // This ensures we don't try to update state after unmount
+    setSelectedRequest(null);
+    setDepartmentFilter(undefined);
+    setStatusFilter(undefined);
+    setRequesterTypeFilter(undefined);
+    setSearchTerm("");
+  }, []);
+  
   return {
     // Data
     requests,
@@ -266,6 +284,9 @@ export const useUnifiedRequests = () => {
     handleUploadAttachment,
     
     // Refresh
-    refetch
+    refetch,
+    
+    // Cleanup
+    cleanup
   };
 };
