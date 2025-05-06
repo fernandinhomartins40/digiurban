@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { Helmet } from "react-helmet";
 import {
   Card,
@@ -46,6 +46,7 @@ export default function DirectRequests() {
   const [selectedDepartment, setSelectedDepartment] = useState<string | "all">("all");
   const [selectedRequest, setSelectedRequest] = useState<DirectRequest | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
   
   const departments = [
     "Gabinete do Prefeito",
@@ -112,6 +113,25 @@ export default function DirectRequests() {
     setDrawerOpen(true);
   };
 
+  // Wrapper functions for filter changes that use startTransition
+  const handleStatusChange = (status: RequestStatus | "all") => {
+    startTransition(() => {
+      setSelectedStatus(status);
+    });
+  };
+
+  const handleDepartmentChange = (department: string) => {
+    startTransition(() => {
+      setSelectedDepartment(department);
+    });
+  };
+
+  const handleSearchChange = (query: string) => {
+    startTransition(() => {
+      setSearchQuery(query);
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Helmet>
@@ -148,11 +168,11 @@ export default function DirectRequests() {
             
             <RequestFilter 
               searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
+              setSearchQuery={handleSearchChange}
               selectedStatus={selectedStatus}
-              setSelectedStatus={setSelectedStatus}
+              setSelectedStatus={handleStatusChange}
               selectedDepartment={selectedDepartment}
-              setSelectedDepartment={setSelectedDepartment}
+              setSelectedDepartment={handleDepartmentChange}
               departments={departments}
             />
           </div>
@@ -161,7 +181,7 @@ export default function DirectRequests() {
         <CardContent>
           <RequestList
             requests={requests}
-            isLoading={isLoading}
+            isLoading={isLoading || isPending}
             searchQuery={searchQuery}
             handleStatusChange={handleStatusChange}
             onRequestClick={handleRequestClick}
