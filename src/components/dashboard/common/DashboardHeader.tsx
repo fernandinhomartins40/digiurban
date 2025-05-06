@@ -1,134 +1,179 @@
 
 import React from "react";
-import { CalendarIcon, Download } from "lucide-react";
+import { CalendarIcon, ChevronDown, FilterIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { DateRange } from "react-day-picker";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+interface Sector {
+  value: string;
+  label: string;
+}
 
 interface DashboardHeaderProps {
   title: string;
   description?: string;
-  dateRange: "7d" | "30d" | "90d" | "custom";
+  dateRange?: string;
   startDate?: Date;
   endDate?: Date;
-  onDateRangeChange: (range: "7d" | "30d" | "90d" | "custom") => void;
-  onDateRangeSelect?: (range: { from?: Date; to?: Date }) => void;
-  sectors?: { value: string; label: string }[];
+  onDateRangeChange?: (range: string) => void;
+  onDateRangeSelect?: (range: DateRange | undefined) => void;
+  sectors?: Sector[];
   selectedSector?: string;
-  onSectorChange?: (sector: string) => void;
-  showDownload?: boolean;
-  onDownload?: () => void;
+  onSectorChange?: (value: string) => void;
   rightContent?: React.ReactNode;
-  className?: string;
 }
 
 export function DashboardHeader({
   title,
   description,
-  dateRange,
+  dateRange = "30d",
   startDate,
   endDate,
   onDateRangeChange,
   onDateRangeSelect,
-  sectors,
+  sectors = [],
   selectedSector,
   onSectorChange,
-  showDownload = true,
-  onDownload,
   rightContent,
-  className,
 }: DashboardHeaderProps) {
+  const [date, setDate] = React.useState<DateRange | undefined>(
+    startDate && endDate
+      ? {
+          from: startDate,
+          to: endDate,
+        }
+      : undefined
+  );
+
+  React.useEffect(() => {
+    if (startDate && endDate) {
+      setDate({
+        from: startDate,
+        to: endDate,
+      });
+    }
+  }, [startDate, endDate]);
+
+  const handleDateRangeChange = (value: string) => {
+    if (onDateRangeChange) {
+      onDateRangeChange(value);
+    }
+  };
+
   return (
-    <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${className}`}>
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
-      </div>
+    <div className="pb-6">
+      <div className="flex flex-col justify-between md:flex-row md:items-center">
+        <div>
+          <h1 className="text-2xl font-semibold">{title}</h1>
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
+        </div>
+        <div className="mt-4 flex items-center space-x-2 md:mt-0">
+          {sectors.length > 0 && onSectorChange && (
+            <Select
+              value={selectedSector}
+              onValueChange={onSectorChange}
+            >
+              <SelectTrigger className="w-[180px]">
+                <div className="flex items-center">
+                  <FilterIcon className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Filtrar por setor" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os setores</SelectItem>
+                {sectors.map((sector) => (
+                  <SelectItem key={sector.value} value={sector.value}>
+                    {sector.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        {sectors && sectors.length > 0 && onSectorChange && (
-          <Select value={selectedSector} onValueChange={onSectorChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Todos os setores" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Todos os setores</SelectItem>
-              {sectors.map((sector) => (
-                <SelectItem key={sector.value} value={sector.value}>
-                  {sector.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
-        <div className="flex gap-2">
-          <Tabs
-            value={dateRange}
-            onValueChange={(value) => onDateRangeChange(value as "7d" | "30d" | "90d" | "custom")}
-            className="w-fit"
-          >
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="7d">7D</TabsTrigger>
-              <TabsTrigger value="30d">30D</TabsTrigger>
-              <TabsTrigger value="90d">90D</TabsTrigger>
-              <TabsTrigger value="custom">
-                <CalendarIcon className="h-4 w-4" />
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {onDateRangeChange && (
+            <Select
+              value={dateRange}
+              onValueChange={handleDateRangeChange}
+            >
+              <SelectTrigger className="w-[180px]">
+                <div className="flex items-center">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Selecione o período" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                <SelectItem value="30d">Últimos 30 dias</SelectItem>
+                <SelectItem value="90d">Últimos 90 dias</SelectItem>
+                <SelectItem value="custom">Período personalizado</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
           {dateRange === "custom" && onDateRangeSelect && (
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-auto justify-start text-left font-normal">
-                  {startDate && endDate ? (
-                    <>
-                      {format(startDate, "P", { locale: ptBR })} -{" "}
-                      {format(endDate, "P", { locale: ptBR })}
-                    </>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[240px] justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date?.from ? (
+                    date.to ? (
+                      <>
+                        {format(date.from, "P", { locale: ptBR })} -{" "}
+                        {format(date.to, "P", { locale: ptBR })}
+                      </>
+                    ) : (
+                      format(date.from, "P", { locale: ptBR })
+                    )
                   ) : (
-                    <span>Escolha um período</span>
+                    <span>Selecione um período</span>
                   )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
                 <Calendar
+                  initialFocus
                   mode="range"
-                  selected={{
-                    from: startDate,
-                    to: endDate,
+                  defaultMonth={date?.from}
+                  selected={date}
+                  onSelect={(newDate) => {
+                    setDate(newDate);
+                    onDateRangeSelect(newDate);
                   }}
-                  onSelect={onDateRangeSelect}
-                  defaultMonth={startDate}
                   numberOfMonths={2}
+                  locale={ptBR}
                 />
               </PopoverContent>
             </Popover>
           )}
 
-          {showDownload && (
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={onDownload || (() => {})}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-          )}
+          {rightContent && <div className="ml-2">{rightContent}</div>}
         </div>
-        
-        {rightContent && (
-          <div className="ml-2">
-            {rightContent}
-          </div>
-        )}
       </div>
     </div>
   );

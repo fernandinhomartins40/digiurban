@@ -257,144 +257,106 @@ export default function ExecutiveDashboard() {
     { neighborhood: "Norte", saude: 180, educacao: 110, assistencia: 90 },
     { neighborhood: "Sul", saude: 160, educacao: 95, assistencia: 70 },
     { neighborhood: "Leste", saude: 90, educacao: 75, assistencia: 45 },
-    { neighborhood: "Oeste", saude: 150, educacao: 115, assistencia: 75 },
+    { neighborhood: "Oeste", saude: 150, educacao: 115, assistencia: 80 },
   ];
 
-  // Charts section
-  const chartsSection = (
-    <div className="space-y-6" id="executive-dashboard">
-      <div className="grid gap-6 md:grid-cols-2">
-        <ChartCard
-          title="Orçamento por Secretaria"
-          description="Comparação entre planejado e executado"
-        >
-          <DashboardComparisonChart
-            data={departmentalBudgetData}
-            bars={[
-              { dataKey: "planejado", fill: "#8884d8", name: "Planejado" },
-              { dataKey: "executado", fill: "#82ca9d", name: "Executado" },
-            ]}
-            lines={[]}
-            xAxisDataKey="name"
-          />
-        </ChartCard>
+  return (
+    <DashboardLayout header={header}>
+      {/* Metrics row */}
+      {metricsSection}
 
-        <ChartCard
-          title="Distribuição de Recursos"
-          description="Alocação percentual por secretaria"
-        >
-          <DashboardAdvancedPieChart
-            data={distributionData}
-            dataKey="value"
-            nameKey="name"
-            donut={true}
-            innerRadius={60}
-            outerRadius={90}
-            colors={["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"]}
-          />
-        </ChartCard>
-      </div>
-
-      <ChartCard
-        title="Tendência Mensal por Secretaria"
-        description="Evolução dos indicadores principais ao longo do tempo"
-      >
-        <DashboardAreaChart
-          data={monthlyTrendData}
-          areas={[
-            { dataKey: "saude", fill: "#8884d8", stroke: "#8884d8", name: "Saúde (Atendimentos)" },
-            { dataKey: "educacao", fill: "#82ca9d", stroke: "#82ca9d", name: "Educação (Alunos)" },
-            { dataKey: "assistencia", fill: "#ffc658", stroke: "#ffc658", name: "Assistência (Famílias)" },
-            { dataKey: "obras", fill: "#ff8042", stroke: "#ff8042", name: "Obras (Projetos)" },
-          ]}
-          xAxisDataKey="month"
-          stacked={false}
-        />
-      </ChartCard>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <ChartCard
-          title="Serviços por Bairro"
-          description="Distribuição de atendimentos por localidade"
-        >
-          <DashboardComparisonChart
-            data={servicesByNeighborhoodData}
-            bars={[
-              { dataKey: "saude", fill: "#8884d8", name: "Saúde" },
-              { dataKey: "educacao", fill: "#82ca9d", name: "Educação" },
-              { dataKey: "assistencia", fill: "#ffc658", name: "Assistência" },
-            ]}
-            lines={[]}
-            xAxisDataKey="neighborhood"
-          />
-        </ChartCard>
-
-        <Card>
+      {/* Charts section */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3 mt-4">
+        {/* Budget execution by department */}
+        <Card className="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Indicadores de Desempenho</CardTitle>
+            <CardTitle>Execução Orçamentária por Departamento</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {/* Saúde KPI */}
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium">Saúde: Taxa de Atendimentos</span>
-                  <span className="text-sm font-medium">78%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: "78%" }}></div>
-                </div>
-              </div>
-              
-              {/* Educação KPI */}
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium">Educação: Taxa de Frequência</span>
-                  <span className="text-sm font-medium">87%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-green-600 h-2.5 rounded-full" style={{ width: "87%" }}></div>
-                </div>
-              </div>
-              
-              {/* Assistência KPI */}
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium">Assistência: Cobertura Familiar</span>
-                  <span className="text-sm font-medium">65%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-yellow-500 h-2.5 rounded-full" style={{ width: "65%" }}></div>
-                </div>
-              </div>
-              
-              {/* Obras KPI */}
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium">Obras: Taxa de Conclusão</span>
-                  <span className="text-sm font-medium">42%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-orange-500 h-2.5 rounded-full" style={{ width: "42%" }}></div>
-                </div>
-              </div>
-            </div>
+            <DashboardComparisonChart
+              data={departmentalBudgetData}
+              xAxisDataKey="name"
+              bars={[
+                { dataKey: "planejado", fill: "#4338ca", name: "Orçamento Planejado" },
+                { dataKey: "executado", fill: "#60a5fa", name: "Orçamento Executado" }
+              ]}
+              gridAxis="y"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Budget distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Distribuição do Orçamento</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DashboardAdvancedPieChart 
+              data={distributionData}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={60}
+              outerRadius={80}
+              colors={["#4f46e5", "#3b82f6", "#0ea5e9", "#06b6d4", "#14b8a6"]}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Services by neighborhood */}
+        <Card className="xl:col-span-3">
+          <CardHeader>
+            <CardTitle>Serviços por Região</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DashboardComparisonChart
+              data={servicesByNeighborhoodData}
+              xAxisDataKey="neighborhood"
+              bars={[
+                { dataKey: "saude", fill: "#4338ca", name: "Saúde" },
+                { dataKey: "educacao", fill: "#60a5fa", name: "Educação" },
+                { dataKey: "assistencia", fill: "#34d399", name: "Assistência Social" }
+              ]}
+              gridAxis="y"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Monthly activity trends */}
+        <Card className="xl:col-span-3">
+          <CardHeader>
+            <CardTitle>Tendências Mensais de Atividade</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DashboardAreaChart 
+              data={monthlyTrendData}
+              xAxisDataKey="month"
+              areas={[
+                { dataKey: "saude", stroke: "#4338ca", fill: "#4338ca33", name: "Saúde" },
+                { dataKey: "educacao", stroke: "#2563eb", fill: "#2563eb33", name: "Educação" },
+                { dataKey: "assistencia", stroke: "#10b981", fill: "#10b98133", name: "Assistência Social" },
+                { dataKey: "obras", stroke: "#f59e0b", fill: "#f59e0b33", name: "Obras", yAxis: "right" }
+              ]}
+              gridAxis="both"
+              height={300}
+              rightYAxisLabel="Obras"
+              leftYAxisLabel="Atendimentos"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Recent alerts card */}
+        <Card className="xl:col-span-3">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle>Alertas Recentes</CardTitle>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/admin/alertas">Ver Todos</a>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <AlertNotifications limit={5} />
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
-
-  // Sidebar content
-  const sidebarContent = <AlertNotifications />;
-
-  return (
-    <DashboardLayout
-      title="Dashboard Executivo"
-      header={header}
-      metrics={metricsSection}
-      charts={chartsSection}
-      sidebar={sidebarContent}
-    />
+    </DashboardLayout>
   );
 }
