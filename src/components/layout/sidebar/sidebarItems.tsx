@@ -15,7 +15,7 @@ import { SidebarItemProps } from "@/types/sidebar";
 
 export const getSidebarItems = (unreadMailCount = 0): SidebarItemProps[] => {
   return [
-    getDashboardItem(),
+    getDashboardItem(), // Ensure Dashboard item is first in the list
     getExecutivoItem(),
     getSaudeItem(),
     getEducacaoItem(),

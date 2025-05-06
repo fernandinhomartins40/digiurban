@@ -49,7 +49,7 @@ export function createAuthActions(
         console.log("Safety timeout triggered - resetting loading state");
         setIsLoading(false);
         
-        // Force navigation as a fallback
+        // Force navigation as a fallback - ensure dashboard route exists!
         if (data.session) {
           const redirectPath = userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard";
           console.log(`Forcing redirect to ${redirectPath} after timeout`);

@@ -71,15 +71,20 @@ export function AdminLayout() {
         setReadyForQuery(true);
       }
       
-      // Redirect users from dashboard if they're not the mayor
+      // Handle dashboard access for non-mayor users
       if (isAuthenticated && user?.role !== "prefeito") {
-        // Check if trying to access dashboard routes
+        // Check if trying to access mayor-only dashboard routes
         if (location.pathname.includes("/admin/gabinete/dashboard") || 
             location.pathname.includes("/admin/executivo/dashboard")) {
           console.log("Non-mayor user attempting to access dashboard, redirecting");
           // Redirect to a more appropriate page based on their role
           navigate("/admin/gabinete/solicitacoes", { replace: true });
         }
+      }
+      
+      // Redirect from root admin path to dashboard
+      if (isAuthenticated && location.pathname === "/admin" || location.pathname === "/admin/") {
+        navigate("/admin/dashboard", { replace: true });
       }
     }
   }, [isLoading, isAuthenticated, userType, navigate, user, location.pathname]);

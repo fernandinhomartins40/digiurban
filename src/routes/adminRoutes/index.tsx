@@ -2,6 +2,7 @@
 import { RouteObject } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import UserManagement from "@/pages/admin/users/UserManagement";
+import Dashboard from "@/pages/admin/Dashboard"; // Re-added Dashboard import
 import { correioRoutes } from "./correioRoutes";
 import { gabineteRoutes } from "./gabineteRoutes";
 import { adminChatRoutes } from "./chatRoutes";
@@ -28,7 +29,11 @@ export const adminRoutes: RouteObject[] = [
     path: "",
     element: <AdminLayout />,
     children: [
-      // Removed general dashboard route
+      // Re-added general dashboard route
+      {
+        path: "dashboard",
+        element: <Dashboard />,
+      },
 
       {
         path: "users",

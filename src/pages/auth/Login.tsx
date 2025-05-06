@@ -36,7 +36,11 @@ export default function Login() {
     
     if (!isLoading && isAuthenticated && userType) {
       console.log("Login: Already authenticated, redirecting to dashboard:", userType);
+      
+      // Make sure we redirect to valid routes
       const redirectPath = userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard";
+      console.log("Redirecting to:", redirectPath);
+      
       navigate(redirectPath, { replace: true });
     }
   }, [isAuthenticated, userType, navigate, isLoading]);
