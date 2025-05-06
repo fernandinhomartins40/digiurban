@@ -99,7 +99,7 @@ export default function DirectRequests() {
   };
 
   // Update request status
-  const handleStatusChange = async (requestId: string, status: RequestStatus) => {
+  const updateRequestStatus = async (requestId: string, status: RequestStatus) => {
     const result = await updateDirectRequest(requestId, { status });
     if (result) {
       setDrawerOpen(false);
@@ -183,7 +183,7 @@ export default function DirectRequests() {
             requests={requests}
             isLoading={isLoading || isPending}
             searchQuery={searchQuery}
-            handleStatusChange={handleStatusChange}
+            handleStatusChange={updateRequestStatus}
             onRequestClick={handleRequestClick}
           />
         </CardContent>
@@ -200,7 +200,7 @@ export default function DirectRequests() {
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         request={selectedRequest}
-        onUpdateStatus={handleStatusChange}
+        onUpdateStatus={updateRequestStatus}
       />
     </div>
   );
