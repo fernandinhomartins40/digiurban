@@ -82,8 +82,8 @@ const estatisticasMock = {
 
 export default function FeedbackCidadaoIndex() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [obraFilter, setObraFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("todos");
+  const [obraFilter, setObraFilter] = useState("todas");
   const [selectedFeedback, setSelectedFeedback] = useState<typeof feedbackMock[0] | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [respostaText, setRespostaText] = useState("");
@@ -119,8 +119,8 @@ export default function FeedbackCidadaoIndex() {
       feedback.nome.toLowerCase().includes(searchQuery.toLowerCase()) || 
       feedback.obra.toLowerCase().includes(searchQuery.toLowerCase()) ||
       feedback.mensagem.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "" || feedback.status === statusFilter;
-    const matchesObra = obraFilter === "" || feedback.obra === obraFilter;
+    const matchesStatus = statusFilter === "todos" || feedback.status === statusFilter;
+    const matchesObra = obraFilter === "todas" || feedback.obra === obraFilter;
     
     return matchesQuery && matchesStatus && matchesObra;
   });
@@ -240,7 +240,7 @@ export default function FeedbackCidadaoIndex() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
                   <SelectItem value="pendente">Pendentes</SelectItem>
                   <SelectItem value="encaminhado">Encaminhados</SelectItem>
                   <SelectItem value="respondido">Respondidos</SelectItem>
@@ -252,7 +252,7 @@ export default function FeedbackCidadaoIndex() {
                   <SelectValue placeholder="Obra" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as obras</SelectItem>
+                  <SelectItem value="todas">Todas as obras</SelectItem>
                   <SelectItem value="Revitalização da Praça Central">Praça Central</SelectItem>
                   <SelectItem value="Pavimentação da Rua das Flores">Rua das Flores</SelectItem>
                   <SelectItem value="Reforma da Escola Municipal">Escola Municipal</SelectItem>
@@ -395,3 +395,4 @@ export default function FeedbackCidadaoIndex() {
     </ObrasLayout>
   );
 }
+
