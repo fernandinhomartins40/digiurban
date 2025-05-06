@@ -8,6 +8,7 @@ import { DashboardLoading } from "@/components/dashboard/common/DashboardLoading
 const MayorDashboard = lazy(() => import("@/pages/admin/gabinete/Dashboard"));
 const DirectRequests = lazy(() => import("@/pages/admin/gabinete/DirectRequests"));
 const Appointments = lazy(() => import("@/pages/admin/gabinete/Appointments"));
+const CitizenServices = lazy(() => import("@/pages/admin/gabinete/CitizenServices"));
 
 // Helper for lazy-loaded components
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -28,5 +29,9 @@ export const gabineteRoutes: RouteObject[] = [
   {
     path: "gabinete/agenda",
     element: <SuspenseWrapper><Appointments /></SuspenseWrapper>,
+  },
+  {
+    path: "gabinete/cidadaos",
+    element: <SuspenseWrapper><CitizenServices /></SuspenseWrapper>,
   }
 ];
