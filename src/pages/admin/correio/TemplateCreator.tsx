@@ -43,6 +43,8 @@ import { TemplateFieldItem } from "@/components/mail/TemplateFieldItem";
 import { toast } from "@/hooks/use-toast";
 import { WysiwygEditor } from "@/components/mail/WysiwygEditor";
 import { FieldList } from "@/components/mail/FieldList";
+import { PredefinedFieldsSelector } from "@/components/mail/PredefinedFieldsSelector";
+import { generateFieldId } from "@/utils/mailTemplateUtils";
 
 const templateFormSchema = z.object({
   name: z.string().min(3, "Nome é obrigatório"),
@@ -159,6 +161,29 @@ export default function TemplateCreator() {
     });
   };
   
+  // Add predefined fields
+  const handleAddPredefinedFields = (fields: Partial<TemplateField>[]) => {
+    // Get current field keys
+    const currentFieldKeys = form.getValues("fields").map(field => field.field_key);
+    
+    // Filter out fields that already exist
+    const newFields = fields.filter(
+      field => field.field_key && !currentFieldKeys.includes(field.field_key)
+    );
+    
+    // Add the new fields
+    newFields.forEach(field => {
+      append({
+        field_key: field.field_key || "",
+        field_label: field.field_label || "",
+        field_type: field.field_type || "text",
+        is_required: field.is_required || false,
+        field_options: field.field_options || {},
+        order_position: formFields.length,
+      });
+    });
+  };
+  
   const handleTemplateSelect = (id: string) => {
     setTemplateId(id);
   };
@@ -208,6 +233,11 @@ export default function TemplateCreator() {
       detail: { fieldKey } 
     });
     document.dispatchEvent(customEvent);
+  };
+  
+  // Get current field keys
+  const getCurrentFieldKeys = () => {
+    return form.getValues("fields").map(field => field.field_key);
   };
   
   async function onSubmit(values: z.infer<typeof templateFormSchema>) {
@@ -491,31 +521,42 @@ export default function TemplateCreator() {
                     
                     {/* Fields Tab */}
                     <TabsContent value="fields" className="space-y-4 pt-4">
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-medium">Campos do Modelo</h3>
-                        <Button type="button" onClick={handleAddField}>
-                          <Plus size={16} className="mr-2" />
-                          Adicionar Campo
-                        </Button>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        {formFields.length === 0 ? (
-                          <div className="border rounded-md p-6 text-center">
-                            <p className="text-muted-foreground">
-                              Nenhum campo adicionado. Clique em "Adicionar Campo" para começar.
-                            </p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="md:col-span-2">
+                          <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium">Campos do Modelo</h3>
+                            <Button type="button" onClick={handleAddField}>
+                              <Plus size={16} className="mr-2" />
+                              Adicionar Campo
+                            </Button>
                           </div>
-                        ) : (
-                          formFields.map((field, index) => (
-                            <TemplateFieldItem
-                              key={field.id}
-                              index={index}
-                              onRemove={() => remove(index)}
-                              form={form}
-                            />
-                          ))
-                        )}
+                          
+                          <div className="space-y-4">
+                            {formFields.length === 0 ? (
+                              <div className="border rounded-md p-6 text-center">
+                                <p className="text-muted-foreground">
+                                  Nenhum campo adicionado. Adicione campos manualmente ou use os campos predefinidos.
+                                </p>
+                              </div>
+                            ) : (
+                              formFields.map((field, index) => (
+                                <TemplateFieldItem
+                                  key={field.id}
+                                  index={index}
+                                  onRemove={() => remove(index)}
+                                  form={form}
+                                />
+                              ))
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="md:col-span-1">
+                          <PredefinedFieldsSelector 
+                            onAddFields={handleAddPredefinedFields} 
+                            existingFieldKeys={getCurrentFieldKeys()}
+                          />
+                        </div>
                       </div>
                     </TabsContent>
                     
