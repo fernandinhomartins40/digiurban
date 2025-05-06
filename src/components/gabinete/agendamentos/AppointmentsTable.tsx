@@ -24,12 +24,20 @@ export function AppointmentsTable({
   isPending = false
 }: AppointmentsTableProps) {
   // Use React Query to fetch appointments
-  const { data: appointments, isLoading } = useQuery({
+  const { data: appointments, isLoading, isError, error } = useQuery({
     queryKey: ["mayorAppointments", filterStatus, searchTerm],
-    queryFn: () => getMayorAppointments(
-      filterStatus === "all" ? undefined : filterStatus,
-      searchTerm
-    ),
+    queryFn: async () => {
+      try {
+        return await getMayorAppointments(
+          filterStatus === "all" ? undefined : filterStatus,
+          searchTerm
+        );
+      } catch (err) {
+        console.error("Error fetching appointments:", err);
+        throw err;
+      }
+    },
+    suspense: false, // Ensure this is false to prevent unwanted suspense
   });
 
   // Status badge colors
@@ -53,11 +61,31 @@ export function AppointmentsTable({
     return format(new Date(date), "PP", { locale: ptBR });
   };
 
+  // Safe click handler that won't trigger suspense
+  const handleAppointmentClick = React.useCallback(
+    (appointment: Appointment) => {
+      // Use setTimeout to ensure this doesn't happen in the render phase
+      setTimeout(() => {
+        onAppointmentClick(appointment);
+      }, 0);
+    },
+    [onAppointmentClick]
+  );
+
   if (isLoading || isPending) {
     return (
       <div className="flex justify-center items-center py-8">
         <Loader2 className="h-8 w-8 animate-spin mr-2" />
         <span>Carregando agendamentos...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        <p>Erro ao carregar agendamentos.</p>
+        <p className="text-sm">{(error as Error)?.message || "Tente novamente mais tarde."}</p>
       </div>
     );
   }
@@ -93,7 +121,7 @@ export function AppointmentsTable({
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => onAppointmentClick(appointment)}
+                  onClick={() => handleAppointmentClick(appointment)}
                 >
                   Ver detalhes
                 </Button>

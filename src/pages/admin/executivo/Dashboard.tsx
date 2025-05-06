@@ -1,3 +1,4 @@
+
 import React, { useState, useTransition, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, AlertTriangle, TrendingUp, TrendingDown, ChartBar } from "lucide-react";
@@ -34,7 +35,7 @@ export default function ExecutiveDashboard() {
   // Verifique se o usuário é o prefeito, caso contrário redirecione
   useEffect(() => {
     if (user?.role !== "prefeito") {
-      navigate("/admin/gabinete/todas-solicitacoes", { replace: true });
+      navigate("/admin/gabinete/solicitacoes", { replace: true });
     }
   }, [user, navigate]);
 
@@ -92,100 +93,106 @@ export default function ExecutiveDashboard() {
   ];
 
   // Handle export data
-  const handleExportData = async () => {
-    try {
-      // Combine data from all departments
-      const combinedData = [
-        { 
-          department: "Saúde", 
-          totalAppointments: saudeMetrics?.totalAppointments || 0,
-          pendingAppointments: saudeMetrics?.pendingAppointments || 0,
-          completedAppointments: saudeMetrics?.completedAppointments || 0,
-          averageWaitTime: saudeMetrics?.averageWaitTime || "N/A" 
-        },
-        { 
-          department: "Educação", 
-          totalStudents: educacaoMetrics?.totalStudents || 0,
-          attendanceRate: educacaoMetrics?.attendanceRate || "N/A",
-          activePrograms: educacaoMetrics?.activePrograms || 0,
-          teachersCount: educacaoMetrics?.teachersCount || 0 
-        },
-        { 
-          department: "Assistência Social", 
-          familiesAssisted: assistenciaMetrics?.familiesAssisted || 0,
-          activePrograms: assistenciaMetrics?.activePrograms || 0,
-          beneficiaries: assistenciaMetrics?.beneficiaries || 0,
-          emergencyAssistance: assistenciaMetrics?.emergencyAssistance || 0 
-        },
-        { 
-          department: "Obras", 
-          ongoingProjects: obrasMetrics?.ongoingProjects || 0,
-          completedProjects: obrasMetrics?.completedProjects || 0,
-          planningProjects: obrasMetrics?.planningProjects || 0,
-          budgetUtilization: obrasMetrics?.budgetUtilization || "N/A" 
-        }
-      ];
-      
-      await exportToCSV(combinedData, "dashboard-executivo");
-      
-      toast({
-        title: "Dados exportados com sucesso",
-        description: "Os dados do Dashboard Executivo foram exportados em formato CSV.",
-      });
-    } catch (error) {
-      console.error("Erro ao exportar dados:", error);
-      toast({
-        title: "Erro ao exportar dados",
-        description: "Não foi possível exportar os dados do dashboard.",
-        variant: "destructive",
-      });
-    }
+  const handleExportData = () => {
+    startTransition(async () => {
+      try {
+        // Combine data from all departments
+        const combinedData = [
+          { 
+            department: "Saúde", 
+            totalAppointments: saudeMetrics?.totalAppointments || 0,
+            pendingAppointments: saudeMetrics?.pendingAppointments || 0,
+            completedAppointments: saudeMetrics?.completedAppointments || 0,
+            averageWaitTime: saudeMetrics?.averageWaitTime || "N/A" 
+          },
+          { 
+            department: "Educação", 
+            totalStudents: educacaoMetrics?.totalStudents || 0,
+            attendanceRate: educacaoMetrics?.attendanceRate || "N/A",
+            activePrograms: educacaoMetrics?.activePrograms || 0,
+            teachersCount: educacaoMetrics?.teachersCount || 0 
+          },
+          { 
+            department: "Assistência Social", 
+            familiesAssisted: assistenciaMetrics?.familiesAssisted || 0,
+            activePrograms: assistenciaMetrics?.activePrograms || 0,
+            beneficiaries: assistenciaMetrics?.beneficiaries || 0,
+            emergencyAssistance: assistenciaMetrics?.emergencyAssistance || 0 
+          },
+          { 
+            department: "Obras", 
+            ongoingProjects: obrasMetrics?.ongoingProjects || 0,
+            completedProjects: obrasMetrics?.completedProjects || 0,
+            planningProjects: obrasMetrics?.planningProjects || 0,
+            budgetUtilization: obrasMetrics?.budgetUtilization || "N/A" 
+          }
+        ];
+        
+        await exportToCSV(combinedData, "dashboard-executivo");
+        
+        toast({
+          title: "Dados exportados com sucesso",
+          description: "Os dados do Dashboard Executivo foram exportados em formato CSV.",
+        });
+      } catch (error) {
+        console.error("Erro ao exportar dados:", error);
+        toast({
+          title: "Erro ao exportar dados",
+          description: "Não foi possível exportar os dados do dashboard.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   // Handle capture screenshot
-  const handleCaptureScreenshot = async () => {
-    try {
-      await captureScreenshot("executive-dashboard", "dashboard-executivo");
-      
-      toast({
-        title: "Screenshot capturado com sucesso",
-        description: "A imagem do Dashboard Executivo foi salva.",
-      });
-    } catch (error) {
-      console.error("Erro ao capturar screenshot:", error);
-      toast({
-        title: "Erro ao capturar screenshot",
-        description: "Não foi possível capturar a imagem do dashboard.",
-        variant: "destructive",
-      });
-    }
+  const handleCaptureScreenshot = () => {
+    startTransition(async () => {
+      try {
+        await captureScreenshot("executive-dashboard", "dashboard-executivo");
+        
+        toast({
+          title: "Screenshot capturado com sucesso",
+          description: "A imagem do Dashboard Executivo foi salva.",
+        });
+      } catch (error) {
+        console.error("Erro ao capturar screenshot:", error);
+        toast({
+          title: "Erro ao capturar screenshot",
+          description: "Não foi possível capturar a imagem do dashboard.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   // Handle share dashboard
   const handleShareDashboard = () => {
-    try {
-      const shareableUrl = generateShareableURL("executivo", {
-        dateRange,
-        startDate: startDate?.toISOString(),
-        endDate: endDate?.toISOString(),
-        department: selectedDepartment,
-      });
-      
-      // Copy to clipboard
-      navigator.clipboard.writeText(shareableUrl);
-      
-      toast({
-        title: "Link copiado para a área de transferência",
-        description: "O link para compartilhamento do dashboard foi copiado.",
-      });
-    } catch (error) {
-      console.error("Erro ao gerar link compartilhável:", error);
-      toast({
-        title: "Erro ao compartilhar dashboard",
-        description: "Não foi possível gerar o link para compartilhamento.",
-        variant: "destructive",
-      });
-    }
+    startTransition(() => {
+      try {
+        const shareableUrl = generateShareableURL("executivo", {
+          dateRange,
+          startDate: startDate?.toISOString(),
+          endDate: endDate?.toISOString(),
+          department: selectedDepartment,
+        });
+        
+        // Copy to clipboard
+        navigator.clipboard.writeText(shareableUrl);
+        
+        toast({
+          title: "Link copiado para a área de transferência",
+          description: "O link para compartilhamento do dashboard foi copiado.",
+        });
+      } catch (error) {
+        console.error("Erro ao gerar link compartilhável:", error);
+        toast({
+          title: "Erro ao compartilhar dashboard",
+          description: "Não foi possível gerar o link para compartilhamento.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   // Dashboard header

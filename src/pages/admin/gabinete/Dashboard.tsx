@@ -1,3 +1,4 @@
+
 import React, { useMemo, useTransition, useEffect } from "react";
 import { FileText, Bell, Activity, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -26,7 +27,7 @@ export default function MayorDashboard() {
   // Verifique se o usuário é o prefeito, caso contrário redirecione
   useEffect(() => {
     if (user?.role !== "prefeito") {
-      navigate("/admin/gabinete/todas-solicitacoes", { replace: true });
+      navigate("/admin/gabinete/solicitacoes", { replace: true });
     }
   }, [user, navigate]);
 
@@ -84,7 +85,8 @@ export default function MayorDashboard() {
   const { 
     data: statsData, 
     isLoading: isLoadingStats, 
-    error: statsError 
+    error: statsError,
+    refetch: refetchStats
   } = useQuery({
     queryKey: ["mayorDashboardStats", startDate, endDate, selectedSector],
     queryFn: () => getDashboardStats(startDate, endDate, selectedSector),
@@ -94,7 +96,8 @@ export default function MayorDashboard() {
   const { 
     data: performanceData, 
     isLoading: isLoadingPerformance, 
-    error: performanceError 
+    error: performanceError,
+    refetch: refetchPerformance
   } = useQuery({
     queryKey: ["mayorPerformanceMetrics", startDate, endDate, selectedSector],
     queryFn: () => getPerformanceMetrics(startDate, endDate, selectedSector),
@@ -104,7 +107,8 @@ export default function MayorDashboard() {
   const { 
     data: departmentData, 
     isLoading: isLoadingDepartmentData, 
-    error: departmentError 
+    error: departmentError,
+    refetch: refetchDepartment
   } = useQuery({
     queryKey: ["mayorDepartmentRequests", startDate, endDate],
     queryFn: () => getDepartmentRequests(startDate, endDate),
@@ -114,7 +118,8 @@ export default function MayorDashboard() {
   const { 
     data: statusData, 
     isLoading: isLoadingStatusData, 
-    error: statusError 
+    error: statusError,
+    refetch: refetchStatus
   } = useQuery({
     queryKey: ["mayorRequestStatusData", startDate, endDate],
     queryFn: () => getRequestStatusData(startDate, endDate),
@@ -124,7 +129,8 @@ export default function MayorDashboard() {
   const { 
     data: activitiesData, 
     isLoading: isLoadingActivities, 
-    error: activitiesError 
+    error: activitiesError,
+    refetch: refetchActivities
   } = useQuery({
     queryKey: ["mayorRecentActivities"],
     queryFn: () => getRecentActivities(),
@@ -139,6 +145,17 @@ export default function MayorDashboard() {
   const error = statsError || performanceError || 
                 departmentError || statusError || 
                 activitiesError;
+
+  // Handle retry with startTransition
+  const handleRetry = () => {
+    startTransition(() => {
+      refetchStats();
+      refetchPerformance();
+      refetchDepartment();
+      refetchStatus();
+      refetchActivities();
+    });
+  };
 
   // Create metrics array
   const metrics = [
@@ -309,6 +326,7 @@ export default function MayorDashboard() {
       isLoading={isLoading}
       isError={!!error}
       error={error as Error}
+      onRetry={handleRetry}
       header={header}
       metrics={metricsSection}
       charts={chartsSection}

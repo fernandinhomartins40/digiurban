@@ -1,3 +1,4 @@
+
 import React, { useState, useTransition, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnifiedRequests } from "@/hooks/useUnifiedRequests";
@@ -53,7 +54,14 @@ export function RequestManagement({
   const [internalIsPending, startInternalTransition] = useTransition();
   
   // Use either the provided transition or the internal one
-  const startTransition = externalStartTransition || startInternalTransition;
+  const startTransition = useCallback((callback: () => void) => {
+    if (externalStartTransition) {
+      externalStartTransition(callback);
+    } else {
+      startInternalTransition(callback);
+    }
+  }, [externalStartTransition]);
+  
   const isPageLoading = externalIsPending || internalIsPending;
   
   const {
@@ -98,9 +106,11 @@ export function RequestManagement({
   }, [departmentFilter, setDepartmentFilter, cleanup]);
   
   const handleRequestClick = useCallback((request: UnifiedRequest) => {
-    setSelectedRequest(request);
-    setIsDetailDrawerOpen(true);
-  }, [setSelectedRequest]);
+    startTransition(() => {
+      setSelectedRequest(request);
+      setIsDetailDrawerOpen(true);
+    });
+  }, [startTransition, setSelectedRequest]);
   
   // Wrap filter changes in startTransition to prevent UI freezes
   const handleStatusFilterChange = useCallback((status: RequestStatus | undefined) => {
@@ -121,6 +131,24 @@ export function RequestManagement({
       setSearchTerm(value);
     });
   }, [startTransition, setSearchTerm]);
+  
+  const handleOpenNewRequestDrawer = useCallback(() => {
+    startTransition(() => {
+      setIsNewRequestDrawerOpen(true);
+    });
+  }, [startTransition]);
+  
+  const handleCloseNewRequestDrawer = useCallback(() => {
+    startTransition(() => {
+      setIsNewRequestDrawerOpen(false);
+    });
+  }, [startTransition]);
+  
+  const handleCloseDetailDrawer = useCallback(() => {
+    startTransition(() => {
+      setIsDetailDrawerOpen(false);
+    });
+  }, [startTransition]);
   
   // Get available departments for dropdown
   const departments = [
@@ -150,7 +178,7 @@ export function RequestManagement({
         </div>
 
         {showNewRequestButton && (
-          <Button onClick={() => setIsNewRequestDrawerOpen(true)}>
+          <Button onClick={handleOpenNewRequestDrawer}>
             <Plus className="mr-2 h-4 w-4" /> Nova Solicitação
           </Button>
         )}
@@ -244,7 +272,7 @@ export function RequestManagement({
       {/* New Request Drawer */}
       <NewRequestDrawer
         isOpen={isNewRequestDrawerOpen}
-        onClose={() => setIsNewRequestDrawerOpen(false)}
+        onClose={handleCloseNewRequestDrawer}
         departments={departments}
         onSubmit={handleCreateRequest}
       />
@@ -252,7 +280,7 @@ export function RequestManagement({
       {/* Request Detail Drawer */}
       <RequestDetailDrawer
         isOpen={isDetailDrawerOpen}
-        onClose={() => setIsDetailDrawerOpen(false)}
+        onClose={handleCloseDetailDrawer}
         request={selectedRequest}
         onUpdateStatus={handleUpdateRequestStatus}
         onForward={allowForwarding ? handleForwardRequest : undefined}

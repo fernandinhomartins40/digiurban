@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { AdminSidebar } from "./AdminSidebar";
 import { Outlet, Navigate, useNavigate, useLocation } from "react-router-dom";
@@ -77,7 +78,7 @@ export function AdminLayout() {
             location.pathname.includes("/admin/executivo/dashboard")) {
           console.log("Non-mayor user attempting to access dashboard, redirecting");
           // Redirect to a more appropriate page based on their role
-          navigate("/admin/gabinete/todas-solicitacoes", { replace: true });
+          navigate("/admin/gabinete/solicitacoes", { replace: true });
         }
       }
     }
