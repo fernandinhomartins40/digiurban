@@ -68,11 +68,11 @@ export default function ExecutiveDashboard() {
     });
   };
 
-  // Get data from individual department dashboards but only if user is mayor
-  const { metricsData: obrasMetrics, chartData: obrasChartData } = useObrasDashboard(user?.role === "prefeito");
-  const { metricsData: educacaoMetrics, chartData: educacaoChartData } = useEducacaoDashboard(user?.role === "prefeito");
-  const { metricsData: assistenciaMetrics, chartData: assistenciaChartData } = useAssistenciaDashboard(user?.role === "prefeito");
-  const { metricsData: saudeMetrics, chartData: saudeChartData } = useHealthDashboard(user?.role === "prefeito");
+  // Get data from individual department dashboards
+  const { metricsData: obrasMetrics, chartData: obrasChartData } = useObrasDashboard();
+  const { metricsData: educacaoMetrics, chartData: educacaoChartData } = useEducacaoDashboard();
+  const { metricsData: assistenciaMetrics, chartData: assistenciaChartData } = useAssistenciaDashboard();
+  const { metricsData: saudeMetrics, chartData: saudeChartData } = useHealthDashboard();
 
   // Department for filtering
   const [selectedDepartment, setSelectedDepartment] = useState<string | undefined>(undefined);

@@ -20,8 +20,6 @@ import { getHabitacaoItem } from "./HabitacaoItem";
 import { getSegurancaPublicaItem } from "./SegurancaPublicaItem";
 import { getTransporteItem } from "./TransporteItem";
 import { getOuvidoriaItem } from "./OuvidoriaItem";
-import { getDashboardForMayor } from "./DashboardForMayor";
-import { useAuth } from "@/contexts/AuthContext";
 
 export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => {
   // Base items without dashboard
@@ -49,10 +47,4 @@ export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => 
   ];
   
   return items;
-};
-
-// This function will be used in the AdminSidebar component to check if the user is the mayor
-// and add the dashboard item only for the mayor
-export const getMayorDashboardItem = (): SidebarItemProps => {
-  return getDashboardForMayor();
 };
