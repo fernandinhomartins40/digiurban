@@ -2,7 +2,7 @@
 import React, { useState, useTransition } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnifiedRequests } from "@/hooks/useUnifiedRequests";
-import { UnifiedRequest, RequestStatus, PriorityLevel } from "@/types/requests";
+import { UnifiedRequest, RequestStatus } from "@/types/requests";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -14,7 +14,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Filter, FileText } from "lucide-react";
+import { Search, Plus, FileText } from "lucide-react";
 import {
   Select,
   SelectContent,

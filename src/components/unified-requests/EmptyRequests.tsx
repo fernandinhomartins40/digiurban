@@ -1,14 +1,26 @@
 
 import React from "react";
-import { TableRow, TableCell } from "@/components/ui/table";
-import { FileX } from "lucide-react";
+import { Plus } from "lucide-react";
 
-export function EmptyRequests() {
+interface EmptyRequestsProps {
+  searchQuery?: string;
+}
+
+export function EmptyRequests({ searchQuery }: EmptyRequestsProps) {
   return (
-    <div className="h-60 flex flex-col items-center justify-center text-muted-foreground border rounded-md">
-      <FileX className="w-12 h-12 mb-3 opacity-50" />
-      <p className="text-lg font-medium mb-1">Nenhuma solicitação encontrada</p>
-      <p className="text-sm">Não existem solicitações que correspondam aos critérios atuais.</p>
+    <div className="text-center py-16">
+      <p className="text-xl font-medium">Nenhuma solicitação encontrada</p>
+      {searchQuery && (
+        <p className="text-sm text-muted-foreground mt-2">
+          Não foram encontradas solicitações com o termo "{searchQuery}"
+        </p>
+      )}
+      <p className="text-sm text-muted-foreground mt-2">
+        Use o botão "Nova Solicitação" para criar uma nova solicitação
+      </p>
+      <div className="mt-4">
+        <Plus className="h-8 w-8 mx-auto text-muted-foreground" />
+      </div>
     </div>
   );
 }

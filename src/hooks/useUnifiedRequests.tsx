@@ -7,7 +7,6 @@ import {
   CreateRequestDTO, 
   RequestStatus,
   RequesterType,
-  PriorityLevel,
   UpdateRequestDTO
 } from "@/types/requests";
 import { 
