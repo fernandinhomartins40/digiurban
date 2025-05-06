@@ -1,5 +1,5 @@
 
-import React, { useState, useTransition, useEffect } from "react";
+import React, { useState, useTransition, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnifiedRequests } from "@/hooks/useUnifiedRequests";
 import { UnifiedRequest, RequestStatus } from "@/types/requests";
@@ -25,6 +25,7 @@ import {
 import { RequestList } from "./RequestList";
 import { NewRequestDrawer } from "./NewRequestDrawer";
 import { RequestDetailDrawer } from "./RequestDetailDrawer";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 interface RequestManagementProps {
   title?: string;
@@ -43,7 +44,7 @@ export function RequestManagement({
   showNewRequestButton = true,
   allowForwarding = true,
   useTransition: externalStartTransition,
-  isPending = false
+  isPending: externalIsPending = false
 }: RequestManagementProps) {
   const { user } = useAuth();
   const [isNewRequestDrawerOpen, setIsNewRequestDrawerOpen] = useState(false);
@@ -54,7 +55,7 @@ export function RequestManagement({
   
   // Use either the provided transition or the internal one
   const startTransition = externalStartTransition || startInternalTransition;
-  const isLoading = isPending || internalIsPending;
+  const isPageLoading = externalIsPending || internalIsPending;
   
   const {
     requests,
@@ -82,6 +83,11 @@ export function RequestManagement({
     cleanup
   } = useUnifiedRequests();
   
+  // For debugging
+  useEffect(() => {
+    console.log("RequestManagement rendered, isLoading:", isLoadingRequests, "isPending:", isPageLoading);
+  }, [isLoadingRequests, isPageLoading]);
+  
   // Set the department filter if provided
   useEffect(() => {
     if (departmentFilter) {
@@ -92,29 +98,30 @@ export function RequestManagement({
     return cleanup;
   }, [departmentFilter, setDepartmentFilter, cleanup]);
   
-  const handleRequestClick = (request: UnifiedRequest) => {
+  const handleRequestClick = useCallback((request: UnifiedRequest) => {
     setSelectedRequest(request);
     setIsDetailDrawerOpen(true);
-  };
+  }, [setSelectedRequest]);
   
   // Wrap filter changes in startTransition to prevent UI freezes
-  const handleStatusFilterChange = (status: RequestStatus | undefined) => {
+  const handleStatusFilterChange = useCallback((status: RequestStatus | undefined) => {
     startTransition(() => {
       setStatusFilter(status);
     });
-  };
+  }, [startTransition, setStatusFilter]);
   
-  const handleRequesterTypeFilterChange = (value: string | undefined) => {
+  const handleRequesterTypeFilterChange = useCallback((value: string | undefined) => {
     startTransition(() => {
       setRequesterTypeFilter(value === "all" ? undefined : value as any);
     });
-  };
+  }, [startTransition, setRequesterTypeFilter]);
   
-  const handleSearchTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchTermChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     startTransition(() => {
-      setSearchTerm(e.target.value);
+      setSearchTerm(value);
     });
-  };
+  }, [startTransition, setSearchTerm]);
   
   // Get available departments for dropdown
   const departments = [
@@ -128,6 +135,8 @@ export function RequestManagement({
     "Meio Ambiente",
     "Serviços Urbanos",
   ];
+  
+  const isLoading = isLoadingRequests || isPageLoading;
   
   return (
     <div className="space-y-6">
@@ -217,7 +226,7 @@ export function RequestManagement({
           
           <RequestList
             requests={requests}
-            isLoading={isLoadingRequests || isLoading}
+            isLoading={isLoading}
             onRequestClick={handleRequestClick}
           />
         </Tabs>

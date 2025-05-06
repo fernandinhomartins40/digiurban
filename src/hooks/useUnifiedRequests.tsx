@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { 
@@ -35,12 +35,29 @@ export const useUnifiedRequests = () => {
   
   // Use a stable reference for the query function to prevent unnecessary re-renders
   const fetchRequests = useCallback(() => {
+    console.log("Fetching requests with filters:", {
+      departmentFilter,
+      statusFilter,
+      requesterTypeFilter,
+      searchTerm
+    });
+    
     return getUnifiedRequests(
       departmentFilter,
       statusFilter,
       requesterTypeFilter,
       searchTerm || undefined
     );
+  }, [departmentFilter, statusFilter, requesterTypeFilter, searchTerm]);
+  
+  // For debugging
+  useEffect(() => {
+    console.log("useUnifiedRequests: Filters changed", {
+      departmentFilter,
+      statusFilter,
+      requesterTypeFilter,
+      searchTerm
+    });
   }, [departmentFilter, statusFilter, requesterTypeFilter, searchTerm]);
   
   // Fetch requests with filters
@@ -251,6 +268,7 @@ export const useUnifiedRequests = () => {
   // Safe cleanup function for when component unmounts
   const cleanup = useCallback(() => {
     // This ensures we don't try to update state after unmount
+    console.log("useUnifiedRequests: cleanup called");
     setSelectedRequest(null);
     setDepartmentFilter(undefined);
     setStatusFilter(undefined);
