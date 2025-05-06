@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Heart, Users, Clock, Calendar, ArrowUp, ArrowDown, Stethoscope } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/common/DashboardHeader";
@@ -5,6 +6,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { MetricCard } from "@/components/dashboard/common/DashboardMetricCards";
 import { useHealthDashboard } from "@/hooks/useHealthDashboard";
 import { ChartCard, DashboardBarChart, DashboardLineChart, DashboardPieChart } from "@/components/dashboard/common/DashboardCharts";
+import { Button } from "@/components/ui/button";
 
 export default function HealthDashboard() {
   const {
