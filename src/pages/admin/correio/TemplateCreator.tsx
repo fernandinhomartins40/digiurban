@@ -28,7 +28,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { useMail } from "@/hooks/use-mail";
 import { Template, TemplateField } from "@/types/mail";
 import { formatDate } from "@/lib/utils";
@@ -42,6 +41,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { isAdminUser } from "@/types/auth";
 import { TemplateFieldItem } from "@/components/mail/TemplateFieldItem";
 import { toast } from "@/hooks/use-toast";
+import { WysiwygEditor } from "@/components/mail/WysiwygEditor";
+import { FieldList } from "@/components/mail/FieldList";
 
 const templateFormSchema = z.object({
   name: z.string().min(3, "Nome é obrigatório"),
@@ -193,6 +194,20 @@ export default function TemplateCreator() {
         });
       }
     }
+  };
+
+  // Handle field drag start
+  const handleFieldDragStart = (e: React.DragEvent, fieldKey: string) => {
+    e.dataTransfer.setData("text/plain", `{{${fieldKey}}}`);
+  };
+
+  // Handle field click - insert at cursor position
+  const handleFieldClick = (fieldKey: string) => {
+    // The actual insertion is handled by the WysiwygEditor component
+    const customEvent = new CustomEvent('insert-field', { 
+      detail: { fieldKey } 
+    });
+    document.dispatchEvent(customEvent);
   };
   
   async function onSubmit(values: z.infer<typeof templateFormSchema>) {
@@ -435,27 +450,40 @@ export default function TemplateCreator() {
                         )}
                       />
                       
-                      <FormField
-                        control={form.control}
-                        name="content"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Conteúdo do Modelo</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Digite o conteúdo do modelo. Use {{campo}} para inserir campos dinâmicos."
-                                className="min-h-60 font-mono"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div className="lg:col-span-2">
+                          <FormField
+                            control={form.control}
+                            name="content"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Conteúdo do Modelo</FormLabel>
+                                <FormControl>
+                                  <WysiwygEditor
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Digite o conteúdo do modelo ou arraste campos para inserir"
+                                    error={!!form.formState.errors.content}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="lg:col-span-1">
+                          <FieldList 
+                            fields={currentTemplate?.fields || []}
+                            onFieldDragStart={handleFieldDragStart}
+                            onFieldClick={handleFieldClick}
+                          />
+                        </div>
+                      </div>
                       
                       <div className="bg-muted p-3 rounded-md">
                         <p className="text-sm text-muted-foreground">
-                          Use <code className="bg-muted-foreground/20 p-0.5 rounded">{"{{nome_campo}}"}</code> para inserir campos dinâmicos no modelo.
+                          Arraste campos do painel lateral para o editor ou use <code className="bg-muted-foreground/20 p-0.5 rounded">{"{{nome_campo}}"}</code>.
                           Os campos devem ser definidos na aba "Campos".
                         </p>
                       </div>

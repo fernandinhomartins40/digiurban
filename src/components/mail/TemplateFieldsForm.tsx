@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TemplateField } from "@/types/mail";
 import { UseFormReturn } from "react-hook-form";
 import { format } from "date-fns";
-import { Edit } from "lucide-react";
+import { Edit, DragHandleVertical } from "lucide-react";
 
 interface TemplateFieldsFormProps {
   fields: TemplateField[];
@@ -49,8 +49,11 @@ export function TemplateFieldsForm({ fields, form }: TemplateFieldsFormProps) {
               required: field.is_required ? `O campo ${field.field_label} é obrigatório` : false
             }}
             render={({ field: formField }) => (
-              <FormItem>
-                <FormLabel>
+              <FormItem className="border rounded-md p-3 relative">
+                <div className="absolute left-3 top-3 text-muted-foreground">
+                  <DragHandleVertical size={16} />
+                </div>
+                <FormLabel className="ml-6">
                   {field.field_label}
                   {field.is_required && <span className="text-destructive ml-1">*</span>}
                 </FormLabel>
