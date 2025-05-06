@@ -42,7 +42,7 @@ export function RequestManagement({
   departmentFilter,
   showNewRequestButton = true,
   allowForwarding = true,
-  useTransition,
+  useTransition: externalStartTransition,
   isPending = false
 }: RequestManagementProps) {
   const { user } = useAuth();
@@ -53,7 +53,7 @@ export function RequestManagement({
   const [internalIsPending, startInternalTransition] = useTransition();
   
   // Use either the provided transition or the internal one
-  const startTransition = useTransition || startInternalTransition;
+  const startTransition = externalStartTransition || startInternalTransition;
   const isLoading = isPending || internalIsPending;
   
   const {
