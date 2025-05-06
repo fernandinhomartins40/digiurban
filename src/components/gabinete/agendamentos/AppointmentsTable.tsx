@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useTransition } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -23,6 +23,9 @@ export function AppointmentsTable({
   onAppointmentClick,
   isPending = false
 }: AppointmentsTableProps) {
+  // Add transition state
+  const [isTablePending, startTransition] = useTransition();
+  
   // Use React Query to fetch appointments
   const { data: appointments, isLoading, isError, error } = useQuery({
     queryKey: ["mayorAppointments", filterStatus, searchTerm],
@@ -60,18 +63,17 @@ export function AppointmentsTable({
     return format(new Date(date), "PP", { locale: ptBR });
   };
 
-  // Safe click handler that won't trigger suspense
+  // Safe click handler that uses startTransition
   const handleAppointmentClick = React.useCallback(
     (appointment: Appointment) => {
-      // Use setTimeout to ensure this doesn't happen in the render phase
-      setTimeout(() => {
+      startTransition(() => {
         onAppointmentClick(appointment);
-      }, 0);
+      });
     },
     [onAppointmentClick]
   );
 
-  if (isLoading || isPending) {
+  if (isLoading || isPending || isTablePending) {
     return (
       <div className="flex justify-center items-center py-8">
         <Loader2 className="h-8 w-8 animate-spin mr-2" />

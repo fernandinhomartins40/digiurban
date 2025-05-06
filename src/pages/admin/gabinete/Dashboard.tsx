@@ -24,13 +24,6 @@ export default function MayorDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Verifique se o usuário é o prefeito, caso contrário redirecione
-  useEffect(() => {
-    if (user?.role !== "prefeito") {
-      navigate("/admin/gabinete/solicitacoes", { replace: true });
-    }
-  }, [user, navigate]);
-
   // Add transition state
   const [isPending, startTransition] = useTransition();
 
@@ -39,6 +32,15 @@ export default function MayorDashboard() {
   const [startDate, setStartDate] = React.useState<Date | undefined>(subDays(new Date(), 30));
   const [endDate, setEndDate] = React.useState<Date | undefined>(new Date());
   const [selectedSector, setSelectedSector] = React.useState<string | undefined>(undefined);
+
+  // Use startTransition for role check and redirection
+  useEffect(() => {
+    if (user?.role !== "prefeito") {
+      startTransition(() => {
+        navigate("/admin/gabinete/solicitacoes", { replace: true });
+      });
+    }
+  }, [user, navigate]);
 
   // Handle date range changes wrapped in startTransition
   const handleDateRangeChange = (range: "7d" | "30d" | "90d" | "custom") => {

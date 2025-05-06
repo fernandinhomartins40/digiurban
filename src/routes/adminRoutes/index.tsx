@@ -1,8 +1,14 @@
 
 import { RouteObject } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import UserManagement from "@/pages/admin/users/UserManagement";
-import Dashboard from "@/pages/admin/Dashboard"; // Re-added Dashboard import
+import { DashboardLoading } from "@/components/dashboard/common/DashboardLoading";
+
+// Lazy load components with explicit Suspense boundaries
+const UserManagement = lazy(() => import("@/pages/admin/users/UserManagement"));
+const Dashboard = lazy(() => import("@/pages/admin/Dashboard"));
+
+// Import route groups
 import { correioRoutes } from "./correioRoutes";
 import { gabineteRoutes } from "./gabineteRoutes";
 import { adminChatRoutes } from "./chatRoutes";
@@ -24,20 +30,27 @@ import { meioAmbienteRoutes } from "./meioAmbienteRoutes";
 import { ouvidoriaRoutes } from "./ouvidoriaRoutes";
 import { executivoRoutes } from "./executivoRoutes";
 
+// Helper for lazy-loaded components
+const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<DashboardLoading message="Carregando..." />}>
+    {children}
+  </Suspense>
+);
+
 export const adminRoutes: RouteObject[] = [
   {
     path: "",
     element: <AdminLayout />,
     children: [
-      // Re-added general dashboard route
+      // General dashboard route
       {
         path: "dashboard",
-        element: <Dashboard />,
+        element: <SuspenseWrapper><Dashboard /></SuspenseWrapper>,
       },
 
       {
         path: "users",
-        element: <UserManagement />,
+        element: <SuspenseWrapper><UserManagement /></SuspenseWrapper>,
       },
       
       // Module-specific routes
