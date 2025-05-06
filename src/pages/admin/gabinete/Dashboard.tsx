@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+
+import React, { useMemo, useTransition } from "react";
 import { FileText, Bell, Activity, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { subDays } from "date-fns";
@@ -18,26 +19,31 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { cn } from "@/lib/utils";
 
 export default function MayorDashboard() {
+  // Add transition state
+  const [isPending, startTransition] = useTransition();
+
   // Date range state
   const [dateRange, setDateRange] = React.useState<"7d" | "30d" | "90d" | "custom">("30d");
   const [startDate, setStartDate] = React.useState<Date | undefined>(subDays(new Date(), 30));
   const [endDate, setEndDate] = React.useState<Date | undefined>(new Date());
   const [selectedSector, setSelectedSector] = React.useState<string | undefined>(undefined);
 
-  // Handle date range changes
+  // Handle date range changes wrapped in startTransition
   const handleDateRangeChange = useMemo(
     () => (range: "7d" | "30d" | "90d" | "custom") => {
-      setDateRange(range);
-      if (range === "7d") {
-        setStartDate(subDays(new Date(), 7));
-        setEndDate(new Date());
-      } else if (range === "30d") {
-        setStartDate(subDays(new Date(), 30));
-        setEndDate(new Date());
-      } else if (range === "90d") {
-        setStartDate(subDays(new Date(), 90));
-        setEndDate(new Date());
-      }
+      startTransition(() => {
+        setDateRange(range);
+        if (range === "7d") {
+          setStartDate(subDays(new Date(), 7));
+          setEndDate(new Date());
+        } else if (range === "30d") {
+          setStartDate(subDays(new Date(), 30));
+          setEndDate(new Date());
+        } else if (range === "90d") {
+          setStartDate(subDays(new Date(), 90));
+          setEndDate(new Date());
+        }
+      });
     },
     []
   );
@@ -50,6 +56,21 @@ export default function MayorDashboard() {
     { value: "obras", label: "Obras" },
     { value: "urbanismo", label: "Urbanismo" },
   ];
+
+  // Wrap sector selection in startTransition
+  const handleSectorChange = (value: string | undefined) => {
+    startTransition(() => {
+      setSelectedSector(value);
+    });
+  };
+  
+  // Wrap date range selection in startTransition
+  const handleDateRangeSelect = (range: { from?: Date; to?: Date }) => {
+    startTransition(() => {
+      setStartDate(range?.from);
+      setEndDate(range?.to);
+    });
+  };
 
   // Fetch all necessary data
   const { 
@@ -99,8 +120,8 @@ export default function MayorDashboard() {
 
   // Calculate loading and error states
   const isLoading = isLoadingStats || isLoadingPerformance || 
-                   isLoadingDepartmentData || isLoadingStatusData || 
-                   isLoadingActivities;
+                    isLoadingDepartmentData || isLoadingStatusData || 
+                    isLoadingActivities || isPending;
                    
   const error = statsError || performanceError || 
                 departmentError || statusError || 
@@ -147,13 +168,10 @@ export default function MayorDashboard() {
       startDate={startDate}
       endDate={endDate}
       onDateRangeChange={handleDateRangeChange}
-      onDateRangeSelect={(range) => {
-        setStartDate(range?.from);
-        setEndDate(range?.to);
-      }}
+      onDateRangeSelect={handleDateRangeSelect}
       sectors={sectors}
       selectedSector={selectedSector}
-      onSectorChange={setSelectedSector}
+      onSectorChange={handleSectorChange}
       rightContent={<Button variant="outline" size="sm">Exportar</Button>}
     />
   );
