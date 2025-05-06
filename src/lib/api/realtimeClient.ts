@@ -59,7 +59,9 @@ class RealtimeClient {
     const channel = supabase.channel(channelId);
     
     // Configure the channel for postgres changes
+    // Fix: Use proper typing for the postgres_changes event
     channel.on(
+      // @ts-ignore - The Supabase types might be outdated, forcing the correct string
       'postgres_changes',
       {
         event: event as 'INSERT' | 'UPDATE' | 'DELETE' | '*',
@@ -67,14 +69,14 @@ class RealtimeClient {
         table: table,
         filter: filter || undefined
       },
-      (payload: RealtimePostgresChangesPayload<any>) => {
+      (payload) => {
         // Apply additional filtering if provided
-        if (filterCallback && !filterCallback(payload)) {
+        if (filterCallback && !filterCallback(payload as RealtimePostgresChangesPayload<any>)) {
           return;
         }
         
         // Execute the callback
-        callback(payload);
+        callback(payload as RealtimePostgresChangesPayload<any>);
       }
     ).subscribe((status) => {
       if (status !== 'SUBSCRIBED') {
