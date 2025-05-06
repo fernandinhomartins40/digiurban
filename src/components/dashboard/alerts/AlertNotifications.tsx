@@ -1,165 +1,96 @@
 
-import React, { useState, useEffect } from "react";
-import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  AlertNotification, 
-  getUnreadAlertNotifications, 
-  markAlertAsRead 
-} from "@/services/dashboard/alertService";
-import { cn } from "@/lib/utils";
+import React from "react";
+import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
 
-export function AlertNotifications() {
-  const [notifications, setNotifications] = useState<AlertNotification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Load notifications
-  const loadNotifications = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getUnreadAlertNotifications();
-      setNotifications(data);
-    } catch (error) {
-      console.error('Error loading notifications:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Load notifications on mount
-  useEffect(() => {
-    loadNotifications();
-    
-    // Set up interval to refresh notifications
-    const interval = setInterval(() => {
-      loadNotifications();
-    }, 60000); // Every minute
-    
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Handle marking notification as read
-  const handleMarkAsRead = async (id: string) => {
-    try {
-      await markAlertAsRead(id);
-      setNotifications(prev => prev.filter(n => n.id !== id));
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
-  
-  // Handle mark all as read
-  const handleMarkAllAsRead = async () => {
-    try {
-      for (const notification of notifications) {
-        await markAlertAsRead(notification.id);
-      }
-      setNotifications([]);
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-    }
-  };
-  
-  // Format date for display
-  const formatDate = (date: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - new Date(date).getTime();
-    const diffMins = Math.round(diffMs / 60000);
-    const diffHours = Math.round(diffMins / 60);
-    const diffDays = Math.round(diffHours / 24);
-    
-    if (diffMins < 60) {
-      return `${diffMins} min atrás`;
-    } else if (diffHours < 24) {
-      return `${diffHours} hora${diffHours !== 1 ? 's' : ''} atrás`;
-    } else {
-      return `${diffDays} dia${diffDays !== 1 ? 's' : ''} atrás`;
-    }
-  };
-  
-  // Get severity class based on condition
-  const getSeverityClass = (condition: string, metricValue: number, threshold: number) => {
-    if (condition === 'greater_than' && metricValue > threshold * 1.5) return 'bg-red-100 text-red-800 border-red-300';
-    if (condition === 'less_than' && metricValue < threshold * 0.5) return 'bg-red-100 text-red-800 border-red-300';
-    return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-  };
-  
-  // Format condition for display
-  const formatCondition = (condition: string, threshold: number, value: number) => {
-    switch (condition) {
-      case 'greater_than': return `acima de ${threshold} (${value})`;
-      case 'less_than': return `abaixo de ${threshold} (${value})`;
-      case 'equal_to': return `igual a ${threshold} (${value})`;
-      case 'not_equal_to': return `diferente de ${threshold} (${value})`;
-      default: return condition;
-    }
-  };
-  
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <div>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Alertas do Dashboard
-          </CardTitle>
-          <CardDescription>
-            Notificações de métricas que estão fora dos valores esperados
-          </CardDescription>
-        </div>
-        {notifications.length > 0 && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleMarkAllAsRead}
-          >
-            Marcar todos como lidos
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="py-8 text-center">Carregando notificações...</div>
-        ) : notifications.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground">
-            Não há notificações de alerta no momento.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {notifications.map((notification) => (
-              <div 
-                key={notification.id}
-                className={cn(
-                  "p-4 rounded-lg border",
-                  getSeverityClass(notification.condition, notification.metricValue, notification.threshold)
-                )}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium">
-                      {notification.metricName} {formatCondition(notification.condition, notification.threshold, notification.metricValue)}
-                    </h4>
-                    <div className="text-sm mt-1">
-                      <span className="font-medium">Departamento:</span> {notification.department}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {formatDate(notification.timestamp)}
-                    </div>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleMarkAsRead(notification.id)}
-                  >
-                    Marcar como lido
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+interface Alert {
+  id: number;
+  title: string;
+  type: "info" | "warning" | "success" | "error" | "urgent";
+  time: string;
 }
+
+interface AlertNotificationsProps {
+  limit?: number;
+}
+
+export const AlertNotifications: React.FC<AlertNotificationsProps> = ({ limit = 5 }) => {
+  // Simulated data for now
+  const alerts: Alert[] = [
+    {
+      id: 1,
+      title: "Prazo de licitação da reforma escolar se aproximando",
+      type: "warning",
+      time: "5 minutos atrás",
+    },
+    {
+      id: 2,
+      title: "Relatório mensal de saúde disponível para revisão",
+      type: "info",
+      time: "2 horas atrás",
+    },
+    {
+      id: 3,
+      title: "Aprovação de orçamento para o programa de assistência social",
+      type: "success",
+      time: "5 horas atrás",
+    },
+    {
+      id: 4,
+      title: "Reclamação sobre atendimento no posto de saúde central",
+      type: "error",
+      time: "1 dia atrás",
+    },
+    {
+      id: 5,
+      title: "Solicitação urgente de manutenção da rede de água",
+      type: "urgent",
+      time: "2 dias atrás",
+    },
+    {
+      id: 6,
+      title: "Novo evento municipal agendado para o próximo mês",
+      type: "info",
+      time: "2 dias atrás",
+    },
+  ];
+
+  // Apply limit to alerts
+  const displayAlerts = limit ? alerts.slice(0, limit) : alerts;
+
+  const getAlertIcon = (type: string) => {
+    switch (type) {
+      case "warning":
+      case "urgent":
+        return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+      case "success":
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      case "error":
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Info className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {displayAlerts.length > 0 ? (
+        displayAlerts.map((alert) => (
+          <div
+            key={alert.id}
+            className="flex items-start space-x-4 rounded-lg border p-4 transition-all hover:bg-accent"
+          >
+            <div className="mt-0.5">{getAlertIcon(alert.type)}</div>
+            <div className="space-y-1">
+              <p className="font-medium leading-none">{alert.title}</p>
+              <p className="text-sm text-muted-foreground">{alert.time}</p>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>Não há alertas recentes.</p>
+        </div>
+      )}
+    </div>
+  );
+};

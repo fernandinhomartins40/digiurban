@@ -83,7 +83,11 @@ export default function EducacaoDashboard() {
       sectors={schools}
       selectedSector={selectedSchool}
       onSectorChange={setSelectedSchool}
-      showDownload={true}
+      rightContent={
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm">Exportar</Button>
+        </div>
+      }
     />
   );
 

@@ -43,12 +43,12 @@ export const ChartCard = ({ title, description, children, className }: ChartProp
 // Comparison Chart - combines bars and lines
 interface ComparisonChartProps {
   data: any[];
-  bars: Array<{
+  bars?: Array<{
     dataKey: string;
     fill: string;
     name: string;
   }>;
-  lines: Array<{
+  lines?: Array<{
     dataKey: string;
     stroke: string;
     name: string;
@@ -62,15 +62,17 @@ interface ComparisonChartProps {
     bottom?: number;
     left?: number;
   };
+  gridAxis?: "x" | "y" | "both";
 }
 
 export const DashboardComparisonChart = ({
   data,
-  bars,
-  lines,
+  bars = [],
+  lines = [],
   xAxisDataKey,
   height = 300,
   yAxisWidth = 50,
+  gridAxis,
   margin = { top: 5, right: 30, left: 20, bottom: 20 },
 }: ComparisonChartProps) => {
   if (!data || data.length === 0) {
@@ -84,7 +86,7 @@ export const DashboardComparisonChart = ({
         <YAxis width={yAxisWidth} />
         <Tooltip />
         <Legend />
-        {bars.map((bar, index) => (
+        {bars && bars.map((bar, index) => (
           <Bar
             key={`bar-${index}`}
             dataKey={bar.dataKey}
@@ -93,7 +95,7 @@ export const DashboardComparisonChart = ({
             barSize={20}
           />
         ))}
-        {lines.map((line, index) => (
+        {lines && lines.map((line, index) => (
           <Line
             key={`line-${index}`}
             type="monotone"
@@ -117,6 +119,7 @@ interface AreaChartProps {
     fill: string;
     stroke: string;
     name: string;
+    yAxis?: "left" | "right";
   }>;
   xAxisDataKey: string;
   stacked?: boolean;
@@ -128,6 +131,9 @@ interface AreaChartProps {
     bottom?: number;
     left?: number;
   };
+  gridAxis?: "x" | "y" | "both";
+  leftYAxisLabel?: string;
+  rightYAxisLabel?: string;
 }
 
 export const DashboardAreaChart = ({
@@ -138,16 +144,34 @@ export const DashboardAreaChart = ({
   height = 300,
   yAxisWidth = 50,
   margin = { top: 5, right: 30, left: 20, bottom: 20 },
+  gridAxis,
+  leftYAxisLabel,
+  rightYAxisLabel,
 }: AreaChartProps) => {
   if (!data || data.length === 0) {
     return <div className="flex h-full items-center justify-center">Sem dados disponíveis</div>;
   }
 
+  // Check if we need a right Y axis
+  const needsRightAxis = areas.some(area => area.yAxis === "right");
+
   return (
     <ResponsiveContainer width="100%" height={height}>
       <AreaChart data={data} margin={margin}>
         <XAxis dataKey={xAxisDataKey} />
-        <YAxis width={yAxisWidth} />
+        <YAxis 
+          width={yAxisWidth} 
+          yAxisId="left"
+          label={leftYAxisLabel ? { value: leftYAxisLabel, angle: -90, position: 'insideLeft' } : undefined}
+        />
+        {needsRightAxis && (
+          <YAxis 
+            width={yAxisWidth} 
+            yAxisId="right" 
+            orientation="right"
+            label={rightYAxisLabel ? { value: rightYAxisLabel, angle: 90, position: 'insideRight' } : undefined}
+          />
+        )}
         <Tooltip />
         <Legend />
         {areas.map((area, index) => (
@@ -159,6 +183,7 @@ export const DashboardAreaChart = ({
             stroke={area.stroke}
             fill={area.fill}
             name={area.name}
+            yAxisId={area.yAxis || "left"}
           />
         ))}
       </AreaChart>

@@ -261,7 +261,10 @@ export default function ExecutiveDashboard() {
   ];
 
   return (
-    <DashboardLayout header={header}>
+    <DashboardLayout 
+      title="Dashboard Executivo"
+      header={header}
+    >
       {/* Metrics row */}
       {metricsSection}
 
@@ -280,7 +283,6 @@ export default function ExecutiveDashboard() {
                 { dataKey: "planejado", fill: "#4338ca", name: "Orçamento Planejado" },
                 { dataKey: "executado", fill: "#60a5fa", name: "Orçamento Executado" }
               ]}
-              gridAxis="y"
             />
           </CardContent>
         </Card>
@@ -316,7 +318,6 @@ export default function ExecutiveDashboard() {
                 { dataKey: "educacao", fill: "#60a5fa", name: "Educação" },
                 { dataKey: "assistencia", fill: "#34d399", name: "Assistência Social" }
               ]}
-              gridAxis="y"
             />
           </CardContent>
         </Card>
@@ -336,10 +337,9 @@ export default function ExecutiveDashboard() {
                 { dataKey: "assistencia", stroke: "#10b981", fill: "#10b98133", name: "Assistência Social" },
                 { dataKey: "obras", stroke: "#f59e0b", fill: "#f59e0b33", name: "Obras", yAxis: "right" }
               ]}
-              gridAxis="both"
-              height={300}
-              rightYAxisLabel="Obras"
               leftYAxisLabel="Atendimentos"
+              rightYAxisLabel="Obras"
+              height={300}
             />
           </CardContent>
         </Card>
@@ -353,7 +353,7 @@ export default function ExecutiveDashboard() {
             </Button>
           </CardHeader>
           <CardContent>
-            <AlertNotifications limit={5} />
+            <AlertNotifications />
           </CardContent>
         </Card>
       </div>
