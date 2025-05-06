@@ -59,7 +59,6 @@ class RealtimeClient {
     const channel = supabase.channel(channelId);
     
     // Configure the channel for postgres changes
-    // Fix: The correct typing for postgres_changes event
     channel.on(
       'postgres_changes' as any,  // Use type assertion as any to bypass TypeScript error
       {
@@ -70,12 +69,15 @@ class RealtimeClient {
       },
       (payload) => {
         // Apply additional filtering if provided
-        if (filterCallback && !filterCallback(payload as RealtimePostgresChangesPayload<any>)) {
+        // Fix: Cast payload to unknown first and then to the expected type
+        const typedPayload = payload as unknown as RealtimePostgresChangesPayload<any>;
+        
+        if (filterCallback && !filterCallback(typedPayload)) {
           return;
         }
         
-        // Execute the callback
-        callback(payload as RealtimePostgresChangesPayload<any>);
+        // Execute the callback with the properly typed payload
+        callback(typedPayload);
       }
     ).subscribe((status) => {
       if (status !== 'SUBSCRIBED') {
