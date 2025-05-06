@@ -4,7 +4,7 @@ import { Appointment } from "@/types/mayorOffice";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { FormLabel } from "@/components/ui/form";
-import { Pencil } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react";
 
 interface AppointmentNotesProps {
   appointment: Appointment;
@@ -42,6 +42,7 @@ export function AppointmentNotes({
           size="sm" 
           onClick={() => setIsEditing(true)}
           className="flex items-center gap-1 text-xs"
+          disabled={isUpdating}
         >
           <Pencil className="h-3 w-3" />
           Adicionar observações
@@ -60,6 +61,7 @@ export function AppointmentNotes({
             size="sm" 
             onClick={() => setIsEditing(true)} 
             className="h-6 px-2"
+            disabled={isUpdating}
           >
             <Pencil className="h-3 w-3 mr-1" />
             <span className="text-xs">Editar</span>
@@ -85,6 +87,7 @@ export function AppointmentNotes({
           placeholder="Adicione observações sobre este agendamento..."
           className="mt-1 resize-none"
           rows={4}
+          disabled={isSaving || isUpdating}
         />
       </div>
       <div className="flex justify-end gap-2">
@@ -105,7 +108,12 @@ export function AppointmentNotes({
           size="sm"
           disabled={isSaving || isUpdating}
         >
-          {isSaving || isUpdating ? "Salvando..." : "Salvar observações"}
+          {(isSaving || isUpdating) ? (
+            <>
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              Salvando...
+            </>
+          ) : "Salvar observações"}
         </Button>
       </div>
     </form>

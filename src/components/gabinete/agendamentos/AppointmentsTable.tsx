@@ -1,79 +1,84 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Appointment, AppointmentStatus } from "@/types/mayorOffice";
-import { getMayorAppointments } from "@/services/mayorOffice/appointmentsService";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ptBR } from "date-fns/locale";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AppointmentStatus, Appointment } from "@/types/mayorOffice";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { getMayorAppointments } from "@/services/mayorOffice/appointmentsService";
+import { Loader2 } from "lucide-react";
 
 interface AppointmentsTableProps {
   filterStatus: AppointmentStatus | "all";
   searchTerm?: string;
   onAppointmentClick: (appointment: Appointment) => void;
+  isPending?: boolean;
 }
 
 export function AppointmentsTable({ 
   filterStatus, 
-  searchTerm,
-  onAppointmentClick 
+  searchTerm = "", 
+  onAppointmentClick,
+  isPending = false
 }: AppointmentsTableProps) {
-  const status = filterStatus === "all" ? undefined : filterStatus;
-  
-  const { data: appointments, isLoading, error } = useQuery({
-    queryKey: ["mayorAppointments", status, searchTerm],
-    queryFn: () => getMayorAppointments(status, searchTerm),
+  // Use React Query to fetch appointments
+  const { data: appointments, isLoading } = useQuery({
+    queryKey: ["mayorAppointments", filterStatus, searchTerm],
+    queryFn: () => getMayorAppointments(
+      filterStatus === "all" ? undefined : filterStatus,
+      searchTerm
+    ),
   });
 
-  if (isLoading) {
+  // Status badge colors
+  const getStatusBadge = (status: AppointmentStatus) => {
+    switch (status) {
+      case "approved":
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Aprovado</Badge>;
+      case "rejected":
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Rejeitado</Badge>;
+      case "completed":
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Concluído</Badge>;
+      case "cancelled":
+        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Cancelado</Badge>;
+      default:
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pendente</Badge>;
+    }
+  };
+
+  // Format date
+  const formatDate = (date: Date) => {
+    return format(new Date(date), "PP", { locale: ptBR });
+  };
+
+  if (isLoading || isPending) {
     return (
-      <div className="flex items-center justify-center py-10">
+      <div className="flex justify-center items-center py-8">
         <Loader2 className="h-8 w-8 animate-spin mr-2" />
         <span>Carregando agendamentos...</span>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erro</AlertTitle>
-        <AlertDescription>
-          Não foi possível carregar os agendamentos. Tente novamente mais tarde.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
   if (!appointments || appointments.length === 0) {
     return (
-      <div className="text-center py-10">
-        <h3 className="text-lg font-medium">Nenhum agendamento encontrado</h3>
-        <p className="text-sm text-muted-foreground mt-2">
-          {filterStatus !== "all" 
-            ? `Não há agendamentos com status "${filterStatus}".` 
-            : "Não há agendamentos disponíveis."}
-          {searchTerm && " Tente usar outros termos de busca."}
-        </p>
+      <div className="text-center py-8 text-muted-foreground">
+        Nenhum agendamento encontrado.
       </div>
     );
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Solicitante</TableHead>
             <TableHead>Assunto</TableHead>
-            <TableHead>Data</TableHead>
+            <TableHead>Data Solicitada</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Prioridade</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -82,44 +87,15 @@ export function AppointmentsTable({
             <TableRow key={appointment.id}>
               <TableCell className="font-medium">{appointment.requesterName}</TableCell>
               <TableCell>{appointment.subject}</TableCell>
-              <TableCell>
-                {format(new Date(appointment.requestedDate), "dd 'de' MMMM', às' HH:mm", { locale: ptBR })}
-              </TableCell>
-              <TableCell>
-                <Badge 
-                  variant={
-                    appointment.status === "approved" ? "default" :
-                    appointment.status === "rejected" ? "destructive" :
-                    appointment.status === "completed" ? "outline" :
-                    "secondary"
-                  }
-                >
-                  {appointment.status === "pending" && "Pendente"}
-                  {appointment.status === "approved" && "Aprovado"}
-                  {appointment.status === "rejected" && "Rejeitado"}
-                  {appointment.status === "completed" && "Concluído"}
-                  {appointment.status === "cancelled" && "Cancelado"}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge 
-                  variant={
-                    appointment.priority === "high" ? "destructive" :
-                    appointment.priority === "low" ? "outline" :
-                    "secondary"
-                  }
-                >
-                  {appointment.priority === "high" && "Alta"}
-                  {appointment.priority === "normal" && "Normal"}
-                  {appointment.priority === "low" && "Baixa"}
-                </Badge>
-              </TableCell>
+              <TableCell>{formatDate(appointment.requestedDate)}</TableCell>
+              <TableCell>{getStatusBadge(appointment.status)}</TableCell>
               <TableCell className="text-right">
                 <Button 
                   variant="ghost" 
+                  size="sm"
                   onClick={() => onAppointmentClick(appointment)}
                 >
-                  Detalhes
+                  Ver detalhes
                 </Button>
               </TableCell>
             </TableRow>

@@ -1,5 +1,5 @@
 
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useTransition } from "react";
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
@@ -24,6 +24,9 @@ export default function AppointmentScheduler() {
     isUpdatingStatus, 
     isUpdatingNotes 
   } = useAppointmentActions();
+  
+  // Add transition state
+  const [isPending, startTransition] = useTransition();
 
   // Handle appointment click
   const handleAppointmentClick = (appointment: Appointment) => {
@@ -42,6 +45,20 @@ export default function AppointmentScheduler() {
 
   const handleComplete = (appointmentId: string): Promise<void> => {
     return handleStatusChange(appointmentId, "completed");
+  };
+
+  // Wrap filter updates in startTransition
+  const handleFilterStatusChange = (status: AppointmentStatus | "all") => {
+    startTransition(() => {
+      setFilterStatus(status);
+    });
+  };
+
+  // Wrap search term updates in startTransition  
+  const handleSearchTermChange = (term: string) => {
+    startTransition(() => {
+      setSearchTerm(term);
+    });
   };
 
   const handleUpdateNotes = (appointmentId: string, notes: string): Promise<void> => {
@@ -76,9 +93,9 @@ export default function AppointmentScheduler() {
           
           <AppointmentFilters 
             filterStatus={filterStatus} 
-            setFilterStatus={setFilterStatus}
+            setFilterStatus={handleFilterStatusChange}
             searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
+            setSearchTerm={handleSearchTermChange}
           />
         </CardHeader>
         
@@ -93,6 +110,7 @@ export default function AppointmentScheduler() {
               filterStatus={filterStatus}
               searchTerm={searchTerm}
               onAppointmentClick={handleAppointmentClick} 
+              isPending={isPending}
             />
           </Suspense>
         </CardContent>
