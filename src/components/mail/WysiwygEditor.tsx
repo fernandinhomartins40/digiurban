@@ -3,16 +3,18 @@ import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
 import { cn } from '@/lib/utils';
 import { 
   Bold, 
   Italic, 
-  ListOrdered, 
-  ListUnordered, 
+  List, 
+  ListOrdered,
   AlignLeft, 
   AlignCenter, 
   AlignRight, 
-  Underline
+  Underline as UnderlineIcon
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
@@ -39,6 +41,10 @@ export function WysiwygEditor({
       Placeholder.configure({
         placeholder,
       }),
+      Underline,
+      TextAlign.configure({
+        types: ['paragraph', 'heading'],
+      }),
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -57,22 +63,28 @@ export function WysiwygEditor({
     }
   }, [editor, value]);
 
+  // Listen for custom events to insert fields
+  useEffect(() => {
+    const handleInsertField = (e: CustomEvent) => {
+      if (!editor) return;
+      
+      const fieldKey = e.detail?.fieldKey;
+      if (fieldKey) {
+        const fieldPlaceholder = `{{${fieldKey}}}`;
+        editor.chain().focus().insertContent(fieldPlaceholder).run();
+      }
+    };
+    
+    document.addEventListener('insert-field', handleInsertField as EventListener);
+    
+    return () => {
+      document.removeEventListener('insert-field', handleInsertField as EventListener);
+    };
+  }, [editor]);
+
   if (!isMounted) {
     return null;
   }
-
-  const handleInsertField = (fieldKey: string) => {
-    if (!editor) return;
-    
-    const fieldPlaceholder = `{{${fieldKey}}}`;
-    
-    // Insert the field placeholder at the current cursor position
-    editor
-      .chain()
-      .focus()
-      .insertContent(fieldPlaceholder)
-      .run();
-  };
 
   return (
     <div className={cn(
@@ -108,7 +120,7 @@ export function WysiwygEditor({
           onClick={() => editor?.chain().focus().toggleUnderline().run()}
           className={cn(editor?.isActive('underline') ? 'bg-accent' : '')}
         >
-          <Underline className="h-4 w-4" />
+          <UnderlineIcon className="h-4 w-4" />
         </Button>
         
         <div className="border-l mx-1 h-6"></div>
@@ -120,7 +132,7 @@ export function WysiwygEditor({
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
           className={cn(editor?.isActive('bulletList') ? 'bg-accent' : '')}
         >
-          <ListUnordered className="h-4 w-4" />
+          <List className="h-4 w-4" />
         </Button>
         
         <Button

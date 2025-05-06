@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DragHandleVertical } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -29,7 +29,7 @@ export function DraggableField({
         "hover:bg-accent hover:border-accent-foreground/20 transition-colors"
       )}
     >
-      <DragHandleVertical className="h-4 w-4 text-muted-foreground" />
+      <GripVertical className="h-4 w-4 text-muted-foreground" />
       <span className="flex-1 text-sm truncate">{label}</span>
       {isRequired && (
         <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
