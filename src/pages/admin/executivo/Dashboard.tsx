@@ -1,4 +1,5 @@
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FileText, AlertTriangle, TrendingUp, TrendingDown, ChartBar } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { DashboardHeader } from "@/components/dashboard/common/DashboardHeader";
@@ -23,9 +24,20 @@ import { useEducacaoDashboard } from "@/hooks/useEducacaoDashboard";
 import { useAssistenciaDashboard } from "@/hooks/useAssistenciaDashboard";
 import { useHealthDashboard } from "@/hooks/useHealthDashboard";
 import { useDateRangeFilter } from "@/hooks/useDashboardData";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ExecutiveDashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Verifique se o usuário é o prefeito, caso contrário redirecione
+  useEffect(() => {
+    if (user?.role !== "prefeito") {
+      navigate("/admin/gabinete/todas-solicitacoes", { replace: true });
+    }
+  }, [user, navigate]);
+
   const [isPending, startTransition] = useTransition();
   
   const {
@@ -56,11 +68,11 @@ export default function ExecutiveDashboard() {
     });
   };
 
-  // Get data from individual department dashboards
-  const { metricsData: obrasMetrics, chartData: obrasChartData } = useObrasDashboard();
-  const { metricsData: educacaoMetrics, chartData: educacaoChartData } = useEducacaoDashboard();
-  const { metricsData: assistenciaMetrics, chartData: assistenciaChartData } = useAssistenciaDashboard();
-  const { metricsData: saudeMetrics, chartData: saudeChartData } = useHealthDashboard();
+  // Get data from individual department dashboards but only if user is mayor
+  const { metricsData: obrasMetrics, chartData: obrasChartData } = useObrasDashboard(user?.role === "prefeito");
+  const { metricsData: educacaoMetrics, chartData: educacaoChartData } = useEducacaoDashboard(user?.role === "prefeito");
+  const { metricsData: assistenciaMetrics, chartData: assistenciaChartData } = useAssistenciaDashboard(user?.role === "prefeito");
+  const { metricsData: saudeMetrics, chartData: saudeChartData } = useHealthDashboard(user?.role === "prefeito");
 
   // Department for filtering
   const [selectedDepartment, setSelectedDepartment] = useState<string | undefined>(undefined);
@@ -207,6 +219,20 @@ export default function ExecutiveDashboard() {
       }
     />
   );
+
+  // Se não for prefeito, renderize uma mensagem ou página alternativa
+  if (user?.role !== "prefeito") {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center p-6">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Acesso Restrito</h2>
+          <p className="text-gray-700 mb-4">
+            Este dashboard é exclusivo para o prefeito. Você será redirecionado em instantes.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Metrics section
   const metrics = [

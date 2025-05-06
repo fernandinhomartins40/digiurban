@@ -2,8 +2,9 @@
 import React from "react";
 import { SidebarItem } from "./sidebar/SidebarItem";
 import { UserSection } from "./sidebar/UserSection";
-import { getSidebarItems } from "./sidebar/items";
+import { getSidebarItems, getMayorDashboardItem } from "./sidebar/items";
 import { useSidebarMail } from "./sidebar/useSidebarMail";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AdminSidebarProps {
   ready?: boolean; // Flag to indicate when it's safe to use React Query
@@ -11,7 +12,15 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ ready = false }: AdminSidebarProps) {
   const { unreadCount } = useSidebarMail(ready);
-  const sidebarItems = getSidebarItems(unreadCount);
+  const { user } = useAuth();
+  
+  // Get base sidebar items
+  let sidebarItems = getSidebarItems(unreadCount);
+  
+  // If user is the mayor, add the dashboard item at the beginning
+  if (user?.role === 'prefeito') {
+    sidebarItems = [getMayorDashboardItem(), ...sidebarItems];
+  }
 
   return (
     <aside className="flex flex-col h-full w-64 bg-white border-r">

@@ -1,6 +1,5 @@
 
 import { SidebarItemProps } from "@/types/sidebar";
-import { getDashboardItem } from "./DashboardItem";
 import { getChatItem } from "./ChatItem";
 import { getUserRolesItem } from "./UserRolesItem";
 import { getGabineteItem } from "./GabineteItem";
@@ -21,27 +20,39 @@ import { getHabitacaoItem } from "./HabitacaoItem";
 import { getSegurancaPublicaItem } from "./SegurancaPublicaItem";
 import { getTransporteItem } from "./TransporteItem";
 import { getOuvidoriaItem } from "./OuvidoriaItem";
+import { getDashboardForMayor } from "./DashboardForMayor";
+import { useAuth } from "@/contexts/AuthContext";
 
-export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => [
-  getDashboardItem(),
-  getChatItem(unreadCount),
-  getUserRolesItem(), // Added user roles item after chat
-  getGabineteItem(),
-  getCorreioItem(unreadCount),
-  getAdministracaoItem(),
-  getFinancasItem(),
-  getEducacaoItem(),
-  getSaudeItem(),
-  getAssistenciaItem(),
-  getAgriculturaItem(),
-  getEsportesItem(),
-  getCulturaItem(),
-  getTurismoItem(),
-  getHabitacaoItem(),
-  getSegurancaPublicaItem(),
-  getTransporteItem(),
-  getObrasItem(),
-  getServicosItem(),
-  getMeioAmbienteItem(),
-  getOuvidoriaItem(),
-];
+export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => {
+  // Base items without dashboard
+  const items: SidebarItemProps[] = [
+    getChatItem(unreadCount),
+    getUserRolesItem(),
+    getGabineteItem(),
+    getCorreioItem(unreadCount),
+    getAdministracaoItem(),
+    getFinancasItem(),
+    getEducacaoItem(),
+    getSaudeItem(),
+    getAssistenciaItem(),
+    getAgriculturaItem(),
+    getEsportesItem(),
+    getCulturaItem(),
+    getTurismoItem(),
+    getHabitacaoItem(),
+    getSegurancaPublicaItem(),
+    getTransporteItem(),
+    getObrasItem(),
+    getServicosItem(),
+    getMeioAmbienteItem(),
+    getOuvidoriaItem(),
+  ];
+  
+  return items;
+};
+
+// This function will be used in the AdminSidebar component to check if the user is the mayor
+// and add the dashboard item only for the mayor
+export const getMayorDashboardItem = (): SidebarItemProps => {
+  return getDashboardForMayor();
+};

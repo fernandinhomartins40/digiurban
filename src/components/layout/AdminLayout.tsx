@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import { AdminSidebar } from "./AdminSidebar";
-import { Outlet, Navigate, useNavigate } from "react-router-dom";
+import { Outlet, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -12,6 +11,7 @@ export function AdminLayout() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [readyForQuery, setReadyForQuery] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Show fallback UI after timeout
   const [showFallback, setShowFallback] = React.useState(false);
@@ -69,8 +69,19 @@ export function AdminLayout() {
         console.log("AdminLayout: User is admin, setting readyForQuery");
         setReadyForQuery(true);
       }
+      
+      // Redirect users from dashboard if they're not the mayor
+      if (isAuthenticated && user?.role !== "prefeito") {
+        // Check if trying to access dashboard routes
+        if (location.pathname.includes("/admin/gabinete/dashboard") || 
+            location.pathname.includes("/admin/executivo/dashboard")) {
+          console.log("Non-mayor user attempting to access dashboard, redirecting");
+          // Redirect to a more appropriate page based on their role
+          navigate("/admin/gabinete/todas-solicitacoes", { replace: true });
+        }
+      }
     }
-  }, [isLoading, isAuthenticated, userType, navigate, user]);
+  }, [isLoading, isAuthenticated, userType, navigate, user, location.pathname]);
 
   // Show loading state
   if (isLoading) {

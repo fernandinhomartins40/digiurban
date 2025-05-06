@@ -1,6 +1,7 @@
 
 import { RouteObject } from "react-router-dom";
 import { lazy } from "react";
+import { MayorOnlyRoute } from "@/components/auth/MayorOnlyRoute";
 
 // Lazy load components
 const MayorDashboard = lazy(() => import("@/pages/admin/gabinete/Dashboard"));
@@ -11,7 +12,7 @@ const AllRequests = lazy(() => import("@/pages/admin/gabinete/AllRequests"));
 export const gabineteRoutes: RouteObject[] = [
   {
     path: "gabinete/dashboard",
-    element: <MayorDashboard />,
+    element: <MayorOnlyRoute><MayorDashboard /></MayorOnlyRoute>,
   },
   {
     path: "gabinete/solicitacoes",

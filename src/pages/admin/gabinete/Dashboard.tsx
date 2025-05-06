@@ -1,8 +1,9 @@
-
-import React, { useMemo, useTransition } from "react";
+import React, { useMemo, useTransition, useEffect } from "react";
 import { FileText, Bell, Activity, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { subDays } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   getDashboardStats, 
   getPerformanceMetrics, 
@@ -19,6 +20,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function MayorDashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Verifique se o usuário é o prefeito, caso contrário redirecione
+  useEffect(() => {
+    if (user?.role !== "prefeito") {
+      navigate("/admin/gabinete/todas-solicitacoes", { replace: true });
+    }
+  }, [user, navigate]);
+
   // Add transition state
   const [isPending, startTransition] = useTransition();
 
@@ -76,7 +87,8 @@ export default function MayorDashboard() {
     error: statsError 
   } = useQuery({
     queryKey: ["mayorDashboardStats", startDate, endDate, selectedSector],
-    queryFn: () => getDashboardStats(startDate, endDate, selectedSector)
+    queryFn: () => getDashboardStats(startDate, endDate, selectedSector),
+    enabled: user?.role === "prefeito" // Only fetch if user is mayor
   });
 
   const { 
@@ -85,7 +97,8 @@ export default function MayorDashboard() {
     error: performanceError 
   } = useQuery({
     queryKey: ["mayorPerformanceMetrics", startDate, endDate, selectedSector],
-    queryFn: () => getPerformanceMetrics(startDate, endDate, selectedSector)
+    queryFn: () => getPerformanceMetrics(startDate, endDate, selectedSector),
+    enabled: user?.role === "prefeito" // Only fetch if user is mayor
   });
 
   const { 
@@ -94,7 +107,8 @@ export default function MayorDashboard() {
     error: departmentError 
   } = useQuery({
     queryKey: ["mayorDepartmentRequests", startDate, endDate],
-    queryFn: () => getDepartmentRequests(startDate, endDate)
+    queryFn: () => getDepartmentRequests(startDate, endDate),
+    enabled: user?.role === "prefeito" // Only fetch if user is mayor
   });
 
   const { 
@@ -103,7 +117,8 @@ export default function MayorDashboard() {
     error: statusError 
   } = useQuery({
     queryKey: ["mayorRequestStatusData", startDate, endDate],
-    queryFn: () => getRequestStatusData(startDate, endDate)
+    queryFn: () => getRequestStatusData(startDate, endDate),
+    enabled: user?.role === "prefeito" // Only fetch if user is mayor
   });
 
   const { 
@@ -112,7 +127,8 @@ export default function MayorDashboard() {
     error: activitiesError 
   } = useQuery({
     queryKey: ["mayorRecentActivities"],
-    queryFn: () => getRecentActivities()
+    queryFn: () => getRecentActivities(),
+    enabled: user?.role === "prefeito" // Only fetch if user is mayor
   });
 
   // Calculate loading and error states
@@ -272,6 +288,20 @@ export default function MayorDashboard() {
       </Card>
     </div>
   );
+
+  // Se não for prefeito, renderize uma mensagem ou página alternativa
+  if (user?.role !== "prefeito") {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center p-6">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Acesso Restrito</h2>
+          <p className="text-gray-700 mb-4">
+            Este dashboard é exclusivo para o prefeito. Você será redirecionado em instantes.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <DashboardLayout
