@@ -5,6 +5,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import { Color } from '@tiptap/extension-color';
+import { TextStyle } from '@tiptap/extension-text-style'; // Added TextStyle which is required by Color
 import { Heading } from '@tiptap/extension-heading';
 import { cn } from '@/lib/utils';
 import { FontSize } from '@/components/mail/editor-extensions/font-size';
@@ -41,6 +42,7 @@ export function WysiwygEditor({
         alignments: ['left', 'center', 'right', 'justify'],
       }),
       Underline,
+      TextStyle, // Added TextStyle which is required by Color
       Color,
       Heading.configure({
         levels: [1, 2, 3, 4, 5, 6],

@@ -6,7 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MagicWandIcon } from "lucide-react";
+import { WandSparkles } from "lucide-react"; // Changed from MagicWandIcon to WandSparkles
 import { TemplateField } from "@/types/mail";
 
 interface AutoPopulateFieldsProps {
@@ -86,7 +86,7 @@ export function AutoPopulateFields({ fields, content, onPopulate }: AutoPopulate
             onClick={handlePopulate}
             className="gap-2"
           >
-            <MagicWandIcon className="h-4 w-4" />
+            <WandSparkles className="h-4 w-4" />
             <span>Inserir Campos</span>
           </Button>
         </TooltipTrigger>

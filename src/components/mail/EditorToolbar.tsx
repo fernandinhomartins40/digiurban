@@ -101,7 +101,11 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         <Select
           value={editor.getAttributes('textStyle').fontSize || ''}
           onValueChange={(value) => {
-            editor.chain().focus().setFontSize(value).run();
+            if (value) {
+              editor.chain().focus().command(({ commands }) => {
+                return commands.setFontSize(value);
+              }).run();
+            }
           }}
         >
           <SelectTrigger className="h-8 w-[75px] text-xs">
@@ -119,7 +123,11 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         <Select
           value={editor.getAttributes('textStyle').fontFamily || ''}
           onValueChange={(value) => {
-            editor.chain().focus().setFontFamily(value).run();
+            if (value) {
+              editor.chain().focus().command(({ commands }) => {
+                return commands.setFontFamily(value);
+              }).run();
+            }
           }}
         >
           <SelectTrigger className="h-8 w-[120px] text-xs">
@@ -282,8 +290,8 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => editor.chain().focus().indent().run()}
-                disabled={!editor.can().indent()}
+                onClick={() => editor.chain().focus().sinkListItem('listItem').run()}
+                disabled={!editor.can().sinkListItem('listItem')}
                 className="h-8 w-8 p-0"
               >
                 <Indent className="h-4 w-4" />
@@ -297,8 +305,8 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => editor.chain().focus().outdent().run()}
-                disabled={!editor.can().outdent()}
+                onClick={() => editor.chain().focus().liftListItem('listItem').run()}
+                disabled={!editor.can().liftListItem('listItem')}
                 className="h-8 w-8 p-0"
               >
                 <Outdent className="h-4 w-4" />
@@ -323,7 +331,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                 {['#000000', '#CC0000', '#4CAF50', '#2196F3', '#FFC107', '#9C27B0', '#795548', '#607D8B', '#E91E63', '#00BCD4'].map((color) => (
                   <button
                     key={color}
-                    onClick={() => editor.chain().focus().setColor(color).run()}
+                    onClick={() => editor.chain().focus().command(({ commands }) => {
+                      return commands.setColor(color);
+                    }).run()}
                     className="h-8 w-8 rounded-md border"
                     style={{ backgroundColor: color }}
                   />

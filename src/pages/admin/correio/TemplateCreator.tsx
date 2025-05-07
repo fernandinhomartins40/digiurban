@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -222,6 +223,48 @@ export default function TemplateCreator() {
   // Get current field keys
   const getCurrentFieldKeys = () => {
     return form.getValues("fields").map(field => field.field_key);
+  };
+  
+  // Handle template selection from the sidebar
+  const handleTemplateSelect = (id: string) => {
+    setTemplateId(id);
+  };
+
+  // Handle creating a new template
+  const handleCreateNew = () => {
+    setTemplateId(null);
+    form.reset({
+      name: "",
+      description: "",
+      documentTypeId: "",
+      content: "",
+      departments: isAdminUser(user) && user?.department ? [user.department] : [],
+      fields: [],
+    });
+    setCurrentTab("editor");
+  };
+
+  // Handle deleting a template
+  const handleDeleteTemplate = async () => {
+    if (templateId) {
+      try {
+        await deleteTemplate(templateId);
+        setTemplateId(null);
+        handleCreateNew();
+        toast({
+          title: "Modelo excluído",
+          description: "O modelo foi excluído com sucesso."
+        });
+        setConfirmDelete(false);
+      } catch (error) {
+        console.error("Error deleting template:", error);
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao excluir o modelo.",
+          variant: "destructive"
+        });
+      }
+    }
   };
   
   async function onSubmit(values: z.infer<typeof templateFormSchema>) {
