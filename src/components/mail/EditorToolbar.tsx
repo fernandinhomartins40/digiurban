@@ -101,9 +101,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           value={editor.getAttributes('textStyle').fontSize || ''}
           onValueChange={(value) => {
             if (value) {
-              editor.chain().focus().command(({ tr, commands }) => {
-                return commands.setMark('textStyle', { fontSize: value }, { tr });
-              }).run();
+              editor.chain().focus().setMark('textStyle', { fontSize: value }).run();
             }
           }}
         >
@@ -123,9 +121,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           value={editor.getAttributes('textStyle').fontFamily || ''}
           onValueChange={(value) => {
             if (value) {
-              editor.chain().focus().command(({ tr, commands }) => {
-                return commands.setMark('textStyle', { fontFamily: value }, { tr });
-              }).run();
+              editor.chain().focus().setMark('textStyle', { fontFamily: value }).run();
             }
           }}
         >

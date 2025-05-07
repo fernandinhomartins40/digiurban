@@ -1,8 +1,26 @@
 
 import { Extension } from '@tiptap/core'
-import { RawCommands } from '@tiptap/react'
 
-export const FontSize = Extension.create({
+type FontSizeOptions = {
+  types: string[]
+}
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    fontSize: {
+      /**
+       * Set font size
+       */
+      setFontSize: (fontSize: string) => ReturnType
+      /**
+       * Unset font size
+       */
+      unsetFontSize: () => ReturnType
+    }
+  }
+}
+
+export const FontSize = Extension.create<FontSizeOptions>({
   name: 'fontSize',
 
   addOptions() {
@@ -36,11 +54,11 @@ export const FontSize = Extension.create({
 
   addCommands() {
     return {
-      setFontSize: (fontSize: string) => ({ chain }) => {
-        return chain().setMark('textStyle', { fontSize })
+      setFontSize: fontSize => ({ commands }) => {
+        return commands.setMark('textStyle', { fontSize })
       },
-      unsetFontSize: () => ({ chain }) => {
-        return chain().setMark('textStyle', { fontSize: null })
+      unsetFontSize: () => ({ commands }) => {
+        return commands.setMark('textStyle', { fontSize: null })
       },
     }
   },

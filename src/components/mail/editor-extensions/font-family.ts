@@ -1,8 +1,26 @@
 
 import { Extension } from '@tiptap/core'
-import { RawCommands } from '@tiptap/react'
 
-export const FontFamily = Extension.create({
+type FontFamilyOptions = {
+  types: string[]
+}
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    fontFamily: {
+      /**
+       * Set font family
+       */
+      setFontFamily: (fontFamily: string) => ReturnType
+      /**
+       * Unset font family
+       */
+      unsetFontFamily: () => ReturnType
+    }
+  }
+}
+
+export const FontFamily = Extension.create<FontFamilyOptions>({
   name: 'fontFamily',
 
   addOptions() {
@@ -36,11 +54,11 @@ export const FontFamily = Extension.create({
 
   addCommands() {
     return {
-      setFontFamily: (fontFamily: string) => ({ chain }) => {
-        return chain().setMark('textStyle', { fontFamily })
+      setFontFamily: fontFamily => ({ commands }) => {
+        return commands.setMark('textStyle', { fontFamily })
       },
-      unsetFontFamily: () => ({ chain }) => {
-        return chain().setMark('textStyle', { fontFamily: null })
+      unsetFontFamily: () => ({ commands }) => {
+        return commands.setMark('textStyle', { fontFamily: null })
       },
     }
   },
