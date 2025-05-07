@@ -1,5 +1,6 @@
+
 import { TemplateField } from "@/types/mail";
-import { DragHandleHorizontal as DragIcon } from "lucide-react";
+import { GripHorizontal as DragIcon } from "lucide-react";
 import { DraggableField } from "@/components/mail/DraggableField";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -75,7 +76,9 @@ export function FieldList({ fields, onFieldDragStart, onFieldClick }: FieldListP
         {fields.map((field) => (
           <DraggableField
             key={field.id || field.field_key}
-            field={field}
+            label={field.field_label}
+            fieldKey={field.field_key}
+            isRequired={field.is_required}
             onDragStart={onFieldDragStart}
             onClick={() => handleFieldClick(field.field_key)}
           />
