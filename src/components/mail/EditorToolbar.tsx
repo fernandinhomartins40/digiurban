@@ -1,10 +1,9 @@
-
 import { type Editor } from '@tiptap/react';
 import { 
   Bold, Italic, Underline, AlignLeft, AlignCenter, 
   AlignRight, AlignJustify, List, ListOrdered,
   Heading1, Heading2, Heading3, Indent, Outdent,
-  Undo, Redo, PaintBucket, Type
+  Undo, Redo, PaintBucket
 } from 'lucide-react';
 import { Toggle } from "@/components/ui/toggle";
 import { 
@@ -102,7 +101,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           value={editor.getAttributes('textStyle').fontSize || ''}
           onValueChange={(value) => {
             if (value) {
-              editor.chain().focus().setFontSize(value).run();
+              editor.chain().focus().command(({ tr, commands }) => {
+                return commands.setMark('textStyle', { fontSize: value }, { tr });
+              }).run();
             }
           }}
         >
@@ -122,7 +123,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           value={editor.getAttributes('textStyle').fontFamily || ''}
           onValueChange={(value) => {
             if (value) {
-              editor.chain().focus().setFontFamily(value).run();
+              editor.chain().focus().command(({ tr, commands }) => {
+                return commands.setMark('textStyle', { fontFamily: value }, { tr });
+              }).run();
             }
           }}
         >

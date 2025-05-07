@@ -1,5 +1,6 @@
 
 import { Extension } from '@tiptap/core'
+import { RawCommands } from '@tiptap/react'
 
 export const FontFamily = Extension.create({
   name: 'fontFamily',
@@ -36,10 +37,10 @@ export const FontFamily = Extension.create({
   addCommands() {
     return {
       setFontFamily: (fontFamily: string) => ({ chain }) => {
-        return chain().setMark('textStyle', { fontFamily }).run()
+        return chain().setMark('textStyle', { fontFamily })
       },
       unsetFontFamily: () => ({ chain }) => {
-        return chain().setMark('textStyle', { fontFamily: null }).run()
+        return chain().setMark('textStyle', { fontFamily: null })
       },
     }
   },

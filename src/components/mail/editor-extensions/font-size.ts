@@ -1,5 +1,6 @@
 
 import { Extension } from '@tiptap/core'
+import { RawCommands } from '@tiptap/react'
 
 export const FontSize = Extension.create({
   name: 'fontSize',
@@ -36,10 +37,10 @@ export const FontSize = Extension.create({
   addCommands() {
     return {
       setFontSize: (fontSize: string) => ({ chain }) => {
-        return chain().setMark('textStyle', { fontSize }).run()
+        return chain().setMark('textStyle', { fontSize })
       },
       unsetFontSize: () => ({ chain }) => {
-        return chain().setMark('textStyle', { fontSize: null }).run()
+        return chain().setMark('textStyle', { fontSize: null })
       },
     }
   },
