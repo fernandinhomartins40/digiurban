@@ -56,6 +56,8 @@ export interface Template {
   name: string;
   description: string | null;
   content: string;
+  header?: string | null;
+  footer?: string | null;
   document_type_id: string | null;
   document_type?: DocumentType;
   creator_id: string;

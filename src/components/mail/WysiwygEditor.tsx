@@ -77,7 +77,10 @@ export function WysiwygEditor({
     const handleInsertField = (e: CustomEvent) => {
       if (editor) {
         const fieldKey = e.detail?.fieldKey;
-        if (fieldKey) {
+        const targetField = e.detail?.targetField;
+        
+        // Only insert if this is the right editor for the target field (or no target specified)
+        if (fieldKey && (!targetField || targetField === 'content')) {
           editor.commands.insertContent(`{{${fieldKey}}}`);
         }
       }

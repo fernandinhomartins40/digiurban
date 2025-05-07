@@ -1,169 +1,86 @@
-
-import React from 'react';
-import { DraggableField } from './DraggableField';
-import { TemplateField } from '@/types/mail';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TemplateField } from "@/types/mail";
+import { DragHandleHorizontal as DragIcon } from "lucide-react";
+import { DraggableField } from "@/components/mail/DraggableField";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface FieldListProps {
   fields: TemplateField[];
   onFieldDragStart: (e: React.DragEvent, fieldKey: string) => void;
-  onFieldClick?: (fieldKey: string) => void;
+  onFieldClick: (fieldKey: string, targetField?: string) => void;
 }
 
 export function FieldList({ fields, onFieldDragStart, onFieldClick }: FieldListProps) {
+  const [selectedTarget, setSelectedTarget] = useState<'content' | 'header' | 'footer'>('content');
+
   if (!fields.length) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Campos do Modelo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center">
-            Não há campos definidos. Adicione campos na aba "Campos".
-          </p>
-        </CardContent>
-      </Card>
+      <div className="border rounded-md p-4">
+        <h3 className="text-sm font-medium mb-2 flex items-center gap-1">
+          <DragIcon className="h-4 w-4" />
+          Campos Disponíveis
+        </h3>
+        <p className="text-xs text-muted-foreground text-center py-2">
+          Nenhum campo definido
+        </p>
+      </div>
     );
   }
 
-  // Group fields by their category for better organization
-  const destinatarioFields = fields.filter(field => 
-    field.field_key.startsWith('destinatario_')
-  );
-  
-  const documentoFields = fields.filter(field => 
-    field.field_key === 'numero_oficio' || 
-    field.field_key === 'assunto' || 
-    field.field_key === 'referencia' ||
-    field.field_key === 'data_emissao' ||
-    field.field_key === 'cidade'
-  );
-  
-  const remetenteFields = fields.filter(field => 
-    field.field_key.startsWith('remetente_')
-  );
-  
-  const conteudoFields = fields.filter(field => 
-    field.field_key === 'corpo_texto'
-  );
-  
-  const outrosFields = fields.filter(field => 
-    !field.field_key.startsWith('destinatario_') &&
-    !field.field_key.startsWith('remetente_') &&
-    field.field_key !== 'numero_oficio' &&
-    field.field_key !== 'assunto' &&
-    field.field_key !== 'referencia' &&
-    field.field_key !== 'data_emissao' &&
-    field.field_key !== 'cidade' &&
-    field.field_key !== 'corpo_texto'
-  );
+  const handleFieldClick = (fieldKey: string) => {
+    onFieldClick(fieldKey, selectedTarget);
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Campos do Modelo</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-2">
-          Arraste os campos para o editor ou clique para inserir no cursor
-        </p>
+    <div className="border rounded-md p-4 space-y-3">
+      <div>
+        <h3 className="text-sm font-medium mb-2 flex items-center gap-1">
+          <DragIcon className="h-4 w-4" />
+          Campos Disponíveis
+        </h3>
         
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all">Todos</TabsTrigger>
-            <TabsTrigger value="dest">Destinatário</TabsTrigger>
-            <TabsTrigger value="doc">Documento</TabsTrigger>
-            <TabsTrigger value="rem">Remetente</TabsTrigger>
-            <TabsTrigger value="outros">Outros</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="all" className="space-y-1">
-            {fields.map((field) => (
-              <DraggableField
-                key={field.id}
-                label={field.field_label}
-                fieldKey={field.field_key}
-                isRequired={field.is_required}
-                onDragStart={onFieldDragStart}
-                onClick={onFieldClick}
-              />
-            ))}
-          </TabsContent>
-          
-          <TabsContent value="dest" className="space-y-1">
-            {destinatarioFields.map((field) => (
-              <DraggableField
-                key={field.id}
-                label={field.field_label}
-                fieldKey={field.field_key}
-                isRequired={field.is_required}
-                onDragStart={onFieldDragStart}
-                onClick={onFieldClick}
-              />
-            ))}
-            {destinatarioFields.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-2">
-                Nenhum campo nesta categoria
-              </p>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="doc" className="space-y-1">
-            {documentoFields.map((field) => (
-              <DraggableField
-                key={field.id}
-                label={field.field_label}
-                fieldKey={field.field_key}
-                isRequired={field.is_required}
-                onDragStart={onFieldDragStart}
-                onClick={onFieldClick}
-              />
-            ))}
-            {documentoFields.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-2">
-                Nenhum campo nesta categoria
-              </p>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="rem" className="space-y-1">
-            {remetenteFields.map((field) => (
-              <DraggableField
-                key={field.id}
-                label={field.field_label}
-                fieldKey={field.field_key}
-                isRequired={field.is_required}
-                onDragStart={onFieldDragStart}
-                onClick={onFieldClick}
-              />
-            ))}
-            {remetenteFields.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-2">
-                Nenhum campo nesta categoria
-              </p>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="outros" className="space-y-1">
-            {conteudoFields.concat(outrosFields).map((field) => (
-              <DraggableField
-                key={field.id}
-                label={field.field_label}
-                fieldKey={field.field_key}
-                isRequired={field.is_required}
-                onDragStart={onFieldDragStart}
-                onClick={onFieldClick}
-              />
-            ))}
-            {conteudoFields.length + outrosFields.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-2">
-                Nenhum campo nesta categoria
-              </p>
-            )}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+        <div className="flex gap-1 mb-3">
+          <Button 
+            variant={selectedTarget === 'content' ? "default" : "outline"} 
+            size="sm" 
+            onClick={() => setSelectedTarget('content')}
+            className="text-xs h-7 px-2"
+          >
+            Conteúdo
+          </Button>
+          <Button 
+            variant={selectedTarget === 'header' ? "default" : "outline"} 
+            size="sm" 
+            onClick={() => setSelectedTarget('header')}
+            className="text-xs h-7 px-2"
+          >
+            Cabeçalho
+          </Button>
+          <Button 
+            variant={selectedTarget === 'footer' ? "default" : "outline"} 
+            size="sm" 
+            onClick={() => setSelectedTarget('footer')}
+            className="text-xs h-7 px-2"
+          >
+            Rodapé
+          </Button>
+        </div>
+
+        <p className="text-xs text-muted-foreground mb-2">
+          Arraste os campos para o {selectedTarget === 'content' ? 'conteúdo' : selectedTarget === 'header' ? 'cabeçalho' : 'rodapé'} ou clique para inserir.
+        </p>
+      </div>
+
+      <div className="space-y-1">
+        {fields.map((field) => (
+          <DraggableField
+            key={field.id || field.field_key}
+            field={field}
+            onDragStart={onFieldDragStart}
+            onClick={() => handleFieldClick(field.field_key)}
+          />
+        ))}
+      </div>
+    </div>
   );
 }

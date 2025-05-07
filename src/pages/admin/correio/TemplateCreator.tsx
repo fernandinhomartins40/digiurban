@@ -211,10 +211,10 @@ export default function TemplateCreator() {
   };
 
   // Handle field click - insert at cursor position
-  const handleFieldClick = (fieldKey: string) => {
+  const handleFieldClick = (fieldKey: string, targetField?: string) => {
     // The actual insertion is handled by the WysiwygEditor component
     const customEvent = new CustomEvent('insert-field', { 
-      detail: { fieldKey } 
+      detail: { fieldKey, targetField } 
     });
     document.dispatchEvent(customEvent);
   };
