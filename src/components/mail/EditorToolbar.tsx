@@ -102,9 +102,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           value={editor.getAttributes('textStyle').fontSize || ''}
           onValueChange={(value) => {
             if (value) {
-              editor.chain().focus().command(({ commands }) => {
-                return commands.setFontSize(value);
-              }).run();
+              editor.chain().focus().setFontSize(value).run();
             }
           }}
         >
@@ -124,9 +122,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           value={editor.getAttributes('textStyle').fontFamily || ''}
           onValueChange={(value) => {
             if (value) {
-              editor.chain().focus().command(({ commands }) => {
-                return commands.setFontFamily(value);
-              }).run();
+              editor.chain().focus().setFontFamily(value).run();
             }
           }}
         >
@@ -331,9 +327,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                 {['#000000', '#CC0000', '#4CAF50', '#2196F3', '#FFC107', '#9C27B0', '#795548', '#607D8B', '#E91E63', '#00BCD4'].map((color) => (
                   <button
                     key={color}
-                    onClick={() => editor.chain().focus().command(({ commands }) => {
-                      return commands.setColor(color);
-                    }).run()}
+                    onClick={() => editor.chain().focus().setColor(color).run()}
                     className="h-8 w-8 rounded-md border"
                     style={{ backgroundColor: color }}
                   />

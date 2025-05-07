@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -187,7 +186,7 @@ export default function TemplateCreator() {
   };
   
   // Handle template starter selection
-  const handleTemplateSelect = (templateContent: string) => {
+  const handleApplyTemplate = (templateContent: string) => {
     form.setValue("content", templateContent);
     updatePreview(templateContent);
     toast({
@@ -511,7 +510,7 @@ export default function TemplateCreator() {
                         <div className="flex items-center gap-2">
                           <TemplateStarter 
                             fields={currentTemplate?.fields || []} 
-                            onSelect={handleTemplateSelect}
+                            onSelect={handleApplyTemplate}
                           />
                           <AutoPopulateFields
                             fields={currentTemplate?.fields || []}
