@@ -89,7 +89,9 @@ export async function createDocument(document: Partial<Document>) {
     department: document.department,
     template_id: document.template_id || null,
     status: document.status || "pending",
-    protocol_number: "temp" // This will be overwritten by the database trigger
+    protocol_number: "temp", // This will be overwritten by the database trigger
+    header: document.header || null,
+    footer: document.footer || null
   };
   
   const { data, error } = await supabase
@@ -369,6 +371,8 @@ export async function createTemplate(template: Partial<Template>, fields: Partia
         name: template.name!,
         description: template.description || null,
         content: template.content!,
+        header: template.header || null,
+        footer: template.footer || null,
         document_type_id: template.document_type_id || null,
         creator_id: template.creator_id!,
         departments: template.departments!,
@@ -416,6 +420,8 @@ export async function updateTemplate(id: string, template: Partial<Template>, fi
       name: template.name,
       description: template.description,
       content: template.content,
+      header: template.header,
+      footer: template.footer,
       document_type_id: template.document_type_id,
       departments: template.departments,
       updated_at: new Date().toISOString()

@@ -20,6 +20,7 @@ interface WysiwygEditorProps {
   error?: boolean;
   className?: string;
   onDrop?: (e: DragEvent) => void;
+  targetField?: 'content' | 'header' | 'footer';
 }
 
 export function WysiwygEditor({
@@ -29,6 +30,7 @@ export function WysiwygEditor({
   error,
   className,
   onDrop,
+  targetField = 'content',
 }: WysiwygEditorProps) {
   // Define the editor
   const editor = useEditor({
@@ -77,10 +79,10 @@ export function WysiwygEditor({
     const handleInsertField = (e: CustomEvent) => {
       if (editor) {
         const fieldKey = e.detail?.fieldKey;
-        const targetField = e.detail?.targetField;
+        const eventTargetField = e.detail?.targetField;
         
-        // Only insert if this is the right editor for the target field (or no target specified)
-        if (fieldKey && (!targetField || targetField === 'content')) {
+        // Only insert if this is the right editor for the target field
+        if (fieldKey && (!eventTargetField || eventTargetField === targetField)) {
           editor.commands.insertContent(`{{${fieldKey}}}`);
         }
       }
@@ -90,7 +92,7 @@ export function WysiwygEditor({
     return () => {
       document.removeEventListener('insert-field', handleInsertField as EventListener);
     };
-  }, [editor]);
+  }, [editor, targetField]);
 
   return (
     <div className={cn('border rounded-lg overflow-hidden', error && 'border-destructive', className)}>

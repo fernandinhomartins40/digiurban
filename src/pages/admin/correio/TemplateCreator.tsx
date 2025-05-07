@@ -52,6 +52,8 @@ const templateFormSchema = z.object({
   description: z.string().optional(),
   documentTypeId: z.string().optional(),
   content: z.string().min(10, "Conteúdo é obrigatório"),
+  header: z.string().optional(),
+  footer: z.string().optional(),
   departments: z.array(z.string()).min(1, "Selecione pelo menos um departamento"),
   fields: z.array(
     z.object({
@@ -70,6 +72,8 @@ export default function TemplateCreator() {
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState("editor");
   const [previewContent, setPreviewContent] = useState("");
+  const [previewHeader, setPreviewHeader] = useState("");
+  const [previewFooter, setPreviewFooter] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   
   const { 
@@ -94,6 +98,8 @@ export default function TemplateCreator() {
       description: "",
       documentTypeId: "",
       content: "",
+      header: "",
+      footer: "",
       departments: isAdminUser(user) && user?.department ? [user.department] : [],
       fields: [],
     },
@@ -112,6 +118,8 @@ export default function TemplateCreator() {
         description: currentTemplate.description || "",
         documentTypeId: currentTemplate.document_type_id || "",
         content: currentTemplate.content,
+        header: currentTemplate.header || "",
+        footer: currentTemplate.footer || "",
         departments: currentTemplate.departments || [],
         fields: currentTemplate.fields?.map((field) => ({
           field_key: field.field_key,
@@ -124,31 +132,49 @@ export default function TemplateCreator() {
       });
       
       // Generate preview
-      updatePreview(currentTemplate.content);
+      updatePreview(
+        currentTemplate.content, 
+        currentTemplate.header || "", 
+        currentTemplate.footer || ""
+      );
     }
   }, [currentTemplate, form]);
   
   // Update preview when content changes
   const content = form.watch("content");
+  const header = form.watch("header");
+  const footer = form.watch("footer");
   const templateFields = form.watch("fields");
   
   useEffect(() => {
-    updatePreview(content);
-  }, [content, templateFields]);
+    updatePreview(content, header, footer);
+  }, [content, header, footer, templateFields]);
   
-  const updatePreview = (content: string) => {
-    let previewHtml = content;
+  const updatePreview = (
+    contentHtml: string, 
+    headerHtml: string, 
+    footerHtml: string
+  ) => {
+    // Get all fields
+    const fields = form.getValues("fields");
     
-    // Replace placeholders with sample data
-    form.getValues("fields").forEach((field) => {
-      let sampleValue = `<span class="bg-primary/20 px-1 rounded">${field.field_label}</span>`;
-      previewHtml = previewHtml.replace(
-        new RegExp(`{{${field.field_key}}}`, "g"),
-        sampleValue
-      );
-    });
+    // Function to replace placeholders with sample data
+    const replacePlaceholders = (html: string) => {
+      let processedHtml = html;
+      fields.forEach((field) => {
+        let sampleValue = `<span class="bg-primary/20 px-1 rounded">${field.field_label}</span>`;
+        processedHtml = processedHtml.replace(
+          new RegExp(`{{${field.field_key}}}`, "g"),
+          sampleValue
+        );
+      });
+      return processedHtml;
+    };
     
-    setPreviewContent(previewHtml);
+    // Process each section
+    setPreviewHeader(replacePlaceholders(headerHtml));
+    setPreviewContent(replacePlaceholders(contentHtml));
+    setPreviewFooter(replacePlaceholders(footerHtml));
   };
   
   const handleAddField = () => {
@@ -188,7 +214,7 @@ export default function TemplateCreator() {
   // Handle template starter selection
   const handleApplyTemplate = (templateContent: string) => {
     form.setValue("content", templateContent);
-    updatePreview(templateContent);
+    updatePreview(templateContent, header, footer);
     toast({
       title: "Modelo aplicado",
       description: "O modelo inicial foi aplicado com sucesso."
@@ -198,7 +224,7 @@ export default function TemplateCreator() {
   // Handle auto-populate fields
   const handleAutoPopulateFields = (populatedContent: string) => {
     form.setValue("content", populatedContent);
-    updatePreview(populatedContent);
+    updatePreview(populatedContent, header, footer);
     toast({
       title: "Campos inseridos",
       description: "Os campos foram inseridos automaticamente no documento."
@@ -237,6 +263,8 @@ export default function TemplateCreator() {
       description: "",
       documentTypeId: "",
       content: "",
+      header: "",
+      footer: "",
       departments: isAdminUser(user) && user?.department ? [user.department] : [],
       fields: [],
     });
@@ -310,6 +338,8 @@ export default function TemplateCreator() {
               description: values.description,
               document_type_id: values.documentTypeId || null,
               content: values.content,
+              header: values.header || null,
+              footer: values.footer || null,
               departments: values.departments,
             },
             fields: processedFields,
@@ -338,6 +368,8 @@ export default function TemplateCreator() {
               description: values.description,
               document_type_id: values.documentTypeId || null,
               content: values.content,
+              header: values.header || null,
+              footer: values.footer || null,
               departments: values.departments,
             },
             fields: processedFields,
@@ -439,6 +471,7 @@ export default function TemplateCreator() {
                   <Tabs defaultValue="editor" value={currentTab} onValueChange={setCurrentTab}>
                     <TabsList>
                       <TabsTrigger value="editor">Editor</TabsTrigger>
+                      <TabsTrigger value="headerfooter">Cabeçalho e Rodapé</TabsTrigger>
                       <TabsTrigger value="fields">Campos</TabsTrigger>
                       <TabsTrigger value="preview">Visualizar</TabsTrigger>
                       <TabsTrigger value="settings">Configurações</TabsTrigger>
@@ -534,6 +567,7 @@ export default function TemplateCreator() {
                                     onChange={field.onChange}
                                     placeholder="Digite o conteúdo do modelo ou arraste campos para inserir"
                                     error={!!form.formState.errors.content}
+                                    targetField="content"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -556,6 +590,72 @@ export default function TemplateCreator() {
                           Arraste campos do painel lateral para o editor ou use <code className="bg-muted-foreground/20 p-0.5 rounded">{"{{nome_campo}}"}</code>.
                           Os campos devem ser definidos na aba "Campos".
                         </p>
+                      </div>
+                    </TabsContent>
+                    
+                    {/* Header and Footer Tab */}
+                    <TabsContent value="headerfooter" className="space-y-6 pt-4">
+                      <div className="space-y-6">
+                        <FormField
+                          control={form.control}
+                          name="header"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cabeçalho do Documento</FormLabel>
+                              <FormControl>
+                                <WysiwygEditor
+                                  value={field.value || ""}
+                                  onChange={field.onChange}
+                                  placeholder="Digite o cabeçalho do documento ou arraste campos para inserir"
+                                  error={!!form.formState.errors.header}
+                                  className="min-h-[150px]"
+                                  targetField="header"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="footer"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Rodapé do Documento</FormLabel>
+                              <FormControl>
+                                <WysiwygEditor
+                                  value={field.value || ""}
+                                  onChange={field.onChange}
+                                  placeholder="Digite o rodapé do documento ou arraste campos para inserir"
+                                  error={!!form.formState.errors.footer}
+                                  className="min-h-[150px]"
+                                  targetField="footer"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+                        <div className="lg:col-span-2">
+                          <div className="bg-muted p-3 rounded-md">
+                            <p className="text-sm text-muted-foreground">
+                              O cabeçalho e rodapé são exibidos em todas as páginas do documento.
+                              Você pode inserir campos assim como no conteúdo principal.
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="lg:col-span-1">
+                          <FieldList 
+                            fields={currentTemplate?.fields || []}
+                            onFieldDragStart={handleFieldDragStart}
+                            onFieldClick={handleFieldClick}
+                          />
+                        </div>
                       </div>
                     </TabsContent>
                     
@@ -607,8 +707,25 @@ export default function TemplateCreator() {
                           <CardTitle className="text-base">Visualização do Modelo</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="border rounded-md p-6 bg-white">
-                            <div dangerouslySetInnerHTML={{ __html: previewContent }} />
+                          <div className="border rounded-md p-6 bg-white space-y-4">
+                            {previewHeader && (
+                              <div className="border-b pb-4 mb-4">
+                                <div className="text-sm font-semibold text-muted-foreground mb-2">Cabeçalho:</div>
+                                <div dangerouslySetInnerHTML={{ __html: previewHeader }} />
+                              </div>
+                            )}
+                            
+                            <div className="min-h-[200px]">
+                              <div className="text-sm font-semibold text-muted-foreground mb-2">Conteúdo:</div>
+                              <div dangerouslySetInnerHTML={{ __html: previewContent }} />
+                            </div>
+                            
+                            {previewFooter && (
+                              <div className="border-t pt-4 mt-4">
+                                <div className="text-sm font-semibold text-muted-foreground mb-2">Rodapé:</div>
+                                <div dangerouslySetInnerHTML={{ __html: previewFooter }} />
+                              </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>

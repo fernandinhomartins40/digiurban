@@ -24,6 +24,8 @@ export interface Document {
   created_at: string;
   updated_at: string;
   template_id: string | null;
+  header?: string | null;
+  footer?: string | null;
 }
 
 export interface DocumentDestination {
