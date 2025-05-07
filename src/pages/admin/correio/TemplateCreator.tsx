@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +44,8 @@ import { WysiwygEditor } from "@/components/mail/WysiwygEditor";
 import { FieldList } from "@/components/mail/FieldList";
 import { PredefinedFieldsSelector } from "@/components/mail/PredefinedFieldsSelector";
 import { generateFieldId } from "@/utils/mailTemplateUtils";
+import { TemplateStarter } from "@/components/mail/TemplateStarter";
+import { AutoPopulateFields } from "@/components/mail/AutoPopulateFields";
 
 const templateFormSchema = z.object({
   name: z.string().min(3, "Nome é obrigatório"),
@@ -184,43 +185,26 @@ export default function TemplateCreator() {
     });
   };
   
-  const handleTemplateSelect = (id: string) => {
-    setTemplateId(id);
-  };
-  
-  const handleCreateNew = () => {
-    setTemplateId(null);
-    form.reset({
-      name: "",
-      description: "",
-      documentTypeId: "",
-      content: "",
-      departments: isAdminUser(user) && user?.department ? [user.department] : [],
-      fields: [],
+  // Handle template starter selection
+  const handleTemplateSelect = (templateContent: string) => {
+    form.setValue("content", templateContent);
+    updatePreview(templateContent);
+    toast({
+      title: "Modelo aplicado",
+      description: "O modelo inicial foi aplicado com sucesso."
     });
   };
   
-  const handleDeleteTemplate = async () => {
-    if (templateId) {
-      try {
-        await deleteTemplate(templateId);
-        setTemplateId(null);
-        handleCreateNew();
-        toast({
-          title: "Modelo removido",
-          description: "O modelo foi excluído com sucesso."
-        });
-      } catch (error) {
-        console.error("Error deleting template:", error);
-        toast({
-          title: "Erro",
-          description: "Ocorreu um erro ao excluir o modelo.",
-          variant: "destructive"
-        });
-      }
-    }
+  // Handle auto-populate fields
+  const handleAutoPopulateFields = (populatedContent: string) => {
+    form.setValue("content", populatedContent);
+    updatePreview(populatedContent);
+    toast({
+      title: "Campos inseridos",
+      description: "Os campos foram inseridos automaticamente no documento."
+    });
   };
-
+  
   // Handle field drag start
   const handleFieldDragStart = (e: React.DragEvent, fieldKey: string) => {
     e.dataTransfer.setData("text/plain", `{{${fieldKey}}}`);
@@ -479,6 +463,20 @@ export default function TemplateCreator() {
                           </FormItem>
                         )}
                       />
+                      
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <TemplateStarter 
+                            fields={currentTemplate?.fields || []} 
+                            onSelect={handleTemplateSelect}
+                          />
+                          <AutoPopulateFields
+                            fields={currentTemplate?.fields || []}
+                            content={form.getValues("content")}
+                            onPopulate={handleAutoPopulateFields}
+                          />
+                        </div>
+                      </div>
                       
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         <div className="lg:col-span-2">

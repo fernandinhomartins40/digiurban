@@ -7,6 +7,7 @@ import { TemplateField } from "@/types/mail";
 import { UseFormReturn } from "react-hook-form";
 import { format } from "date-fns";
 import { Edit, GripVertical } from "lucide-react";
+import { useState } from "react";
 
 interface TemplateFieldsFormProps {
   fields: TemplateField[];
@@ -14,6 +15,8 @@ interface TemplateFieldsFormProps {
 }
 
 export function TemplateFieldsForm({ fields, form }: TemplateFieldsFormProps) {
+  const [draggedField, setDraggedField] = useState<string | null>(null);
+
   if (!fields.length) {
     return null;
   }
@@ -30,6 +33,29 @@ export function TemplateFieldsForm({ fields, form }: TemplateFieldsFormProps) {
     }
     
     return value;
+  };
+
+  const handleDragStart = (e: React.DragEvent, fieldId: string) => {
+    setDraggedField(fieldId);
+    e.dataTransfer.setData("text/plain", fieldId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, targetFieldId: string) => {
+    e.preventDefault();
+    
+    if (draggedField && draggedField !== targetFieldId) {
+      // In a real implementation, you would reorder the fields here
+      // For now, we'll just show that the drag was successful
+      console.log(`Field ${draggedField} dropped onto ${targetFieldId}`);
+    }
+    
+    setDraggedField(null);
   };
 
   return (
@@ -49,8 +75,14 @@ export function TemplateFieldsForm({ fields, form }: TemplateFieldsFormProps) {
               required: field.is_required ? `O campo ${field.field_label} é obrigatório` : false
             }}
             render={({ field: formField }) => (
-              <FormItem className="border rounded-md p-3 relative">
-                <div className="absolute left-3 top-3 text-muted-foreground">
+              <FormItem 
+                className="border rounded-md p-3 relative"
+                draggable
+                onDragStart={(e) => handleDragStart(e, field.id)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, field.id)}
+              >
+                <div className="absolute left-3 top-3 text-muted-foreground cursor-move">
                   <GripVertical size={16} />
                 </div>
                 <FormLabel className="ml-6">
