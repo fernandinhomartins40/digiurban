@@ -1,6 +1,6 @@
+
 import React from "react";
-import { Sidebar } from "@/components/dashboard/Sidebar";
-import { TopBar } from "@/components/dashboard/TopBar";
+import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { MetricsCards } from "@/components/dashboard/MetricsCards";
 import { InsightsChart } from "@/components/dashboard/InsightsChart";
 import { UserTable } from "@/components/dashboard/UserTable";
@@ -9,12 +9,14 @@ export default function Index() {
   return (
     <div className="items-stretch bg-[#F9FBFC] flex w-full flex-1 flex-wrap h-full max-md:max-w-full">
       {/* Sidebar */}
-      <Sidebar />
+      <AdminSidebar />
 
       {/* Main Content */}
       <main className="min-w-60 flex-1 shrink basis-[0%] pb-5 max-md:max-w-full">
-        {/* Top Bar */}
-        <TopBar />
+        {/* Simple Header */}
+        <div className="w-full px-5 py-4 border-b bg-white mb-4">
+          <h1 className="text-xl font-semibold">Dashboard</h1>
+        </div>
 
         {/* Content Area */}
         <div className="w-full px-5 max-md:max-w-full">

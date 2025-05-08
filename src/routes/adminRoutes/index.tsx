@@ -29,6 +29,7 @@ import { servicosRoutes } from "./servicosRoutes";
 import { meioAmbienteRoutes } from "./meioAmbienteRoutes";
 import { ouvidoriaRoutes } from "./ouvidoriaRoutes";
 import { executivoRoutes } from "./executivoRoutes";
+import { solicitacoesRoutes } from "./solicitacoesRoutes";
 
 // Helper for lazy-loaded components
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -54,6 +55,7 @@ export const adminRoutes: RouteObject[] = [
       },
       
       // Module-specific routes
+      ...solicitacoesRoutes, // Add the new solicitações routes
       ...correioRoutes,
       ...gabineteRoutes,
       ...adminChatRoutes,

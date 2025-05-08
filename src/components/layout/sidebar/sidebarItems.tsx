@@ -11,12 +11,14 @@ import { getAdministracaoItem } from "./items/AdministracaoItem";
 import { getEducacaoItem } from "./items/EducacaoItem";
 import { getDashboardItem } from "./items/DashboardItem";
 import { getExecutivoItem } from "./items/ExecutivoItem";
+import { getSolicitacoesItem } from "./items/SolicitacoesItem";
 import { SidebarItemProps } from "@/types/sidebar";
 
 export const getSidebarItems = (unreadMailCount = 0): SidebarItemProps[] => {
   return [
     getDashboardItem(), // Ensure Dashboard item is first in the list
     getExecutivoItem(),
+    getSolicitacoesItem(), // Add the new Solicitações item
     getSaudeItem(),
     getEducacaoItem(),
     getAssistenciaItem(),
