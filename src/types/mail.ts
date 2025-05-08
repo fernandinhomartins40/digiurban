@@ -70,6 +70,7 @@ export interface Template {
   fields?: TemplateField[];
 }
 
+// Making field_key and field_label and field_type required but handle compatibility with React Hook Form
 export interface TemplateField {
   id?: string;
   template_id?: string;
