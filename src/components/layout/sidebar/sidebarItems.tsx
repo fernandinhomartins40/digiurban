@@ -11,6 +11,7 @@ import { getAdministracaoItem } from "./items/AdministracaoItem";
 import { getEducacaoItem } from "./items/EducacaoItem";
 import { getDashboardItem } from "./items/DashboardItem";
 import { getExecutivoItem } from "./items/ExecutivoItem";
+import { getSolicitacoesItem } from "./items/SolicitacoesItem";
 import { SidebarItemProps } from "@/types/sidebar";
 
 export const getSidebarItems = (unreadMailCount = 0): SidebarItemProps[] => {
@@ -25,6 +26,7 @@ export const getSidebarItems = (unreadMailCount = 0): SidebarItemProps[] => {
     getGabineteItem(),
     getFinancasItem(),
     getAdministracaoItem(),
+    getSolicitacoesItem(),
     getChatItem(),
   ];
 };
