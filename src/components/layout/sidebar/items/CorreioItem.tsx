@@ -15,8 +15,16 @@ export const getCorreioItem = (unreadCount: number = 0): SidebarItemProps => ({
       badge: unreadCount,
     },
     {
+      title: "Email Interno",
+      path: "/admin/correio/email-interno",
+    },
+    {
       title: "Novo Ofício",
       path: "/admin/correio/novo-oficio",
+    },
+    {
+      title: "Ofício Digital",
+      path: "/admin/correio/oficio-digital",
     },
     {
       title: "Criador de Modelos",

@@ -4,6 +4,8 @@ import MailInbox from "@/pages/admin/correio/MailInbox";
 import NovoOficio from "@/pages/admin/correio/NovoOficio";
 import TemplateCreator from "@/pages/admin/correio/TemplateCreator";
 import TemplateLibrary from "@/pages/admin/correio/TemplateLibrary";
+import EmailInterno from "@/pages/admin/correio/EmailInterno";
+import OficioDigital from "@/pages/admin/correio/OficioDigital";
 
 export const correioRoutes: RouteObject[] = [
   {
@@ -13,6 +15,14 @@ export const correioRoutes: RouteObject[] = [
   {
     path: "correio/novo-oficio",
     element: <NovoOficio />,
+  },
+  {
+    path: "correio/email-interno",
+    element: <EmailInterno />,
+  },
+  {
+    path: "correio/oficio-digital",
+    element: <OficioDigital />,
   },
   {
     path: "correio/criador-oficios",

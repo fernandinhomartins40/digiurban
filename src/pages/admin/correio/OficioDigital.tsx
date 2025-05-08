@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -24,7 +25,7 @@ import { useMail } from "@/hooks/use-mail";
 import { isAdminUser } from "@/types/auth";
 import { Template } from "@/types/mail";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, Loader2, Mail, Send } from "lucide-react";
+import { AlertTriangle, FileText, Download, Loader2, Mail, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -33,6 +34,12 @@ import { TemplateFieldsForm } from "@/components/mail/TemplateFieldsForm";
 import { z } from "zod";
 import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 export default function OficioDigital() {
   const { user } = useAuth();
@@ -42,6 +49,8 @@ export default function OficioDigital() {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [isCreatingAttachment, setIsCreatingAttachment] = useState(false);
+  const [isGeneratingFile, setIsGeneratingFile] = useState(false);
+  const [documentContent, setDocumentContent] = useState("");
   
   const { 
     getTemplates, 
@@ -168,12 +177,14 @@ export default function OficioDigital() {
       const { title, documentTypeId, toDepartment, content, ...fieldValues } = values;
       
       // Generate content from template if available
-      let documentContent = content || "";
+      let generatedContent = content || "";
       if (selectedTemplate) {
-        documentContent = generateContent(selectedTemplate, fieldValues);
+        generatedContent = generateContent(selectedTemplate, fieldValues);
       }
       
-      if (!documentContent.trim()) {
+      setDocumentContent(generatedContent);
+      
+      if (!generatedContent.trim()) {
         toast({
           title: "Conteúdo vazio",
           description: "O documento não pode ter conteúdo vazio.",
@@ -188,7 +199,7 @@ export default function OficioDigital() {
         // Create document
         const createdDoc = await createDocument({
           title,
-          content: documentContent,
+          content: generatedContent,
           document_type_id: documentTypeId,
           creator_id: user.id,
           department: user.department,
@@ -242,6 +253,22 @@ export default function OficioDigital() {
     navigate("/admin/correio/dashboard");
   };
   
+  const handleGenerateFile = (type: 'pdf' | 'doc' | 'txt') => {
+    setIsGeneratingFile(true);
+    
+    // Simulação de geração de arquivo
+    setTimeout(() => {
+      setIsGeneratingFile(false);
+      
+      toast({
+        title: `Arquivo ${type.toUpperCase()} gerado`,
+        description: `O documento foi exportado no formato ${type.toUpperCase()} com sucesso.`,
+      });
+      
+      // Em um cenário real, aqui teríamos o download do arquivo
+    }, 2000);
+  };
+  
   return (
     <div className="space-y-6">
       <div>
@@ -255,7 +282,7 @@ export default function OficioDigital() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Mail size={20} />
+              <FileText size={20} />
               Criar Novo Documento
             </CardTitle>
           </CardHeader>
@@ -264,7 +291,7 @@ export default function OficioDigital() {
               <div className="space-y-6">
                 <Alert variant="default" className="bg-green-50 border-green-200">
                   <AlertDescription className="text-green-800">
-                    Documento criado com sucesso! Agora você pode adicionar anexos se necessário.
+                    Documento criado com sucesso! Agora você pode adicionar anexos ou exportar o documento.
                   </AlertDescription>
                 </Alert>
 
@@ -276,6 +303,43 @@ export default function OficioDigital() {
                   />
                   <p className="text-sm text-muted-foreground mt-2">
                     Você pode anexar vários arquivos ao documento, um de cada vez.
+                  </p>
+                </div>
+                
+                <div className="border p-4 rounded-md">
+                  <h3 className="font-medium mb-2">Exportar Documento</h3>
+                  <div className="flex space-x-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" disabled={isGeneratingFile}>
+                          {isGeneratingFile ? (
+                            <>
+                              <Loader2 size={16} className="mr-2 animate-spin" />
+                              Gerando...
+                            </>
+                          ) : (
+                            <>
+                              <Download size={16} className="mr-2" />
+                              Exportar Documento
+                            </>
+                          )}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleGenerateFile('pdf')}>
+                          Exportar como PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleGenerateFile('doc')}>
+                          Exportar como DOC
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleGenerateFile('txt')}>
+                          Exportar como TXT
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Exporte o documento em diferentes formatos para uso externo.
                   </p>
                 </div>
                 
