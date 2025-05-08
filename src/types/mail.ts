@@ -71,16 +71,16 @@ export interface Template {
 }
 
 export interface TemplateField {
-  id: string;
-  template_id: string;
+  id?: string;
+  template_id?: string;
   field_key: string;
   field_label: string;
   field_type: string;
-  field_options: any | null;
+  field_options?: any | null;
   is_required: boolean;
-  order_position: number;
-  created_at: string;
-  updated_at: string;
+  order_position?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface DocumentFilters {
