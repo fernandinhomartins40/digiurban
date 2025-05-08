@@ -11,16 +11,22 @@ export function useFieldsSelector(
   const [loading, setLoading] = React.useState(false);
   const [selectedFields, setSelectedFields] = React.useState<Record<string, boolean>>({});
   
-  // Initialize all fields as selected
-  React.useEffect(() => {
+  // Initialize fields with existing fields marked as unselected
+  const updateSelectedFields = React.useCallback((existingKeys: string[]) => {
     const initialSelectedState: Record<string, boolean> = {};
     predefinedFields.forEach(field => {
       if (field.field_key) {
-        initialSelectedState[field.field_key] = !existingFieldKeys.includes(field.field_key);
+        // Only select fields that are not already added
+        initialSelectedState[field.field_key] = !existingKeys.includes(field.field_key);
       }
     });
     setSelectedFields(initialSelectedState);
-  }, [existingFieldKeys]);
+  }, []);
+  
+  // Initialize all fields when component mounts
+  React.useEffect(() => {
+    updateSelectedFields(existingFieldKeys);
+  }, [existingFieldKeys, updateSelectedFields]);
   
   const handleCheckboxChange = (fieldKey: string) => {
     setSelectedFields(prev => ({
@@ -56,17 +62,29 @@ export function useFieldsSelector(
         description: `${fieldsToAdd.length} campo(s) predefinidos foram adicionados com sucesso.`
       });
       setLoading(false);
+      
+      // Mark added fields as unselected
+      setSelectedFields(prev => {
+        const newState = {...prev};
+        fieldsToAdd.forEach(field => {
+          if (field.field_key) {
+            newState[field.field_key] = false;
+          }
+        });
+        return newState;
+      });
     }, 500);
   };
   
   // Count total selected fields
-  const selectedCount = Object.values(selectedFields).filter(Boolean).length;
+  const selectedCount = Object.entries(selectedFields).filter(([_, selected]) => selected).length;
   
   return {
     loading,
     selectedFields,
     selectedCount,
     handleCheckboxChange,
-    handleAddAllFields
+    handleAddAllFields,
+    updateSelectedFields
   };
 }

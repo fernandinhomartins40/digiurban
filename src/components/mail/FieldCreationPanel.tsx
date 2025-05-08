@@ -1,40 +1,24 @@
 
-import React, { useState } from 'react';
-import { Plus, X, Edit, AlignJustify, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect } from 'react';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { DraggableField } from './DraggableField';
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FieldForm } from './fields/FieldForm';
+import { FieldList } from './FieldList';
 import { PredefinedFieldsSelector } from './PredefinedFieldsSelector';
 import { TemplateField } from '@/types/mail';
-import { cn } from '@/lib/utils';
-import { generateFieldId } from '@/utils/mailTemplateUtils';
-import { FieldArrayWithId } from 'react-hook-form';
-
-// Define a more general field type to accommodate both TemplateField and FieldArrayWithId
-type FieldType = {
-  field_key: string;
-  field_label: string;
-  field_type: string;
-  field_options?: any | null;
-  is_required: boolean;
-  order_position?: number;
-  id?: string;
-  [key: string]: any; // Allow for additional properties
-};
+import { FieldArrayWithId, UseFieldArrayReturn } from 'react-hook-form';
+import { getPredefinedFieldsWithIds, getPredefinedFieldByKey } from '@/utils/mailTemplateUtils';
+import { useToast } from '@/hooks/use-toast';
 
 interface FieldCreationPanelProps {
-  fields: (Partial<TemplateField> | FieldArrayWithId<any, "fields", "id">)[];
+  fields: FieldArrayWithId<any, "fields", "id">[] | any[];
   onAddField: (field: Partial<TemplateField>) => void;
   onUpdateField: (index: number, field: Partial<TemplateField>) => void;
   onRemoveField: (index: number) => void;
@@ -44,8 +28,8 @@ interface FieldCreationPanelProps {
   existingFieldKeys: string[];
   selectedTargetField: 'content' | 'header' | 'footer';
   onChangeTargetField: (field: 'content' | 'header' | 'footer') => void;
-  showPredefinedFields?: boolean;
-  togglePredefinedFields?: () => void;
+  showPredefinedFields: boolean;
+  togglePredefinedFields: () => void;
 }
 
 export function FieldCreationPanel({
@@ -59,300 +43,170 @@ export function FieldCreationPanel({
   existingFieldKeys,
   selectedTargetField,
   onChangeTargetField,
-  showPredefinedFields = false,
+  showPredefinedFields,
   togglePredefinedFields
 }: FieldCreationPanelProps) {
-  const [newField, setNewField] = useState<Partial<TemplateField>>({
-    field_key: '',
-    field_label: '',
-    field_type: 'text',
-    is_required: false
-  });
-  
+  const [activeTab, setActiveTab] = useState("fields");
   const [editingFieldIndex, setEditingFieldIndex] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const resetNewField = () => {
-    setNewField({
-      field_key: '',
-      field_label: '',
-      field_type: 'text',
-      is_required: false
-    });
-  };
+  const { toast } = useToast();
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newField.field_key || !newField.field_label) return;
-    
-    if (editingFieldIndex !== null) {
-      onUpdateField(editingFieldIndex, newField);
-      setEditingFieldIndex(null);
-    } else {
-      onAddField(newField);
-    }
-    resetNewField();
-  };
-  
-  const startEditField = (index: number) => {
-    setEditingFieldIndex(index);
-    const fieldToEdit = fields[index];
-    // Safely extract field properties
-    const fieldData: Partial<TemplateField> = {
-      field_key: (fieldToEdit as any).field_key || '',
-      field_label: (fieldToEdit as any).field_label || '',
-      field_type: (fieldToEdit as any).field_type || 'text',
-      is_required: (fieldToEdit as any).is_required || false,
-      field_options: (fieldToEdit as any).field_options || null,
-      order_position: (fieldToEdit as any).order_position
-    };
-    setNewField(fieldData);
-  };
-  
-  const cancelEdit = () => {
-    setEditingFieldIndex(null);
-    resetNewField();
-  };
-
-  const handleCreateFieldFromSelection = () => {
-    const event = new CustomEvent('create-field-from-selection', {
-      detail: {
-        targetField: selectedTargetField,
-        callback: (field: Partial<TemplateField>) => {
-          onAddField(field);
+  // Handle field extraction events from template content
+  useEffect(() => {
+    const handleExtractFields = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (!customEvent.detail) return;
+      
+      const { fieldKeys, fields: templateFields, source } = customEvent.detail;
+      
+      if (source === 'editor' && fieldKeys && fieldKeys.length > 0) {
+        // Get predefined fields that match the extracted keys
+        const fieldsToAdd = fieldKeys
+          .map(key => getPredefinedFieldByKey(key))
+          .filter(field => field && !existingFieldKeys.includes(field.field_key!))
+          .map(field => ({...field}));
+        
+        if (fieldsToAdd.length > 0) {
+          onAddPredefinedFields(fieldsToAdd);
+          toast({
+            title: "Campos detectados",
+            description: `${fieldsToAdd.length} campos foram detectados e adicionados.`
+          });
+        } else {
+          toast({
+            title: "Sem novos campos",
+            description: "Nenhum novo campo foi detectado no conteúdo."
+          });
         }
       }
-    });
-    document.dispatchEvent(event);
+      
+      if (source === 'template' && templateFields && templateFields.length > 0) {
+        // Add template fields directly
+        const fieldsToAdd = templateFields
+          .filter(field => field && field.field_key && !existingFieldKeys.includes(field.field_key))
+          .map(field => ({...field}));
+        
+        if (fieldsToAdd.length > 0) {
+          onAddPredefinedFields(fieldsToAdd);
+          toast({
+            title: "Campos do modelo",
+            description: `${fieldsToAdd.length} campos foram adicionados do modelo.`
+          });
+        }
+      }
+    };
+    
+    document.addEventListener('extract-fields', handleExtractFields);
+    
+    return () => {
+      document.removeEventListener('extract-fields', handleExtractFields);
+    };
+  }, [existingFieldKeys, onAddPredefinedFields, toast]);
+  
+  const handleEditField = (index: number) => {
+    setEditingFieldIndex(index);
+    setActiveTab("edit");
   };
   
-  const filteredFields = fields.filter(field => {
-    const fieldLabel = (field as any).field_label || '';
-    const fieldKey = (field as any).field_key || '';
-    return fieldLabel.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      fieldKey.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
-  const handleLabelChange = (value: string) => {
-    const generatedKey = value.trim()
-      .toLowerCase()
-      .replace(/\s+/g, '_')
-      .replace(/[^a-z0-9_]/g, '');
-      
-    setNewField({
-      ...newField,
-      field_label: value,
-      field_key: generatedKey
-    });
+  const handleSaveField = (field: Partial<TemplateField>) => {
+    if (editingFieldIndex !== null) {
+      onUpdateField(editingFieldIndex, field);
+      setEditingFieldIndex(null);
+      setActiveTab("fields");
+    }
   };
-
-  // Helper function to safely get field properties
-  const getFieldProperty = (field: any, property: string, defaultValue: any = '') => {
-    return field && field[property] !== undefined ? field[property] : defaultValue;
+  
+  const handleCancelEdit = () => {
+    setEditingFieldIndex(null);
+    setActiveTab("fields");
+  };
+  
+  const handleCreateField = (field: Partial<TemplateField>) => {
+    onAddField(field);
+    setActiveTab("fields");
   };
 
   return (
-    <div className="space-y-4 h-full">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium">Campos do Documento</h3>
-      </div>
-      
-      <div className="flex gap-1 mb-3">
-        <Button 
-          variant={selectedTargetField === 'content' ? "default" : "outline"} 
-          size="sm" 
-          onClick={() => onChangeTargetField('content')}
-          className="text-xs h-7 px-2 flex-1"
-        >
-          Conteúdo
-        </Button>
-        <Button 
-          variant={selectedTargetField === 'header' ? "default" : "outline"} 
-          size="sm" 
-          onClick={() => onChangeTargetField('header')}
-          className="text-xs h-7 px-2 flex-1"
-        >
-          Cabeçalho
-        </Button>
-        <Button 
-          variant={selectedTargetField === 'footer' ? "default" : "outline"} 
-          size="sm" 
-          onClick={() => onChangeTargetField('footer')}
-          className="text-xs h-7 px-2 flex-1"
-        >
-          Rodapé
-        </Button>
-      </div>
-      
-      <Card className="border-dashed border-blue-300 bg-blue-50/50">
-        <CardHeader className="py-2 px-3">
-          <CardTitle className="text-sm font-medium flex items-center justify-between">
-            <span>Criar Campo</span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleCreateFieldFromSelection} 
-              className="h-6 px-2 text-xs"
-            >
-              Da Seleção
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="py-2 px-3 space-y-2">
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <Input
-                placeholder="Nome do campo"
-                value={newField.field_label || ''}
-                onChange={(e) => handleLabelChange(e.target.value)}
-                className="text-sm h-8"
+    <div className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-3 mb-2">
+          <TabsTrigger value="fields">Campos</TabsTrigger>
+          <TabsTrigger value="new">Novo Campo</TabsTrigger>
+          <TabsTrigger value="edit" disabled={editingFieldIndex === null}>Editar</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="fields" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">
+                Campos do Modelo
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-2">
+              <FieldList 
+                fields={fields} 
+                onFieldDragStart={onFieldDragStart}
+                onFieldClick={onFieldClick}
+                onEditField={handleEditField}
+                onRemoveField={onRemoveField}
+                selectedTarget={selectedTargetField}
+                onChangeTarget={onChangeTargetField}
               />
-            </div>
-            <div className="flex gap-2">
-              <Select 
-                value={newField.field_type} 
-                onValueChange={(value) => setNewField({...newField, field_type: value})}
-              >
-                <SelectTrigger className="h-8 text-xs flex-1">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="text">Texto</SelectItem>
-                  <SelectItem value="number">Número</SelectItem>
-                  <SelectItem value="date">Data</SelectItem>
-                  <SelectItem value="textarea">Área de Texto</SelectItem>
-                  <SelectItem value="select">Seleção</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="required" 
-                  checked={newField.is_required}
-                  onCheckedChange={(checked) => setNewField({...newField, is_required: checked === true})}
-                />
-                <label htmlFor="required" className="text-xs cursor-pointer">
-                  Obrigatório
-                </label>
-              </div>
-            </div>
-            <div className="flex items-center justify-between pt-1">
-              {editingFieldIndex !== null ? (
-                <>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={cancelEdit} 
-                    className="h-8 text-xs"
-                  >
-                    <X className="h-3.5 w-3.5 mr-1" />
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    size="sm" 
-                    className="h-8 text-xs"
-                  >
-                    <Edit className="h-3.5 w-3.5 mr-1" />
-                    Atualizar
-                  </Button>
-                </>
-              ) : (
+            </CardContent>
+            <CardFooter className="flex justify-between pt-0">
+              <div className="flex gap-2">
                 <Button 
-                  type="submit" 
-                  size="sm" 
-                  className="h-8 text-xs ml-auto"
-                  disabled={!newField.field_label || !newField.field_key}
+                  onClick={togglePredefinedFields} 
+                  variant={showPredefinedFields ? "default" : "outline"}
+                  size="sm"
                 >
-                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  {showPredefinedFields ? "Ocultar Predefinidos" : "Mostrar Predefinidos"}
+                </Button>
+                <Button 
+                  onClick={() => setActiveTab("new")} 
+                  size="sm"
+                >
                   Adicionar Campo
                 </Button>
-              )}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {togglePredefinedFields && (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full flex items-center justify-between text-xs h-8"
-          onClick={togglePredefinedFields}
-        >
-          <span>Campos Predefinidos</span>
-          {showPredefinedFields ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </Button>
-      )}
-
-      {showPredefinedFields && (
-        <PredefinedFieldsSelector 
-          onAddFields={onAddPredefinedFields} 
-          existingFieldKeys={existingFieldKeys}
-        />
-      )}
-      
-      {fields.length > 0 && (
-        <>
-          <div className="flex items-center justify-between mt-4">
-            <h3 className="text-sm font-medium">Campos Disponíveis</h3>
-            <Input
-              placeholder="Filtrar campos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-[180px] h-8 text-xs"
+              </div>
+            </CardFooter>
+          </Card>
+          
+          {showPredefinedFields && (
+            <PredefinedFieldsSelector 
+              onAddFields={onAddPredefinedFields}
+              existingFieldKeys={existingFieldKeys}
             />
-          </div>
-          
-          <div className={cn("space-y-1", filteredFields.length > 6 && "overflow-y-auto max-h-[240px] pr-2")}>
-            {filteredFields.map((field, index) => {
-              // Safely extract field properties
-              const fieldKey = getFieldProperty(field, 'field_key');
-              const fieldLabel = getFieldProperty(field, 'field_label');
-              const isRequired = getFieldProperty(field, 'is_required', false);
-              
-              // Skip rendering if field_key is missing
-              if (!fieldKey) return null;
-              
-              return (
-                <div key={fieldKey || index} className="flex items-center gap-1">
-                  <DraggableField
-                    label={fieldLabel}
-                    fieldKey={fieldKey}
-                    isRequired={isRequired}
-                    field={field as Partial<TemplateField>}
-                    onDragStart={onFieldDragStart}
-                    onClick={() => onFieldClick(fieldKey)}
-                  />
-                  <div className="flex flex-col gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6" 
-                      onClick={() => startEditField(index)}
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6 text-red-500 hover:text-red-700" 
-                      onClick={() => onRemoveField(index)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          
-          <div className="text-xs text-muted-foreground mt-1 pt-2 border-t">
-            <p>Arraste os campos para o editor ou clique para inserir no cursor.</p>
-          </div>
-        </>
-      )}
+          )}
+        </TabsContent>
+        
+        <TabsContent value="new">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Novo Campo</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FieldForm onSubmit={handleCreateField} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="edit">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Editar Campo</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {editingFieldIndex !== null && (
+                <FieldForm 
+                  initialValues={fields[editingFieldIndex]}
+                  onSubmit={handleSaveField}
+                  onCancel={handleCancelEdit}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

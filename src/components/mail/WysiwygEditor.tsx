@@ -7,6 +7,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
+import Image from '@tiptap/extension-image';
 import { cn } from '@/lib/utils';
 import { EditorToolbar } from './EditorToolbar';
 
@@ -42,6 +43,7 @@ export function WysiwygEditor({
       }),
       TextStyle,
       Color,
+      Image,
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -99,7 +101,7 @@ export function WysiwygEditor({
 
   return (
     <div className={cn("border rounded-md overflow-hidden", className)}>
-      {editor && <EditorToolbar editor={editor} />}
+      {editor && <EditorToolbar editor={editor} targetField={targetField} />}
       <div 
         ref={editorRef} 
         className="editor-content" 

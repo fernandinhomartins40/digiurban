@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   Card, 
@@ -29,8 +29,14 @@ export function PredefinedFieldsSelector({
     selectedFields,
     selectedCount,
     handleCheckboxChange,
-    handleAddAllFields
+    handleAddAllFields,
+    updateSelectedFields
   } = useFieldsSelector(onAddFields, existingFieldKeys);
+  
+  // Update selected fields when existingFieldKeys changes
+  useEffect(() => {
+    updateSelectedFields(existingFieldKeys);
+  }, [existingFieldKeys, updateSelectedFields]);
   
   return (
     <Card>

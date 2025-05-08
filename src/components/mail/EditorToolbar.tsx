@@ -4,7 +4,7 @@ import {
   Bold, Italic, Underline, AlignLeft, AlignCenter, 
   AlignRight, AlignJustify, List, ListOrdered,
   Heading1, Heading2, Heading3, Indent, Outdent,
-  Undo, Redo, PaintBucket
+  Undo, Redo, PaintBucket, Image, FileDown
 } from 'lucide-react';
 import { Toggle } from "@/components/ui/toggle";
 import { 
@@ -27,10 +27,26 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { TemplateStarter } from './TemplateStarter';
+import { TemplateField } from '@/types/mail';
+import { extractFieldsFromContent } from '@/utils/mailTemplateUtils';
 
 interface EditorToolbarProps {
   editor: Editor;
+  targetField?: 'content' | 'header' | 'footer';
 }
 
 const fontSizes = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '30px', '36px', '48px', '60px', '72px'];
@@ -44,10 +60,65 @@ const fontFamilies = [
   { label: 'Verdana', value: 'Verdana, Geneva, sans-serif' },
 ];
 
-export function EditorToolbar({ editor }: EditorToolbarProps) {
+export function EditorToolbar({ editor, targetField = 'content' }: EditorToolbarProps) {
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  
   if (!editor) {
     return null;
   }
+
+  const addImage = () => {
+    if (imageUrl) {
+      editor.chain().focus().setImage({ src: imageUrl }).run();
+      setImageUrl('');
+      setIsImageDialogOpen(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      
+      // Create a local preview URL
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setImageUrl(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleTemplateSelect = (content: string, fields: Partial<TemplateField>[]) => {
+    // Apply template to editor
+    editor.commands.setContent(content);
+    
+    // Trigger field extraction event if there are detected fields
+    const event = new CustomEvent('extract-fields', {
+      detail: { fields, source: 'template' }
+    });
+    
+    document.dispatchEvent(event);
+  };
+
+  const handleExtractFields = () => {
+    // Get current content from editor
+    const content = editor.getHTML();
+    
+    // Extract fields from template content
+    const fieldKeys = extractFieldsFromContent(content);
+    
+    // Trigger field extraction event
+    const event = new CustomEvent('extract-fields', {
+      detail: { fieldKeys, source: 'editor' }
+    });
+    
+    document.dispatchEvent(event);
+  };
 
   return (
     <TooltipProvider>
@@ -99,7 +170,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         <Separator orientation="vertical" className="mx-1 h-6" />
 
         <Select
-          value={editor.getAttributes('textStyle').fontSize || ''}
+          value={editor.getAttributes('textStyle').fontSize || '16px'}
           onValueChange={(value) => {
             if (value) {
               editor.chain().focus().setMark('textStyle', { fontSize: value }).run();
@@ -119,7 +190,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         </Select>
 
         <Select
-          value={editor.getAttributes('textStyle').fontFamily || ''}
+          value={editor.getAttributes('textStyle').fontFamily || fontFamilies[0].value}
           onValueChange={(value) => {
             if (value) {
               editor.chain().focus().setMark('textStyle', { fontFamily: value }).run();
@@ -336,6 +407,94 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             </PopoverContent>
           </Popover>
         </div>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* Image insertion button */}
+        <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="ghost" className="h-8 px-2">
+              <Image className="h-4 w-4 mr-1" />
+              <span className="sr-only">Inserir imagem</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Inserir Imagem</DialogTitle>
+              <DialogDescription>
+                Insira uma URL de imagem ou faça upload de um arquivo.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="imageUrl" className="text-right">
+                  URL da imagem
+                </Label>
+                <Input
+                  id="imageUrl"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://exemplo.com/imagem.jpg"
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="imageFile" className="text-right">
+                  Ou faça upload
+                </Label>
+                <Input
+                  id="imageFile"
+                  type="file"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="col-span-3"
+                />
+              </div>
+              {imageUrl && (
+                <div className="border rounded p-2 mt-2">
+                  <p className="text-sm text-muted-foreground mb-2">Pré-visualização:</p>
+                  <img src={imageUrl} alt="Preview" className="max-h-[200px] mx-auto" />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsImageDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="button" onClick={addImage} disabled={!imageUrl}>
+                Inserir
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Template Starter button - only show for content editor */}
+        {targetField === 'content' && (
+          <>
+            <Separator orientation="vertical" className="mx-1 h-6" />
+            <TemplateStarter fields={[]} onSelect={handleTemplateSelect} />
+          </>
+        )}
+
+        {/* Extract fields button - only show for content editor */}
+        {targetField === 'content' && (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="ml-auto"
+                  onClick={handleExtractFields}
+                >
+                  <FileDown className="h-4 w-4 mr-1" />
+                  <span>Inserir Campos</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Identifica e adiciona campos do modelo</TooltipContent>
+            </Tooltip>
+          </>
+        )}
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 

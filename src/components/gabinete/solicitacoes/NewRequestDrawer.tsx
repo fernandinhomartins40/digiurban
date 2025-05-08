@@ -123,7 +123,7 @@ export function NewRequestDrawer({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Setor Responsável</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione um setor" />
@@ -148,7 +148,7 @@ export function NewRequestDrawer({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Prioridade</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione uma prioridade" />
