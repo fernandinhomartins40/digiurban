@@ -492,6 +492,18 @@ export default function TemplateCreator() {
     }
   }
   
+  // Fix for line 597 - We need to map formFields to proper TemplateField objects
+  const mapFormFieldsToTemplateFields = (fields: any[]): Partial<TemplateField>[] => {
+    return fields.map(field => ({
+      field_key: field.field_key || '',
+      field_label: field.field_label || '',
+      field_type: field.field_type || 'text',
+      is_required: field.is_required || false,
+      field_options: field.field_options || null,
+      order_position: field.order_position
+    }));
+  };
+  
   return (
     <div className="space-y-6">
       <div>

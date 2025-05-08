@@ -4,9 +4,10 @@ import { GripHorizontal as DragIcon } from "lucide-react";
 import { DraggableField } from "@/components/mail/DraggableField";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { FieldArrayWithId } from "react-hook-form";
 
 interface FieldListProps {
-  fields: TemplateField[];
+  fields: (TemplateField | FieldArrayWithId<any, "fields", "id">)[];
   onFieldDragStart: (e: React.DragEvent, fieldKey: string, field?: Partial<TemplateField>) => void;
   onFieldClick: (fieldKey: string, targetField?: string) => void;
 }
@@ -73,17 +74,26 @@ export function FieldList({ fields, onFieldDragStart, onFieldClick }: FieldListP
       </div>
 
       <div className="space-y-1">
-        {fields.map((field) => (
-          <DraggableField
-            key={field.id || field.field_key}
-            label={field.field_label}
-            fieldKey={field.field_key}
-            field={field}
-            isRequired={field.is_required}
-            onDragStart={onFieldDragStart}
-            onClick={() => handleFieldClick(field.field_key)}
-          />
-        ))}
+        {fields.map((field) => {
+          // Safely get properties regardless of the field type
+          const fieldKey = (field as any).field_key;
+          const fieldLabel = (field as any).field_label;
+          const isRequired = (field as any).is_required;
+          
+          if (!fieldKey) return null;
+          
+          return (
+            <DraggableField
+              key={fieldKey}
+              label={fieldLabel}
+              fieldKey={fieldKey}
+              field={field}
+              isRequired={isRequired}
+              onDragStart={onFieldDragStart}
+              onClick={() => handleFieldClick(fieldKey)}
+            />
+          );
+        })}
       </div>
     </div>
   );
