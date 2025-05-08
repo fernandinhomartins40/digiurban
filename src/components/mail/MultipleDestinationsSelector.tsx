@@ -1,83 +1,64 @@
 
-import * as React from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
+import React, { useState } from 'react';
+import { 
+  Command, 
+  CommandEmpty, 
+  CommandGroup, 
+  CommandInput, 
+  CommandItem, 
+  CommandList 
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
 } from "@/components/ui/popover";
-import { X, ChevronsUpDown, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Common departments in a Brazilian municipality
-const commonDepartments = [
-  "Administração",
-  "Assistência Social",
-  "Comunicação",
-  "Cultura",
-  "Educação",
-  "Esportes",
-  "Fazenda",
+// Mock departments for demonstration
+const mockDepartments = [
   "Gabinete do Prefeito",
-  "Infraestrutura",
-  "Jurídico",
-  "Meio Ambiente",
-  "Obras",
-  "Planejamento",
-  "Recursos Humanos",
-  "Saúde",
-  "Segurança",
-  "Serviços Urbanos",
-  "Transporte",
-  "Turismo",
-  "Urbanismo",
+  "Secretaria de Administração",
+  "Secretaria de Educação",
+  "Secretaria de Saúde",
+  "Secretaria de Assistência Social",
+  "Secretaria de Finanças",
+  "Departamento de Recursos Humanos",
+  "Departamento de Compras",
+  "Departamento Jurídico",
+  "Departamento de Obras"
 ];
 
 interface MultipleDestinationsSelectorProps {
   selectedDestinations: string[];
-  onChange: (value: string[]) => void;
+  onChange: (destinations: string[]) => void;
 }
 
-export function MultipleDestinationsSelector({
-  selectedDestinations,
-  onChange,
+export function MultipleDestinationsSelector({ 
+  selectedDestinations = [], 
+  onChange 
 }: MultipleDestinationsSelectorProps) {
-  const [open, setOpen] = React.useState(false);
-  const [query, setQuery] = React.useState("");
-
-  // Add a new destination that's not in the common list
-  const addCustomDestination = () => {
-    if (!query.trim()) return;
-    
-    if (!selectedDestinations.includes(query)) {
-      onChange([...selectedDestinations, query]);
-    }
-    
-    setQuery("");
-  };
-
-  // Remove a destination
-  const removeDestination = (destination: string) => {
-    onChange(selectedDestinations.filter((d) => d !== destination));
-  };
-
-  // Toggle a destination selection
-  const toggleDestination = (destination: string) => {
-    if (selectedDestinations.includes(destination)) {
-      removeDestination(destination);
+  const [open, setOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  
+  // Make sure we have a valid array to work with
+  const departments = mockDepartments || [];
+  
+  const handleSelect = (department: string) => {
+    if (selectedDestinations.includes(department)) {
+      onChange(selectedDestinations.filter(d => d !== department));
     } else {
-      onChange([...selectedDestinations, destination]);
+      onChange([...selectedDestinations, department]);
     }
   };
-
+  
+  const handleRemove = (department: string) => {
+    onChange(selectedDestinations.filter(d => d !== department));
+  };
+  
   return (
     <div className="space-y-2">
       <Popover open={open} onOpenChange={setOpen}>
@@ -88,60 +69,57 @@ export function MultipleDestinationsSelector({
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {selectedDestinations.length > 0 
-              ? `${selectedDestinations.length} departamento(s) selecionado(s)`
-              : "Selecione departamentos..."}
+            {selectedDestinations.length > 0
+              ? `${selectedDestinations.length} departamento${selectedDestinations.length > 1 ? 's' : ''} selecionado${selectedDestinations.length > 1 ? 's' : ''}`
+              : "Selecionar departamentos destinatários"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="p-0" align="start">
+        <PopoverContent className="w-full p-0" align="start">
           <Command>
             <CommandInput 
               placeholder="Buscar departamento..." 
-              value={query}
-              onValueChange={setQuery}
+              value={searchValue}
+              onValueChange={setSearchValue}
             />
-            <CommandEmpty>
-              <div className="flex flex-col gap-2 p-2">
-                <span>Nenhum departamento encontrado.</span>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={addCustomDestination}
-                >
-                  Adicionar "{query}"
-                </Button>
-              </div>
-            </CommandEmpty>
-            <CommandGroup>
-              {commonDepartments.map((department) => (
-                <CommandItem
-                  key={department}
-                  onSelect={() => toggleDestination(department)}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedDestinations.includes(department) ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {department}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            <CommandList>
+              <CommandEmpty>Nenhum departamento encontrado.</CommandEmpty>
+              <CommandGroup>
+                {departments.map((department) => (
+                  <CommandItem
+                    key={department}
+                    onSelect={() => handleSelect(department)}
+                    className="flex items-center"
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedDestinations.includes(department) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    <span>{department}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
-
-      {selectedDestinations.length > 0 && (
+      
+      {selectedDestinations && selectedDestinations.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
-          {selectedDestinations.map((destination) => (
-            <Badge key={destination} variant="secondary">
-              {destination}
-              <X
-                className="ml-2 h-3 w-3 cursor-pointer"
-                onClick={() => removeDestination(destination)}
-              />
+          {selectedDestinations.map((department) => (
+            <Badge key={department} variant="secondary" className="pl-2">
+              {department}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 pl-1"
+                onClick={() => handleRemove(department)}
+              >
+                <X className="h-3 w-3" />
+                <span className="sr-only">Remover {department}</span>
+              </Button>
             </Badge>
           ))}
         </div>
