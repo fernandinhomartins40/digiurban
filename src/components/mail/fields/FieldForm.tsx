@@ -1,0 +1,153 @@
+
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { TemplateField } from "@/types/mail";
+import { Textarea } from '@/components/ui/textarea';
+
+interface FieldFormProps {
+  initialValues?: Partial<TemplateField>;
+  onSubmit: (field: Partial<TemplateField>) => void;
+  onCancel?: () => void;
+}
+
+export function FieldForm({ initialValues, onSubmit, onCancel }: FieldFormProps) {
+  const [field, setField] = useState<Partial<TemplateField>>(
+    initialValues || {
+      field_key: '',
+      field_label: '',
+      field_type: 'text',
+      is_required: false,
+      field_options: null,
+    }
+  );
+
+  const handleChange = (key: string, value: any) => {
+    setField((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleOptionsChange = (value: string) => {
+    try {
+      // Only attempt to parse if there's a value
+      if (value.trim()) {
+        // Split by new lines, and then by commas, filter out empties
+        const options = value
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0);
+          
+        handleChange('field_options', options.length ? options : null);
+      } else {
+        handleChange('field_options', null);
+      }
+    } catch (error) {
+      console.error('Error parsing options:', error);
+      handleChange('field_options', null);
+    }
+  };
+
+  const getOptionsValue = () => {
+    if (!field.field_options) return '';
+    if (Array.isArray(field.field_options)) {
+      return field.field_options.join('\n');
+    }
+    return '';
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(field);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="field_key">Chave do Campo*</Label>
+        <Input
+          id="field_key"
+          value={field.field_key || ''}
+          onChange={(e) => handleChange('field_key', e.target.value)}
+          placeholder="nome_campo"
+          required
+        />
+        <p className="text-xs text-muted-foreground">
+          Identificador único usado nos templates, sem espaços
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="field_label">Rótulo do Campo*</Label>
+        <Input
+          id="field_label"
+          value={field.field_label || ''}
+          onChange={(e) => handleChange('field_label', e.target.value)}
+          placeholder="Nome do Campo"
+          required
+        />
+        <p className="text-xs text-muted-foreground">
+          Nome amigável exibido para os usuários
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="field_type">Tipo do Campo*</Label>
+        <Select
+          value={field.field_type || 'text'}
+          onValueChange={(value) => handleChange('field_type', value)}
+        >
+          <SelectTrigger id="field_type">
+            <SelectValue placeholder="Selecione um tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="text">Texto</SelectItem>
+            <SelectItem value="textarea">Texto longo</SelectItem>
+            <SelectItem value="number">Número</SelectItem>
+            <SelectItem value="date">Data</SelectItem>
+            <SelectItem value="select">Lista de opções</SelectItem>
+            <SelectItem value="checkbox">Caixa de seleção</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {field.field_type === 'select' && (
+        <div className="space-y-2">
+          <Label htmlFor="field_options">Opções</Label>
+          <Textarea
+            id="field_options"
+            value={getOptionsValue()}
+            onChange={(e) => handleOptionsChange(e.target.value)}
+            placeholder="Digite uma opção por linha"
+            rows={4}
+          />
+          <p className="text-xs text-muted-foreground">
+            Digite uma opção por linha
+          </p>
+        </div>
+      )}
+
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="is_required"
+          checked={field.is_required || false}
+          onCheckedChange={(checked) => handleChange('is_required', checked)}
+        />
+        <Label htmlFor="is_required">Campo obrigatório</Label>
+      </div>
+
+      <div className="flex justify-end space-x-2 pt-2">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit">Salvar</Button>
+      </div>
+    </form>
+  );
+}

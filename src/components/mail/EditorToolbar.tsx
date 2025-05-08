@@ -71,7 +71,12 @@ export function EditorToolbar({ editor, targetField = 'content' }: EditorToolbar
 
   const addImage = () => {
     if (imageUrl) {
-      editor.chain().focus().setImage({ src: imageUrl }).run();
+      // Use insertContent instead of setImage for TipTap
+      editor.chain().focus().insertContent({
+        type: 'image',
+        attrs: { src: imageUrl }
+      }).run();
+      
       setImageUrl('');
       setIsImageDialogOpen(false);
     }
