@@ -21,8 +21,20 @@ import { cn } from '@/lib/utils';
 import { generateFieldId } from '@/utils/mailTemplateUtils';
 import { FieldArrayWithId } from 'react-hook-form';
 
+// Define a more general field type to accommodate both TemplateField and FieldArrayWithId
+type FieldType = {
+  field_key: string;
+  field_label: string;
+  field_type: string;
+  field_options?: any | null;
+  is_required: boolean;
+  order_position?: number;
+  id?: string;
+  [key: string]: any; // Allow for additional properties
+};
+
 interface FieldCreationPanelProps {
-  fields: Partial<TemplateField>[] | FieldArrayWithId<any, "fields", "id">[];
+  fields: (Partial<TemplateField> | FieldArrayWithId<any, "fields", "id">)[];
   onAddField: (field: Partial<TemplateField>) => void;
   onUpdateField: (index: number, field: Partial<TemplateField>) => void;
   onRemoveField: (index: number) => void;
@@ -85,8 +97,17 @@ export function FieldCreationPanel({
   
   const startEditField = (index: number) => {
     setEditingFieldIndex(index);
-    const fieldToEdit = fields[index] as Partial<TemplateField>;
-    setNewField({...fieldToEdit});
+    const fieldToEdit = fields[index];
+    // Safely extract field properties
+    const fieldData: Partial<TemplateField> = {
+      field_key: (fieldToEdit as any).field_key || '',
+      field_label: (fieldToEdit as any).field_label || '',
+      field_type: (fieldToEdit as any).field_type || 'text',
+      is_required: (fieldToEdit as any).is_required || false,
+      field_options: (fieldToEdit as any).field_options || null,
+      order_position: (fieldToEdit as any).order_position
+    };
+    setNewField(fieldData);
   };
   
   const cancelEdit = () => {
@@ -124,6 +145,11 @@ export function FieldCreationPanel({
       field_label: value,
       field_key: generatedKey
     });
+  };
+
+  // Helper function to safely get field properties
+  const getFieldProperty = (field: any, property: string, defaultValue: any = '') => {
+    return field && field[property] !== undefined ? field[property] : defaultValue;
   };
 
   return (
@@ -281,16 +307,23 @@ export function FieldCreationPanel({
           
           <div className={cn("space-y-1", filteredFields.length > 6 && "overflow-y-auto max-h-[240px] pr-2")}>
             {filteredFields.map((field, index) => {
-              const fieldData = field as any;
+              // Safely extract field properties
+              const fieldKey = getFieldProperty(field, 'field_key');
+              const fieldLabel = getFieldProperty(field, 'field_label');
+              const isRequired = getFieldProperty(field, 'is_required', false);
+              
+              // Skip rendering if field_key is missing
+              if (!fieldKey) return null;
+              
               return (
-                <div key={fieldData.field_key || index} className="flex items-center gap-1">
+                <div key={fieldKey || index} className="flex items-center gap-1">
                   <DraggableField
-                    label={fieldData.field_label || ''}
-                    fieldKey={fieldData.field_key || ''}
-                    isRequired={fieldData.is_required}
+                    label={fieldLabel}
+                    fieldKey={fieldKey}
+                    isRequired={isRequired}
                     field={field as Partial<TemplateField>}
                     onDragStart={onFieldDragStart}
-                    onClick={() => onFieldClick(fieldData.field_key || '')}
+                    onClick={() => onFieldClick(fieldKey)}
                   />
                   <div className="flex flex-col gap-1">
                     <Button 
@@ -311,7 +344,7 @@ export function FieldCreationPanel({
                     </Button>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
           

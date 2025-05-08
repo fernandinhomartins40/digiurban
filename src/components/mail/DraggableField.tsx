@@ -9,8 +9,8 @@ interface DraggableFieldProps {
   label: string;
   fieldKey: string;
   isRequired?: boolean;
-  field?: Partial<TemplateField>;
-  onDragStart: (e: React.DragEvent, fieldKey: string, field?: Partial<TemplateField>) => void;
+  field?: Partial<TemplateField> | any; // Allow for more flexible field types
+  onDragStart: (e: React.DragEvent, fieldKey: string, field?: Partial<TemplateField> | any) => void;
   onClick?: (fieldKey: string) => void;
 }
 
@@ -28,7 +28,12 @@ export function DraggableField({
     
     // Set structured data for enhanced handling
     if (field) {
-      e.dataTransfer.setData('field/json', JSON.stringify(field));
+      try {
+        const fieldData = typeof field === 'object' ? field : { field_key: fieldKey, field_label: label };
+        e.dataTransfer.setData('field/json', JSON.stringify(fieldData));
+      } catch (error) {
+        console.error('Error serializing field data:', error);
+      }
     }
     
     // Call parent handler
