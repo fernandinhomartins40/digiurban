@@ -20,7 +20,7 @@ import {
   getPriorityColor, 
   mapStatusName, 
   mapPriorityName,
-  getRequesterTypeName
+  mapRequesterTypeName
 } from "@/utils/requestMappers";
 
 interface RequestListProps {
@@ -75,7 +75,7 @@ export function RequestList({
                 {request.title}
               </TableCell>
               <TableCell>
-                {getRequesterTypeName(request.requester_type)}
+                {mapRequesterTypeName(request.requester_type)}
               </TableCell>
               <TableCell>{request.target_department}</TableCell>
               <TableCell>
