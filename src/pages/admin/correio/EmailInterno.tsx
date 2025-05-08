@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -65,14 +64,16 @@ export default function EmailInterno() {
       from: 'RH', 
       to: 'Departamento Jurídico', 
       subject: 'Contratação de novos servidores', 
-      date: '2023-05-07T09:00:00Z' 
+      date: '2023-05-07T09:00:00Z',
+      read: true
     },
     { 
       id: '5', 
       from: 'RH', 
       to: 'Secretaria de Educação', 
       subject: 'Cronograma de capacitações', 
-      date: '2023-05-06T11:20:00Z' 
+      date: '2023-05-06T11:20:00Z',
+      read: true
     }
   ];
 
