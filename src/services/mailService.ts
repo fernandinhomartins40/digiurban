@@ -107,6 +107,34 @@ export async function createDocument(document: Partial<Document>) {
   return data as Document;
 }
 
+export async function createFilledTemplate(document: Partial<Document>) {
+  // Add document_category if not provided
+  const documentData = {
+    title: document.title,
+    content: document.content,
+    document_type_id: document.document_type_id,
+    creator_id: document.creator_id,
+    department: document.department,
+    template_id: document.template_id || null,
+    status: document.status || "pending",
+    protocol_number: "temp", // This will be overwritten by the database trigger
+    document_category: 'filled_template' // Add the category
+  };
+  
+  const { data, error } = await supabase
+    .from("mail_documents")
+    .insert(documentData)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error creating filled template:", error);
+    throw error;
+  }
+  
+  return data;
+}
+
 export async function updateDocumentStatus(id: string, status: DocumentStatus) {
   const { data, error } = await supabase
     .from("mail_documents")
@@ -609,29 +637,6 @@ export async function getFilledDocuments() {
   
   if (error) {
     console.error("Error fetching filled documents:", error);
-    throw error;
-  }
-  
-  return data;
-}
-
-// Enhancing createDocument to support filled templates
-export async function createFilledTemplate(document: Partial<Document> & { document_category?: string }) {
-  // Add document_category if not provided
-  const documentData = {
-    ...document,
-    document_category: document.document_category || 'filled_template',
-    protocol_number: "temp" // This will be overwritten by the database trigger
-  };
-  
-  const { data, error } = await supabase
-    .from("mail_documents")
-    .insert(documentData)
-    .select()
-    .single();
-  
-  if (error) {
-    console.error("Error creating filled template:", error);
     throw error;
   }
   

@@ -26,6 +26,7 @@ export interface Document {
   template_id: string | null;
   header?: string | null;
   footer?: string | null;
+  document_category?: string;
 }
 
 export interface DocumentDestination {

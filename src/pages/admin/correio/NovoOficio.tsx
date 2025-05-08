@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -244,7 +243,6 @@ export default function NovoOficio() {
         creator_id: user.id,
         department: user.department,
         template_id: selectedTemplate?.id || null,
-        document_category: 'filled_template',
       });
       
       if (createdDoc) {

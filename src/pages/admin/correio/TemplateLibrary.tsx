@@ -1,7 +1,5 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -32,14 +30,7 @@ export default function TemplateLibrary() {
 
   const { getTemplates, documentTypes, getFilledDocuments } = useMail();
   const { data: templates, isLoading: isLoadingTemplates } = getTemplates();
-  const { data: filledDocuments, isLoading: isLoadingDocuments } = useQuery(
-    ["filledDocuments"],
-    () => getFilledDocuments(),
-    { 
-      refetchOnWindowFocus: false,
-      staleTime: 30000
-    }
-  );
+  const { data: filledDocuments, isLoading: isLoadingDocuments } = getFilledDocuments();
   const { data: documentTypesData } = documentTypes;
 
   // Template categories based on document types
