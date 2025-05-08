@@ -22,15 +22,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
 interface TemplateStarterProps {
-  fields: TemplateField[];
-  onSelect: (content: string) => void;
+  fields: Partial<TemplateField>[];
+  onSelect: (content: string, fields: Partial<TemplateField>[]) => void;
 }
 
 export function TemplateStarter({ fields, onSelect }: TemplateStarterProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("administrativo");
-  const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<{content: string, fields: Partial<TemplateField>[]} | null>(null);
 
   // Define template categories
   const templateCategories = [
@@ -41,32 +41,89 @@ export function TemplateStarter({ fields, onSelect }: TemplateStarterProps) {
     { id: "parecer", name: "Pareceres" }
   ];
 
-  // Expanded template library with categories
+  // Template fields by category
+  const templateFieldSets: Record<string, Partial<TemplateField>[]> = {
+    basic: [
+      { field_key: 'destinatario_nome', field_label: 'Nome do Destinatário', field_type: 'text', is_required: true },
+      { field_key: 'destinatario_cargo', field_label: 'Cargo do Destinatário', field_type: 'text', is_required: false },
+      { field_key: 'destinatario_orgao', field_label: 'Órgão do Destinatário', field_type: 'text', is_required: false },
+      { field_key: 'numero_oficio', field_label: 'Número do Documento', field_type: 'text', is_required: true },
+      { field_key: 'assunto', field_label: 'Assunto', field_type: 'text', is_required: true },
+      { field_key: 'cidade', field_label: 'Cidade', field_type: 'text', is_required: false },
+      { field_key: 'data_emissao', field_label: 'Data de Emissão', field_type: 'date', is_required: true },
+      { field_key: 'remetente_nome', field_label: 'Nome do Remetente', field_type: 'text', is_required: true },
+      { field_key: 'remetente_cargo', field_label: 'Cargo do Remetente', field_type: 'text', is_required: false },
+      { field_key: 'corpo_texto', field_label: 'Corpo do Texto', field_type: 'textarea', is_required: true },
+    ],
+    detailed: [
+      // Basic fields
+      { field_key: 'destinatario_nome', field_label: 'Nome do Destinatário', field_type: 'text', is_required: true },
+      { field_key: 'destinatario_cargo', field_label: 'Cargo do Destinatário', field_type: 'text', is_required: false },
+      { field_key: 'destinatario_orgao', field_label: 'Órgão do Destinatário', field_type: 'text', is_required: false },
+      { field_key: 'numero_oficio', field_label: 'Número do Documento', field_type: 'text', is_required: true },
+      { field_key: 'assunto', field_label: 'Assunto', field_type: 'text', is_required: true },
+      { field_key: 'cidade', field_label: 'Cidade', field_type: 'text', is_required: false },
+      { field_key: 'data_emissao', field_label: 'Data de Emissão', field_type: 'date', is_required: true },
+      { field_key: 'remetente_nome', field_label: 'Nome do Remetente', field_type: 'text', is_required: true },
+      { field_key: 'remetente_cargo', field_label: 'Cargo do Remetente', field_type: 'text', is_required: false },
+      { field_key: 'remetente_departamento', field_label: 'Departamento do Remetente', field_type: 'text', is_required: false },
+      // Detailed sections
+      { field_key: 'conteudo_introducao', field_label: 'Introdução', field_type: 'textarea', is_required: false },
+      { field_key: 'conteudo_desenvolvimento', field_label: 'Desenvolvimento', field_type: 'textarea', is_required: false },
+      { field_key: 'conteudo_conclusao', field_label: 'Conclusão', field_type: 'textarea', is_required: false },
+    ],
+    comunicacao: [
+      { field_key: 'numero_oficio', field_label: 'Número do Documento', field_type: 'text', is_required: true },
+      { field_key: 'assunto', field_label: 'Assunto', field_type: 'text', is_required: true },
+      { field_key: 'destinatario_nome', field_label: 'Nome do Destinatário', field_type: 'text', is_required: true },
+      { field_key: 'destinatario_cargo', field_label: 'Cargo do Destinatário', field_type: 'text', is_required: false },
+      { field_key: 'destinatario_orgao', field_label: 'Órgão do Destinatário', field_type: 'text', is_required: false },
+      { field_key: 'data_emissao', field_label: 'Data de Emissão', field_type: 'date', is_required: true },
+      { field_key: 'corpo_texto', field_label: 'Corpo do Texto', field_type: 'textarea', is_required: true },
+      { field_key: 'remetente_nome', field_label: 'Nome do Remetente', field_type: 'text', is_required: true },
+      { field_key: 'remetente_cargo', field_label: 'Cargo do Remetente', field_type: 'text', is_required: false },
+    ],
+    memorando: [
+      { field_key: 'numero_oficio', field_label: 'Número do Memorando', field_type: 'text', is_required: true },
+      { field_key: 'assunto', field_label: 'Assunto', field_type: 'text', is_required: true },
+      { field_key: 'destinatario_nome', field_label: 'Nome do Destinatário', field_type: 'text', is_required: true },
+      { field_key: 'destinatario_orgao', field_label: 'Órgão do Destinatário', field_type: 'text', is_required: false },
+      { field_key: 'remetente_nome', field_label: 'Nome do Remetente', field_type: 'text', is_required: true },
+      { field_key: 'cidade', field_label: 'Cidade', field_type: 'text', is_required: false },
+      { field_key: 'data_emissao', field_label: 'Data de Emissão', field_type: 'date', is_required: true },
+      { field_key: 'corpo_texto', field_label: 'Corpo do Texto', field_type: 'textarea', is_required: true },
+    ],
+  };
+
+  // Expanded template library with categories and associated fields
   const templateLibrary = {
     administrativo: [
       {
         id: 'oficio_padrao',
         name: 'Ofício Padrão',
         description: 'Modelo padrão para documentos oficiais',
-        template: generateBasicTemplate(fields),
+        template: generateBasicTemplate(),
         isStandard: true,
-        tags: ["formal", "geral"]
+        tags: ["formal", "geral"],
+        fields: templateFieldSets.basic
       },
       {
         id: 'oficio_detalhado',
         name: 'Ofício Detalhado',
         description: 'Ofício com seções detalhadas para comunicações formais',
-        template: generateDetailedOficioTemplate(fields),
+        template: generateDetailedOficioTemplate(),
         isStandard: true,
-        tags: ["formal", "detalhado"]
+        tags: ["formal", "detalhado"],
+        fields: templateFieldSets.detailed
       },
       {
         id: 'oficio_gabinete',
         name: 'Ofício do Gabinete',
         description: 'Modelo específico para comunicações do Gabinete do Prefeito',
-        template: generateMayorOfficeTemplate(fields),
+        template: generateMayorOfficeTemplate(),
         isStandard: true,
-        tags: ["gabinete", "executivo"]
+        tags: ["gabinete", "executivo"],
+        fields: templateFieldSets.basic
       }
     ],
     comunicacao: [
@@ -74,25 +131,28 @@ export function TemplateStarter({ fields, onSelect }: TemplateStarterProps) {
         id: 'comunicado_interno',
         name: 'Comunicado Interno',
         description: 'Para comunicações internas entre departamentos',
-        template: generateCommunicationTemplate(fields),
+        template: generateCommunicationTemplate(),
         isStandard: true,
-        tags: ["interno", "departamentos"]
+        tags: ["interno", "departamentos"],
+        fields: templateFieldSets.comunicacao
       },
       {
         id: 'circular',
         name: 'Circular',
         description: 'Para envio a múltiplos destinatários',
-        template: generateCircularTemplate(fields),
+        template: generateCircularTemplate(),
         isStandard: true,
-        tags: ["múltiplos", "circular"]
+        tags: ["múltiplos", "circular"],
+        fields: templateFieldSets.comunicacao
       },
       {
         id: 'informativo',
         name: 'Informativo',
         description: 'Para divulgação de informações importantes',
-        template: generateInformativoTemplate(fields),
+        template: generateInformativoTemplate(),
         isStandard: true,
-        tags: ["informação", "divulgação"]
+        tags: ["informação", "divulgação"],
+        fields: templateFieldSets.comunicacao
       }
     ],
     requerimento: [
@@ -100,25 +160,28 @@ export function TemplateStarter({ fields, onSelect }: TemplateStarterProps) {
         id: 'memorando',
         name: 'Memorando',
         description: 'Para solicitações e comunicações formais',
-        template: generateMemoTemplate(fields),
+        template: generateMemoTemplate(),
         isStandard: true,
-        tags: ["solicitação", "formal"]
+        tags: ["solicitação", "formal"],
+        fields: templateFieldSets.memorando
       },
       {
         id: 'requerimento_simples',
         name: 'Requerimento Simples',
         description: 'Para realizar pedidos formais simples',
-        template: generateSimpleRequestTemplate(fields),
+        template: generateSimpleRequestTemplate(),
         isStandard: true,
-        tags: ["solicitação", "pedido"]
+        tags: ["solicitação", "pedido"],
+        fields: templateFieldSets.basic
       },
       {
         id: 'solicitacao_recursos',
         name: 'Solicitação de Recursos',
         description: 'Para requisitar recursos materiais ou financeiros',
-        template: generateResourceRequestTemplate(fields),
+        template: generateResourceRequestTemplate(),
         isStandard: true,
-        tags: ["recursos", "requisição"]
+        tags: ["recursos", "requisição"],
+        fields: templateFieldSets.basic
       }
     ],
     despacho: [
@@ -126,17 +189,19 @@ export function TemplateStarter({ fields, onSelect }: TemplateStarterProps) {
         id: 'despacho_decisorio',
         name: 'Despacho Decisório',
         description: 'Para decisões administrativas formais',
-        template: generateDecisionTemplate(fields),
+        template: generateDecisionTemplate(),
         isStandard: true,
-        tags: ["decisão", "autoridade"]
+        tags: ["decisão", "autoridade"],
+        fields: templateFieldSets.basic
       },
       {
         id: 'encaminhamento',
         name: 'Encaminhamento',
         description: 'Para encaminhar documentos entre setores',
-        template: generateForwardingTemplate(fields),
+        template: generateForwardingTemplate(),
         isStandard: true,
-        tags: ["encaminhamento", "procedimento"]
+        tags: ["encaminhamento", "procedimento"],
+        fields: templateFieldSets.basic
       }
     ],
     parecer: [
@@ -144,17 +209,19 @@ export function TemplateStarter({ fields, onSelect }: TemplateStarterProps) {
         id: 'parecer_tecnico',
         name: 'Parecer Técnico',
         description: 'Para análises técnicas sobre um tema',
-        template: generateTechnicalOpinionTemplate(fields),
+        template: generateTechnicalOpinionTemplate(),
         isStandard: true,
-        tags: ["técnico", "análise"]
+        tags: ["técnico", "análise"],
+        fields: templateFieldSets.basic
       },
       {
         id: 'relatorio',
         name: 'Relatório',
         description: 'Para apresentação de resultados ou situações',
-        template: generateReportTemplate(fields),
+        template: generateReportTemplate(),
         isStandard: true,
-        tags: ["relatório", "resultado"]
+        tags: ["relatório", "resultado"],
+        fields: templateFieldSets.basic
       }
     ]
   };
@@ -171,14 +238,14 @@ export function TemplateStarter({ fields, onSelect }: TemplateStarterProps) {
     );
   };
 
-  function handleSelectTemplate(template: string) {
-    onSelect(template);
+  function handleSelectTemplate(template: string, fields: Partial<TemplateField>[]) {
+    onSelect(template, fields);
     setOpen(false);
     setPreviewTemplate(null);
   }
 
-  function handlePreviewTemplate(template: string) {
-    setPreviewTemplate(template);
+  function handlePreviewTemplate(template: string, fields: Partial<TemplateField>[]) {
+    setPreviewTemplate({ content: template, fields });
   }
 
   function handleClosePreview() {
@@ -242,7 +309,7 @@ export function TemplateStarter({ fields, onSelect }: TemplateStarterProps) {
                               className="h-6 w-6 p-0"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handlePreviewTemplate(template.template);
+                                handlePreviewTemplate(template.template, template.fields);
                               }}
                             >
                               <PanelLeftOpen className="h-4 w-4" />
@@ -260,13 +327,13 @@ export function TemplateStarter({ fields, onSelect }: TemplateStarterProps) {
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => handleSelectTemplate(template.template)}
+                            onClick={() => handleSelectTemplate(template.template, template.fields)}
                           >
                             <Copy className="h-3.5 w-3.5 mr-1" /> Usar
                           </Button>
                           <Button 
                             size="sm"
-                            onClick={() => handleSelectTemplate(template.template)}
+                            onClick={() => handleSelectTemplate(template.template, template.fields)}
                           >
                             <Edit className="h-3.5 w-3.5 mr-1" /> Editar
                           </Button>
@@ -294,16 +361,33 @@ export function TemplateStarter({ fields, onSelect }: TemplateStarterProps) {
                     </Button>
                     <Button 
                       size="sm" 
-                      onClick={() => handleSelectTemplate(previewTemplate)}
+                      onClick={() => handleSelectTemplate(previewTemplate.content, previewTemplate.fields)}
                     >
                       Usar este modelo
                     </Button>
                   </div>
                 </div>
-                <div 
-                  className="prose prose-sm max-w-none border rounded-md p-4 mt-2 bg-white"
-                  dangerouslySetInnerHTML={{ __html: previewTemplate }}
-                />
+                <div className="space-y-4">
+                  <div 
+                    className="prose prose-sm max-w-none border rounded-md p-4 mt-2 bg-white"
+                    dangerouslySetInnerHTML={{ __html: previewTemplate.content }}
+                  />
+
+                  {previewTemplate.fields.length > 0 && (
+                    <div className="border rounded-md p-4 bg-white">
+                      <h4 className="font-medium mb-3">Campos incluídos neste modelo:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {previewTemplate.fields.map((field, index) => (
+                          <div key={index} className="text-sm p-2 border rounded-md bg-gray-50 flex items-center gap-2">
+                            <span className="font-medium">{field.field_label}:</span>
+                            <Badge variant="outline" className="text-xs">{field.field_type}</Badge>
+                            {field.is_required && <Badge className="text-xs">Obrigatório</Badge>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -313,181 +397,119 @@ export function TemplateStarter({ fields, onSelect }: TemplateStarterProps) {
   );
 }
 
-function generateBasicTemplate(fields: TemplateField[]): string {
-  // Find field keys
-  const destinatarioNome = fields.find(f => f.field_key === 'destinatario_nome')?.field_key || 'destinatario_nome';
-  const destinatarioCargo = fields.find(f => f.field_key === 'destinatario_cargo')?.field_key || 'destinatario_cargo';
-  const destinatarioOrgao = fields.find(f => f.field_key === 'destinatario_orgao')?.field_key || 'destinatario_orgao';
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const cidade = fields.find(f => f.field_key === 'cidade')?.field_key || 'cidade';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const remetenteCargo = fields.find(f => f.field_key === 'remetente_cargo')?.field_key || 'remetente_cargo';
-  const corpoTexto = fields.find(f => f.field_key === 'corpo_texto')?.field_key || 'corpo_texto';
-
+function generateBasicTemplate(): string {
   return `
-<h2 style="text-align:center;"><strong>OFÍCIO Nº {{${numeroOficio}}}/202X</strong></h2>
-<p style="text-align:right;">{{${cidade}}}, {{${dataEmissao}}}</p>
+<h2 style="text-align:center;"><strong>OFÍCIO Nº {{numero_oficio}}/202X</strong></h2>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
 <p><strong>A Sua Excelência o(a) Senhor(a)</strong></p>
-<p><strong>{{${destinatarioNome}}}</strong></p>
-<p><strong>{{${destinatarioCargo}}}</strong></p>
-<p><strong>{{${destinatarioOrgao}}}</strong></p>
+<p><strong>{{destinatario_nome}}</strong></p>
+<p><strong>{{destinatario_cargo}}</strong></p>
+<p><strong>{{destinatario_orgao}}</strong></p>
 <p><br></p>
-<p><strong>Assunto: {{${assunto}}}</strong></p>
+<p><strong>Assunto: {{assunto}}</strong></p>
 <p><br></p>
-<p>Excelentíssimo(a) Senhor(a) {{${destinatarioNome}}},</p>
+<p>Excelentíssimo(a) Senhor(a) {{destinatario_nome}},</p>
 <p><br></p>
-<p>{{${corpoTexto}}}</p>
+<p>{{corpo_texto}}</p>
 <p><br></p>
 <p style="text-align:center;">Atenciosamente,</p>
 <p><br></p>
-<p style="text-align:center;"><strong>{{${remetenteNome}}}</strong></p>
-<p style="text-align:center;">{{${remetenteCargo}}}</p>
+<p style="text-align:center;"><strong>{{remetente_nome}}</strong></p>
+<p style="text-align:center;">{{remetente_cargo}}</p>
   `;
 }
 
-function generateCommunicationTemplate(fields: TemplateField[]): string {
-  // Find field keys
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const destinatarioNome = fields.find(f => f.field_key === 'destinatario_nome')?.field_key || 'destinatario_nome';
-  const destinatarioCargo = fields.find(f => f.field_key === 'destinatario_cargo')?.field_key || 'destinatario_cargo';
-  const destinatarioOrgao = fields.find(f => f.field_key === 'destinatario_orgao')?.field_key || 'destinatario_orgao';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const corpoTexto = fields.find(f => f.field_key === 'corpo_texto')?.field_key || 'corpo_texto';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const remetenteCargo = fields.find(f => f.field_key === 'remetente_cargo')?.field_key || 'remetente_cargo';
-
+function generateCommunicationTemplate(): string {
   return `
-<h2 style="text-align:center;"><strong>COMUNICAÇÃO INTERNA Nº {{${numeroOficio}}}/202X</strong></h2>
+<h2 style="text-align:center;"><strong>COMUNICAÇÃO INTERNA Nº {{numero_oficio}}/202X</strong></h2>
 <p><br></p>
-<p><strong>De:</strong> {{${remetenteNome}}} - {{${remetenteCargo}}}</p>
-<p><strong>Para:</strong> {{${destinatarioNome}}} - {{${destinatarioCargo}}}</p>
-<p><strong>Departamento:</strong> {{${destinatarioOrgao}}}</p>
-<p><strong>Assunto:</strong> {{${assunto}}}</p>
-<p><strong>Data:</strong> {{${dataEmissao}}}</p>
+<p><strong>De:</strong> {{remetente_nome}} - {{remetente_cargo}}</p>
+<p><strong>Para:</strong> {{destinatario_nome}} - {{destinatario_cargo}}</p>
+<p><strong>Departamento:</strong> {{destinatario_orgao}}</p>
+<p><strong>Assunto:</strong> {{assunto}}</p>
+<p><strong>Data:</strong> {{data_emissao}}</p>
 <p><br></p>
 <p><strong>MENSAGEM:</strong></p>
 <p><br></p>
-<p>{{${corpoTexto}}}</p>
+<p>{{corpo_texto}}</p>
 <p><br></p>
 <p>Atenciosamente,</p>
 <p><br></p>
-<p><strong>{{${remetenteNome}}}</strong></p>
-<p>{{${remetenteCargo}}}</p>
+<p><strong>{{remetente_nome}}</strong></p>
+<p>{{remetente_cargo}}</p>
   `;
 }
 
-function generateMemoTemplate(fields: TemplateField[]): string {
-  // Find field keys
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const destinatarioNome = fields.find(f => f.field_key === 'destinatario_nome')?.field_key || 'destinatario_nome';
-  const destinatarioOrgao = fields.find(f => f.field_key === 'destinatario_orgao')?.field_key || 'destinatario_orgao';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const cidade = fields.find(f => f.field_key === 'cidade')?.field_key || 'cidade';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const corpoTexto = fields.find(f => f.field_key === 'corpo_texto')?.field_key || 'corpo_texto';
-
+function generateMemoTemplate(): string {
   return `
-<h2 style="text-align:center;"><strong>MEMORANDO Nº {{${numeroOficio}}}/202X</strong></h2>
-<p style="text-align:right;">{{${cidade}}}, {{${dataEmissao}}}</p>
+<h2 style="text-align:center;"><strong>MEMORANDO Nº {{numero_oficio}}/202X</strong></h2>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
-<p><strong>De:</strong> {{${remetenteNome}}}</p>
-<p><strong>Para:</strong> {{${destinatarioNome}}} - {{${destinatarioOrgao}}}</p>
-<p><strong>Assunto:</strong> {{${assunto}}}</p>
+<p><strong>De:</strong> {{remetente_nome}}</p>
+<p><strong>Para:</strong> {{destinatario_nome}} - {{destinatario_orgao}}</p>
+<p><strong>Assunto:</strong> {{assunto}}</p>
 <p><br></p>
-<p>{{${corpoTexto}}}</p>
+<p>{{corpo_texto}}</p>
 <p><br></p>
 <p>Atenciosamente,</p>
 <p><br></p>
-<p><strong>{{${remetenteNome}}}</strong></p>
+<p><strong>{{remetente_nome}}</strong></p>
   `;
 }
 
-// New template functions
-
-function generateDetailedOficioTemplate(fields: TemplateField[]): string {
-  // Find field keys
-  const destinatarioNome = fields.find(f => f.field_key === 'destinatario_nome')?.field_key || 'destinatario_nome';
-  const destinatarioCargo = fields.find(f => f.field_key === 'destinatario_cargo')?.field_key || 'destinatario_cargo';
-  const destinatarioOrgao = fields.find(f => f.field_key === 'destinatario_orgao')?.field_key || 'destinatario_orgao';
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const cidade = fields.find(f => f.field_key === 'cidade')?.field_key || 'cidade';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const remetenteCargo = fields.find(f => f.field_key === 'remetente_cargo')?.field_key || 'remetente_cargo';
-  const remetenteDepartamento = fields.find(f => f.field_key === 'remetente_departamento')?.field_key || 'remetente_departamento';
-  const introducao = fields.find(f => f.field_key === 'conteudo_introducao')?.field_key || 'conteudo_introducao';
-  const desenvolvimento = fields.find(f => f.field_key === 'conteudo_desenvolvimento')?.field_key || 'conteudo_desenvolvimento';
-  const conclusao = fields.find(f => f.field_key === 'conteudo_conclusao')?.field_key || 'conteudo_conclusao';
-
+function generateDetailedOficioTemplate(): string {
   return `
-<h2 style="text-align:center;"><strong>OFÍCIO Nº {{${numeroOficio}}}/202X</strong></h2>
-<p style="text-align:right;">{{${cidade}}}, {{${dataEmissao}}}</p>
+<h2 style="text-align:center;"><strong>OFÍCIO Nº {{numero_oficio}}/202X</strong></h2>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
 <p><strong>A Sua Excelência o(a) Senhor(a)</strong></p>
-<p><strong>{{${destinatarioNome}}}</strong></p>
-<p><strong>{{${destinatarioCargo}}}</strong></p>
-<p><strong>{{${destinatarioOrgao}}}</strong></p>
+<p><strong>{{destinatario_nome}}</strong></p>
+<p><strong>{{destinatario_cargo}}</strong></p>
+<p><strong>{{destinatario_orgao}}</strong></p>
 <p><br></p>
-<p><strong>Assunto: {{${assunto}}}</strong></p>
+<p><strong>Assunto: {{assunto}}</strong></p>
 <p><br></p>
-<p>Excelentíssimo(a) Senhor(a) {{${destinatarioNome}}},</p>
+<p>Excelentíssimo(a) Senhor(a) {{destinatario_nome}},</p>
 <p><br></p>
 <h3><strong>INTRODUÇÃO</strong></h3>
-<p>{{${introducao}}}</p>
+<p>{{conteudo_introducao}}</p>
 <p><br></p>
 <h3><strong>DESENVOLVIMENTO</strong></h3>
-<p>{{${desenvolvimento}}}</p>
+<p>{{conteudo_desenvolvimento}}</p>
 <p><br></p>
 <h3><strong>CONCLUSÃO</strong></h3>
-<p>{{${conclusao}}}</p>
+<p>{{conteudo_conclusao}}</p>
 <p><br></p>
 <p style="text-align:center;">Atenciosamente,</p>
 <p><br></p>
-<p style="text-align:center;"><strong>{{${remetenteNome}}}</strong></p>
-<p style="text-align:center;">{{${remetenteCargo}}}</p>
-<p style="text-align:center;">{{${remetenteDepartamento}}}</p>
+<p style="text-align:center;"><strong>{{remetente_nome}}</strong></p>
+<p style="text-align:center;">{{remetente_cargo}}</p>
+<p style="text-align:center;">{{remetente_departamento}}</p>
   `;
 }
 
-function generateMayorOfficeTemplate(fields: TemplateField[]): string {
-  // Find field keys
-  const destinatarioNome = fields.find(f => f.field_key === 'destinatario_nome')?.field_key || 'destinatario_nome';
-  const destinatarioCargo = fields.find(f => f.field_key === 'destinatario_cargo')?.field_key || 'destinatario_cargo';
-  const destinatarioOrgao = fields.find(f => f.field_key === 'destinatario_orgao')?.field_key || 'destinatario_orgao';
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const cidade = fields.find(f => f.field_key === 'cidade')?.field_key || 'cidade';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const corpoTexto = fields.find(f => f.field_key === 'corpo_texto')?.field_key || 'corpo_texto';
-  const referencia = fields.find(f => f.field_key === 'documento_referencia')?.field_key || 'documento_referencia';
-
+function generateMayorOfficeTemplate(): string {
   return `
 <div style="text-align:center;">
   <h2><strong>GABINETE DO PREFEITO</strong></h2>
-  <h3>MUNICÍPIO DE {{${cidade}}}</h3>
-  <p>Ofício do Gabinete Nº {{${numeroOficio}}}/202X</p>
+  <h3>MUNICÍPIO DE {{cidade}}</h3>
+  <p>Ofício do Gabinete Nº {{numero_oficio}}/202X</p>
 </div>
 
-<p style="text-align:right;">{{${cidade}}}, {{${dataEmissao}}}</p>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
 
-<p><strong>Referência:</strong> {{${referencia}}}</p>
-<p><strong>Assunto:</strong> {{${assunto}}}</p>
+<p><strong>Assunto:</strong> {{assunto}}</p>
 <p><br></p>
 
 <p>Ao(À) Excelentíssimo(a) Senhor(a)<br>
-<strong>{{${destinatarioNome}}}</strong><br>
-{{${destinatarioCargo}}}<br>
-{{${destinatarioOrgao}}}</p>
+<strong>{{destinatario_nome}}</strong><br>
+{{destinatario_cargo}}<br>
+{{destinatario_orgao}}</p>
 <p><br></p>
 
-<p>{{${corpoTexto}}}</p>
+<p>{{corpo_texto}}</p>
 <p><br></p>
 
 <p style="text-align:center;">Cordialmente,</p>
@@ -496,94 +518,63 @@ function generateMayorOfficeTemplate(fields: TemplateField[]): string {
   `;
 }
 
-function generateCircularTemplate(fields: TemplateField[]): string {
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const cidade = fields.find(f => f.field_key === 'cidade')?.field_key || 'cidade';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const corpoTexto = fields.find(f => f.field_key === 'corpo_texto')?.field_key || 'corpo_texto';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const remetenteCargo = fields.find(f => f.field_key === 'remetente_cargo')?.field_key || 'remetente_cargo';
-
+function generateCircularTemplate(): string {
   return `
-<h2 style="text-align:center;"><strong>CIRCULAR Nº {{${numeroOficio}}}/202X</strong></h2>
-<p style="text-align:right;">{{${cidade}}}, {{${dataEmissao}}}</p>
+<h2 style="text-align:center;"><strong>CIRCULAR Nº {{numero_oficio}}/202X</strong></h2>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
 
 <p><strong>A TODOS OS DEPARTAMENTOS</strong></p>
-<p><strong>Assunto: {{${assunto}}}</strong></p>
+<p><strong>Assunto:</strong> {{assunto}}</p>
 <p><br></p>
 
-<p>Prezados Senhores,</p>
-<p><br></p>
-<p>{{${corpoTexto}}}</p>
+<p>Prezados(as) Senhores(as),</p>
 <p><br></p>
 
-<p>Esta circular entra em vigor na data de sua publicação.</p>
+<p>{{corpo_texto}}</p>
 <p><br></p>
 
-<p style="text-align:center;">Atenciosamente,</p>
+<p style="text-align:right;">Atenciosamente,</p>
 <p><br></p>
-<p style="text-align:center;"><strong>{{${remetenteNome}}}</strong></p>
-<p style="text-align:center;">{{${remetenteCargo}}}</p>
+<p style="text-align:right;"><strong>{{remetente_nome}}</strong></p>
+<p style="text-align:right;">{{remetente_cargo}}</p>
   `;
 }
 
-function generateInformativoTemplate(fields: TemplateField[]): string {
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const corpoTexto = fields.find(f => f.field_key === 'corpo_texto')?.field_key || 'corpo_texto';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const remetenteDepartamento = fields.find(f => f.field_key === 'remetente_departamento')?.field_key || 'remetente_departamento';
-
+function generateInformativoTemplate(): string {
   return `
-<div style="text-align:center;">
-  <h2><strong>INFORMATIVO Nº {{${numeroOficio}}}/202X</strong></h2>
-  <p>Data: {{${dataEmissao}}}</p>
-</div>
+<h2 style="text-align:center;"><strong>INFORMATIVO Nº {{numero_oficio}}/202X</strong></h2>
+<p style="text-align:center;"><strong>{{assunto}}</strong></p>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
 
-<div style="background-color: #f0f0f0; padding: 10px; text-align: center;">
-  <h3><strong>{{${assunto}}}</strong></h3>
-</div>
+<p>{{corpo_texto}}</p>
 <p><br></p>
 
-<p>{{${corpoTexto}}}</p>
-<p><br></p>
-
-<p style="text-align:right;">Departamento de {{${remetenteDepartamento}}}</p>
-<p style="text-align:right;">{{${remetenteNome}}}</p>
+<p>Para mais informações, entre em contato:</p>
+<p>{{remetente_nome}} - {{remetente_cargo}}</p>
   `;
 }
 
-function generateSimpleRequestTemplate(fields: TemplateField[]): string {
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const destinatarioNome = fields.find(f => f.field_key === 'destinatario_nome')?.field_key || 'destinatario_nome';
-  const destinatarioCargo = fields.find(f => f.field_key === 'destinatario_cargo')?.field_key || 'destinatario_cargo';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const cidade = fields.find(f => f.field_key === 'cidade')?.field_key || 'cidade';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const corpoTexto = fields.find(f => f.field_key === 'corpo_texto')?.field_key || 'corpo_texto';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const remetenteCargo = fields.find(f => f.field_key === 'remetente_cargo')?.field_key || 'remetente_cargo';
-
+function generateSimpleRequestTemplate(): string {
   return `
-<h2 style="text-align:center;"><strong>REQUERIMENTO Nº {{${numeroOficio}}}/202X</strong></h2>
-<p style="text-align:right;">{{${cidade}}}, {{${dataEmissao}}}</p>
+<h2 style="text-align:center;"><strong>REQUERIMENTO</strong></h2>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
 
-<p>Ao Sr(a).<br>
-<strong>{{${destinatarioNome}}}</strong><br>
-{{${destinatarioCargo}}}</p>
+<p><strong>A Sua Excelência o(a) Senhor(a)</strong></p>
+<p><strong>{{destinatario_nome}}</strong></p>
+<p><strong>{{destinatario_cargo}}</strong></p>
+<p><strong>{{destinatario_orgao}}</strong></p>
 <p><br></p>
 
-<p><strong>Assunto: {{${assunto}}}</strong></p>
+<p><strong>Assunto: {{assunto}}</strong></p>
 <p><br></p>
 
-<p>Venho por meio deste requerer:</p>
+<p>Eu, {{remetente_nome}}, venho por meio deste solicitar:</p>
 <p><br></p>
-<p>{{${corpoTexto}}}</p>
+
+<p>{{corpo_texto}}</p>
 <p><br></p>
 
 <p>Nestes termos, peço deferimento.</p>
@@ -591,195 +582,112 @@ function generateSimpleRequestTemplate(fields: TemplateField[]): string {
 
 <p style="text-align:center;">Atenciosamente,</p>
 <p><br></p>
-<p style="text-align:center;"><strong>{{${remetenteNome}}}</strong></p>
-<p style="text-align:center;">{{${remetenteCargo}}}</p>
+<p style="text-align:center;"><strong>{{remetente_nome}}</strong></p>
+<p style="text-align:center;">{{remetente_cargo}}</p>
   `;
 }
 
-function generateResourceRequestTemplate(fields: TemplateField[]): string {
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const destinatarioNome = fields.find(f => f.field_key === 'destinatario_nome')?.field_key || 'destinatario_nome';
-  const destinatarioOrgao = fields.find(f => f.field_key === 'destinatario_orgao')?.field_key || 'destinatario_orgao';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const cidade = fields.find(f => f.field_key === 'cidade')?.field_key || 'cidade';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const corpoTexto = fields.find(f => f.field_key === 'corpo_texto')?.field_key || 'corpo_texto';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const remetenteDepartamento = fields.find(f => f.field_key === 'remetente_departamento')?.field_key || 'remetente_departamento';
-
+function generateResourceRequestTemplate(): string {
   return `
-<h2 style="text-align:center;"><strong>SOLICITAÇÃO DE RECURSOS</strong></h2>
-<h3 style="text-align:center;">Memorando nº {{${numeroOficio}}}/202X</h3>
-<p style="text-align:right;">{{${cidade}}}, {{${dataEmissao}}}</p>
+<h2 style="text-align:center;"><strong>SOLICITAÇÃO DE RECURSOS Nº {{numero_oficio}}/202X</strong></h2>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
 
-<p><strong>De:</strong> Departamento de {{${remetenteDepartamento}}}<br>
-<strong>Para:</strong> {{${destinatarioOrgao}}}<br>
-<strong>At.:</strong> {{${destinatarioNome}}}<br>
-<strong>Assunto:</strong> {{${assunto}}}</p>
+<p><strong>Ao Departamento:</strong> {{destinatario_orgao}}</p>
+<p><strong>A/C:</strong> {{destinatario_nome}}</p>
 <p><br></p>
 
-<p>Prezados,</p>
-<p><br></p>
-<p>Vimos por meio deste documento solicitar os seguintes recursos:</p>
-<p><br></p>
-<p>{{${corpoTexto}}}</p>
+<p><strong>Assunto: {{assunto}}</strong></p>
 <p><br></p>
 
-<p>Justificativa: A presente solicitação visa atender às necessidades do departamento para o pleno cumprimento de suas atividades.</p>
+<p>Prezado(a) Senhor(a),</p>
 <p><br></p>
 
-<p>Atenciosamente,</p>
+<p>{{corpo_texto}}</p>
 <p><br></p>
-<p><strong>{{${remetenteNome}}}</strong></p>
-<p>Departamento de {{${remetenteDepartamento}}}</p>
+
+<p>Sem mais para o momento, agradeço pela atenção.</p>
+<p><br></p>
+
+<p style="text-align:center;">Atenciosamente,</p>
+<p><br></p>
+<p style="text-align:center;"><strong>{{remetente_nome}}</strong></p>
+<p style="text-align:center;">{{remetente_cargo}}</p>
   `;
 }
 
-function generateDecisionTemplate(fields: TemplateField[]): string {
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const documentoReferencia = fields.find(f => f.field_key === 'documento_referencia')?.field_key || 'documento_referencia';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const cidade = fields.find(f => f.field_key === 'cidade')?.field_key || 'cidade';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const corpoTexto = fields.find(f => f.field_key === 'corpo_texto')?.field_key || 'corpo_texto';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const remetenteCargo = fields.find(f => f.field_key === 'remetente_cargo')?.field_key || 'remetente_cargo';
-
+function generateDecisionTemplate(): string {
   return `
-<h2 style="text-align:center;"><strong>DESPACHO DECISÓRIO Nº {{${numeroOficio}}}/202X</strong></h2>
-<p style="text-align:right;">{{${cidade}}}, {{${dataEmissao}}}</p>
+<h2 style="text-align:center;"><strong>DESPACHO DECISÓRIO Nº {{numero_oficio}}/202X</strong></h2>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
 
-<p><strong>Referência:</strong> {{${documentoReferencia}}}<br>
-<strong>Assunto:</strong> {{${assunto}}}</p>
+<p><strong>Assunto: {{assunto}}</strong></p>
 <p><br></p>
 
-<p>DECISÃO:</p>
-<p><br></p>
-<p>{{${corpoTexto}}}</p>
+<p>{{corpo_texto}}</p>
 <p><br></p>
 
-<p>Este é o despacho.</p>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}.</p>
 <p><br></p>
 
-<p style="text-align:center;"><strong>{{${remetenteNome}}}</strong></p>
-<p style="text-align:center;">{{${remetenteCargo}}}</p>
+<p style="text-align:center;"><strong>{{remetente_nome}}</strong></p>
+<p style="text-align:center;">{{remetente_cargo}}</p>
   `;
 }
 
-function generateForwardingTemplate(fields: TemplateField[]): string {
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const destinatarioNome = fields.find(f => f.field_key === 'destinatario_nome')?.field_key || 'destinatario_nome';
-  const destinatarioOrgao = fields.find(f => f.field_key === 'destinatario_orgao')?.field_key || 'destinatario_orgao';
-  const documentoReferencia = fields.find(f => f.field_key === 'documento_referencia')?.field_key || 'documento_referencia';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const corpoTexto = fields.find(f => f.field_key === 'corpo_texto')?.field_key || 'corpo_texto';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const remetenteDepartamento = fields.find(f => f.field_key === 'remetente_departamento')?.field_key || 'remetente_departamento';
-
+function generateForwardingTemplate(): string {
   return `
 <h2 style="text-align:center;"><strong>ENCAMINHAMENTO</strong></h2>
-<h3 style="text-align:center;">Despacho nº {{${numeroOficio}}}/202X</h3>
-<p style="text-align:right;">{{${dataEmissao}}}</p>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
 
-<p><strong>De:</strong> {{${remetenteDepartamento}}}<br>
-<strong>Para:</strong> {{${destinatarioOrgao}}}<br>
-<strong>Atenção:</strong> {{${destinatarioNome}}}<br>
-<strong>Referência:</strong> {{${documentoReferencia}}}<br>
-<strong>Assunto:</strong> {{${assunto}}}</p>
+<p>Encaminho o presente processo a {{destinatario_nome}} - {{destinatario_orgao}}, para:</p>
 <p><br></p>
 
-<p>Encaminho o documento em referência para:</p>
-<p><br></p>
-<p>{{${corpoTexto}}}</p>
+<p>{{corpo_texto}}</p>
 <p><br></p>
 
-<p style="text-align:right;">{{${remetenteNome}}}<br>{{${remetenteDepartamento}}}</p>
+<p style="text-align:center;">Atenciosamente,</p>
+<p><br></p>
+
+<p style="text-align:center;"><strong>{{remetente_nome}}</strong></p>
+<p style="text-align:center;">{{remetente_cargo}}</p>
   `;
 }
 
-function generateTechnicalOpinionTemplate(fields: TemplateField[]): string {
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const documentoReferencia = fields.find(f => f.field_key === 'documento_referencia')?.field_key || 'documento_referencia';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const cidade = fields.find(f => f.field_key === 'cidade')?.field_key || 'cidade';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const introducao = fields.find(f => f.field_key === 'conteudo_introducao')?.field_key || 'conteudo_introducao';
-  const desenvolvimento = fields.find(f => f.field_key === 'conteudo_desenvolvimento')?.field_key || 'conteudo_desenvolvimento';
-  const conclusao = fields.find(f => f.field_key === 'conteudo_conclusao')?.field_key || 'conteudo_conclusao';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const remetenteCargo = fields.find(f => f.field_key === 'remetente_cargo')?.field_key || 'remetente_cargo';
-
+function generateTechnicalOpinionTemplate(): string {
   return `
-<h2 style="text-align:center;"><strong>PARECER TÉCNICO Nº {{${numeroOficio}}}/202X</strong></h2>
-<p style="text-align:right;">{{${cidade}}}, {{${dataEmissao}}}</p>
+<h2 style="text-align:center;"><strong>PARECER TÉCNICO Nº {{numero_oficio}}/202X</strong></h2>
+<p style="text-align:center;"><strong>{{assunto}}</strong></p>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
 
-<p><strong>Referência:</strong> {{${documentoReferencia}}}<br>
-<strong>Assunto:</strong> {{${assunto}}}</p>
-<p><br></p>
-
-<h3><strong>1. RELATÓRIO</strong></h3>
-<p>{{${introducao}}}</p>
-<p><br></p>
-
-<h3><strong>2. ANÁLISE</strong></h3>
-<p>{{${desenvolvimento}}}</p>
-<p><br></p>
-
-<h3><strong>3. PARECER</strong></h3>
-<p>{{${conclusao}}}</p>
+<p>{{corpo_texto}}</p>
 <p><br></p>
 
 <p>É o parecer.</p>
 <p><br></p>
 
-<p style="text-align:center;">{{${cidade}}}, {{${dataEmissao}}}</p>
-<p><br></p>
-
-<p style="text-align:center;"><strong>{{${remetenteNome}}}</strong></p>
-<p style="text-align:center;">{{${remetenteCargo}}}</p>
+<p style="text-align:center;"><strong>{{remetente_nome}}</strong></p>
+<p style="text-align:center;">{{remetente_cargo}}</p>
   `;
 }
 
-function generateReportTemplate(fields: TemplateField[]): string {
-  const numeroOficio = fields.find(f => f.field_key === 'numero_oficio')?.field_key || 'numero_oficio';
-  const assunto = fields.find(f => f.field_key === 'assunto')?.field_key || 'assunto';
-  const cidade = fields.find(f => f.field_key === 'cidade')?.field_key || 'cidade';
-  const dataEmissao = fields.find(f => f.field_key === 'data_emissao')?.field_key || 'data_emissao';
-  const introducao = fields.find(f => f.field_key === 'conteudo_introducao')?.field_key || 'conteudo_introducao';
-  const desenvolvimento = fields.find(f => f.field_key === 'conteudo_desenvolvimento')?.field_key || 'conteudo_desenvolvimento';
-  const conclusao = fields.find(f => f.field_key === 'conteudo_conclusao')?.field_key || 'conteudo_conclusao';
-  const remetenteNome = fields.find(f => f.field_key === 'remetente_nome')?.field_key || 'remetente_nome';
-  const remetenteCargo = fields.find(f => f.field_key === 'remetente_cargo')?.field_key || 'remetente_cargo';
-  const remetenteDepartamento = fields.find(f => f.field_key === 'remetente_departamento')?.field_key || 'remetente_departamento';
-
+function generateReportTemplate(): string {
   return `
-<h2 style="text-align:center;"><strong>RELATÓRIO Nº {{${numeroOficio}}}/202X</strong></h2>
-<h3 style="text-align:center;">{{${assunto}}}</h3>
-<p style="text-align:right;">{{${cidade}}}, {{${dataEmissao}}}</p>
+<h2 style="text-align:center;"><strong>RELATÓRIO Nº {{numero_oficio}}/202X</strong></h2>
+<p style="text-align:center;"><strong>{{assunto}}</strong></p>
+<p style="text-align:right;">{{cidade}}, {{data_emissao}}</p>
 <p><br></p>
 
-<h3><strong>1. INTRODUÇÃO</strong></h3>
-<p>{{${introducao}}}</p>
+<p>{{corpo_texto}}</p>
 <p><br></p>
 
-<h3><strong>2. DESENVOLVIMENTO</strong></h3>
-<p>{{${desenvolvimento}}}</p>
+<p style="text-align:center;">{{cidade}}, {{data_emissao}}.</p>
 <p><br></p>
 
-<h3><strong>3. CONCLUSÃO</strong></h3>
-<p>{{${conclusao}}}</p>
-<p><br></p>
-
-<p style="text-align:center;">{{${cidade}}}, {{${dataEmissao}}}</p>
-<p><br></p>
-
-<p style="text-align:center;"><strong>{{${remetenteNome}}}</strong></p>
-<p style="text-align:center;">{{${remetenteCargo}}}</p>
-<p style="text-align:center;">{{${remetenteDepartamento}}}</p>
+<p style="text-align:center;"><strong>{{remetente_nome}}</strong></p>
+<p style="text-align:center;">{{remetente_cargo}}</p>
   `;
 }

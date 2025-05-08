@@ -33,7 +33,7 @@ import { Template, TemplateField } from "@/types/mail";
 import { formatDate } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
-import { File, Loader2, Plus, Save, Settings, Trash2 } from "lucide-react";
+import { File, Image, Loader2, Plus, Save, Settings, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -45,6 +45,7 @@ import { FieldCreationPanel } from "@/components/mail/FieldCreationPanel";
 import { TemplateStarter } from "@/components/mail/TemplateStarter";
 import { AutoPopulateFields } from "@/components/mail/AutoPopulateFields";
 import { generateFieldId } from "@/utils/mailTemplateUtils";
+import { ImageUploader } from "@/components/mail/ImageUploader";
 
 const templateFormSchema = z.object({
   name: z.string().min(3, "Nome é obrigatório"),
@@ -74,11 +75,12 @@ export default function TemplateCreator() {
   const [previewHeader, setPreviewHeader] = useState("");
   const [previewFooter, setPreviewFooter] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [selectedTargetField, setSelectedTargetField] = useState<'content' | 'header' | 'footer'>('content');
+  const [selectedTemplateType, setSelectedTemplateType] = useState<'content' | 'header' | 'footer'>('content');
+  const [showPredefinedFields, setShowPredefinedFields] = useState(false);
+  const [isTemplateSelected, setIsTemplateSelected] = useState(false);
   
   const { 
     documentTypes,
-    getTemplates,
     getTemplate,
     createTemplate,
     updateTemplate,
@@ -88,7 +90,6 @@ export default function TemplateCreator() {
     isLoadingDeleteTemplate
   } = useMail();
   
-  const { data: templates } = getTemplates();
   const { data: currentTemplate, isLoading: isLoadingTemplate } = getTemplate(templateId || "");
   
   const form = useForm<z.infer<typeof templateFormSchema>>({
@@ -131,6 +132,8 @@ export default function TemplateCreator() {
         })) || [],
       });
       
+      setIsTemplateSelected(true);
+      
       // Generate preview
       updatePreview(
         currentTemplate.content, 
@@ -139,6 +142,26 @@ export default function TemplateCreator() {
       );
     }
   }, [currentTemplate, form]);
+  
+  // Check URL params for template duplication or editing
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const duplicateId = queryParams.get('duplicate');
+    const editId = queryParams.get('edit');
+    
+    if (editId) {
+      setTemplateId(editId);
+    } else if (duplicateId) {
+      // Handle template duplication logic
+      // This will be handled by the getTemplate() effect above
+      setTemplateId(duplicateId);
+      // Clear the ID to create a new template based on the duplicate
+      setTimeout(() => {
+        setTemplateId(null);
+        form.setValue("name", `Cópia de ${form.getValues("name")}`);
+      }, 500);
+    }
+  }, []);
   
   // Update preview when content changes
   const content = form.watch("content");
@@ -239,13 +262,33 @@ export default function TemplateCreator() {
     }
   };
   
-  // Handle template starter selection
-  const handleApplyTemplate = (templateContent: string) => {
+  // Handle template starter selection with field integration
+  const handleApplyTemplate = (templateContent: string, templateFields: Partial<TemplateField>[]) => {
     form.setValue("content", templateContent);
+    
+    // Clear existing fields and add the template fields
+    form.setValue("fields", []);
+    
+    // Add template fields
+    if (templateFields && templateFields.length > 0) {
+      templateFields.forEach(field => {
+        append({
+          field_key: field.field_key || generateFieldId(),
+          field_label: field.field_label || '',
+          field_type: field.field_type || 'text',
+          is_required: field.is_required || false,
+          field_options: field.field_options || {},
+          order_position: formFields.length,
+        });
+      });
+    }
+    
+    setIsTemplateSelected(true);
     updatePreview(templateContent, header, footer);
+    
     toast({
       title: "Modelo aplicado",
-      description: "O modelo inicial foi aplicado com sucesso."
+      description: "O modelo e seus campos foram aplicados com sucesso."
     });
   };
   
@@ -275,7 +318,7 @@ export default function TemplateCreator() {
   const handleFieldClick = (fieldKey: string) => {
     // The actual insertion is handled by the WysiwygEditor component
     const customEvent = new CustomEvent('insert-field', { 
-      detail: { fieldKey, targetField: selectedTargetField } 
+      detail: { fieldKey, targetField: selectedTemplateType } 
     });
     document.dispatchEvent(customEvent);
   };
@@ -285,11 +328,6 @@ export default function TemplateCreator() {
     return form.getValues("fields").map(field => field.field_key);
   };
   
-  // Handle template selection from the sidebar
-  const handleTemplateSelect = (id: string) => {
-    setTemplateId(id);
-  };
-
   // Handle creating a new template
   const handleCreateNew = () => {
     setTemplateId(null);
@@ -304,6 +342,7 @@ export default function TemplateCreator() {
       fields: [],
     });
     setCurrentTab("editor");
+    setIsTemplateSelected(false);
   };
 
   // Handle deleting a template
@@ -333,6 +372,22 @@ export default function TemplateCreator() {
   const handleEditorDrop = (e: DragEvent) => {
     // This is now handled by the editor directly
     return false;
+  };
+  
+  // Toggle showing predefined fields
+  const togglePredefinedFields = () => {
+    setShowPredefinedFields(!showPredefinedFields);
+  };
+  
+  // Handle insert image in header
+  const handleInsertImage = (imageUrl: string) => {
+    const imageHtml = `<img src="${imageUrl}" alt="Imagem cabeçalho" style="max-height: 100px; max-width: 100%;" />`;
+    
+    // Get current header content
+    const currentHeader = form.getValues("header") || "";
+    
+    // Insert image at the beginning of the header
+    form.setValue("header", `${imageHtml}${currentHeader}`);
   };
   
   async function onSubmit(values: z.infer<typeof templateFormSchema>) {
@@ -447,405 +502,369 @@ export default function TemplateCreator() {
         </p>
       </div>
       
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Templates List */}
-        <Card className="w-full lg:w-64 h-min">
+      <div className="w-full">
+        {/* Template Editor */}
+        <Card>
           <CardHeader>
-            <CardTitle className="text-base">Modelos Salvos</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              {templateId ? "Editar Modelo" : "Novo Modelo"}
+              {templateId && currentTemplate && (
+                <Badge variant="outline" className="ml-2">
+                  Criado em {formatDate(currentTemplate.created_at)}
+                </Badge>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={handleCreateNew}
-              >
-                <Plus size={16} className="mr-2" />
-                Novo Modelo
-              </Button>
-              
-              <div className="space-y-1 mt-4">
-                {templates?.map((template) => (
-                  <Button
-                    key={template.id}
-                    variant={templateId === template.id ? "secondary" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => handleTemplateSelect(template.id)}
-                  >
-                    <File size={16} className="mr-2" />
-                    <span className="truncate">{template.name}</span>
-                  </Button>
-                ))}
-                
-                {!templates?.length && (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    Nenhum modelo salvo
-                  </p>
-                )}
-                
-                {isLoadingTemplate && (
-                  <div className="flex justify-center py-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Template Editor */}
-        <div className="flex-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {templateId ? "Editar Modelo" : "Novo Modelo"}
-                {templateId && currentTemplate && (
-                  <Badge variant="outline" className="ml-2">
-                    Criado em {formatDate(currentTemplate.created_at)}
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <Tabs defaultValue="editor" value={currentTab} onValueChange={setCurrentTab}>
-                    <TabsList>
-                      <TabsTrigger value="editor">Editor</TabsTrigger>
-                      <TabsTrigger value="preview">Visualizar</TabsTrigger>
-                      <TabsTrigger value="settings">Configurações</TabsTrigger>
-                    </TabsList>
-                    
-                    {/* Editor Tab */}
-                    <TabsContent value="editor" className="space-y-6 pt-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nome do Modelo</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Ex: Solicitação de Diária" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="documentTypeId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Tipo de Documento</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                value={field.value || ""}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Selecione o tipo" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="none">Nenhum</SelectItem>
-                                  {documentTypes.data?.map((type) => (
-                                    <SelectItem key={type.id} value={type.id}>
-                                      {type.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <Tabs defaultValue="editor" value={currentTab} onValueChange={setCurrentTab}>
+                  <TabsList>
+                    <TabsTrigger value="editor">Editor</TabsTrigger>
+                    <TabsTrigger value="preview">Visualizar</TabsTrigger>
+                    <TabsTrigger value="settings">Configurações</TabsTrigger>
+                  </TabsList>
+                  
+                  {/* Editor Tab */}
+                  <TabsContent value="editor" className="space-y-6 pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
-                        name="description"
+                        name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Descrição do Modelo</FormLabel>
+                            <FormLabel>Nome do Modelo</FormLabel>
                             <FormControl>
-                              <Input placeholder="Descrição breve do modelo" {...field} />
+                              <Input placeholder="Ex: Solicitação de Diária" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <TemplateStarter 
-                            fields={currentTemplate?.fields || []} 
-                            onSelect={handleApplyTemplate}
-                          />
+                      <FormField
+                        control={form.control}
+                        name="documentTypeId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tipo de Documento</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              value={field.value || ""}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione o tipo" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="none">Nenhum</SelectItem>
+                                {documentTypes.data?.map((type) => (
+                                  <SelectItem key={type.id} value={type.id}>
+                                    {type.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Descrição do Modelo</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Descrição breve do modelo" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <TemplateStarter 
+                          fields={formFields} 
+                          onSelect={handleApplyTemplate}
+                        />
+                        {isTemplateSelected && (
                           <AutoPopulateFields
-                            fields={currentTemplate?.fields || []}
+                            fields={formFields}
                             content={form.getValues("content")}
                             onPopulate={handleAutoPopulateFields}
                           />
-                        </div>
-                      </div>
-
-                      <div className="border-t pt-4 mt-4">
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                          {/* Header section */}
-                          <div className="lg:col-span-12">
-                            <FormField
-                              control={form.control}
-                              name="header"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Cabeçalho do Documento</FormLabel>
-                                  <FormControl>
-                                    <WysiwygEditor
-                                      value={field.value || ""}
-                                      onChange={field.onChange}
-                                      placeholder="Digite o cabeçalho ou arraste campos para inserir"
-                                      error={!!form.formState.errors.header}
-                                      className="min-h-[100px]"
-                                      targetField="header"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          {/* Main content section and fields sidebar */}
-                          <div className="lg:col-span-8">
-                            <FormField
-                              control={form.control}
-                              name="content"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Conteúdo do Modelo</FormLabel>
-                                  <FormControl>
-                                    <WysiwygEditor
-                                      value={field.value}
-                                      onChange={field.onChange}
-                                      placeholder="Digite o conteúdo do modelo ou arraste campos para inserir"
-                                      error={!!form.formState.errors.content}
-                                      onDrop={handleEditorDrop}
-                                      targetField="content"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          {/* Integrated field creation panel */}
-                          <div className="lg:col-span-4">
-                            <FieldCreationPanel
-                              fields={formFields}
-                              onAddField={handleAddField}
-                              onUpdateField={handleUpdateField}
-                              onRemoveField={remove}
-                              onAddPredefinedFields={handleAddPredefinedFields}
-                              onFieldDragStart={handleFieldDragStart}
-                              onFieldClick={handleFieldClick}
-                              existingFieldKeys={getCurrentFieldKeys()}
-                              selectedTargetField={selectedTargetField}
-                              onChangeTargetField={setSelectedTargetField}
-                            />
-                          </div>
-
-                          {/* Footer section */}
-                          <div className="lg:col-span-12">
-                            <FormField
-                              control={form.control}
-                              name="footer"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Rodapé do Documento</FormLabel>
-                                  <FormControl>
-                                    <WysiwygEditor
-                                      value={field.value || ""}
-                                      onChange={field.onChange}
-                                      placeholder="Digite o rodapé ou arraste campos para inserir"
-                                      error={!!form.formState.errors.footer}
-                                      className="min-h-[100px]"
-                                      targetField="footer"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    
-                    {/* Preview Tab */}
-                    <TabsContent value="preview" className="pt-4">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-base">Visualização do Modelo</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="border rounded-md p-6 bg-white space-y-4">
-                            {previewHeader && (
-                              <div className="border-b pb-4 mb-4">
-                                <div className="text-sm font-semibold text-muted-foreground mb-2">Cabeçalho:</div>
-                                <div dangerouslySetInnerHTML={{ __html: previewHeader }} />
-                              </div>
-                            )}
-                            
-                            <div className="min-h-[200px]">
-                              <div className="text-sm font-semibold text-muted-foreground mb-2">Conteúdo:</div>
-                              <div dangerouslySetInnerHTML={{ __html: previewContent }} />
-                            </div>
-                            
-                            {previewFooter && (
-                              <div className="border-t pt-4 mt-4">
-                                <div className="text-sm font-semibold text-muted-foreground mb-2">Rodapé:</div>
-                                <div dangerouslySetInnerHTML={{ __html: previewFooter }} />
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                    
-                    {/* Settings Tab */}
-                    <TabsContent value="settings" className="space-y-6 pt-4">
-                      <FormField
-                        control={form.control}
-                        name="departments"
-                        render={() => (
-                          <FormItem>
-                            <FormLabel>Departamentos que podem usar este modelo</FormLabel>
-                            <FormControl>
-                              <div className="border rounded-md p-3">
-                                {/* This would ideally be a multi-select, but for simplicity let's hardcode a few options */}
-                                {["Administração", "Financeiro", "RH", "Compras", "Educação"].map((dept) => (
-                                  <FormField
-                                    key={dept}
-                                    control={form.control}
-                                    name="departments"
-                                    render={({ field }) => {
-                                      return (
-                                        <FormItem
-                                          key={dept}
-                                          className="flex flex-row items-start space-x-3 space-y-0 py-1"
-                                        >
-                                          <FormControl>
-                                            <Checkbox
-                                              checked={field.value?.includes(dept)}
-                                              onCheckedChange={(checked) => {
-                                                return checked
-                                                  ? field.onChange([...field.value, dept])
-                                                  : field.onChange(
-                                                      field.value?.filter(
-                                                        (value) => value !== dept
-                                                      )
-                                                    )
-                                              }}
-                                            />
-                                          </FormControl>
-                                          <FormLabel className="font-normal">
-                                            {dept}
-                                          </FormLabel>
-                                        </FormItem>
-                                      )
-                                    }}
-                                  />
-                                ))}
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
                         )}
-                      />
-                      
-                      {templateId && (
-                        <div className="border-t pt-4">
-                          <h3 className="text-lg font-medium text-destructive mb-2">Zona de Perigo</h3>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            As ações abaixo não podem ser desfeitas.
-                          </p>
-                          
-                          <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-                            <DialogTrigger asChild>
-                              <Button variant="destructive">
-                                <Trash2 size={16} className="mr-2" />
-                                Excluir Modelo
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Excluir Modelo</DialogTitle>
-                                <DialogDescription>
-                                  Tem certeza que deseja excluir este modelo? Esta ação não pode ser desfeita.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <DialogFooter>
-                                <Button 
-                                  variant="outline" 
-                                  type="button" 
-                                  onClick={() => setConfirmDelete(false)}
-                                >
-                                  Cancelar
-                                </Button>
-                                <Button 
-                                  variant="destructive" 
-                                  onClick={handleDeleteTemplate}
-                                  disabled={isLoadingDeleteTemplate}
-                                >
-                                  {isLoadingDeleteTemplate ? (
-                                    <Loader2 size={16} className="mr-2 animate-spin" />
-                                  ) : (
-                                    <Trash2 size={16} className="mr-2" />
-                                  )}
-                                  Excluir
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4 mt-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        {/* Header section */}
+                        <div className="lg:col-span-12">
+                          <FormField
+                            control={form.control}
+                            name="header"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex items-center justify-between">
+                                  <FormLabel>Cabeçalho do Documento</FormLabel>
+                                  <ImageUploader onImageUploaded={handleInsertImage}>
+                                    <Button type="button" variant="outline" size="sm">
+                                      <Image className="h-4 w-4 mr-1" /> Adicionar Imagem
+                                    </Button>
+                                  </ImageUploader>
+                                </div>
+                                <FormControl>
+                                  <WysiwygEditor
+                                    value={field.value || ""}
+                                    onChange={field.onChange}
+                                    placeholder="Digite o cabeçalho ou arraste campos para inserir"
+                                    error={!!form.formState.errors.header}
+                                    className="min-h-[100px]"
+                                    targetField="header"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         </div>
-                      )}
-                    </TabsContent>
-                  </Tabs>
+
+                        {/* Main content section and fields sidebar */}
+                        <div className="lg:col-span-8">
+                          <FormField
+                            control={form.control}
+                            name="content"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Conteúdo do Modelo</FormLabel>
+                                <FormControl>
+                                  <WysiwygEditor
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Digite o conteúdo do modelo ou arraste campos para inserir"
+                                    error={!!form.formState.errors.content}
+                                    onDrop={handleEditorDrop}
+                                    targetField="content"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        {/* Integrated field creation panel */}
+                        <div className="lg:col-span-4">
+                          <FieldCreationPanel
+                            fields={formFields}
+                            onAddField={handleAddField}
+                            onUpdateField={handleUpdateField}
+                            onRemoveField={remove}
+                            onAddPredefinedFields={handleAddPredefinedFields}
+                            onFieldDragStart={handleFieldDragStart}
+                            onFieldClick={handleFieldClick}
+                            existingFieldKeys={getCurrentFieldKeys()}
+                            selectedTargetField={selectedTemplateType}
+                            onChangeTargetField={setSelectedTemplateType}
+                            showPredefinedFields={showPredefinedFields}
+                            togglePredefinedFields={togglePredefinedFields}
+                          />
+                        </div>
+
+                        {/* Footer section */}
+                        <div className="lg:col-span-12">
+                          <FormField
+                            control={form.control}
+                            name="footer"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Rodapé do Documento</FormLabel>
+                                <FormControl>
+                                  <WysiwygEditor
+                                    value={field.value || ""}
+                                    onChange={field.onChange}
+                                    placeholder="Digite o rodapé ou arraste campos para inserir"
+                                    error={!!form.formState.errors.footer}
+                                    className="min-h-[100px]"
+                                    targetField="footer"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
                   
-                  <div className="flex justify-end gap-2 pt-4 border-t">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setCurrentTab("editor")}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button 
-                      type="submit"
-                      disabled={isLoadingCreateTemplate || isLoadingUpdateTemplate}
-                    >
-                      {(isLoadingCreateTemplate || isLoadingUpdateTemplate) ? (
-                        <>
-                          <Loader2 size={16} className="mr-2 animate-spin" />
-                          Salvando...
-                        </>
-                      ) : (
-                        <>
-                          <Save size={16} className="mr-2" />
-                          Salvar Modelo
-                        </>
+                  {/* Preview Tab */}
+                  <TabsContent value="preview" className="pt-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Visualização do Modelo</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="border rounded-md p-6 bg-white space-y-4">
+                          {previewHeader && (
+                            <div className="border-b pb-4 mb-4">
+                              <div className="text-sm font-semibold text-muted-foreground mb-2">Cabeçalho:</div>
+                              <div dangerouslySetInnerHTML={{ __html: previewHeader }} />
+                            </div>
+                          )}
+                          
+                          <div className="min-h-[200px]">
+                            <div className="text-sm font-semibold text-muted-foreground mb-2">Conteúdo:</div>
+                            <div dangerouslySetInnerHTML={{ __html: previewContent }} />
+                          </div>
+                          
+                          {previewFooter && (
+                            <div className="border-t pt-4 mt-4">
+                              <div className="text-sm font-semibold text-muted-foreground mb-2">Rodapé:</div>
+                              <div dangerouslySetInnerHTML={{ __html: previewFooter }} />
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  {/* Settings Tab */}
+                  <TabsContent value="settings" className="space-y-6 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="departments"
+                      render={() => (
+                        <FormItem>
+                          <FormLabel>Departamentos que podem usar este modelo</FormLabel>
+                          <FormControl>
+                            <div className="border rounded-md p-3">
+                              {/* This would ideally be a multi-select, but for simplicity let's hardcode a few options */}
+                              {["Administração", "Financeiro", "RH", "Compras", "Educação"].map((dept) => (
+                                <FormField
+                                  key={dept}
+                                  control={form.control}
+                                  name="departments"
+                                  render={({ field }) => {
+                                    return (
+                                      <FormItem
+                                        key={dept}
+                                        className="flex flex-row items-start space-x-3 space-y-0 py-1"
+                                      >
+                                        <FormControl>
+                                          <Checkbox
+                                            checked={field.value?.includes(dept)}
+                                            onCheckedChange={(checked) => {
+                                              return checked
+                                                ? field.onChange([...field.value, dept])
+                                                : field.onChange(
+                                                    field.value?.filter(
+                                                      (value) => value !== dept
+                                                    )
+                                                  )
+                                            }}
+                                          />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">
+                                          {dept}
+                                        </FormLabel>
+                                      </FormItem>
+                                    )
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </div>
+                    />
+                    
+                    {templateId && (
+                      <div className="border-t pt-4">
+                        <h3 className="text-lg font-medium text-destructive mb-2">Zona de Perigo</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          As ações abaixo não podem ser desfeitas.
+                        </p>
+                        
+                        <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+                          <DialogTrigger asChild>
+                            <Button variant="destructive">
+                              <Trash2 size={16} className="mr-2" />
+                              Excluir Modelo
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Excluir Modelo</DialogTitle>
+                              <DialogDescription>
+                                Tem certeza que deseja excluir este modelo? Esta ação não pode ser desfeita.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Button 
+                                variant="outline" 
+                                type="button" 
+                                onClick={() => setConfirmDelete(false)}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button 
+                                variant="destructive" 
+                                onClick={handleDeleteTemplate}
+                                disabled={isLoadingDeleteTemplate}
+                              >
+                                {isLoadingDeleteTemplate ? (
+                                  <Loader2 size={16} className="mr-2 animate-spin" />
+                                ) : (
+                                  <Trash2 size={16} className="mr-2" />
+                                )}
+                                Excluir
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+                
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCurrentTab("editor")}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit"
+                    disabled={isLoadingCreateTemplate || isLoadingUpdateTemplate}
+                  >
+                    {(isLoadingCreateTemplate || isLoadingUpdateTemplate) ? (
+                      <>
+                        <Loader2 size={16} className="mr-2 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} className="mr-2" />
+                        Salvar Modelo
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

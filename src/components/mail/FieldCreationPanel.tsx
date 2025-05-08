@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, X, Edit, AlignJustify } from 'lucide-react';
+import { Plus, X, Edit, AlignJustify, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -31,6 +31,8 @@ interface FieldCreationPanelProps {
   existingFieldKeys: string[];
   selectedTargetField: 'content' | 'header' | 'footer';
   onChangeTargetField: (field: 'content' | 'header' | 'footer') => void;
+  showPredefinedFields?: boolean;
+  togglePredefinedFields?: () => void;
 }
 
 export function FieldCreationPanel({
@@ -43,7 +45,9 @@ export function FieldCreationPanel({
   onFieldClick,
   existingFieldKeys,
   selectedTargetField,
-  onChangeTargetField
+  onChangeTargetField,
+  showPredefinedFields = false,
+  togglePredefinedFields
 }: FieldCreationPanelProps) {
   const [newField, setNewField] = useState<Partial<TemplateField>>({
     field_key: '',
@@ -240,10 +244,24 @@ export function FieldCreationPanel({
         </CardContent>
       </Card>
 
-      <PredefinedFieldsSelector 
-        onAddFields={onAddPredefinedFields} 
-        existingFieldKeys={existingFieldKeys}
-      />
+      {togglePredefinedFields && (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full flex items-center justify-between text-xs h-8"
+          onClick={togglePredefinedFields}
+        >
+          <span>Campos Predefinidos</span>
+          {showPredefinedFields ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
+      )}
+
+      {showPredefinedFields && (
+        <PredefinedFieldsSelector 
+          onAddFields={onAddPredefinedFields} 
+          existingFieldKeys={existingFieldKeys}
+        />
+      )}
       
       {fields.length > 0 && (
         <>
