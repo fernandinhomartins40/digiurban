@@ -1,167 +1,102 @@
 
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import TextAlign from '@tiptap/extension-text-align';
-import Underline from '@tiptap/extension-underline';
-import { TextStyle } from '@tiptap/extension-text-style';
-import { Color } from '@tiptap/extension-color';
-import { Heading } from '@tiptap/extension-heading';
+import React, { useEffect, useRef, useState } from 'react';
+import { Editor } from '@tinymce/tinymce-react';
 import { cn } from '@/lib/utils';
-import { FontSize } from '@/components/mail/editor-extensions/font-size';
-import { FontFamily } from '@/components/mail/editor-extensions/font-family';
-import { EditorToolbar } from '@/components/mail/EditorToolbar';
-import { useEffect } from 'react';
 
 interface WysiwygEditorProps {
   value: string;
-  onChange: (value: string) => void;
+  onChange: (content: string) => void;
   placeholder?: string;
-  error?: boolean;
   className?: string;
-  onDrop?: (e: DragEvent) => void;
   targetField?: 'content' | 'header' | 'footer';
+  height?: number;
 }
 
 export function WysiwygEditor({
   value,
   onChange,
-  placeholder = 'Digite aqui...',
-  error,
+  placeholder,
   className,
-  onDrop,
   targetField = 'content',
+  height = 400,
 }: WysiwygEditorProps) {
-  // Define the editor
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder,
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-        alignments: ['left', 'center', 'right', 'justify'],
-      }),
-      Underline,
-      TextStyle,
-      Color,
-      Heading.configure({
-        levels: [1, 2, 3, 4, 5, 6],
-      }),
-      FontSize,
-      FontFamily,
-    ],
-    content: value,
-    onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
-    },
-    editorProps: {
-      handleDrop: (view, event, slice, moved) => {
-        if (onDrop) {
-          onDrop(event);
-          return true;
-        }
-        
-        // Check if this is our custom field drag
-        const fieldData = event.dataTransfer?.getData('field/json');
-        if (fieldData) {
-          try {
-            const field = JSON.parse(fieldData);
-            const { schema } = view.state;
-            const coordinates = view.posAtCoords({
-              left: event.clientX,
-              top: event.clientY,
-            });
-            
-            if (coordinates) {
-              const transaction = view.state.tr.insertText(`{{${field.field_key}}}`, coordinates.pos);
-              view.dispatch(transaction);
-              return true;
-            }
-          } catch (error) {
-            console.error('Error processing dropped field:', error);
-          }
-        }
-        
-        return false;
-      },
-    },
-  });
+  const editorRef = useRef<any>(null);
+  const [isReady, setIsReady] = useState(false);
 
-  // Update editor content when value changes externally
+  // Listen for custom events to insert fields
   useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value);
-    }
-  }, [value, editor]);
-
-  // Handle insertion of fields when event is fired
-  useEffect(() => {
-    const handleInsertField = (e: CustomEvent) => {
-      if (editor) {
-        const fieldKey = e.detail?.fieldKey;
-        const eventTargetField = e.detail?.targetField;
-        
-        // Only insert if this is the right editor for the target field
-        if (fieldKey && (!eventTargetField || eventTargetField === targetField)) {
-          editor.commands.insertContent(`{{${fieldKey}}}`);
-        }
-      }
+    const handleInsertField = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (!editorRef.current || !customEvent.detail) return;
+      
+      const { fieldText, targetField: eventTargetField } = customEvent.detail;
+      
+      // Only respond if this editor is the target
+      if (eventTargetField !== targetField) return;
+      
+      editorRef.current.insertContent(fieldText);
     };
-
-    document.addEventListener('insert-field', handleInsertField as EventListener);
+    
+    document.addEventListener('insert-field', handleInsertField);
+    
     return () => {
-      document.removeEventListener('insert-field', handleInsertField as EventListener);
+      document.removeEventListener('insert-field', handleInsertField);
     };
-  }, [editor, targetField]);
-
-  // Handle selection conversion to field
-  useEffect(() => {
-    const handleCreateFieldFromSelection = (e: CustomEvent) => {
-      if (editor && e.detail?.targetField === targetField) {
-        const selection = editor.state.selection;
-        if (!selection.empty) {
-          const selectedText = editor.state.doc.textBetween(
-            selection.from,
-            selection.to,
-            ' '
-          );
-          
-          if (selectedText) {
-            const fieldKey = e.detail?.fieldKey || selectedText.replace(/\s+/g, '_').toLowerCase();
-            editor.chain().deleteSelection().insertContent(`{{${fieldKey}}}`).run();
-            
-            // Return the created field info so parent components can add it to fields list
-            if (e.detail?.callback) {
-              e.detail.callback({
-                field_key: fieldKey,
-                field_label: selectedText,
-                field_type: 'text'
-              });
-            }
-          }
-        }
-      }
-    };
-
-    document.addEventListener('create-field-from-selection', handleCreateFieldFromSelection as EventListener);
-    return () => {
-      document.removeEventListener('create-field-from-selection', handleCreateFieldFromSelection as EventListener);
-    };
-  }, [editor, targetField]);
+  }, [targetField]);
 
   return (
-    <div 
-      className={cn('border rounded-lg overflow-hidden', 
-        error && 'border-destructive', 
-        className
-      )}
-    >
-      {editor && <EditorToolbar editor={editor} />}
-      <EditorContent
-        editor={editor}
-        className="prose prose-sm max-w-none p-4 min-h-[200px] focus:outline-none"
+    <div className={cn("border rounded-md overflow-hidden", className)}>
+      <Editor
+        apiKey="no-api-key"
+        onInit={(evt, editor) => {
+          editorRef.current = editor;
+          setIsReady(true);
+        }}
+        value={value}
+        onEditorChange={onChange}
+        init={{
+          height,
+          menubar: false,
+          plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+          ],
+          toolbar:
+            'formatselect | bold italic underline | \
+            alignleft aligncenter alignright | \
+            bullist numlist outdent indent | \
+            removeformat | help',
+          placeholder: placeholder || 'Digite aqui...',
+          content_style: `
+            body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif; font-size: 14px; }
+            [data-mce-placeholder]:before { content: attr(data-mce-placeholder); color: #aaa; }
+          `,
+          paste_data_images: true,
+          setup: (editor) => {
+            editor.on('drop', function(e) {
+              // Handle drop events for field insertion
+              try {
+                const dataTransfer = e.dataTransfer;
+                if (dataTransfer && dataTransfer.getData('field/json')) {
+                  e.preventDefault();
+                  const fieldData = JSON.parse(dataTransfer.getData('field/json'));
+                  if (fieldData && fieldData.field_key) {
+                    editor.insertContent(`{{${fieldData.field_key}}}`);
+                  }
+                }
+              } catch (error) {
+                console.error('Error handling drop event:', error);
+              }
+            });
+          },
+          formats: {
+            field: { inline: 'span', classes: 'template-field', attributes: { 'data-field': '%value' } }
+          },
+          paste_preprocess: (plugin, args) => {
+            // Clean pasted content
+          }
+        }}
       />
     </div>
   );
