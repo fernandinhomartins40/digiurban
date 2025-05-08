@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentAttachment, DocumentDestination, DocumentFilters, DocumentStatus, DocumentType, Template, TemplateField } from "@/types/mail";
 
@@ -370,12 +369,12 @@ export async function createTemplate(template: Partial<Template>, fields: Partia
       {
         name: template.name!,
         description: template.description || null,
-        content: template.content!,
+        content: template.content || '',
         header: template.header || null,
         footer: template.footer || null,
         document_type_id: template.document_type_id || null,
         creator_id: template.creator_id!,
-        departments: template.departments!,
+        departments: template.departments || [],
         is_active: true
       }
     ])
@@ -419,11 +418,11 @@ export async function updateTemplate(id: string, template: Partial<Template>, fi
     .update({
       name: template.name,
       description: template.description,
-      content: template.content,
-      header: template.header,
-      footer: template.footer,
-      document_type_id: template.document_type_id,
-      departments: template.departments,
+      content: template.content || '',
+      header: template.header || null,
+      footer: template.footer || null,
+      document_type_id: template.document_type_id || null,
+      departments: template.departments || [],
       updated_at: new Date().toISOString()
     })
     .eq("id", id)
@@ -436,10 +435,15 @@ export async function updateTemplate(id: string, template: Partial<Template>, fi
   }
   
   // Delete existing fields
-  await supabase
+  const { error: deleteError } = await supabase
     .from("mail_template_fields")
     .delete()
     .eq("template_id", id);
+  
+  if (deleteError) {
+    console.error("Error deleting existing template fields:", deleteError);
+    throw deleteError;
+  }
   
   // Create new template fields
   if (fields && fields.length > 0) {

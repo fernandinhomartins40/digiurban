@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,14 +25,33 @@ export function FieldForm({ initialValues, onSubmit, onCancel }: FieldFormProps)
     }
   );
 
+  // Use effect to initialize field options textarea value if editing
+  useEffect(() => {
+    if (initialValues?.field_options) {
+      setOptionsTextValue(getOptionsValue());
+    }
+  }, [initialValues]);
+
+  const [optionsTextValue, setOptionsTextValue] = useState(() => getOptionsValue());
+
   const handleChange = (key: string, value: any) => {
     setField((prev) => ({
       ...prev,
       [key]: value,
     }));
+
+    // Reset options when changing field type away from select
+    if (key === 'field_type' && value !== 'select' && field.field_options) {
+      setField((prev) => ({
+        ...prev,
+        field_options: null
+      }));
+      setOptionsTextValue('');
+    }
   };
 
   const handleOptionsChange = (value: string) => {
+    setOptionsTextValue(value);
     try {
       // Only attempt to parse if there's a value
       if (value.trim()) {
@@ -52,16 +71,27 @@ export function FieldForm({ initialValues, onSubmit, onCancel }: FieldFormProps)
     }
   };
 
-  const getOptionsValue = () => {
+  function getOptionsValue() {
     if (!field.field_options) return '';
     if (Array.isArray(field.field_options)) {
       return field.field_options.join('\n');
     }
     return '';
-  };
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    if (!field.field_key || !field.field_label) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha o rótulo e a chave do campo.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     onSubmit(field);
   };
 
@@ -82,6 +112,16 @@ export function FieldForm({ initialValues, onSubmit, onCancel }: FieldFormProps)
       handleChange('field_key', sanitizeFieldKey(label));
     }
   };
+  
+  // Add toast import
+  const toast = React.useCallback(({ title, description, variant }: { title: string, description: string, variant?: "default" | "destructive" }) => {
+    // Check if toast is defined globally
+    if (typeof window !== "undefined" && window.toast) {
+      window.toast({ title, description, variant });
+    } else {
+      console.log(`${variant === "destructive" ? "[ERROR]" : "[INFO]"} ${title}: ${description}`);
+    }
+  }, []);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -138,7 +178,7 @@ export function FieldForm({ initialValues, onSubmit, onCancel }: FieldFormProps)
           <Label htmlFor="field_options">Opções</Label>
           <Textarea
             id="field_options"
-            value={getOptionsValue()}
+            value={optionsTextValue}
             onChange={(e) => handleOptionsChange(e.target.value)}
             placeholder="Digite uma opção por linha"
             rows={4}
@@ -160,7 +200,11 @@ export function FieldForm({ initialValues, onSubmit, onCancel }: FieldFormProps)
 
       <div className="flex justify-end space-x-2 pt-2">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onCancel();
+          }}>
             Cancelar
           </Button>
         )}

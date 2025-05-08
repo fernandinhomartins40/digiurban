@@ -13,6 +13,7 @@ import { getFieldsByCategory } from "@/utils/mailTemplateUtils";
 import { TemplateField } from "@/types/mail";
 import { FieldCategoryAccordion } from "./fields/FieldCategoryAccordion";
 import { useFieldsSelector } from "./fields/useFieldsSelector";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PredefinedFieldsSelectorProps {
   onAddFields: (fields: Partial<TemplateField>[]) => void;
@@ -46,8 +47,13 @@ export function PredefinedFieldsSelector({
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={handleAddAllFields}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleAddAllFields(e);
+            }}
             disabled={loading || selectedCount === 0}
+            type="button"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -59,40 +65,42 @@ export function PredefinedFieldsSelector({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Accordion type="multiple" defaultValue={["destinatario", "documento", "remetente", "conteudo"]}>
-          <FieldCategoryAccordion
-            categoryId="destinatario"
-            categoryTitle="Dados do Destinatário"
-            fields={fieldsByCategory.destinatario}
-            selectedFields={selectedFields}
-            existingFieldKeys={existingFieldKeys}
-            onCheckboxChange={handleCheckboxChange}
-          />
-          <FieldCategoryAccordion
-            categoryId="documento"
-            categoryTitle="Dados do Documento"
-            fields={fieldsByCategory.documento}
-            selectedFields={selectedFields}
-            existingFieldKeys={existingFieldKeys}
-            onCheckboxChange={handleCheckboxChange}
-          />
-          <FieldCategoryAccordion
-            categoryId="remetente"
-            categoryTitle="Dados do Remetente"
-            fields={fieldsByCategory.remetente}
-            selectedFields={selectedFields}
-            existingFieldKeys={existingFieldKeys}
-            onCheckboxChange={handleCheckboxChange}
-          />
-          <FieldCategoryAccordion
-            categoryId="conteudo"
-            categoryTitle="Conteúdo"
-            fields={fieldsByCategory.conteudo}
-            selectedFields={selectedFields}
-            existingFieldKeys={existingFieldKeys}
-            onCheckboxChange={handleCheckboxChange}
-          />
-        </Accordion>
+        <ScrollArea className="max-h-[400px] pr-4">
+          <Accordion type="multiple" defaultValue={["destinatario", "documento", "remetente", "conteudo"]}>
+            <FieldCategoryAccordion
+              categoryId="destinatario"
+              categoryTitle="Dados do Destinatário"
+              fields={fieldsByCategory.destinatario}
+              selectedFields={selectedFields}
+              existingFieldKeys={existingFieldKeys}
+              onCheckboxChange={handleCheckboxChange}
+            />
+            <FieldCategoryAccordion
+              categoryId="documento"
+              categoryTitle="Dados do Documento"
+              fields={fieldsByCategory.documento}
+              selectedFields={selectedFields}
+              existingFieldKeys={existingFieldKeys}
+              onCheckboxChange={handleCheckboxChange}
+            />
+            <FieldCategoryAccordion
+              categoryId="remetente"
+              categoryTitle="Dados do Remetente"
+              fields={fieldsByCategory.remetente}
+              selectedFields={selectedFields}
+              existingFieldKeys={existingFieldKeys}
+              onCheckboxChange={handleCheckboxChange}
+            />
+            <FieldCategoryAccordion
+              categoryId="conteudo"
+              categoryTitle="Conteúdo"
+              fields={fieldsByCategory.conteudo}
+              selectedFields={selectedFields}
+              existingFieldKeys={existingFieldKeys}
+              onCheckboxChange={handleCheckboxChange}
+            />
+          </Accordion>
+        </ScrollArea>
       </CardContent>
     </Card>
   );

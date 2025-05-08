@@ -125,6 +125,12 @@ export function FieldCreationPanel({
     setActiveTab("fields");
   };
 
+  const handleTogglePredefined = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    togglePredefinedFields();
+  };
+
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -155,15 +161,17 @@ export function FieldCreationPanel({
             <CardFooter className="flex justify-between pt-0">
               <div className="flex gap-2">
                 <Button 
-                  onClick={togglePredefinedFields} 
+                  onClick={handleTogglePredefined} 
                   variant={showPredefinedFields ? "default" : "outline"}
                   size="sm"
+                  type="button"
                 >
                   {showPredefinedFields ? "Ocultar Predefinidos" : "Mostrar Predefinidos"}
                 </Button>
                 <Button 
                   onClick={() => setActiveTab("new")} 
                   size="sm"
+                  type="button"
                 >
                   Adicionar Campo
                 </Button>

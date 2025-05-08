@@ -35,7 +35,13 @@ export function useFieldsSelector(
     }));
   };
   
-  const handleAddAllFields = () => {
+  const handleAddAllFields = (e?: React.MouseEvent) => {
+    // Prevent default form submission if this is triggered by a button click
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     setLoading(true);
     
     // Get selected fields to add
@@ -54,7 +60,7 @@ export function useFieldsSelector(
       return;
     }
     
-    // Add fields
+    // Add fields with a small delay to avoid UI freezing
     setTimeout(() => {
       onAddFields(fieldsToAdd);
       toast({
@@ -73,7 +79,7 @@ export function useFieldsSelector(
         });
         return newState;
       });
-    }, 300);
+    }, 100);
   };
   
   // Count total selected fields
