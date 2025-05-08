@@ -19,29 +19,16 @@ import {
   uploadRequestAttachment
 } from "@/services/requestsService";
 import { mapStatusName } from "@/utils/requestMappers";
-import { useAuth } from "@/contexts/AuthContext";
-import { isAdminUser } from "@/types/auth";
 
 export const useUnifiedRequests = () => {
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
-  const { user } = useAuth();
   
   // Filters
-  // Use the user's department as the default filter if they're an admin
-  const initialDepartment = user && isAdminUser(user) ? user.department : undefined;
-  
-  const [departmentFilter, setDepartmentFilter] = useState<string | undefined>(initialDepartment);
+  const [departmentFilter, setDepartmentFilter] = useState<string | undefined>();
   const [statusFilter, setStatusFilter] = useState<RequestStatus | undefined>();
   const [requesterTypeFilter, setRequesterTypeFilter] = useState<RequesterType | undefined>();
   const [searchTerm, setSearchTerm] = useState<string>("");
-  
-  // Set department filter when user changes
-  useEffect(() => {
-    if (user && isAdminUser(user) && user.department) {
-      setDepartmentFilter(user.department);
-    }
-  }, [user]);
   
   // Selected request
   const [selectedRequest, setSelectedRequest] = useState<UnifiedRequest | null>(null);
@@ -283,11 +270,11 @@ export const useUnifiedRequests = () => {
     // This ensures we don't try to update state after unmount
     console.log("useUnifiedRequests: cleanup called");
     setSelectedRequest(null);
-    setDepartmentFilter(initialDepartment); // Reset to initial department
+    setDepartmentFilter(undefined);
     setStatusFilter(undefined);
     setRequesterTypeFilter(undefined);
     setSearchTerm("");
-  }, [initialDepartment]);
+  }, []);
   
   return {
     // Data

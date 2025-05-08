@@ -20,13 +20,10 @@ import { getHabitacaoItem } from "./HabitacaoItem";
 import { getSegurancaPublicaItem } from "./SegurancaPublicaItem";
 import { getTransporteItem } from "./TransporteItem";
 import { getOuvidoriaItem } from "./OuvidoriaItem";
-import { getSolicitacoesItem } from "./SolicitacoesItem";
-import { getDashboardItem } from "./DashboardItem";
 
 export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => {
-  // Base items with dashboard
+  // Base items without dashboard
   const items: SidebarItemProps[] = [
-    getDashboardItem(), // Add the Dashboard item
     getChatItem(unreadCount),
     getUserRolesItem(),
     getGabineteItem(),
@@ -47,7 +44,6 @@ export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => 
     getServicosItem(),
     getMeioAmbienteItem(),
     getOuvidoriaItem(),
-    getSolicitacoesItem(),
   ];
   
   return items;
