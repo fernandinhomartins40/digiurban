@@ -1,121 +1,53 @@
 
-import { TemplateField } from "@/types/mail";
+import { v4 as uuidv4 } from 'uuid';
 
-// Predefined fields commonly used in official documents (ofícios)
-export const predefinedFields: Partial<TemplateField>[] = [
-  {
-    field_key: "destinatario_nome",
-    field_label: "Nome do Destinatário",
-    field_type: "text",
-    is_required: true,
-    order_position: 0,
-  },
-  {
-    field_key: "destinatario_cargo",
-    field_label: "Cargo do Destinatário",
-    field_type: "text",
-    is_required: true,
-    order_position: 1,
-  },
-  {
-    field_key: "destinatario_orgao",
-    field_label: "Órgão/Instituição",
-    field_type: "text",
-    is_required: true,
-    order_position: 2,
-  },
-  {
-    field_key: "numero_oficio",
-    field_label: "Número do Ofício",
-    field_type: "text",
-    is_required: true,
-    order_position: 3,
-  },
-  {
-    field_key: "assunto",
-    field_label: "Assunto",
-    field_type: "text",
-    is_required: true,
-    order_position: 4,
-  },
-  {
-    field_key: "referencia",
-    field_label: "Referência",
-    field_type: "text",
-    is_required: false,
-    order_position: 5,
-  },
-  {
-    field_key: "data_emissao",
-    field_label: "Data de Emissão",
-    field_type: "date",
-    is_required: true,
-    order_position: 6,
-  },
-  {
-    field_key: "cidade",
-    field_label: "Cidade",
-    field_type: "text",
-    is_required: false,
-    order_position: 7,
-  },
-  {
-    field_key: "remetente_nome",
-    field_label: "Nome do Remetente",
-    field_type: "text",
-    is_required: true,
-    order_position: 8,
-  },
-  {
-    field_key: "remetente_cargo",
-    field_label: "Cargo do Remetente",
-    field_type: "text",
-    is_required: true,
-    order_position: 9,
-  },
-  {
-    field_key: "corpo_texto",
-    field_label: "Corpo do Texto",
-    field_type: "textarea",
-    is_required: true,
-    order_position: 10,
-  }
-];
-
-// Helper function to get fields grouped by category
-export const getFieldsByCategory = () => {
-  return {
-    destinatario: predefinedFields.filter(field => 
-      field.field_key?.startsWith('destinatario_')
-    ),
-    documento: predefinedFields.filter(field => 
-      field.field_key === 'numero_oficio' || 
-      field.field_key === 'assunto' || 
-      field.field_key === 'referencia' ||
-      field.field_key === 'data_emissao' ||
-      field.field_key === 'cidade'
-    ),
-    remetente: predefinedFields.filter(field => 
-      field.field_key?.startsWith('remetente_')
-    ),
-    conteudo: predefinedFields.filter(field => 
-      field.field_key === 'corpo_texto'
-    ),
-  };
-};
-
-// Helper function to generate a unique id for each field
+/**
+ * Generates a unique field ID for template fields
+ * @returns A string formatted as a valid field key
+ */
 export const generateFieldId = (): string => {
-  return Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15);
+  // Generate a short ID based on UUID to ensure uniqueness
+  const shortId = uuidv4().substring(0, 8);
+  return `field_${shortId}`;
 };
 
-// Helper function to add IDs to predefined fields
-export const getPredefinedFieldsWithIds = (): Partial<TemplateField>[] => {
-  return predefinedFields.map(field => ({
-    ...field,
-    id: generateFieldId(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }));
+/**
+ * Validates if a string is a valid field key format
+ * Field keys should be lowercase with underscores and no spaces
+ * @param key The field key to validate
+ * @returns Boolean indicating if the key is valid
+ */
+export const isValidFieldKey = (key: string): boolean => {
+  const regex = /^[a-z0-9_]+$/;
+  return regex.test(key);
+};
+
+/**
+ * Converts any string to a valid field key format
+ * @param text The text to convert
+ * @returns A valid field key
+ */
+export const textToFieldKey = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '');
+};
+
+/**
+ * Extracts field placeholders from a string
+ * @param content The content to analyze
+ * @returns Array of field keys found in the content
+ */
+export const extractFieldsFromContent = (content: string): string[] => {
+  const regex = /{{([^}]+)}}/g;
+  const fields: string[] = [];
+  let match;
+  
+  while ((match = regex.exec(content)) !== null) {
+    fields.push(match[1]);
+  }
+  
+  return [...new Set(fields)]; // Return unique fields only
 };

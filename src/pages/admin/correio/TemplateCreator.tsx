@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,14 +39,12 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
 import { isAdminUser } from "@/types/auth";
-import { TemplateFieldItem } from "@/components/mail/TemplateFieldItem";
 import { toast } from "@/hooks/use-toast";
 import { WysiwygEditor } from "@/components/mail/WysiwygEditor";
-import { FieldList } from "@/components/mail/FieldList";
-import { PredefinedFieldsSelector } from "@/components/mail/PredefinedFieldsSelector";
-import { generateFieldId } from "@/utils/mailTemplateUtils";
+import { FieldCreationPanel } from "@/components/mail/FieldCreationPanel";
 import { TemplateStarter } from "@/components/mail/TemplateStarter";
 import { AutoPopulateFields } from "@/components/mail/AutoPopulateFields";
+import { generateFieldId } from "@/utils/mailTemplateUtils";
 
 const templateFormSchema = z.object({
   name: z.string().min(3, "Nome é obrigatório"),
@@ -75,6 +74,7 @@ export default function TemplateCreator() {
   const [previewHeader, setPreviewHeader] = useState("");
   const [previewFooter, setPreviewFooter] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [selectedTargetField, setSelectedTargetField] = useState<'content' | 'header' | 'footer'>('content');
   
   const { 
     documentTypes,
@@ -105,7 +105,7 @@ export default function TemplateCreator() {
     },
   });
   
-  const { fields: formFields, append, remove } = useFieldArray({
+  const { fields: formFields, append, update, remove } = useFieldArray({
     control: form.control,
     name: "fields",
   });
@@ -177,14 +177,35 @@ export default function TemplateCreator() {
     setPreviewFooter(replacePlaceholders(footerHtml));
   };
   
-  const handleAddField = () => {
+  const handleAddField = (field: Partial<TemplateField>) => {
     append({
-      field_key: "",
-      field_label: "",
-      field_type: "text",
-      is_required: false,
-      field_options: {},
+      field_key: field.field_key || generateFieldId(),
+      field_label: field.field_label || '',
+      field_type: field.field_type || 'text',
+      is_required: field.is_required || false,
+      field_options: field.field_options || {},
       order_position: formFields.length,
+    });
+    
+    toast({
+      title: "Campo adicionado",
+      description: `Campo "${field.field_label}" adicionado com sucesso.`
+    });
+  };
+  
+  const handleUpdateField = (index: number, field: Partial<TemplateField>) => {
+    update(index, {
+      field_key: field.field_key || '',
+      field_label: field.field_label || '',
+      field_type: field.field_type || 'text',
+      is_required: field.is_required || false,
+      field_options: field.field_options || {},
+      order_position: index,
+    });
+    
+    toast({
+      title: "Campo atualizado",
+      description: `Campo "${field.field_label}" atualizado com sucesso.`
     });
   };
   
@@ -201,14 +222,21 @@ export default function TemplateCreator() {
     // Add the new fields
     newFields.forEach(field => {
       append({
-        field_key: field.field_key || "",
-        field_label: field.field_label || "",
-        field_type: field.field_type || "text",
+        field_key: field.field_key || generateFieldId(),
+        field_label: field.field_label || '',
+        field_type: field.field_type || 'text',
         is_required: field.is_required || false,
         field_options: field.field_options || {},
         order_position: formFields.length,
       });
     });
+    
+    if (newFields.length > 0) {
+      toast({
+        title: "Campos adicionados",
+        description: `${newFields.length} campos predefinidos foram adicionados.`
+      });
+    }
   };
   
   // Handle template starter selection
@@ -232,15 +260,22 @@ export default function TemplateCreator() {
   };
   
   // Handle field drag start
-  const handleFieldDragStart = (e: React.DragEvent, fieldKey: string) => {
+  const handleFieldDragStart = (
+    e: React.DragEvent, 
+    fieldKey: string, 
+    field?: Partial<TemplateField>
+  ) => {
     e.dataTransfer.setData("text/plain", `{{${fieldKey}}}`);
+    if (field) {
+      e.dataTransfer.setData("field/json", JSON.stringify(field));
+    }
   };
 
   // Handle field click - insert at cursor position
-  const handleFieldClick = (fieldKey: string, targetField?: string) => {
+  const handleFieldClick = (fieldKey: string) => {
     // The actual insertion is handled by the WysiwygEditor component
     const customEvent = new CustomEvent('insert-field', { 
-      detail: { fieldKey, targetField } 
+      detail: { fieldKey, targetField: selectedTargetField } 
     });
     document.dispatchEvent(customEvent);
   };
@@ -292,6 +327,12 @@ export default function TemplateCreator() {
         });
       }
     }
+  };
+  
+  // Handle editor drop zone 
+  const handleEditorDrop = (e: DragEvent) => {
+    // This is now handled by the editor directly
+    return false;
   };
   
   async function onSubmit(values: z.infer<typeof templateFormSchema>) {
@@ -471,8 +512,6 @@ export default function TemplateCreator() {
                   <Tabs defaultValue="editor" value={currentTab} onValueChange={setCurrentTab}>
                     <TabsList>
                       <TabsTrigger value="editor">Editor</TabsTrigger>
-                      <TabsTrigger value="headerfooter">Cabeçalho e Rodapé</TabsTrigger>
-                      <TabsTrigger value="fields">Campos</TabsTrigger>
                       <TabsTrigger value="preview">Visualizar</TabsTrigger>
                       <TabsTrigger value="settings">Configurações</TabsTrigger>
                     </TabsList>
@@ -552,150 +591,96 @@ export default function TemplateCreator() {
                           />
                         </div>
                       </div>
-                      
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        <div className="lg:col-span-2">
-                          <FormField
-                            control={form.control}
-                            name="content"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Conteúdo do Modelo</FormLabel>
-                                <FormControl>
-                                  <WysiwygEditor
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    placeholder="Digite o conteúdo do modelo ou arraste campos para inserir"
-                                    error={!!form.formState.errors.content}
-                                    targetField="content"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <div className="lg:col-span-1">
-                          <FieldList 
-                            fields={currentTemplate?.fields || []}
-                            onFieldDragStart={handleFieldDragStart}
-                            onFieldClick={handleFieldClick}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="bg-muted p-3 rounded-md">
-                        <p className="text-sm text-muted-foreground">
-                          Arraste campos do painel lateral para o editor ou use <code className="bg-muted-foreground/20 p-0.5 rounded">{"{{nome_campo}}"}</code>.
-                          Os campos devem ser definidos na aba "Campos".
-                        </p>
-                      </div>
-                    </TabsContent>
-                    
-                    {/* Header and Footer Tab */}
-                    <TabsContent value="headerfooter" className="space-y-6 pt-4">
-                      <div className="space-y-6">
-                        <FormField
-                          control={form.control}
-                          name="header"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Cabeçalho do Documento</FormLabel>
-                              <FormControl>
-                                <WysiwygEditor
-                                  value={field.value || ""}
-                                  onChange={field.onChange}
-                                  placeholder="Digite o cabeçalho do documento ou arraste campos para inserir"
-                                  error={!!form.formState.errors.header}
-                                  className="min-h-[150px]"
-                                  targetField="header"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="footer"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Rodapé do Documento</FormLabel>
-                              <FormControl>
-                                <WysiwygEditor
-                                  value={field.value || ""}
-                                  onChange={field.onChange}
-                                  placeholder="Digite o rodapé do documento ou arraste campos para inserir"
-                                  error={!!form.formState.errors.footer}
-                                  className="min-h-[150px]"
-                                  targetField="footer"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-                        <div className="lg:col-span-2">
-                          <div className="bg-muted p-3 rounded-md">
-                            <p className="text-sm text-muted-foreground">
-                              O cabeçalho e rodapé são exibidos em todas as páginas do documento.
-                              Você pode inserir campos assim como no conteúdo principal.
-                            </p>
+
+                      <div className="border-t pt-4 mt-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                          {/* Header section */}
+                          <div className="lg:col-span-12">
+                            <FormField
+                              control={form.control}
+                              name="header"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Cabeçalho do Documento</FormLabel>
+                                  <FormControl>
+                                    <WysiwygEditor
+                                      value={field.value || ""}
+                                      onChange={field.onChange}
+                                      placeholder="Digite o cabeçalho ou arraste campos para inserir"
+                                      error={!!form.formState.errors.header}
+                                      className="min-h-[100px]"
+                                      targetField="header"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           </div>
-                        </div>
-                        
-                        <div className="lg:col-span-1">
-                          <FieldList 
-                            fields={currentTemplate?.fields || []}
-                            onFieldDragStart={handleFieldDragStart}
-                            onFieldClick={handleFieldClick}
-                          />
-                        </div>
-                      </div>
-                    </TabsContent>
-                    
-                    {/* Fields Tab */}
-                    <TabsContent value="fields" className="space-y-4 pt-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="md:col-span-2">
-                          <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-medium">Campos do Modelo</h3>
-                            <Button type="button" onClick={handleAddField}>
-                              <Plus size={16} className="mr-2" />
-                              Adicionar Campo
-                            </Button>
+
+                          {/* Main content section and fields sidebar */}
+                          <div className="lg:col-span-8">
+                            <FormField
+                              control={form.control}
+                              name="content"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Conteúdo do Modelo</FormLabel>
+                                  <FormControl>
+                                    <WysiwygEditor
+                                      value={field.value}
+                                      onChange={field.onChange}
+                                      placeholder="Digite o conteúdo do modelo ou arraste campos para inserir"
+                                      error={!!form.formState.errors.content}
+                                      onDrop={handleEditorDrop}
+                                      targetField="content"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           </div>
-                          
-                          <div className="space-y-4">
-                            {formFields.length === 0 ? (
-                              <div className="border rounded-md p-6 text-center">
-                                <p className="text-muted-foreground">
-                                  Nenhum campo adicionado. Adicione campos manualmente ou use os campos predefinidos.
-                                </p>
-                              </div>
-                            ) : (
-                              formFields.map((field, index) => (
-                                <TemplateFieldItem
-                                  key={field.id}
-                                  index={index}
-                                  onRemove={() => remove(index)}
-                                  form={form}
-                                />
-                              ))
-                            )}
+
+                          {/* Integrated field creation panel */}
+                          <div className="lg:col-span-4">
+                            <FieldCreationPanel
+                              fields={formFields}
+                              onAddField={handleAddField}
+                              onUpdateField={handleUpdateField}
+                              onRemoveField={remove}
+                              onAddPredefinedFields={handleAddPredefinedFields}
+                              onFieldDragStart={handleFieldDragStart}
+                              onFieldClick={handleFieldClick}
+                              existingFieldKeys={getCurrentFieldKeys()}
+                              selectedTargetField={selectedTargetField}
+                              onChangeTargetField={setSelectedTargetField}
+                            />
                           </div>
-                        </div>
-                        
-                        <div className="md:col-span-1">
-                          <PredefinedFieldsSelector 
-                            onAddFields={handleAddPredefinedFields} 
-                            existingFieldKeys={getCurrentFieldKeys()}
-                          />
+
+                          {/* Footer section */}
+                          <div className="lg:col-span-12">
+                            <FormField
+                              control={form.control}
+                              name="footer"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Rodapé do Documento</FormLabel>
+                                  <FormControl>
+                                    <WysiwygEditor
+                                      value={field.value || ""}
+                                      onChange={field.onChange}
+                                      placeholder="Digite o rodapé ou arraste campos para inserir"
+                                      error={!!form.formState.errors.footer}
+                                      className="min-h-[100px]"
+                                      targetField="footer"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                         </div>
                       </div>
                     </TabsContent>

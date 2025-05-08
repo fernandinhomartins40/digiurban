@@ -62,6 +62,28 @@ export function WysiwygEditor({
           onDrop(event);
           return true;
         }
+        
+        // Check if this is our custom field drag
+        const fieldData = event.dataTransfer?.getData('field/json');
+        if (fieldData) {
+          try {
+            const field = JSON.parse(fieldData);
+            const { schema } = view.state;
+            const coordinates = view.posAtCoords({
+              left: event.clientX,
+              top: event.clientY,
+            });
+            
+            if (coordinates) {
+              const transaction = view.state.tr.insertText(`{{${field.field_key}}}`, coordinates.pos);
+              view.dispatch(transaction);
+              return true;
+            }
+          } catch (error) {
+            console.error('Error processing dropped field:', error);
+          }
+        }
+        
         return false;
       },
     },
@@ -94,8 +116,48 @@ export function WysiwygEditor({
     };
   }, [editor, targetField]);
 
+  // Handle selection conversion to field
+  useEffect(() => {
+    const handleCreateFieldFromSelection = (e: CustomEvent) => {
+      if (editor && e.detail?.targetField === targetField) {
+        const selection = editor.state.selection;
+        if (!selection.empty) {
+          const selectedText = editor.state.doc.textBetween(
+            selection.from,
+            selection.to,
+            ' '
+          );
+          
+          if (selectedText) {
+            const fieldKey = e.detail?.fieldKey || selectedText.replace(/\s+/g, '_').toLowerCase();
+            editor.chain().deleteSelection().insertContent(`{{${fieldKey}}}`).run();
+            
+            // Return the created field info so parent components can add it to fields list
+            if (e.detail?.callback) {
+              e.detail.callback({
+                field_key: fieldKey,
+                field_label: selectedText,
+                field_type: 'text'
+              });
+            }
+          }
+        }
+      }
+    };
+
+    document.addEventListener('create-field-from-selection', handleCreateFieldFromSelection as EventListener);
+    return () => {
+      document.removeEventListener('create-field-from-selection', handleCreateFieldFromSelection as EventListener);
+    };
+  }, [editor, targetField]);
+
   return (
-    <div className={cn('border rounded-lg overflow-hidden', error && 'border-destructive', className)}>
+    <div 
+      className={cn('border rounded-lg overflow-hidden', 
+        error && 'border-destructive', 
+        className
+      )}
+    >
       {editor && <EditorToolbar editor={editor} />}
       <EditorContent
         editor={editor}

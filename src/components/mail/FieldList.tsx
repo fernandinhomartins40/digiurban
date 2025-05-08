@@ -7,7 +7,7 @@ import { useState } from "react";
 
 interface FieldListProps {
   fields: TemplateField[];
-  onFieldDragStart: (e: React.DragEvent, fieldKey: string) => void;
+  onFieldDragStart: (e: React.DragEvent, fieldKey: string, field?: Partial<TemplateField>) => void;
   onFieldClick: (fieldKey: string, targetField?: string) => void;
 }
 
@@ -78,6 +78,7 @@ export function FieldList({ fields, onFieldDragStart, onFieldClick }: FieldListP
             key={field.id || field.field_key}
             label={field.field_label}
             fieldKey={field.field_key}
+            field={field}
             isRequired={field.is_required}
             onDragStart={onFieldDragStart}
             onClick={() => handleFieldClick(field.field_key)}
