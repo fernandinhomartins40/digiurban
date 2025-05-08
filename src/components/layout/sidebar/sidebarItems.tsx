@@ -1,32 +1,9 @@
 
 import React from "react";
-import { getSaudeItem } from "./items/SaudeItem";
-import { getAssistenciaItem } from "./items/AssistenciaItem";
-import { getObrasItem } from "./items/ObrasItem";
-import { getCorreioItem } from "./items/CorreioItem";
-import { getGabineteItem } from "./items/GabineteItem";
-import { getChatItem } from "./items/ChatItem";
-import { getFinancasItem } from "./items/FinancasItem";
-import { getAdministracaoItem } from "./items/AdministracaoItem";
-import { getEducacaoItem } from "./items/EducacaoItem";
-import { getDashboardItem } from "./items/DashboardItem";
-import { getExecutivoItem } from "./items/ExecutivoItem";
-import { getSolicitacoesItem } from "./items/SolicitacoesItem";
+import { getSidebarItems } from "./items";
 import { SidebarItemProps } from "@/types/sidebar";
 
 export const getSidebarItems = (unreadMailCount = 0): SidebarItemProps[] => {
-  return [
-    getDashboardItem(), // Ensure Dashboard item is first in the list
-    getExecutivoItem(),
-    getSolicitacoesItem(), // Add the new Solicitações item
-    getSaudeItem(),
-    getEducacaoItem(),
-    getAssistenciaItem(),
-    getObrasItem(),
-    getCorreioItem(unreadMailCount),
-    getGabineteItem(),
-    getFinancasItem(),
-    getAdministracaoItem(),
-    getChatItem(),
-  ];
+  // Use the unified function from items/index.ts
+  return getSidebarItems(unreadMailCount);
 };
