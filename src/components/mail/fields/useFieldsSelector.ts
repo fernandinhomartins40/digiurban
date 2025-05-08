@@ -23,7 +23,7 @@ export function useFieldsSelector(
     setSelectedFields(initialSelectedState);
   }, []);
   
-  // Initialize all fields when component mounts
+  // Initialize all fields when component mounts or existing fields change
   React.useEffect(() => {
     updateSelectedFields(existingFieldKeys);
   }, [existingFieldKeys, updateSelectedFields]);
@@ -73,7 +73,7 @@ export function useFieldsSelector(
         });
         return newState;
       });
-    }, 500);
+    }, 300);
   };
   
   // Count total selected fields

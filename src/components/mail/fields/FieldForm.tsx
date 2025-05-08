@@ -36,7 +36,7 @@ export function FieldForm({ initialValues, onSubmit, onCancel }: FieldFormProps)
     try {
       // Only attempt to parse if there's a value
       if (value.trim()) {
-        // Split by new lines, and then by commas, filter out empties
+        // Split by new lines, and then filter out empties
         const options = value
           .split('\n')
           .map(line => line.trim())
@@ -65,33 +65,51 @@ export function FieldForm({ initialValues, onSubmit, onCancel }: FieldFormProps)
     onSubmit(field);
   };
 
+  const sanitizeFieldKey = (key: string) => {
+    return key
+      .toLowerCase()
+      .replace(/\s+/g, '_') // Replace spaces with underscores
+      .replace(/[^a-z0-9_]/g, ''); // Remove special characters
+  };
+
+  // Auto-generate field key based on field label
+  const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const label = e.target.value;
+    handleChange('field_label', label);
+    
+    // Only auto-generate key if it's empty or was auto-generated before
+    if (!field.field_key || field.field_key === sanitizeFieldKey(field.field_label || '')) {
+      handleChange('field_key', sanitizeFieldKey(label));
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="field_key">Chave do Campo*</Label>
-        <Input
-          id="field_key"
-          value={field.field_key || ''}
-          onChange={(e) => handleChange('field_key', e.target.value)}
-          placeholder="nome_campo"
-          required
-        />
-        <p className="text-xs text-muted-foreground">
-          Identificador único usado nos templates, sem espaços
-        </p>
-      </div>
-
       <div className="space-y-2">
         <Label htmlFor="field_label">Rótulo do Campo*</Label>
         <Input
           id="field_label"
           value={field.field_label || ''}
-          onChange={(e) => handleChange('field_label', e.target.value)}
+          onChange={handleLabelChange}
           placeholder="Nome do Campo"
           required
         />
         <p className="text-xs text-muted-foreground">
           Nome amigável exibido para os usuários
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="field_key">Chave do Campo*</Label>
+        <Input
+          id="field_key"
+          value={field.field_key || ''}
+          onChange={(e) => handleChange('field_key', sanitizeFieldKey(e.target.value))}
+          placeholder="nome_campo"
+          required
+        />
+        <p className="text-xs text-muted-foreground">
+          Identificador único usado nos templates, sem espaços
         </p>
       </div>
 

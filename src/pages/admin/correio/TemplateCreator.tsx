@@ -60,10 +60,10 @@ const departmentOptions = [
 const templateFormSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   description: z.string().optional(),
-  documentTypeId: z.string().optional(),
+  documentTypeId: z.string().optional().nullable(),
   content: z.string().optional().default(''),
-  header: z.string().optional(),
-  footer: z.string().optional(),
+  header: z.string().optional().nullable(),
+  footer: z.string().optional().nullable(),
   departments: z.array(z.string()).optional().default([]),
   fields: z.array(
     z.object({
@@ -71,7 +71,7 @@ const templateFormSchema = z.object({
       field_label: z.string().min(1, 'Rótulo do campo é obrigatório'),
       field_type: z.string().min(1, 'Tipo do campo é obrigatório'),
       is_required: z.boolean().default(false),
-      field_options: z.any().optional(),
+      field_options: z.any().optional().nullable(),
       order_position: z.number().optional(),
     })
   ).optional().default([]),
@@ -98,7 +98,7 @@ const TemplateCreator: React.FC = () => {
     defaultValues: {
       name: '',
       description: '',
-      documentTypeId: '',
+      documentTypeId: null,
       content: '',
       header: '',
       footer: '',
@@ -147,7 +147,7 @@ const TemplateCreator: React.FC = () => {
       form.reset({
         name: templateData.name || '',
         description: templateData.description || '',
-        documentTypeId: templateData.document_type_id || '',
+        documentTypeId: templateData.document_type_id || null,
         content: templateData.content || '',
         header: templateData.header || '',
         footer: templateData.footer || '',
@@ -329,8 +329,8 @@ const TemplateCreator: React.FC = () => {
   };
 
   return (
-    <div className="container max-w-screen-xl h-[calc(100vh-64px)] flex flex-col overflow-hidden">
-      <div className="mb-6 pt-6">
+    <div className="container max-w-screen-xl py-6">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold mb-2">
           {isEditing ? 'Editar Modelo' : 'Criar Novo Modelo'}
         </h1>
@@ -342,175 +342,173 @@ const TemplateCreator: React.FC = () => {
       </div>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto pb-4 pr-1">
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Detalhes do Modelo</CardTitle>
-                <CardDescription>
-                  Informações básicas sobre o modelo
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Basic template details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Nome do Modelo*</label>
-                    <Input
-                      {...form.register('name')}
-                      placeholder="Nome do modelo"
-                    />
-                    {form.formState.errors.name && (
-                      <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Tipo de Documento</label>
-                    <Select 
-                      value={form.getValues('documentTypeId') || "none"} 
-                      onValueChange={(value) => form.setValue('documentTypeId', value === "none" ? "" : value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhum</SelectItem>
-                        {documentTypes.map(type => (
-                          <SelectItem key={type.id} value={type.id}>
-                            {type.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Detalhes do Modelo</CardTitle>
+              <CardDescription>
+                Informações básicas sobre o modelo
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Basic template details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Descrição</label>
-                  <Textarea
-                    {...form.register('description')}
-                    placeholder="Descrição do modelo"
-                    rows={3}
+                  <label className="text-sm font-medium">Nome do Modelo*</label>
+                  <Input
+                    {...form.register('name')}
+                    placeholder="Nome do modelo"
                   />
+                  {form.formState.errors.name && (
+                    <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Departamentos</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
-                    {departmentOptions.map(dept => (
-                      <div key={dept.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`dept-${dept.id}`}
-                          checked={selectedDepartments.includes(dept.id)}
-                          onCheckedChange={(checked) => 
-                            handleDepartmentChange(dept.id, checked === true)
-                          }
-                        />
-                        <Label htmlFor={`dept-${dept.id}`} className="text-sm">
-                          {dept.name}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
+                  <label className="text-sm font-medium">Tipo de Documento</label>
+                  <Select 
+                    value={form.getValues('documentTypeId') || undefined} 
+                    onValueChange={(value) => form.setValue('documentTypeId', value === "none" ? null : value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      {documentTypes.map(type => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </CardContent>
-            </Card>
-            
-            {/* Editor */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-8 space-y-6">
-                <Tabs defaultValue="content">
-                  <TabsList className="mb-2">
-                    <TabsTrigger value="content">Conteúdo</TabsTrigger>
-                    <TabsTrigger value="header">Cabeçalho</TabsTrigger>
-                    <TabsTrigger value="footer">Rodapé</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="content" className="space-y-4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Conteúdo do Modelo</CardTitle>
-                        <CardDescription>
-                          Use o editor abaixo para criar o conteúdo do seu modelo. 
-                          Insira os campos usando os botões ou arrastando-os para o editor.
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <WysiwygEditor
-                          value={form.getValues('content') || ''}
-                          onChange={(value) => form.setValue('content', value)}
-                          placeholder="Digite o conteúdo do modelo aqui..."
-                          targetField="content"
-                          height={400}
-                        />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                  
-                  <TabsContent value="header" className="space-y-4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Cabeçalho do Modelo</CardTitle>
-                        <CardDescription>
-                          Crie o cabeçalho que será exibido em todos os documentos que usarem este modelo.
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <WysiwygEditor
-                          value={form.getValues('header') || ''}
-                          onChange={(value) => form.setValue('header', value)}
-                          placeholder="Digite o cabeçalho do modelo aqui..."
-                          targetField="header"
-                          height={200}
-                        />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                  
-                  <TabsContent value="footer" className="space-y-4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Rodapé do Modelo</CardTitle>
-                        <CardDescription>
-                          Crie o rodapé que será exibido em todos os documentos que usarem este modelo.
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <WysiwygEditor
-                          value={form.getValues('footer') || ''}
-                          onChange={(value) => form.setValue('footer', value)}
-                          placeholder="Digite o rodapé do modelo aqui..."
-                          targetField="footer"
-                          height={200}
-                        />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
               </div>
               
-              {/* Field creation sidebar */}
-              <div className="lg:col-span-4">
-                <FieldCreationPanel
-                  fields={formFields}
-                  onAddField={handleAddField}
-                  onUpdateField={handleUpdateField}
-                  onRemoveField={remove}
-                  onAddPredefinedFields={handleAddPredefinedFields}
-                  onFieldDragStart={handleFieldDragStart}
-                  onFieldClick={handleFieldClick}
-                  existingFieldKeys={getCurrentFieldKeys()}
-                  selectedTargetField={selectedTemplateType}
-                  onChangeTargetField={setSelectedTemplateType}
-                  showPredefinedFields={showPredefinedFields}
-                  togglePredefinedFields={togglePredefinedFields}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Descrição</label>
+                <Textarea
+                  {...form.register('description')}
+                  placeholder="Descrição do modelo"
+                  rows={3}
                 />
               </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Departamentos</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
+                  {departmentOptions.map(dept => (
+                    <div key={dept.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`dept-${dept.id}`}
+                        checked={selectedDepartments.includes(dept.id)}
+                        onCheckedChange={(checked) => 
+                          handleDepartmentChange(dept.id, checked === true)
+                        }
+                      />
+                      <Label htmlFor={`dept-${dept.id}`} className="text-sm">
+                        {dept.name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Editor */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-8 space-y-6">
+              <Tabs defaultValue="content">
+                <TabsList className="mb-2">
+                  <TabsTrigger value="content">Conteúdo</TabsTrigger>
+                  <TabsTrigger value="header">Cabeçalho</TabsTrigger>
+                  <TabsTrigger value="footer">Rodapé</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="content" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Conteúdo do Modelo</CardTitle>
+                      <CardDescription>
+                        Use o editor abaixo para criar o conteúdo do seu modelo. 
+                        Insira os campos usando os botões ou arrastando-os para o editor.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <WysiwygEditor
+                        value={form.getValues('content') || ''}
+                        onChange={(value) => form.setValue('content', value)}
+                        placeholder="Digite o conteúdo do modelo aqui..."
+                        targetField="content"
+                        height={400}
+                      />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="header" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Cabeçalho do Modelo</CardTitle>
+                      <CardDescription>
+                        Crie o cabeçalho que será exibido em todos os documentos que usarem este modelo.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <WysiwygEditor
+                        value={form.getValues('header') || ''}
+                        onChange={(value) => form.setValue('header', value)}
+                        placeholder="Digite o cabeçalho do modelo aqui..."
+                        targetField="header"
+                        height={200}
+                      />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="footer" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Rodapé do Modelo</CardTitle>
+                      <CardDescription>
+                        Crie o rodapé que será exibido em todos os documentos que usarem este modelo.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <WysiwygEditor
+                        value={form.getValues('footer') || ''}
+                        onChange={(value) => form.setValue('footer', value)}
+                        placeholder="Digite o rodapé do modelo aqui..."
+                        targetField="footer"
+                        height={200}
+                      />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+            
+            {/* Field creation sidebar */}
+            <div className="lg:col-span-4">
+              <FieldCreationPanel
+                fields={formFields}
+                onAddField={handleAddField}
+                onUpdateField={handleUpdateField}
+                onRemoveField={remove}
+                onAddPredefinedFields={handleAddPredefinedFields}
+                onFieldDragStart={handleFieldDragStart}
+                onFieldClick={handleFieldClick}
+                existingFieldKeys={getCurrentFieldKeys()}
+                selectedTargetField={selectedTemplateType}
+                onChangeTargetField={setSelectedTemplateType}
+                showPredefinedFields={showPredefinedFields}
+                togglePredefinedFields={togglePredefinedFields}
+              />
             </div>
           </div>
           
-          <Card className="mt-4">
+          <Card>
             <CardFooter className="flex justify-between p-4">
               <Button
                 type="button"

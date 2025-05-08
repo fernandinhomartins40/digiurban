@@ -2231,6 +2231,8 @@ export type Database = {
           departments: string[]
           description: string | null
           document_type_id: string | null
+          footer: string | null
+          header: string | null
           id: string
           is_active: boolean
           name: string
@@ -2243,6 +2245,8 @@ export type Database = {
           departments: string[]
           description?: string | null
           document_type_id?: string | null
+          footer?: string | null
+          header?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -2255,6 +2259,8 @@ export type Database = {
           departments?: string[]
           description?: string | null
           document_type_id?: string | null
+          footer?: string | null
+          header?: string | null
           id?: string
           is_active?: boolean
           name?: string
