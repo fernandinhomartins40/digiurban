@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PredefinedFieldsSelector } from "../../PredefinedFieldsSelector";
+import { PredefinedFieldsSelector } from "../predefined";
 import { FieldsTabContent, NewTabContent, EditTabContent } from "./TabPanelContent";
 import { FieldExtractor } from "./FieldExtractor";
 import { useFieldCreationPanel } from "./useFieldCreationPanel";

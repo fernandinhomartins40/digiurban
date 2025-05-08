@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Template, TemplateField, DocumentType } from '@/types/mail';
 import { FieldCreationPanel } from '@/components/mail/FieldCreationPanel';
 import { WysiwygEditor } from '@/components/mail/WysiwygEditor';
+import { PredefinedFieldsSelector } from '@/components/mail/fields/predefined';
 import { useToast } from '@/hooks/use-toast';
 import { getDocumentTypes, createTemplate, getTemplate, updateTemplate } from '@/services/mailService';
 import { useNavigate, useParams } from 'react-router-dom';
