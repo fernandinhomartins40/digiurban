@@ -1,19 +1,12 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Accordion } from "@/components/ui/accordion";
-import { Loader2, ListPlus } from "lucide-react";
-import { getFieldsByCategory } from "@/utils/mailTemplateUtils";
-import { TemplateField } from "@/types/mail";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FieldCategoryAccordion } from "../FieldCategoryAccordion";
+import { TemplateField } from "@/types/mail";
+import { getFieldsByCategory } from "@/utils/mailTemplateUtils";
 import { useFieldsSelector } from "./useFieldsSelector";
+import { PredefinedFieldsActionButton } from "./PredefinedFieldsActionButton";
+import { PredefinedFieldsCategoryList } from "./PredefinedFieldsCategoryList";
 
 interface PredefinedFieldsSelectorProps {
   onAddFields: (fields: Partial<TemplateField>[]) => void;
@@ -64,4 +57,3 @@ export function PredefinedFieldsSelector({
     </Card>
   );
 }
-
