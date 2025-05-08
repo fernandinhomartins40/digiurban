@@ -1,3 +1,4 @@
+
 import { type Editor } from '@tiptap/react';
 import { 
   Bold, Italic, Underline, AlignLeft, AlignCenter, 
@@ -344,7 +345,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => editor.chain().focus().undo().run()}
+                onClick={() => editor.commands.undo()}
                 disabled={!editor.can().undo()}
                 className="h-8 w-8 p-0"
               >
@@ -359,7 +360,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => editor.chain().focus().redo().run()}
+                onClick={() => editor.commands.redo()}
                 disabled={!editor.can().redo()}
                 className="h-8 w-8 p-0"
               >

@@ -130,8 +130,6 @@ export function NewRequestDrawer({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* Changed from value="" or value="_default" to value="placeholder" */}
-                          <SelectItem value="placeholder" disabled>Selecione um setor</SelectItem>
                           {departments.map((dept) => (
                             <SelectItem key={dept} value={dept}>
                               {dept}

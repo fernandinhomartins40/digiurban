@@ -315,14 +315,13 @@ const TemplateCreator: React.FC = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tipo de Documento</label>
                   <Select 
-                    value={form.getValues('documentTypeId') || undefined} 
-                    onValueChange={(value) => form.setValue('documentTypeId', value)}
+                    value={form.getValues('documentTypeId') || "none"} 
+                    onValueChange={(value) => form.setValue('documentTypeId', value === "none" ? "" : value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um tipo" />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* Changed from empty string to "none" */}
                       <SelectItem value="none">Nenhum</SelectItem>
                       {documentTypes.map(type => (
                         <SelectItem key={type.id} value={type.id}>
@@ -346,13 +345,14 @@ const TemplateCreator: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Departamentos</label>
                 <Select 
-                  value={form.getValues('departments')?.[0] || undefined} 
-                  onValueChange={(value) => form.setValue('departments', [value])}
+                  value={form.getValues('departments')?.[0] || "none"} 
+                  onValueChange={(value) => form.setValue('departments', value === "none" ? [] : [value])}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um departamento" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     <SelectItem value="gabinete">Gabinete</SelectItem>
                     <SelectItem value="educacao">Educação</SelectItem>
                     <SelectItem value="saude">Saúde</SelectItem>
@@ -413,6 +413,7 @@ const TemplateCreator: React.FC = () => {
                         onChange={(value) => form.setValue('header', value)}
                         placeholder="Digite o cabeçalho do modelo aqui..."
                         targetField="header"
+                        height={200}
                       />
                     </CardContent>
                   </Card>
@@ -432,6 +433,7 @@ const TemplateCreator: React.FC = () => {
                         onChange={(value) => form.setValue('footer', value)}
                         placeholder="Digite o rodapé do modelo aqui..."
                         targetField="footer"
+                        height={200}
                       />
                     </CardContent>
                   </Card>
@@ -490,5 +492,4 @@ const TemplateCreator: React.FC = () => {
   );
 };
 
-// Add default export
 export default TemplateCreator;
