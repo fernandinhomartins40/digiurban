@@ -20,6 +20,7 @@ import { getHabitacaoItem } from "./HabitacaoItem";
 import { getSegurancaPublicaItem } from "./SegurancaPublicaItem";
 import { getTransporteItem } from "./TransporteItem";
 import { getOuvidoriaItem } from "./OuvidoriaItem";
+import { getSolicitacoesItem } from "./SolicitacoesItem";
 
 export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => {
   // Base items without dashboard
@@ -44,6 +45,7 @@ export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => 
     getServicosItem(),
     getMeioAmbienteItem(),
     getOuvidoriaItem(),
+    getSolicitacoesItem(),
   ];
   
   return items;

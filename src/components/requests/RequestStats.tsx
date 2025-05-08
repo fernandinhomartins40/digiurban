@@ -1,86 +1,91 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowDown, ArrowUp, Inbox, CheckCircle, Loader, AlertCircle } from "lucide-react";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { 
+  ArrowDown, 
+  ArrowUp, 
+  CheckCircle,
+  Inbox,
+  Loader,
+  AlertCircle
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface RequestStatsProps {
   title: string;
-  value: number;
-  description: string;
-  trend?: {
-    value: number;
-    direction: "up" | "down" | "neutral";
-  };
-  icon: "inbox" | "check-circle" | "loader" | "alert-circle";
+  value: number | string;
+  description?: string;
+  trend?: "up" | "down" | "neutral";
+  icon?: "inbox" | "loader" | "check-circle" | "alert-circle";
   iconColor?: string;
 }
 
-export function RequestStats({
-  title,
-  value,
-  description,
-  trend,
-  icon,
+export function RequestStats({ 
+  title, 
+  value, 
+  description, 
+  trend, 
+  icon = "inbox",
   iconColor = "text-primary"
 }: RequestStatsProps) {
-  const renderIcon = () => {
-    const className = `h-5 w-5 ${iconColor}`;
-    
+  const getIcon = () => {
     switch (icon) {
       case "inbox":
-        return <Inbox className={className} />;
-      case "check-circle":
-        return <CheckCircle className={className} />;
+        return <Inbox className={cn("h-4 w-4", iconColor)} />;
       case "loader":
-        return <Loader className={className} />;
+        return <Loader className={cn("h-4 w-4", iconColor)} />;
+      case "check-circle":
+        return <CheckCircle className={cn("h-4 w-4", iconColor)} />;
       case "alert-circle":
-        return <AlertCircle className={className} />;
+        return <AlertCircle className={cn("h-4 w-4", iconColor)} />;
       default:
-        return <Inbox className={className} />;
+        return <Inbox className={cn("h-4 w-4", iconColor)} />;
     }
   };
 
-  const renderTrend = () => {
+  const getTrendIcon = () => {
     if (!trend) return null;
+    
+    return trend === "up" ? (
+      <ArrowUp className="h-4 w-4 text-green-500" />
+    ) : trend === "down" ? (
+      <ArrowDown className="h-4 w-4 text-red-500" />
+    ) : null;
+  };
 
-    if (trend.direction === "up") {
-      return (
-        <div className="flex items-center text-sm text-green-600">
-          <ArrowUp className="h-4 w-4" />
-          <span>{trend.value}%</span>
-        </div>
-      );
-    }
-
-    if (trend.direction === "down") {
-      return (
-        <div className="flex items-center text-sm text-red-600">
-          <ArrowDown className="h-4 w-4" />
-          <span>{trend.value}%</span>
-        </div>
-      );
-    }
-
-    return (
-      <div className="text-sm text-gray-500">
-        <span>0%</span>
-      </div>
-    );
+  const getTrendClass = () => {
+    if (!trend) return "";
+    
+    return trend === "up" 
+      ? "text-green-500" 
+      : trend === "down" 
+      ? "text-red-500" 
+      : "";
   };
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {renderIcon()}
+        <CardTitle className="text-sm font-medium">
+          {title}
+        </CardTitle>
+        <div className={cn("p-2 rounded-full bg-primary/10", iconColor.replace("text-", "bg-") + "/10")}>
+          {getIcon()}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">{description}</p>
-          {renderTrend()}
-        </div>
+        {description && (
+          <p className={cn("text-xs text-muted-foreground flex items-center mt-1", getTrendClass())}>
+            {description}
+            {getTrendIcon()}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

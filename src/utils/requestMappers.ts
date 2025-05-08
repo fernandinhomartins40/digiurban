@@ -1,62 +1,68 @@
 
-import { 
-  RequestStatus,
-  PriorityLevel,
-  RequesterType
-} from "@/types/requests";
+import { PriorityLevel, RequestStatus, RequesterType } from "@/types/requests";
 
-export const mapStatusName = (status: RequestStatus): string => {
+/**
+ * Maps the status to a readable name
+ */
+export function mapStatusName(status: RequestStatus): string {
   const statusMap: Record<RequestStatus, string> = {
-    'open': 'Aberta',
-    'in_progress': 'Em Andamento',
-    'completed': 'Concluída',
-    'cancelled': 'Cancelada',
-    'forwarded': 'Encaminhada'
+    open: "Aberto",
+    in_progress: "Em Andamento",
+    completed: "Concluído",
+    cancelled: "Cancelado",
+    forwarded: "Encaminhado"
   };
-  
   return statusMap[status] || status;
-};
+}
 
-export const mapPriorityName = (priority: PriorityLevel): string => {
+/**
+ * Maps the priority to a readable name
+ */
+export function mapPriorityName(priority: PriorityLevel): string {
   const priorityMap: Record<PriorityLevel, string> = {
-    'low': 'Baixa',
-    'normal': 'Normal',
-    'high': 'Alta',
-    'urgent': 'Urgente'
+    low: "Baixa",
+    normal: "Normal",
+    high: "Alta",
+    urgent: "Urgente"
   };
-  
   return priorityMap[priority] || priority;
-};
+}
 
-export const mapRequesterTypeName = (requesterType: RequesterType): string => {
+/**
+ * Gets the appropriate color class for a status
+ */
+export function getStatusColor(status: RequestStatus): string {
+  const colorMap: Record<RequestStatus, string> = {
+    open: "bg-yellow-500 hover:bg-yellow-600",
+    in_progress: "bg-blue-500 hover:bg-blue-600",
+    completed: "bg-green-500 hover:bg-green-600",
+    cancelled: "bg-gray-500 hover:bg-gray-600",
+    forwarded: "bg-purple-500 hover:bg-purple-600"
+  };
+  return colorMap[status] || "bg-gray-500 hover:bg-gray-600";
+}
+
+/**
+ * Gets the appropriate color class for a priority
+ */
+export function getPriorityColor(priority: PriorityLevel): string {
+  const colorMap: Record<PriorityLevel, string> = {
+    low: "bg-blue-500 hover:bg-blue-600",
+    normal: "bg-green-500 hover:bg-green-600",
+    high: "bg-orange-500 hover:bg-orange-600",
+    urgent: "bg-red-500 hover:bg-red-600"
+  };
+  return colorMap[priority] || "bg-gray-500 hover:bg-gray-600";
+}
+
+/**
+ * Maps the requester type to a readable name
+ */
+export function mapRequesterTypeName(requesterType: RequesterType): string {
   const requesterTypeMap: Record<RequesterType, string> = {
-    'citizen': 'Cidadão',
-    'department': 'Departamento',
-    'mayor': 'Gabinete'
+    citizen: "Cidadão",
+    department: "Departamento",
+    mayor: "Gabinete"
   };
-  
   return requesterTypeMap[requesterType] || requesterType;
-};
-
-export const getPriorityColor = (priority: PriorityLevel): string => {
-  const priorityColorMap: Record<PriorityLevel, string> = {
-    'low': 'bg-slate-100 text-slate-800',
-    'normal': 'bg-blue-100 text-blue-800',
-    'high': 'bg-amber-100 text-amber-800',
-    'urgent': 'bg-red-100 text-red-800'
-  };
-  
-  return priorityColorMap[priority] || 'bg-gray-100 text-gray-800';
-};
-
-export const getStatusColor = (status: RequestStatus): string => {
-  const statusColorMap: Record<RequestStatus, string> = {
-    'open': 'bg-blue-100 text-blue-800',
-    'in_progress': 'bg-yellow-100 text-yellow-800',
-    'completed': 'bg-green-100 text-green-800',
-    'cancelled': 'bg-red-100 text-red-800',
-    'forwarded': 'bg-purple-100 text-purple-800'
-  };
-  
-  return statusColorMap[status] || 'bg-gray-100 text-gray-800';
-};
+}
