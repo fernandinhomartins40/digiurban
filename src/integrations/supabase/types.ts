@@ -2132,6 +2132,7 @@ export type Database = {
           created_at: string
           creator_id: string
           department: string
+          document_category: string
           document_type_id: string
           id: string
           protocol_number: string
@@ -2145,6 +2146,7 @@ export type Database = {
           created_at?: string
           creator_id: string
           department: string
+          document_category?: string
           document_type_id: string
           id?: string
           protocol_number: string
@@ -2158,6 +2160,7 @@ export type Database = {
           created_at?: string
           creator_id?: string
           department?: string
+          document_category?: string
           document_type_id?: string
           id?: string
           protocol_number?: string
@@ -2175,6 +2178,96 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mail_internal_attachments: {
+        Row: {
+          document_id: string | null
+          file_name: string
+          file_path: string | null
+          file_size: number
+          file_type: string
+          id: string
+          message_id: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          document_id?: string | null
+          file_name: string
+          file_path?: string | null
+          file_size: number
+          file_type: string
+          id?: string
+          message_id: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          document_id?: string | null
+          file_name?: string
+          file_path?: string | null
+          file_size?: number
+          file_type?: string
+          id?: string
+          message_id?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mail_internal_attachments_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "mail_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mail_internal_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "mail_internal_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mail_internal_messages: {
+        Row: {
+          content: string
+          created_at: string
+          from_department: string
+          id: string
+          read_at: string | null
+          sent_at: string
+          sent_by: string
+          status: string
+          subject: string
+          to_department: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          from_department: string
+          id?: string
+          read_at?: string | null
+          sent_at?: string
+          sent_by: string
+          status?: string
+          subject: string
+          to_department: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          from_department?: string
+          id?: string
+          read_at?: string | null
+          sent_at?: string
+          sent_by?: string
+          status?: string
+          subject?: string
+          to_department?: string
+        }
+        Relationships: []
       }
       mail_template_fields: {
         Row: {

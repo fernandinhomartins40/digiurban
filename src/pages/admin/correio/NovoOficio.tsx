@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -22,7 +23,7 @@ import { useMail } from "@/hooks/use-mail";
 import { isAdminUser } from "@/types/auth";
 import { Template } from "@/types/mail";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, Loader2, Mail, Send, Download, FileText, Users } from "lucide-react";
+import { AlertTriangle, Loader2, Mail, Send, Download, FileText, Users, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -33,6 +34,7 @@ import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { MultipleDestinationsSelector } from "@/components/mail/MultipleDestinationsSelector";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function NovoOficio() {
   const { user } = useAuth();
@@ -44,14 +46,19 @@ export default function NovoOficio() {
   const [isCreatingAttachment, setIsCreatingAttachment] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [destinations, setDestinations] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [documentTitle, setDocumentTitle] = useState("");
   
   const { 
     getTemplates, 
     getTemplate, 
     documentTypes, 
     createDocument,
+    createFilledTemplate,
     forwardDocument,
     isLoadingCreate,
+    isLoadingCreateFilled,
     isLoadingForward
   } = useMail();
   
@@ -115,6 +122,7 @@ export default function NovoOficio() {
     // Set a default title based on template name
     if (template?.name) {
       form.setValue("title", template.name);
+      setDocumentTitle(template.name);
     }
   }, [template, form]);
   
@@ -174,6 +182,95 @@ export default function NovoOficio() {
   // Handle destinations
   const handleDestinationsChange = (newDestinations: string[]) => {
     setDestinations(newDestinations);
+  };
+  
+  // Handle save document
+  const handleSaveDocument = async () => {
+    try {
+      if (!user || !isAdminUser(user)) {
+        toast({
+          title: "Erro de permissão",
+          description: "Você não tem permissão para criar documentos.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!user.department) {
+        toast({
+          title: "Departamento não configurado",
+          description: "Seu usuário não possui um departamento configurado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!documentTitle?.trim()) {
+        toast({
+          title: "Título obrigatório",
+          description: "Por favor, informe um título para o documento.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setIsSaving(true);
+      
+      // Extract field values
+      const values = form.getValues();
+      const { documentTypeId, ...fieldValues } = values;
+      
+      // Generate content from template
+      let documentContent = "";
+      if (selectedTemplate) {
+        documentContent = generateContent(selectedTemplate, fieldValues);
+      }
+      
+      if (!documentContent.trim()) {
+        toast({
+          title: "Conteúdo vazio",
+          description: "O documento não pode ter conteúdo vazio.",
+          variant: "destructive",
+        });
+        setIsSaving(false);
+        return;
+      }
+      
+      // Create filled template document
+      const createdDoc = await createFilledTemplate({
+        title: documentTitle,
+        content: documentContent,
+        document_type_id: documentTypeId,
+        creator_id: user.id,
+        department: user.department,
+        template_id: selectedTemplate?.id || null,
+        document_category: 'filled_template',
+      });
+      
+      if (createdDoc) {
+        setDocumentId(createdDoc.id);
+        
+        toast({
+          title: "Documento salvo com sucesso",
+          description: `O documento foi salvo na biblioteca de ofícios.`,
+        });
+        
+        // Close dialog
+        setShowSaveDialog(false);
+        
+        // Navigate to the document library
+        navigate("/admin/correio/biblioteca-modelos");
+      }
+    } catch (error) {
+      console.error("Error saving document:", error);
+      toast({
+        title: "Erro ao salvar documento",
+        description: "Ocorreu um erro ao salvar o documento. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   async function onSubmit(values: FormValues) {
@@ -284,7 +381,7 @@ export default function NovoOficio() {
   };
   
   const handleFinish = () => {
-    navigate("/admin/correio/dashboard");
+    navigate("/admin/correio/biblioteca-modelos");
   };
   
   return (
@@ -437,10 +534,11 @@ export default function NovoOficio() {
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() => navigate("/admin/correio/dashboard")}
+                            onClick={() => setShowSaveDialog(true)}
                             disabled={isLoadingCreate || isLoadingForward || isCreatingAttachment}
                           >
-                            Cancelar
+                            <Save size={16} className="mr-2" />
+                            Salvar Ofício
                           </Button>
                           <Button 
                             type="submit" 
@@ -516,6 +614,48 @@ export default function NovoOficio() {
           </Card>
         </div>
       </div>
+
+      {/* Save Dialog */}
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Salvar Ofício</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <FormItem>
+              <FormLabel>Título do Ofício</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Digite um título para o ofício" 
+                  value={documentTitle} 
+                  onChange={(e) => setDocumentTitle(e.target.value)}
+                />
+              </FormControl>
+              <p className="text-sm text-muted-foreground">
+                O ofício será salvo na biblioteca de modelos para uso futuro.
+              </p>
+            </FormItem>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaveDialog(false)} disabled={isSaving}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveDocument} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -486,3 +486,154 @@ export async function deleteTemplate(id: string) {
   
   return data as Template;
 }
+
+// Internal Mail Services
+export async function sendInternalEmail(message: {
+  subject: string;
+  content: string;
+  from_department: string;
+  to_department: string;
+  sent_by: string;
+}) {
+  const { data, error } = await supabase
+    .from("mail_internal_messages")
+    .insert([message])
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error sending internal email:", error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function getIncomingEmails(department: string) {
+  const { data, error } = await supabase
+    .from("mail_internal_messages")
+    .select("*")
+    .eq("to_department", department)
+    .order("sent_at", { ascending: false });
+  
+  if (error) {
+    console.error("Error fetching incoming emails:", error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function getOutgoingEmails(department: string) {
+  const { data, error } = await supabase
+    .from("mail_internal_messages")
+    .select("*")
+    .eq("from_department", department)
+    .order("sent_at", { ascending: false });
+  
+  if (error) {
+    console.error("Error fetching outgoing emails:", error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function markEmailAsRead(id: string) {
+  const { data, error } = await supabase
+    .from("mail_internal_messages")
+    .update({ read_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error marking email as read:", error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function getEmail(id: string) {
+  const { data, error } = await supabase
+    .from("mail_internal_messages")
+    .select(`
+      *,
+      attachments:mail_internal_attachments(*)
+    `)
+    .eq("id", id)
+    .single();
+  
+  if (error) {
+    console.error("Error fetching email:", error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function addEmailAttachment(attachment: {
+  message_id: string;
+  document_id?: string;
+  file_name: string;
+  file_path?: string;
+  file_type: string;
+  file_size: number;
+  uploaded_by: string;
+}) {
+  const { data, error } = await supabase
+    .from("mail_internal_attachments")
+    .insert([attachment])
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error adding email attachment:", error);
+    throw error;
+  }
+  
+  return data;
+}
+
+// Document functions specifically for filled templates
+export async function getFilledDocuments() {
+  const { data, error } = await supabase
+    .from("mail_documents")
+    .select(`
+      *,
+      document_type:document_type_id(*)
+    `)
+    .eq("document_category", "filled_template")
+    .order("created_at", { ascending: false });
+  
+  if (error) {
+    console.error("Error fetching filled documents:", error);
+    throw error;
+  }
+  
+  return data;
+}
+
+// Enhancing createDocument to support filled templates
+export async function createFilledTemplate(document: Partial<Document> & { document_category?: string }) {
+  // Add document_category if not provided
+  const documentData = {
+    ...document,
+    document_category: document.document_category || 'filled_template',
+    protocol_number: "temp" // This will be overwritten by the database trigger
+  };
+  
+  const { data, error } = await supabase
+    .from("mail_documents")
+    .insert(documentData)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error creating filled template:", error);
+    throw error;
+  }
+  
+  return data;
+}

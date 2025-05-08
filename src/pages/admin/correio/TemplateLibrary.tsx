@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -14,11 +15,13 @@ import {
   Edit, 
   Trash2,
   Search,
-  Filter
+  Filter,
+  Mail,
+  FileText
 } from "lucide-react";
 import { useMail } from "@/hooks/use-mail";
 import { useToast } from "@/hooks/use-toast";
-import { Template } from "@/types/mail";
+import { Document, Template } from "@/types/mail";
 
 export default function TemplateLibrary() {
   const navigate = useNavigate();
@@ -27,8 +30,16 @@ export default function TemplateLibrary() {
   const [selectedTemplateType, setSelectedTemplateType] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const { getTemplates, documentTypes } = useMail();
-  const { data: templates, isLoading } = getTemplates();
+  const { getTemplates, documentTypes, getFilledDocuments } = useMail();
+  const { data: templates, isLoading: isLoadingTemplates } = getTemplates();
+  const { data: filledDocuments, isLoading: isLoadingDocuments } = useQuery(
+    ["filledDocuments"],
+    () => getFilledDocuments(),
+    { 
+      refetchOnWindowFocus: false,
+      staleTime: 30000
+    }
+  );
   const { data: documentTypesData } = documentTypes;
 
   // Template categories based on document types
@@ -44,6 +55,16 @@ export default function TemplateLibrary() {
       template.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesType = !selectedTemplateType || template.document_type_id === selectedTemplateType;
+    
+    return matchesSearch && matchesType;
+  });
+
+  // Filter filled documents based on search and type
+  const filteredDocuments = filledDocuments?.filter(doc => {
+    const matchesSearch = !searchTerm || 
+      doc.title.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = !selectedTemplateType || doc.document_type_id === selectedTemplateType;
     
     return matchesSearch && matchesType;
   });
@@ -73,6 +94,23 @@ export default function TemplateLibrary() {
     toast({
       title: "Editando modelo",
       description: "Você será redirecionado para o editor de modelos."
+    });
+  };
+  
+  // Handle filled document actions
+  const handleViewDocument = (document: Document) => {
+    // TODO: Implement document viewer
+    toast({
+      title: "Visualizando documento",
+      description: "Funcionalidade de visualização a ser implementada"
+    });
+  };
+  
+  const handleSendDocument = (document: Document) => {
+    navigate(`/admin/correio/email-interno?document=${document.id}`);
+    toast({
+      title: "Enviando documento",
+      description: "Você será redirecionado para a página de email interno."
     });
   };
 
@@ -115,6 +153,38 @@ export default function TemplateLibrary() {
       </CardContent>
     </Card>
   );
+  
+  // Render document card
+  const renderDocumentCard = (document: Document) => (
+    <Card key={document.id} className="overflow-hidden transition-colors hover:border-primary">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-base">
+            {document.title}
+          </CardTitle>
+          <div className="flex gap-1">
+            <Badge variant="outline" className="bg-blue-100">Ofício</Badge>
+            {document.document_type && (
+              <Badge variant="secondary">{document.document_type.name}</Badge>
+            )}
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Protocolo: {document.protocol_number}
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="flex justify-end gap-2 mt-2">
+          <Button variant="outline" size="sm" onClick={() => handleViewDocument(document)}>
+            <FileText className="h-3.5 w-3.5 mr-1" /> Visualizar
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleSendDocument(document)}>
+            <Mail className="h-3.5 w-3.5 mr-1" /> Enviar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-6">
@@ -134,10 +204,16 @@ export default function TemplateLibrary() {
             </p>
           </div>
         </div>
-        <Button onClick={() => navigate("/admin/correio/criador-oficios")}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Criar Modelo
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate("/admin/correio/novo-oficio")}>
+            <FileText className="mr-2 h-4 w-4" />
+            Novo Ofício
+          </Button>
+          <Button variant="outline" onClick={() => navigate("/admin/correio/criador-oficios")}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Criar Modelo
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -145,7 +221,7 @@ export default function TemplateLibrary() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-8 w-full md:w-[300px]"
-            placeholder="Buscar modelo..."
+            placeholder="Buscar modelo ou documento..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -167,12 +243,65 @@ export default function TemplateLibrary() {
       <Tabs defaultValue="all" className="space-y-4">
         <TabsList>
           <TabsTrigger value="all">Todos</TabsTrigger>
-          <TabsTrigger value="standard">Padrão</TabsTrigger>
-          <TabsTrigger value="custom">Personalizados</TabsTrigger>
+          <TabsTrigger value="templates">Modelos</TabsTrigger>
+          <TabsTrigger value="documents">Ofícios Criados</TabsTrigger>
         </TabsList>
 
+        {/* All Content Tab */}
         <TabsContent value="all" className="m-0">
-          {isLoading ? (
+          {(isLoadingTemplates || isLoadingDocuments) ? (
+            <div className="flex justify-center p-12">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : (filteredTemplates?.length === 0 && filteredDocuments?.length === 0) ? (
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <FileDown className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <h3 className="text-lg font-medium mb-2">Nenhum item encontrado</h3>
+                <p className="text-muted-foreground">
+                  Não foram encontrados modelos ou documentos com os critérios selecionados.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4" 
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedTemplateType(null);
+                  }}
+                >
+                  Limpar filtros
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div>
+              {/* Documents Section */}
+              {filteredDocuments && filteredDocuments.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold mb-4">Ofícios Criados</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredDocuments.map(document => renderDocumentCard(document))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Templates Section */}
+              {filteredTemplates && filteredTemplates.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-4">Modelos</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {groupedTemplates.standard.map(template => renderTemplateCard(template, true))}
+                    {groupedTemplates.custom.map(template => renderTemplateCard(template))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Templates Tab */}
+        <TabsContent value="templates" className="m-0">
+          {isLoadingTemplates ? (
             <div className="flex justify-center p-12">
               <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
             </div>
@@ -183,71 +312,6 @@ export default function TemplateLibrary() {
                 <h3 className="text-lg font-medium mb-2">Nenhum modelo encontrado</h3>
                 <p className="text-muted-foreground">
                   Não foram encontrados modelos com os critérios selecionados.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4" 
-                  onClick={() => {
-                    setSearchTerm("");
-                    setSelectedTemplateType(null);
-                  }}
-                >
-                  Limpar filtros
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groupedTemplates.standard.map(template => renderTemplateCard(template, true))}
-              {groupedTemplates.custom.map(template => renderTemplateCard(template))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="standard" className="m-0">
-          {isLoading ? (
-            <div className="flex justify-center p-12">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : groupedTemplates.standard.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <FileDown className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <h3 className="text-lg font-medium mb-2">Nenhum modelo padrão encontrado</h3>
-                <p className="text-muted-foreground">
-                  Não foram encontrados modelos padrão com os critérios selecionados.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4" 
-                  onClick={() => {
-                    setSearchTerm("");
-                    setSelectedTemplateType(null);
-                  }}
-                >
-                  Limpar filtros
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groupedTemplates.standard.map(template => renderTemplateCard(template, true))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="custom" className="m-0">
-          {isLoading ? (
-            <div className="flex justify-center p-12">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : groupedTemplates.custom.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <FileDown className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <h3 className="text-lg font-medium mb-2">Nenhum modelo personalizado encontrado</h3>
-                <p className="text-muted-foreground">
-                  Você ainda não criou modelos personalizados ou nenhum corresponde aos critérios de busca.
                 </p>
                 <div className="flex justify-center gap-2 mt-4">
                   <Button 
@@ -267,7 +331,45 @@ export default function TemplateLibrary() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {groupedTemplates.standard.map(template => renderTemplateCard(template, true))}
               {groupedTemplates.custom.map(template => renderTemplateCard(template))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Documents Tab */}
+        <TabsContent value="documents" className="m-0">
+          {isLoadingDocuments ? (
+            <div className="flex justify-center p-12">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : filteredDocuments?.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <h3 className="text-lg font-medium mb-2">Nenhum ofício encontrado</h3>
+                <p className="text-muted-foreground">
+                  Você ainda não criou nenhum ofício ou nenhum corresponde aos critérios de busca.
+                </p>
+                <div className="flex justify-center gap-2 mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setSearchTerm("");
+                      setSelectedTemplateType(null);
+                    }}
+                  >
+                    Limpar filtros
+                  </Button>
+                  <Button onClick={() => navigate("/admin/correio/novo-oficio")}>
+                    Novo Ofício
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredDocuments.map(document => renderDocumentCard(document))}
             </div>
           )}
         </TabsContent>
