@@ -315,14 +315,15 @@ const TemplateCreator: React.FC = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tipo de Documento</label>
                   <Select 
-                    value={form.getValues('documentTypeId') || ''} 
+                    value={form.getValues('documentTypeId') || undefined} 
                     onValueChange={(value) => form.setValue('documentTypeId', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um tipo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
+                      {/* Changed from empty string to "none" */}
+                      <SelectItem value="none">Nenhum</SelectItem>
                       {documentTypes.map(type => (
                         <SelectItem key={type.id} value={type.id}>
                           {type.name}
@@ -345,7 +346,7 @@ const TemplateCreator: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Departamentos</label>
                 <Select 
-                  value={form.getValues('departments')?.[0] || ''} 
+                  value={form.getValues('departments')?.[0] || undefined} 
                   onValueChange={(value) => form.setValue('departments', [value])}
                 >
                   <SelectTrigger>

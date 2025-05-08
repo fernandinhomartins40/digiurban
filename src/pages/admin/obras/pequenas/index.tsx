@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ObrasLayout } from "../components/ObrasLayout";
 import { Button } from "@/components/ui/button";
@@ -213,6 +212,7 @@ export default function PequenasObrasIndex() {
                             onSelect={setDataInicio}
                             locale={ptBR}
                             initialFocus
+                            className="pointer-events-auto"
                           />
                         </PopoverContent>
                       </Popover>
@@ -230,6 +230,7 @@ export default function PequenasObrasIndex() {
                             onSelect={setDataFim}
                             locale={ptBR}
                             initialFocus
+                            className="pointer-events-auto"
                           />
                         </PopoverContent>
                       </Popover>
@@ -308,15 +309,18 @@ export default function PequenasObrasIndex() {
                       <label className="text-sm font-medium">Descrição</label>
                       <textarea 
                         className="w-full min-h-[120px] p-3 rounded-md border border-input bg-transparent"
-                        placeholder="Descreva detalhes da obra ou reparo necessário"
+                        placeholder="Descreva a obra"
                       ></textarea>
                     </div>
                   </div>
+                  
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setOpenNewObraDialog(false)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit">Cadastrar Obra</Button>
+                  </DialogFooter>
                 </form>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setOpenNewObraDialog(false)}>Cancelar</Button>
-                  <Button onClick={() => setOpenNewObraDialog(false)}>Salvar</Button>
-                </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
