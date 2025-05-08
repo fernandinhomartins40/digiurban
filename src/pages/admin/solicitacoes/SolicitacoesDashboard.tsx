@@ -5,11 +5,13 @@ import { useUnifiedRequests } from "@/hooks/useUnifiedRequests";
 import { RequestStats } from "@/components/solicitacoes/RequestStats";
 import { RequestManagement } from "@/components/unified-requests/RequestManagement";
 import { UnifiedRequest, RequestStatus } from "@/types/requests";
+import { isAdminUser } from "@/utils/authGuards";
 
 export default function SolicitacoesDashboard() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin" || user?.role === "prefeito";
-  const userDepartment = user?.department;
+  // Safely access department only if user is an admin type
+  const userDepartment = isAdminUser(user) ? user.department : undefined;
   
   // Get the unified requests hook
   const {
