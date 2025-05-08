@@ -60,12 +60,15 @@ export const extractFieldsFromContent = (content: string): string[] => {
  * @returns A new template object with a new ID
  */
 export const duplicateTemplate = (template: Template, newName?: string): Omit<Template, 'id'> => {
-  const { id, created_at, updated_at, ...rest } = template;
+  const { id, ...rest } = template;
+  const now = new Date().toISOString();
   
   return {
     ...rest,
     name: newName || `Cópia de ${template.name}`,
     is_active: true,
+    created_at: now,
+    updated_at: now,
     fields: template.fields?.map(field => ({
       ...field,
       id: uuidv4(),

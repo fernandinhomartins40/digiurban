@@ -27,12 +27,12 @@ export default function TemplateLibrary() {
   const [selectedTemplateType, setSelectedTemplateType] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const { getTemplates, getDocumentTypes } = useMail();
+  const { getTemplates, documentTypes } = useMail();
   const { data: templates, isLoading } = getTemplates();
-  const { data: documentTypes } = getDocumentTypes();
+  const { data: documentTypesData } = documentTypes;
 
   // Template categories based on document types
-  const templateCategories = documentTypes?.map(type => ({
+  const templateCategories = documentTypesData?.map(type => ({
     id: type.id,
     name: type.name
   })) || [];
@@ -56,7 +56,7 @@ export default function TemplateLibrary() {
       acc.custom.push(template);
     }
     return acc;
-  }, { standard: [], custom: [] });
+  }, { standard: [], custom: [] }) || { standard: [], custom: [] };
 
   // Handle template duplication
   const handleDuplicateTemplate = (template: Template) => {
@@ -198,8 +198,8 @@ export default function TemplateLibrary() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groupedTemplates?.standard.map(template => renderTemplateCard(template, true))}
-              {groupedTemplates?.custom.map(template => renderTemplateCard(template))}
+              {groupedTemplates.standard.map(template => renderTemplateCard(template, true))}
+              {groupedTemplates.custom.map(template => renderTemplateCard(template))}
             </div>
           )}
         </TabsContent>
@@ -209,7 +209,7 @@ export default function TemplateLibrary() {
             <div className="flex justify-center p-12">
               <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
             </div>
-          ) : groupedTemplates?.standard.length === 0 ? (
+          ) : groupedTemplates.standard.length === 0 ? (
             <Card>
               <CardContent className="pt-6 text-center">
                 <FileDown className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
@@ -231,7 +231,7 @@ export default function TemplateLibrary() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groupedTemplates?.standard.map(template => renderTemplateCard(template, true))}
+              {groupedTemplates.standard.map(template => renderTemplateCard(template, true))}
             </div>
           )}
         </TabsContent>
@@ -241,7 +241,7 @@ export default function TemplateLibrary() {
             <div className="flex justify-center p-12">
               <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
             </div>
-          ) : groupedTemplates?.custom.length === 0 ? (
+          ) : groupedTemplates.custom.length === 0 ? (
             <Card>
               <CardContent className="pt-6 text-center">
                 <FileDown className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
@@ -267,7 +267,7 @@ export default function TemplateLibrary() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groupedTemplates?.custom.map(template => renderTemplateCard(template))}
+              {groupedTemplates.custom.map(template => renderTemplateCard(template))}
             </div>
           )}
         </TabsContent>
