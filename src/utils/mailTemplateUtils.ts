@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { TemplateField } from '@/types/mail';
+import { TemplateField, Template } from '@/types/mail';
 
 /**
  * Generates a unique field ID for template fields
@@ -54,6 +54,36 @@ export const extractFieldsFromContent = (content: string): string[] => {
 };
 
 /**
+ * Creates a duplicate of a template with a new name
+ * @param template The template to duplicate
+ * @param newName Optional new name for the duplicated template
+ * @returns A new template object with a new ID
+ */
+export const duplicateTemplate = (template: Template, newName?: string): Omit<Template, 'id'> => {
+  const { id, created_at, updated_at, ...rest } = template;
+  
+  return {
+    ...rest,
+    name: newName || `Cópia de ${template.name}`,
+    is_active: true,
+    fields: template.fields?.map(field => ({
+      ...field,
+      id: uuidv4(),
+      template_id: '',
+    })),
+  };
+};
+
+/**
+ * Determines if a template is a system standard template
+ * @param template The template to check
+ * @returns Boolean indicating if the template is standard
+ */
+export const isStandardTemplate = (template: Template): boolean => {
+  return template.name.startsWith('Sistema:');
+};
+
+/**
  * Predefined fields that can be added to templates
  */
 export const predefinedFields: Partial<TemplateField>[] = [
@@ -67,7 +97,7 @@ export const predefinedFields: Partial<TemplateField>[] = [
   { field_key: 'destinatario_cep', field_label: 'CEP do Destinatário', field_type: 'text', is_required: false },
   
   // Documento fields
-  { field_key: 'documento_numero', field_label: 'Número do Documento', field_type: 'text', is_required: true },
+  { field_key: 'numero_oficio', field_label: 'Número do Documento', field_type: 'text', is_required: true },
   { field_key: 'documento_data', field_label: 'Data do Documento', field_type: 'date', is_required: true },
   { field_key: 'documento_assunto', field_label: 'Assunto do Documento', field_type: 'text', is_required: true },
   { field_key: 'documento_referencia', field_label: 'Referência do Documento', field_type: 'text', is_required: false },
@@ -84,7 +114,13 @@ export const predefinedFields: Partial<TemplateField>[] = [
   { field_key: 'conteudo_desenvolvimento', field_label: 'Desenvolvimento', field_type: 'textarea', is_required: false },
   { field_key: 'conteudo_conclusao', field_label: 'Conclusão', field_type: 'textarea', is_required: false },
   { field_key: 'conteudo_agradecimento', field_label: 'Agradecimento', field_type: 'text', is_required: false },
-  { field_key: 'conteudo_despedida', field_label: 'Despedida', field_type: 'text', is_required: false }
+  { field_key: 'conteudo_despedida', field_label: 'Despedida', field_type: 'text', is_required: false },
+  { field_key: 'corpo_texto', field_label: 'Corpo do Texto', field_type: 'textarea', is_required: true },
+  
+  // Dados locais
+  { field_key: 'cidade', field_label: 'Cidade', field_type: 'text', is_required: false },
+  { field_key: 'data_emissao', field_label: 'Data de Emissão', field_type: 'date', is_required: true },
+  { field_key: 'assunto', field_label: 'Assunto', field_type: 'text', is_required: true },
 ];
 
 /**
@@ -107,7 +143,8 @@ export const getFieldsByCategory = () => {
     destinatario: [],
     documento: [],
     remetente: [],
-    conteudo: []
+    conteudo: [],
+    outros: []
   };
   
   predefinedFields.forEach(field => {
@@ -122,8 +159,8 @@ export const getFieldsByCategory = () => {
     } else if (key.startsWith('conteudo_')) {
       categories.conteudo.push(field);
     } else {
-      // Default to content for any other fields
-      categories.conteudo.push(field);
+      // Default to outros for any other fields
+      categories.outros.push(field);
     }
   });
   

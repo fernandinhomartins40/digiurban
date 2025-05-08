@@ -22,5 +22,9 @@ export const getCorreioItem = (unreadCount: number = 0): SidebarItemProps => ({
       title: "Criador de Modelos",
       path: "/admin/correio/criador-oficios",
     },
+    {
+      title: "Biblioteca de Modelos",
+      path: "/admin/correio/biblioteca-modelos",
+    },
   ],
 });
