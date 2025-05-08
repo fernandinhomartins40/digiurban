@@ -504,6 +504,8 @@ export default function TemplateCreator() {
     }));
   };
   
+  const formattedFields = mapFormFieldsToTemplateFields(formFields);
+
   return (
     <div className="space-y-6">
       <div>
