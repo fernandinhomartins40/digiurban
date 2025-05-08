@@ -19,9 +19,10 @@ import { PredefinedFieldsSelector } from './PredefinedFieldsSelector';
 import { TemplateField } from '@/types/mail';
 import { cn } from '@/lib/utils';
 import { generateFieldId } from '@/utils/mailTemplateUtils';
+import { FieldArrayWithId } from 'react-hook-form';
 
 interface FieldCreationPanelProps {
-  fields: Partial<TemplateField>[];
+  fields: Partial<TemplateField>[] | FieldArrayWithId<any, "fields", "id">[];
   onAddField: (field: Partial<TemplateField>) => void;
   onUpdateField: (index: number, field: Partial<TemplateField>) => void;
   onRemoveField: (index: number) => void;
@@ -84,7 +85,8 @@ export function FieldCreationPanel({
   
   const startEditField = (index: number) => {
     setEditingFieldIndex(index);
-    setNewField({...fields[index]});
+    const fieldToEdit = fields[index] as Partial<TemplateField>;
+    setNewField({...fieldToEdit});
   };
   
   const cancelEdit = () => {
@@ -104,10 +106,12 @@ export function FieldCreationPanel({
     document.dispatchEvent(event);
   };
   
-  const filteredFields = fields.filter(field => 
-    field.field_label?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    field.field_key?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredFields = fields.filter(field => {
+    const fieldLabel = (field as any).field_label || '';
+    const fieldKey = (field as any).field_key || '';
+    return fieldLabel.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      fieldKey.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   const handleLabelChange = (value: string) => {
     const generatedKey = value.trim()
@@ -276,36 +280,39 @@ export function FieldCreationPanel({
           </div>
           
           <div className={cn("space-y-1", filteredFields.length > 6 && "overflow-y-auto max-h-[240px] pr-2")}>
-            {filteredFields.map((field, index) => (
-              <div key={field.field_key} className="flex items-center gap-1">
-                <DraggableField
-                  label={field.field_label || ''}
-                  fieldKey={field.field_key || ''}
-                  isRequired={field.is_required}
-                  field={field}
-                  onDragStart={onFieldDragStart}
-                  onClick={() => onFieldClick(field.field_key || '')}
-                />
-                <div className="flex flex-col gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6" 
-                    onClick={() => startEditField(index)}
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6 text-red-500 hover:text-red-700" 
-                    onClick={() => onRemoveField(index)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
+            {filteredFields.map((field, index) => {
+              const fieldData = field as any;
+              return (
+                <div key={fieldData.field_key || index} className="flex items-center gap-1">
+                  <DraggableField
+                    label={fieldData.field_label || ''}
+                    fieldKey={fieldData.field_key || ''}
+                    isRequired={fieldData.is_required}
+                    field={field as Partial<TemplateField>}
+                    onDragStart={onFieldDragStart}
+                    onClick={() => onFieldClick(fieldData.field_key || '')}
+                  />
+                  <div className="flex flex-col gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6" 
+                      onClick={() => startEditField(index)}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 text-red-500 hover:text-red-700" 
+                      onClick={() => onRemoveField(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
           
           <div className="text-xs text-muted-foreground mt-1 pt-2 border-t">
