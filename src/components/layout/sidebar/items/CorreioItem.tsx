@@ -10,16 +10,16 @@ export const getCorreioItem = (unreadCount: number = 0): SidebarItemProps => ({
   badge: unreadCount,
   children: [
     {
-      title: "Dashboard",
+      title: "Caixa de Entrada",
       path: "/admin/correio/dashboard",
       badge: unreadCount,
     },
     {
-      title: "Ofício Digital",
-      path: "/admin/correio/oficio-digital",
+      title: "Novo Ofício",
+      path: "/admin/correio/novo-oficio",
     },
     {
-      title: "Criador de Ofícios",
+      title: "Criador de Modelos",
       path: "/admin/correio/criador-oficios",
     },
   ],

@@ -1,17 +1,17 @@
 
 import { RouteObject } from "react-router-dom";
-import MailDashboard from "@/pages/admin/correio/MailDashboard";
-import OficioDigital from "@/pages/admin/correio/OficioDigital";
+import MailInbox from "@/pages/admin/correio/MailInbox";
+import NovoOficio from "@/pages/admin/correio/NovoOficio";
 import TemplateCreator from "@/pages/admin/correio/TemplateCreator";
 
 export const correioRoutes: RouteObject[] = [
   {
     path: "correio/dashboard",
-    element: <MailDashboard />,
+    element: <MailInbox />,
   },
   {
-    path: "correio/oficio-digital",
-    element: <OficioDigital />,
+    path: "correio/novo-oficio",
+    element: <NovoOficio />,
   },
   {
     path: "correio/criador-oficios",
