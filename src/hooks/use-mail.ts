@@ -194,14 +194,12 @@ export function useMail() {
   };
 
   // Get filled documents
-  const {
-    data: filledDocuments,
-    isLoading: isLoadingFilledDocs,
-    refetch: refetchFilledDocs
-  } = useQuery({
-    queryKey: ["filledDocuments"],
-    queryFn: mailService.getFilledDocuments
-  });
+  const getFilledDocuments = () => {
+    return useQuery({
+      queryKey: ["filledDocuments"],
+      queryFn: () => mailService.getFilledDocuments(),
+    });
+  };
 
   // Attachment upload
   const {
@@ -252,9 +250,6 @@ export function useMail() {
     getIncomingDocuments,
     getOutgoingDocuments,
     getFilledDocuments,
-    filledDocuments,
-    isLoadingFilledDocs,
-    refetchFilledDocs,
     // Attachment functions
     uploadAttachment,
     isLoadingUpload,
