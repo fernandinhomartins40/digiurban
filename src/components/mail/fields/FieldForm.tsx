@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { TemplateField } from "@/types/mail";
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from "@/hooks/use-toast";
 
 interface FieldFormProps {
   initialValues?: Partial<TemplateField>;
@@ -112,16 +113,6 @@ export function FieldForm({ initialValues, onSubmit, onCancel }: FieldFormProps)
       handleChange('field_key', sanitizeFieldKey(label));
     }
   };
-  
-  // Add toast import
-  const toast = React.useCallback(({ title, description, variant }: { title: string, description: string, variant?: "default" | "destructive" }) => {
-    // Check if toast is defined globally
-    if (typeof window !== "undefined" && window.toast) {
-      window.toast({ title, description, variant });
-    } else {
-      console.log(`${variant === "destructive" ? "[ERROR]" : "[INFO]"} ${title}: ${description}`);
-    }
-  }, []);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
