@@ -48,6 +48,7 @@ if (typeof window !== 'undefined') {
   // Preload UserManagement and other critical components
   import("@/pages/admin/users/UserManagement");
   import("@/pages/admin/gabinete/Appointments");
+  import("@/pages/admin/solicitacoes/SolicitacoesDashboard");
 }
 
 export const adminRoutes: RouteObject[] = [
