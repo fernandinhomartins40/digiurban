@@ -4,9 +4,11 @@ import { lazy, Suspense } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { DashboardLoading } from "@/components/dashboard/common/DashboardLoading";
 
-// Lazy load components with explicit Suspense boundaries
+// Import Dashboard directly instead of lazy loading to prevent dynamic import issues
+import Dashboard from "@/pages/admin/Dashboard";
+
+// Lazy load other components with explicit Suspense boundaries
 const UserManagement = lazy(() => import("@/pages/admin/users/UserManagement"));
-const Dashboard = lazy(() => import("@/pages/admin/Dashboard"));
 
 // Import route groups
 import { correioRoutes } from "./correioRoutes";
@@ -43,10 +45,10 @@ export const adminRoutes: RouteObject[] = [
     path: "",
     element: <AdminLayout />,
     children: [
-      // General dashboard route
+      // General dashboard route - directly imported instead of lazy loaded
       {
         path: "dashboard",
-        element: <SuspenseWrapper><Dashboard /></SuspenseWrapper>,
+        element: <Dashboard />
       },
 
       {
@@ -81,4 +83,3 @@ export const adminRoutes: RouteObject[] = [
 ];
 
 export default adminRoutes;
-

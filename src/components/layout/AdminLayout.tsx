@@ -5,7 +5,7 @@ import { Outlet, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { isAdminUser } from "@/types/auth";
+import { isAdminUser } from "@/utils/authGuards";
 
 export function AdminLayout() {
   const { isLoading, isAuthenticated, userType, user } = useAuth();
@@ -83,7 +83,7 @@ export function AdminLayout() {
       }
       
       // Redirect from root admin path to dashboard
-      if (isAuthenticated && location.pathname === "/admin" || location.pathname === "/admin/") {
+      if (isAuthenticated && (location.pathname === "/admin" || location.pathname === "/admin/")) {
         navigate("/admin/dashboard", { replace: true });
       }
     }
@@ -164,11 +164,13 @@ export function AdminLayout() {
 
   // We're authenticated and an admin, so render the admin layout
   return (
-    <div className="flex h-screen bg-gray-50">
-      <AdminSidebar ready={readyForQuery} />
-      <main className="flex-1 overflow-auto p-6">
-        <Outlet />
-      </main>
+    <div className="flex h-screen overflow-hidden">
+      <AdminSidebar />
+      <div className="flex-1 overflow-auto">
+        <main className="p-6 max-w-7xl mx-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

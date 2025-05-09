@@ -22,21 +22,87 @@ interface DashboardChartData {
   moduleUsage: any[];
 }
 
-// Mock data fetching function - to be replaced with actual API calls
+// Mock data for testing
+const mockMetricsData = {
+  totalRequests: 328,
+  pendingRequests: 42,
+  activeUsers: 186,
+  systemActivity: 1248,
+  alerts: 7
+};
+
+// Mock chart data for testing
+const mockChartData = {
+  departmentActivity: [
+    { name: "Saúde", value: 400 },
+    { name: "Educação", value: 300 },
+    { name: "Urbanismo", value: 300 },
+    { name: "Obras", value: 200 },
+    { name: "Assistência", value: 150 },
+  ],
+  requestsByStatus: [
+    { name: "Em Andamento", value: 32 },
+    { name: "Pendente", value: 26 },
+    { name: "Concluído", value: 42 },
+    { name: "Cancelado", value: 6 },
+  ],
+  activityTrend: [
+    { month: "Jan", requests: 65, users: 28 },
+    { month: "Fev", requests: 59, users: 48 },
+    { month: "Mar", requests: 80, users: 40 },
+    { month: "Abr", requests: 81, users: 47 },
+    { month: "Mai", requests: 56, users: 65 },
+    { month: "Jun", requests: 55, users: 58 },
+    { month: "Jul", requests: 40, users: 44 },
+  ],
+  recentActivities: [
+    {
+      id: 1,
+      action: "Nova solicitação urgente recebida",
+      user: "Maria Santos",
+      department: "Saúde",
+      time: "5 minutos"
+    },
+    {
+      id: 2, 
+      action: "Reunião agendada com Secretário de Obras",
+      user: "João Silva",
+      department: "Gabinete",
+      time: "2 horas"
+    },
+    {
+      id: 3,
+      action: "Política pública de educação atualizada",
+      user: "Ana Costa",
+      department: "Educação",
+      time: "5 horas"
+    },
+    {
+      id: 4,
+      action: "Solicitação #2340 foi finalizada",
+      user: "Carlos Pereira",
+      department: "Obras",
+      time: "1 dia"
+    }
+  ],
+  moduleUsage: [
+    { name: "Solicitações", percent: 75 },
+    { name: "RH", percent: 62 },
+    { name: "Saúde", percent: 58 },
+    { name: "Educação", percent: 45 },
+    { name: "Finanças", percent: 38 }
+  ]
+};
+
+// Mock data fetching function - using mock data for now
 const fetchMainDashboardMetrics = async (
   startDate?: Date,
   endDate?: Date
 ): Promise<DashboardMetrics> => {
   console.log("Fetching main dashboard metrics with params:", { startDate, endDate });
   
-  // Return empty data structure that will be filled with real data later
-  return {
-    totalRequests: 0,
-    pendingRequests: 0,
-    activeUsers: 0,
-    systemActivity: 0,
-    alerts: 0,
-  };
+  // Return mock data for now
+  return mockMetricsData;
 };
 
 const fetchMainDashboardChartData = async (
@@ -45,14 +111,8 @@ const fetchMainDashboardChartData = async (
 ): Promise<DashboardChartData> => {
   console.log("Fetching main dashboard chart data with params:", { startDate, endDate });
   
-  // Return empty chart data structure that will be filled with real data later
-  return {
-    departmentActivity: [],
-    requestsByStatus: [],
-    activityTrend: [],
-    recentActivities: [],
-    moduleUsage: []
-  };
+  // Return mock chart data for now
+  return mockChartData;
 };
 
 export function useMainDashboard() {
@@ -67,15 +127,9 @@ export function useMainDashboard() {
     handleDateRangeChange
   } = useDateRangeFilter("30d");
 
-  // Fetch metrics data using our new API query hook
+  // Fetch metrics data directly for now to avoid potential API issues
   const {
-    data: metricsData = {
-      totalRequests: 0,
-      pendingRequests: 0,
-      activeUsers: 0,
-      systemActivity: 0,
-      alerts: 0
-    },
+    data: metricsData = mockMetricsData,
     isLoading: isLoadingMetrics,
     error: metricsError,
     refetch: refetchMetrics,
@@ -83,9 +137,8 @@ export function useMainDashboard() {
   } = useApiQuery<DashboardMetrics>(
     ["mainDashboardMetrics", startDate?.toISOString(), endDate?.toISOString()],
     async () => {
-      // This will be replaced with a real API call in the future
-      const data = await fetchMainDashboardMetrics(startDate, endDate);
-      return { data, error: null, status: 'success' };
+      // Return mock data directly instead of making API call
+      return { data: mockMetricsData, error: null, status: 'success' };
     },
     {
       staleTime: CACHE_TIMES.REGULAR, // 5 minutes
@@ -93,15 +146,9 @@ export function useMainDashboard() {
     }
   );
 
-  // Fetch chart data
+  // Fetch chart data directly for now to avoid potential API issues
   const {
-    data: chartData = {
-      departmentActivity: [],
-      requestsByStatus: [],
-      activityTrend: [],
-      recentActivities: [],
-      moduleUsage: []
-    },
+    data: chartData = mockChartData,
     isLoading: isLoadingCharts,
     error: chartsError,
     refetch: refetchCharts,
@@ -109,9 +156,8 @@ export function useMainDashboard() {
   } = useApiQuery<DashboardChartData>(
     ["mainDashboardCharts", startDate?.toISOString(), endDate?.toISOString()],
     async () => {
-      // This will be replaced with a real API call in the future
-      const data = await fetchMainDashboardChartData(startDate, endDate);
-      return { data, error: null, status: 'success' };
+      // Return mock data directly instead of making API call
+      return { data: mockChartData, error: null, status: 'success' };
     },
     {
       staleTime: CACHE_TIMES.REGULAR, // 5 minutes

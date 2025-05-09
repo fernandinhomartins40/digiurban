@@ -109,7 +109,7 @@ export default function AdminDashboard() {
   // Recent Activities component
   const RecentActivitiesList = ({ activities }: { activities: any[] }) => (
     <ul className="space-y-4">
-      {activities.map((activity) => (
+      {activities?.map((activity) => (
         <li key={activity.id} className="flex items-start gap-4 border-b pb-4 last:border-0">
           <div className="mt-1 bg-primary/10 p-2 rounded-full">
             <Clock className="h-4 w-4 text-primary" />
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
   // Module Usage component
   const ModuleUsageList = ({ modules }: { modules: any[] }) => (
     <div className="space-y-4">
-      {modules.map((module) => (
+      {modules?.map((module) => (
         <div key={module.name} className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">{module.name}</p>
@@ -229,15 +229,17 @@ export default function AdminDashboard() {
           title="Tendência de Atividade"
           description="Solicitações e usuários ativos ao longo do tempo"
         >
-          <DashboardLineChart
-            data={chartData.activityTrend}
-            lines={[
-              { dataKey: "requests", stroke: "#8884d8", name: "Solicitações" },
-              { dataKey: "users", stroke: "#82ca9d", name: "Usuários" }
-            ]}
-            xAxisDataKey="month"
-            height={300}
-          />
+          {chartData.activityTrend && (
+            <DashboardLineChart
+              data={chartData.activityTrend}
+              lines={[
+                { dataKey: "requests", stroke: "#8884d8", name: "Solicitações" },
+                { dataKey: "users", stroke: "#82ca9d", name: "Usuários" }
+              ]}
+              xAxisDataKey="month"
+              height={300}
+            />
+          )}
         </ChartCard>
 
         {/* Department Activity */}
@@ -245,12 +247,14 @@ export default function AdminDashboard() {
           title="Atividade por Departamento"
           description="Distribuição de atividades por departamento"
         >
-          <DashboardBarChart
-            data={chartData.departmentActivity}
-            bars={[{ dataKey: "value", fill: "#8884d8", name: "Atividades" }]}
-            xAxisDataKey="name"
-            height={300}
-          />
+          {chartData.departmentActivity && (
+            <DashboardBarChart
+              data={chartData.departmentActivity}
+              bars={[{ dataKey: "value", fill: "#8884d8", name: "Atividades" }]}
+              xAxisDataKey="name"
+              height={300}
+            />
+          )}
         </ChartCard>
       </div>
 
@@ -260,12 +264,14 @@ export default function AdminDashboard() {
           title="Solicitações por Status"
           description="Distribuição das solicitações por status atual"
         >
-          <DashboardPieChart
-            data={chartData.requestsByStatus}
-            dataKey="value"
-            nameKey="name"
-            height={300}
-          />
+          {chartData.requestsByStatus && (
+            <DashboardPieChart
+              data={chartData.requestsByStatus}
+              dataKey="value"
+              nameKey="name"
+              height={300}
+            />
+          )}
         </ChartCard>
 
         {/* Module Usage and Recent Activities */}
@@ -275,7 +281,7 @@ export default function AdminDashboard() {
               <CardTitle>Módulos Populares</CardTitle>
             </CardHeader>
             <CardContent>
-              <ModuleUsageList modules={chartData.moduleUsage} />
+              {chartData.moduleUsage && <ModuleUsageList modules={chartData.moduleUsage} />}
             </CardContent>
           </Card>
           
@@ -284,7 +290,9 @@ export default function AdminDashboard() {
               <CardTitle>Atividades Recentes</CardTitle>
             </CardHeader>
             <CardContent>
-              <RecentActivitiesList activities={chartData.recentActivities} />
+              {chartData.recentActivities && (
+                <RecentActivitiesList activities={chartData.recentActivities} />
+              )}
             </CardContent>
             <CardFooter>
               <Button variant="outline" size="sm" className="w-full">
