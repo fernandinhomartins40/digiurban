@@ -5,11 +5,11 @@ import { MayorOnlyRoute } from "@/components/auth/MayorOnlyRoute";
 import { DashboardLoading } from "@/components/dashboard/common/DashboardLoading";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
-// Import Dashboard directly for reliability, lazy load other components
+// Import components directly for reliability
 import MayorDashboard from "@/pages/admin/gabinete/Dashboard";
+import Appointments from "@/pages/admin/gabinete/Appointments";
 
 // Lazy load non-critical components with error boundaries
-const Appointments = lazy(() => import("@/pages/admin/gabinete/Appointments"));
 const CitizenServices = lazy(() => import("@/pages/admin/gabinete/CitizenServices"));
 
 // Helper for lazy-loaded components with error boundaries
@@ -25,6 +25,7 @@ const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
 if (typeof window !== 'undefined') {
   // Preload critical components
   import("@/pages/admin/gabinete/Dashboard");
+  import("@/pages/admin/gabinete/Appointments");
 }
 
 export const gabineteRoutes: RouteObject[] = [
@@ -34,7 +35,7 @@ export const gabineteRoutes: RouteObject[] = [
   },
   {
     path: "gabinete/agenda",
-    element: <SuspenseWrapper><Appointments /></SuspenseWrapper>,
+    element: <ErrorBoundary><Appointments /></ErrorBoundary>,
   },
   {
     path: "gabinete/cidadaos",

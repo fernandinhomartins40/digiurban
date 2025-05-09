@@ -45,8 +45,9 @@ import { solicitacoesRoutes } from "./solicitacoesRoutes";
 
 // Preload critical routes for better performance
 if (typeof window !== 'undefined') {
-  // Preload UserManagement component
+  // Preload UserManagement and other critical components
   import("@/pages/admin/users/UserManagement");
+  import("@/pages/admin/gabinete/Appointments");
 }
 
 export const adminRoutes: RouteObject[] = [
