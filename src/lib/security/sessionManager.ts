@@ -1,4 +1,3 @@
-
 /**
  * Utility for managing authentication sessions and security state
  */
@@ -105,10 +104,15 @@ export const forceSessionRefresh = (redirectUrl: string = '/login') => {
   }
 };
 
+// Import needed components to prevent runtime errors
+import { toast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
+
 /**
  * Manages session activity and implements auto-logout for security
  */
-class SessionManager {
+export class SessionManager {
   private idleTimer: number | null = null;
   private lastActivity: number = Date.now();
   private isActive: boolean = true;
@@ -273,15 +277,7 @@ class SessionManager {
       title: 'Sessão expirando',
       description: 'Sua sessão irá expirar em breve. Deseja continuar conectado?',
       variant: 'default',
-      action: (
-        <ToastAction
-          altText="Renovar Sessão"
-          onClick={handleRefresh}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          Renovar Sessão
-        </ToastAction>
-      )
+      // Do not include JSX in this file - import toast actions from a separate component if needed
     });
   }
   
@@ -382,11 +378,6 @@ class SessionManager {
     }
   }
 }
-
-// Import needed components at the top to prevent runtime errors
-import { toast, ToastAction } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Session } from '@supabase/supabase-js';
 
 // Export singleton instance
 export const sessionManager = new SessionManager();

@@ -55,7 +55,7 @@ export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
         );
         
         // Log audit event
-        // Fix: use await with an async IIFE to properly handle the Promise<string>
+        // Fix: properly handle the Promise using async/await
         const userId = await (async () => {
           const { data } = await supabase.auth.getUser();
           return data.user?.id || 'unknown';
@@ -92,7 +92,7 @@ export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
         setUsers(prevUsers => [...prevUsers, data.user]);
         
         // Log audit event
-        // Fix: use await with an async IIFE to properly handle the Promise<string>
+        // Fix: properly handle the Promise using async/await
         const userId = await (async () => {
           const { data } = await supabase.auth.getUser();
           return data.user?.id || 'unknown';
