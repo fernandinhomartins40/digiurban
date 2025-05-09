@@ -1790,6 +1790,67 @@ export type Database = {
         }
         Relationships: []
       }
+      hr_attendances: {
+        Row: {
+          attendance_date: string
+          attended_by: string
+          created_at: string
+          description: string
+          employee_id: string
+          id: string
+          notes: string | null
+          service_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attendance_date?: string
+          attended_by: string
+          created_at?: string
+          description: string
+          employee_id: string
+          id?: string
+          notes?: string | null
+          service_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attendance_date?: string
+          attended_by?: string
+          created_at?: string
+          description?: string
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          service_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_attendances_attended_by_fkey"
+            columns: ["attended_by"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_attendances_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_attendances_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "hr_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_document_types: {
         Row: {
           created_at: string

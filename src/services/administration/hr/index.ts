@@ -5,3 +5,4 @@ export * from './requests';
 export * from './attachments';
 export * from './statusHistory';
 export * from './services';
+export * from './attendances';

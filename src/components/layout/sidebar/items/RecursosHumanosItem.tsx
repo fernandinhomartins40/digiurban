@@ -15,5 +15,9 @@ export const getRecursosHumanosItem = (): SidebarItemProps => ({
       title: "Serviços RH",
       path: "/admin/rh/servicos",
     },
+    {
+      title: "Atendimento",
+      path: "/admin/rh/atendimento",
+    },
   ],
 });

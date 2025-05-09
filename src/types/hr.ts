@@ -1,4 +1,3 @@
-
 export type HRService = {
   id: string;
   name: string;
@@ -22,3 +21,24 @@ export type HRService = {
 
 export type ServiceFormData = Omit<HRService, 'id' | 'created_at' | 'updated_at'>;
 export type ServiceCategory = 'Tempo' | 'Licenças' | 'Aposentadoria' | 'Transferências' | 'Outros';
+
+export type HRAttendanceStatus = 'in_progress' | 'concluded' | 'cancelled';
+
+export type HRAttendance = {
+  id: string;
+  employeeId: string;
+  employeeName?: string;
+  serviceId: string | null;
+  serviceName?: string;
+  description: string;
+  status: HRAttendanceStatus;
+  attendanceDate: Date;
+  attendedBy: string;
+  attendedByName?: string;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type HRAttendanceCreate = Omit<HRAttendance, 'id' | 'createdAt' | 'updatedAt' | 'employeeName' | 'serviceName' | 'attendedByName'>;
+export type HRAttendanceUpdate = Partial<HRAttendanceCreate>;
