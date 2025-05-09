@@ -7,8 +7,10 @@ import { DashboardLoading } from "@/components/dashboard/common/DashboardLoading
 // Main index page becomes a router
 import ComprasIndex from "@/pages/admin/compras/index";
 
-// Lazy load components with proper suspense boundaries
-const FornecedoresPage = lazy(() => import("@/pages/admin/compras/fornecedores"));
+// Import fornecedores page directly to avoid dynamic import issues
+import FornecedoresPage from "@/pages/admin/compras/fornecedores/index";
+
+// Lazy load other components with proper suspense boundaries
 const FornecedorCadastroPage = lazy(() => import("@/pages/admin/compras/fornecedores/cadastro"));
 const FornecedorDetalhesPage = lazy(() => import("@/pages/admin/compras/fornecedores/[id]"));
 const ContratosPage = lazy(() => import("@/pages/admin/compras/contratos"));
@@ -31,14 +33,14 @@ export const comprasRoutes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <SuspenseWrapper><FornecedoresPage /></SuspenseWrapper>,
+        element: <FornecedoresPage />, // Direct reference without SuspenseWrapper
       },
       {
         path: "fornecedores",
         children: [
           {
             index: true,
-            element: <SuspenseWrapper><FornecedoresPage /></SuspenseWrapper>,
+            element: <FornecedoresPage />, // Direct reference without SuspenseWrapper
           },
           {
             path: "cadastro",
