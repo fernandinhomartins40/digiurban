@@ -55,9 +55,15 @@ export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
         );
         
         // Log audit event
+        // Fix: use await with an async IIFE to properly handle the Promise<string>
+        const userId = await (async () => {
+          const { data } = await supabase.auth.getUser();
+          return data.user?.id || 'unknown';
+        })();
+        
         await AuditLogger.log({
           operationType: AuditOperationType.USER_UPDATE,
-          userId: supabase.auth.getUser().then(res => res.data.user?.id || 'unknown'),
+          userId,
           targetId: editingUser.id,
           details: {
             updatedFields: Object.keys(userDataWithoutPermissions),
@@ -86,9 +92,15 @@ export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
         setUsers(prevUsers => [...prevUsers, data.user]);
         
         // Log audit event
+        // Fix: use await with an async IIFE to properly handle the Promise<string>
+        const userId = await (async () => {
+          const { data } = await supabase.auth.getUser();
+          return data.user?.id || 'unknown';
+        })();
+        
         await AuditLogger.log({
           operationType: AuditOperationType.USER_CREATE,
-          userId: supabase.auth.getUser().then(res => res.data.user?.id || 'unknown'),
+          userId,
           targetId: data.user.id,
           details: {
             role: sanitizedUserData.role,
