@@ -1,22 +1,150 @@
-
 /**
  * General security utilities for the application
  */
+
+// Modern WebCrypto API-based encryption
+/**
+ * Encrypts data using the Web Crypto API
+ * @param text Text to encrypt
+ * @param password Encryption key
+ * @returns Promise resolving to encrypted data as base64 string
+ */
+export async function encryptData(text: string, password: string): Promise<string> {
+  try {
+    // Convert password to key material
+    const encoder = new TextEncoder();
+    const passwordData = encoder.encode(password);
+    
+    // Create a key using PBKDF2
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      passwordData,
+      { name: 'PBKDF2' },
+      false,
+      ['deriveBits', 'deriveKey']
+    );
+    
+    const key = await crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt,
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt']
+    );
+    
+    // Encrypt the data
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encodedText = encoder.encode(text);
+    const encryptedContent = await crypto.subtle.encrypt(
+      {
+        name: 'AES-GCM',
+        iv
+      },
+      key,
+      encodedText
+    );
+    
+    // Combine the salt, iv, and encrypted content
+    const encryptedBuffer = new Uint8Array([
+      ...salt,
+      ...iv,
+      ...new Uint8Array(encryptedContent)
+    ]);
+    
+    // Convert to base64
+    return btoa(String.fromCharCode(...encryptedBuffer));
+  } catch (error) {
+    console.error('Encryption error:', error);
+    throw new Error('Failed to encrypt data');
+  }
+}
+
+/**
+ * Decrypts data using the Web Crypto API
+ * @param encryptedText Encrypted text in base64
+ * @param password Encryption key
+ * @returns Promise resolving to decrypted string
+ */
+export async function decryptData(encryptedText: string, password: string): Promise<string> {
+  try {
+    // Convert from base64
+    const encryptedData = new Uint8Array(
+      atob(encryptedText)
+        .split('')
+        .map(c => c.charCodeAt(0))
+    );
+    
+    // Extract salt, iv and encrypted content
+    const salt = encryptedData.slice(0, 16);
+    const iv = encryptedData.slice(16, 28);
+    const content = encryptedData.slice(28);
+    
+    // Create key material from password
+    const encoder = new TextEncoder();
+    const passwordData = encoder.encode(password);
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      passwordData,
+      { name: 'PBKDF2' },
+      false,
+      ['deriveBits', 'deriveKey']
+    );
+    
+    // Derive the key using the salt
+    const key = await crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt,
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['decrypt']
+    );
+    
+    // Decrypt the content
+    const decryptedContent = await crypto.subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv
+      },
+      key,
+      content
+    );
+    
+    // Convert to string
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedContent);
+  } catch (error) {
+    console.error('Decryption error:', error);
+    throw new Error('Failed to decrypt data');
+  }
+}
 
 /**
  * Safely access browser storage with fallbacks and encryption support
  */
 export const safeStorage = {
-  setItem(key: string, value: string, useEncryption = false): void {
+  async setItem(key: string, value: string, useEncryption = false): Promise<void> {
     try {
-      const valueToStore = useEncryption ? simpleEncrypt(value) : value;
+      const appKey = 'DIGIURBAN_SECURITY_KEY';
+      const valueToStore = useEncryption ? await encryptData(value, appKey) : value;
       localStorage.setItem(key, valueToStore);
     } catch (error) {
       console.error('Error setting item in localStorage:', error);
       
       // Try sessionStorage as fallback
       try {
-        const valueToStore = useEncryption ? simpleEncrypt(value) : value;
+        const appKey = 'DIGIURBAN_SECURITY_KEY';
+        const valueToStore = useEncryption ? await encryptData(value, appKey) : value;
         sessionStorage.setItem(key, valueToStore);
       } catch (fallbackError) {
         console.error('Error setting item in sessionStorage:', fallbackError);
@@ -24,7 +152,7 @@ export const safeStorage = {
     }
   },
   
-  getItem(key: string, useDecryption = false): string | null {
+  async getItem(key: string, useDecryption = false): Promise<string | null> {
     let value: string | null = null;
     
     try {
@@ -43,7 +171,8 @@ export const safeStorage = {
     // Decrypt if needed
     if (value && useDecryption) {
       try {
-        return simpleDecrypt(value);
+        const appKey = 'DIGIURBAN_SECURITY_KEY';
+        return await decryptData(value, appKey);
       } catch (decryptError) {
         console.error('Error decrypting value:', decryptError);
         return null;
@@ -81,44 +210,6 @@ export const safeStorage = {
     }
   }
 };
-
-/**
- * Simple encryption function (for demonstration purposes)
- * Note: In a production app, use a proper encryption library
- */
-function simpleEncrypt(text: string): string {
-  // Simple XOR encryption with a hardcoded key
-  // This is NOT secure for production use
-  const key = 'DIGIURBAN_SECURITY_KEY';
-  let result = '';
-  
-  for (let i = 0; i < text.length; i++) {
-    const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-    result += String.fromCharCode(charCode);
-  }
-  
-  // Convert to base64 for storage
-  return btoa(result);
-}
-
-/**
- * Simple decryption function (for demonstration purposes)
- * Note: In a production app, use a proper encryption library
- */
-function simpleDecrypt(encryptedText: string): string {
-  // Decode from base64
-  const decoded = atob(encryptedText);
-  const key = 'DIGIURBAN_SECURITY_KEY';
-  let result = '';
-  
-  // XOR decrypt
-  for (let i = 0; i < decoded.length; i++) {
-    const charCode = decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-    result += String.fromCharCode(charCode);
-  }
-  
-  return result;
-}
 
 /**
  * Clear sensitive data when user logs out

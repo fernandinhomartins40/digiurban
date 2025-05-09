@@ -20,17 +20,21 @@ export function sanitizeHtml(input: string): string {
 }
 
 /**
- * Sanitize inputs for database operations by removing SQL injection patterns
- * @param input String that might contain SQL injection attempts
+ * Sanitize inputs for database operations
+ * @param input String that might contain dangerous content
  * @returns Sanitized string
+ * 
+ * NOTE: This should NOT be used as primary defense against SQL injection.
+ * Always use Supabase parameterized queries instead of string concatenation.
  */
-export function sanitizeSqlInput(input: string): string {
+export function sanitizeInput(input: string): string {
   if (!input) return '';
   
-  // Remove common SQL injection patterns
+  // Remove potentially dangerous characters
+  // This is a defense in depth, not a replacement for parameterized queries
   return input
-    .replace(/(\b)(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER)(\b)/gi, '')
-    .replace(/['";/\\]/g, '');
+    .replace(/['";\\]/g, '')
+    .trim();
 }
 
 /**
@@ -90,4 +94,62 @@ export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
   }
   
   return result as T;
+}
+
+/**
+ * Validate if input meets security requirements
+ * @param input Input string to validate
+ * @param pattern Regex pattern to validate against
+ * @returns Boolean indicating if input is valid
+ */
+export function validatePattern(input: string, pattern: RegExp): boolean {
+  if (!input) return false;
+  return pattern.test(input);
+}
+
+/**
+ * Validate email format
+ * @param email Email to validate
+ * @returns Boolean indicating if email is valid
+ */
+export function validateEmail(email: string): boolean {
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return validatePattern(email, emailPattern);
+}
+
+/**
+ * Validate CPF format
+ * @param cpf CPF to validate
+ * @returns Boolean indicating if CPF is valid
+ */
+export function validateCPF(cpf: string): boolean {
+  const cpfClean = cpf.replace(/\D/g, '');
+  
+  if (cpfClean.length !== 11) return false;
+  
+  // Check for all same digits (invalid CPF)
+  if (/^(\d)\1{10}$/.test(cpfClean)) return false;
+  
+  // Validation algorithm for CPF
+  let sum = 0;
+  let remainder;
+  
+  for (let i = 1; i <= 9; i++) {
+    sum += parseInt(cpfClean.substring(i-1, i)) * (11 - i);
+  }
+  
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cpfClean.substring(9, 10))) return false;
+  
+  sum = 0;
+  for (let i = 1; i <= 10; i++) {
+    sum += parseInt(cpfClean.substring(i-1, i)) * (12 - i);
+  }
+  
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cpfClean.substring(10, 11))) return false;
+  
+  return true;
 }

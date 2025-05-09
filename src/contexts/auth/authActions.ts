@@ -5,6 +5,7 @@ import { NavigateFunction } from "react-router-dom";
 import { User } from "@/types/auth";
 import { Session } from "@supabase/supabase-js";
 import { AuthError } from "@supabase/supabase-js";
+import { cleanupAuthState } from "@/lib/security/sessionManager";
 
 /**
  * Core authentication methods implementation
@@ -21,12 +22,26 @@ export function createAuthActions(
     setUser(null);
     setSession(null);
     setUserType(null);
+    
+    // Clean up auth storage items
+    cleanupAuthState();
   };
 
   const login = async (email: string, password: string, userType: "admin" | "citizen") => {
     try {
       setIsLoading(true);
       console.log(`Attempting login for ${email} as ${userType}`);
+      
+      // Clean up any existing auth state first
+      cleanupAuthState();
+      
+      // Try a global sign out first to clear any existing sessions
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.log("Pre-login signout error (non-critical):", err);
+      }
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -53,7 +68,8 @@ export function createAuthActions(
         if (data.session) {
           const redirectPath = userType === "admin" ? "/admin/dashboard" : "/citizen/dashboard";
           console.log(`Forcing redirect to ${redirectPath} after timeout`);
-          navigate(redirectPath, { replace: true });
+          // Use location.href for a full page refresh to ensure clean slate
+          window.location.href = redirectPath;
         }
       }, 3000);
       
@@ -97,6 +113,9 @@ export function createAuthActions(
     try {
       setIsLoading(true);
       
+      // Clean up any existing auth state first
+      cleanupAuthState();
+      
       // Add user_type to metadata
       const metadata = {
         ...userData,
@@ -111,6 +130,7 @@ export function createAuthActions(
         password: userData.password,
         options: {
           data: userMetadata,
+          emailRedirectTo: window.location.origin + "/login"
         }
       });
 
@@ -140,9 +160,15 @@ export function createAuthActions(
   const logout = async () => {
     try {
       setIsLoading(true);
-      await supabase.auth.signOut();
+      
+      // First clean up auth state
       clearAuthState();
-      navigate("/login", { replace: true });
+      
+      // Then sign out with global scope
+      await supabase.auth.signOut({ scope: 'global' });
+      
+      // Navigate to login and force page reload for clean state
+      window.location.href = "/login";
     } catch (error: any) {
       console.error("Logout error:", error.message);
       toast({

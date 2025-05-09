@@ -9,6 +9,34 @@ import { ToastAction } from '@/components/ui/toast';
 export const MAX_IDLE_TIME = 30 * 60 * 1000;
 
 /**
+ * Helper for secure cleanup of authentication state on logout
+ */
+export function cleanupAuthState(): void {
+  // Clear auth token
+  try {
+    // Clear specific auth related items
+    localStorage.removeItem('supabase.auth.token');
+    localStorage.removeItem('digiurban-auth-storage');
+    
+    // Clear any item that might contain auth information
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Also clear from sessionStorage if in use
+    Object.keys(sessionStorage || {}).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  } catch (error) {
+    console.error('Failed to clean up auth state:', error);
+  }
+}
+
+/**
  * Manages session activity and implements auto-logout for security
  */
 export class SessionManager {
@@ -226,12 +254,18 @@ export class SessionManager {
    */
   private async forceLogout() {
     try {
-      await supabase.auth.signOut();
+      // Clean up auth state first
+      cleanupAuthState();
+      
+      // Sign out with global scope to clear server session as well
+      await supabase.auth.signOut({ scope: 'global' });
       
       // Redirect to login page
       window.location.href = '/login';
     } catch (error) {
       console.error('Error in force logout:', error);
+      // Fallback: attempt redirect even if signOut fails
+      window.location.href = '/login';
     }
   }
   
@@ -257,6 +291,24 @@ export class SessionManager {
       return true;
     } catch (error) {
       console.error('Error in manual refresh:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Perform secure logout
+   * @returns Promise that resolves when logout is complete
+   */
+  public async secureLogout(): Promise<boolean> {
+    try {
+      // Clean up auth state first
+      cleanupAuthState();
+      
+      // Sign out with global scope
+      await supabase.auth.signOut({ scope: 'global' });
+      return true;
+    } catch (error) {
+      console.error('Error during secure logout:', error);
       return false;
     }
   }

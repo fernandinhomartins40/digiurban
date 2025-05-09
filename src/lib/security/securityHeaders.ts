@@ -1,4 +1,3 @@
-
 /**
  * Utility for managing security headers that can be applied to our application
  */
@@ -72,17 +71,32 @@ export function generateCSP(options: CSPOptions): string {
 
 /**
  * Default CSP configuration for the application
+ * Updated for better security - removed unsafe-inline and unsafe-eval where possible
  */
 export const DEFAULT_CSP: CSPOptions = {
   defaultSrc: ["'self'"],
-  scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://vvuwhkaxrwrdgydxvprr.supabase.co"],
-  styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+  // Using nonce-based approach instead of unsafe-inline
+  scriptSrc: ["'self'", "https://vvuwhkaxrwrdgydxvprr.supabase.co"],
+  styleSrc: ["'self'", "https://fonts.googleapis.com"],
   imgSrc: ["'self'", "data:", "https://vvuwhkaxrwrdgydxvprr.supabase.co"],
   connectSrc: ["'self'", "https://vvuwhkaxrwrdgydxvprr.supabase.co"],
   fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
   objectSrc: ["'none'"],
   frameSrc: ["'self'"],
 };
+
+/**
+ * Generate a nonce value for use with CSP
+ * @returns Random nonce string
+ */
+export function generateNonce(): string {
+  const randomBytes = new Uint8Array(16);
+  crypto.getRandomValues(randomBytes);
+  
+  return Array.from(randomBytes)
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 /**
  * Generate security headers for meta tags
