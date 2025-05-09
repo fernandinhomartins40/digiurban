@@ -23,7 +23,7 @@ export const fetchAttendances = async (
         *,
         employee:employee_id(id, name, email),
         service:service_id(id, name),
-        admin:attended_by(name)
+        admin:attended_by(id, name)
       `)
       .range(offset, offset + limit - 1);
     
@@ -61,11 +61,11 @@ export const fetchAttendances = async (
       query = query.order('attendance_date', { ascending: false });
     }
     
-    const response = await query;
+    const { data, error } = await query;
     
     // Transform the data to match our type
-    if (response.data) {
-      const transformedData: HRAttendance[] = response.data.map(record => ({
+    if (data) {
+      const transformedData: HRAttendance[] = data.map(record => ({
         id: record.id,
         employeeId: record.employee_id,
         employeeName: record.employee?.name,
@@ -81,49 +81,48 @@ export const fetchAttendances = async (
         updatedAt: new Date(record.updated_at)
       }));
       
-      return { data: transformedData };
+      return { data: transformedData, error, status: error ? 'error' : 'success' };
     }
     
-    return response;
+    return { data: [], error, status: error ? 'error' : 'success' };
   }, { context: 'fetchAttendances' });
 };
 
 // Fetch a single attendance by ID
 export const fetchAttendanceById = async (id: string): Promise<ApiResponse<HRAttendance>> => {
   return apiRequest(async () => {
-    const response = await supabase
+    const { data, error } = await supabase
       .from('hr_attendances')
       .select(`
         *,
         employee:employee_id(id, name, email),
         service:service_id(id, name),
-        admin:attended_by(name)
+        admin:attended_by(id, name)
       `)
       .eq('id', id)
       .single();
     
-    if (response.data) {
-      const record = response.data;
+    if (data) {
       const transformedData: HRAttendance = {
-        id: record.id,
-        employeeId: record.employee_id,
-        employeeName: record.employee?.name,
-        serviceId: record.service_id,
-        serviceName: record.service?.name,
-        description: record.description,
-        status: record.status as HRAttendanceStatus,
-        attendanceDate: new Date(record.attendance_date),
-        attendedBy: record.attended_by,
-        attendedByName: record.admin?.name,
-        notes: record.notes,
-        createdAt: new Date(record.created_at),
-        updatedAt: new Date(record.updated_at)
+        id: data.id,
+        employeeId: data.employee_id,
+        employeeName: data.employee?.name,
+        serviceId: data.service_id,
+        serviceName: data.service?.name,
+        description: data.description,
+        status: data.status as HRAttendanceStatus,
+        attendanceDate: new Date(data.attendance_date),
+        attendedBy: data.attended_by,
+        attendedByName: data.admin?.name,
+        notes: data.notes,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
       };
       
-      return { data: transformedData };
+      return { data: transformedData, error, status: error ? 'error' : 'success' };
     }
     
-    return response;
+    return { data: null as any, error, status: error ? 'error' : 'success' };
   }, { context: 'fetchAttendanceById' });
 };
 
@@ -147,7 +146,7 @@ export const createAttendance = async (data: HRAttendanceCreate): Promise<ApiRes
   return apiRequest(async () => {
     const { employeeId, serviceId, description, status, attendanceDate, attendedBy, notes } = data;
     
-    const response = await supabase
+    const { data: record, error } = await supabase
       .from('hr_attendances')
       .insert({
         employee_id: employeeId,
@@ -161,8 +160,7 @@ export const createAttendance = async (data: HRAttendanceCreate): Promise<ApiRes
       .select()
       .single();
     
-    if (response.data) {
-      const record = response.data;
+    if (record) {
       const transformedData: HRAttendance = {
         id: record.id,
         employeeId: record.employee_id,
@@ -176,10 +174,10 @@ export const createAttendance = async (data: HRAttendanceCreate): Promise<ApiRes
         updatedAt: new Date(record.updated_at)
       };
       
-      return { data: transformedData };
+      return { data: transformedData, error, status: error ? 'error' : 'success' };
     }
     
-    return response;
+    return { data: null as any, error, status: error ? 'error' : 'success' };
   }, { context: 'createAttendance' });
 };
 
@@ -199,15 +197,14 @@ export const updateAttendance = async (id: string, data: HRAttendanceUpdate): Pr
     // Always update the updated_at timestamp
     updateData.updated_at = new Date().toISOString();
     
-    const response = await supabase
+    const { data: record, error } = await supabase
       .from('hr_attendances')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
     
-    if (response.data) {
-      const record = response.data;
+    if (record) {
       const transformedData: HRAttendance = {
         id: record.id,
         employeeId: record.employee_id,
@@ -221,21 +218,21 @@ export const updateAttendance = async (id: string, data: HRAttendanceUpdate): Pr
         updatedAt: new Date(record.updated_at)
       };
       
-      return { data: transformedData };
+      return { data: transformedData, error, status: error ? 'error' : 'success' };
     }
     
-    return response;
+    return { data: null as any, error, status: error ? 'error' : 'success' };
   }, { context: 'updateAttendance' });
 };
 
 // Delete an attendance
 export const deleteAttendance = async (id: string): Promise<ApiResponse<null>> => {
   return apiRequest(async () => {
-    const response = await supabase
+    const { error } = await supabase
       .from('hr_attendances')
       .delete()
       .eq('id', id);
     
-    return response;
+    return { data: null, error, status: error ? 'error' : 'success' };
   }, { context: 'deleteAttendance' });
 };

@@ -100,8 +100,8 @@ export const AttendanceFilter = ({
                 <SelectValue placeholder="Todos os serviços" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os serviços</SelectItem>
-                {services.map((service) => (
+                <SelectItem value="all">Todos os serviços</SelectItem>
+                {services && services.map((service) => (
                   <SelectItem key={service.id} value={service.id}>
                     {service.name}
                   </SelectItem>
@@ -117,7 +117,7 @@ export const AttendanceFilter = ({
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="in_progress">Em andamento</SelectItem>
                 <SelectItem value="concluded">Concluído</SelectItem>
                 <SelectItem value="cancelled">Cancelado</SelectItem>

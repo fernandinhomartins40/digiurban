@@ -22,6 +22,7 @@ import AttendanceDetail from "@/components/administracao/rh/attendance/Attendanc
 import AttendanceFilter from "@/components/administracao/rh/attendance/AttendanceFilter";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfDay, endOfDay } from "date-fns";
+import { ApiResponse } from "@/lib/api/supabaseClient";
 
 export default function HRAttendancePage() {
   const { user } = useAuth();
@@ -40,10 +41,10 @@ export default function HRAttendancePage() {
 
   // Fetch all admin profiles (employees)
   const {
-    data: employees = [],
+    data: employeesData = { data: [] },
     isLoading: isLoadingEmployees,
     refetch: refetchEmployees,
-  } = useApiQuery(
+  } = useApiQuery<ApiResponse<any>>(
     ["admin-profiles"],
     async () => {
       const { data, error } = await supabase
@@ -51,28 +52,31 @@ export default function HRAttendancePage() {
         .select("id, name, email")
         .order("name");
 
-      if (error) throw error;
-      return data;
+      return { data, error, status: error ? 'error' : 'success' };
     },
     {
       enabled: true,
     }
   );
 
+  const employees = employeesData?.data || [];
+
   // Fetch services
   const {
-    data: services = [],
+    data: servicesResponse,
     isLoading: isLoadingServices,
   } = useApiQuery(
     ["hr-services"],
     async () => {
       const response = await fetchServices();
-      return response.data || [];
+      return response;
     },
     {
       enabled: true,
     }
   );
+
+  const services = servicesResponse?.data || [];
 
   // Build query parameters based on filters
   const queryParams = React.useMemo(() => {
@@ -83,10 +87,21 @@ export default function HRAttendancePage() {
     if (filters) {
       params.filters = {};
 
-      if (filters.serviceId) params.filters.serviceId = filters.serviceId;
-      if (filters.status) params.filters.status = filters.status;
-      if (filters.startDate) params.filters.startDate = startOfDay(filters.startDate);
-      if (filters.endDate) params.filters.endDate = endOfDay(filters.endDate);
+      if (filters.serviceId && filters.serviceId !== "all") {
+        params.filters.serviceId = filters.serviceId;
+      }
+      
+      if (filters.status && filters.status !== "all") {
+        params.filters.status = filters.status;
+      }
+      
+      if (filters.startDate) {
+        params.filters.startDate = startOfDay(filters.startDate);
+      }
+      
+      if (filters.endDate) {
+        params.filters.endDate = endOfDay(filters.endDate);
+      }
     }
 
     return params;
@@ -94,16 +109,16 @@ export default function HRAttendancePage() {
 
   // Fetch attendances based on filters
   const {
-    data: attendances = [],
+    data: attendancesData = { data: [] },
     isLoading: isLoadingAttendances,
     refetch: refetchAttendances,
-  } = useApiQuery(
+  } = useApiQuery<ApiResponse<any>>(
     ["hr-attendances", JSON.stringify(queryParams)],
     async () => {
       // If we have an employee name filter, we need to find the employee ID first
       let employeeId: string | undefined = undefined;
       
-      if (filters.employeeName) {
+      if (filters.employeeName && employees && Array.isArray(employees)) {
         const matchingEmployees = employees.filter((emp: any) =>
           emp.name.toLowerCase().includes(filters.employeeName?.toLowerCase() || "")
         );
@@ -128,33 +143,37 @@ export default function HRAttendancePage() {
         response = await fetchAttendances(queryParams);
       }
       
-      return response.data || [];
+      return response;
     },
     {
       enabled: true,
     }
   );
+  
+  const attendances = attendancesData?.data || [];
 
   // Fetch employee-specific attendances for history
   const {
-    data: employeeHistory = [],
+    data: employeeHistoryData = { data: [] },
     refetch: refetchHistory,
-  } = useApiQuery(
+  } = useApiQuery<ApiResponse<any>>(
     ["hr-employee-history", viewingAttendance?.employeeId],
     async () => {
-      if (!viewingAttendance?.employeeId) return [];
+      if (!viewingAttendance?.employeeId) return { data: [], error: null, status: 'success' };
       
       const response = await fetchAttendancesByEmployee(
         viewingAttendance.employeeId,
         { orderBy: { column: "attendance_date", ascending: false } }
       );
       
-      return response.data || [];
+      return response;
     },
     {
       enabled: !!viewingAttendance?.employeeId,
     }
   );
+
+  const employeeHistory = employeeHistoryData?.data || [];
 
   // Create attendance mutation
   const createAttendanceMutation = useApiMutation<HRAttendance, HRAttendanceCreate>(
@@ -335,12 +354,12 @@ export default function HRAttendancePage() {
             <AttendanceForm
               initialData={editingAttendance || undefined}
               onSubmit={handleFormSubmit}
-              employees={employees}
+              employees={employees as { id: string; name: string }[]}
               isLoading={isLoading}
             />
           ) : (
             <AttendanceList
-              attendances={attendances}
+              attendances={attendances as HRAttendance[]}
               isLoading={isLoading}
               onView={handleViewAttendance}
               onEdit={handleEditAttendance}
@@ -358,9 +377,11 @@ export default function HRAttendancePage() {
           setIsDetailOpen(false);
           setViewingAttendance(null);
         }}
-        employeeHistory={employeeHistory.filter(
-          (item) => item.id !== viewingAttendance?.id
-        )}
+        employeeHistory={employeeHistory && Array.isArray(employeeHistory) ? 
+          (employeeHistory as HRAttendance[]).filter(
+            (item) => item.id !== viewingAttendance?.id
+          ) : []
+        }
       />
     </div>
   );

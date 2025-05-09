@@ -45,16 +45,18 @@ export const AttendanceForm = ({
   );
 
   // Fetch HR services
-  const { data: services = [], isLoading: isLoadingServices } = useApiQuery(
+  const { data: servicesResponse } = useApiQuery(
     ['hr-services'],
     async () => {
       const response = await fetchServices();
-      return response.data || [];
+      return response;
     },
     {
       enabled: true,
     }
   );
+
+  const services = servicesResponse?.data || [];
 
   const form = useForm<HRAttendanceCreate>({
     defaultValues: initialData
@@ -137,7 +139,7 @@ export const AttendanceForm = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {employees.map((employee) => (
+                      {employees && employees.map((employee) => (
                         <SelectItem key={employee.id} value={employee.id}>
                           {employee.name}
                         </SelectItem>
@@ -156,7 +158,6 @@ export const AttendanceForm = ({
                 <FormItem>
                   <FormLabel>Serviço</FormLabel>
                   <Select
-                    disabled={isLoadingServices}
                     onValueChange={field.onChange}
                     defaultValue={field.value?.toString()}
                   >
@@ -166,7 +167,7 @@ export const AttendanceForm = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {services.map((service: HRService) => (
+                      {services && Array.isArray(services) && services.map((service: HRService) => (
                         <SelectItem key={service.id} value={service.id}>
                           {service.name}
                         </SelectItem>
