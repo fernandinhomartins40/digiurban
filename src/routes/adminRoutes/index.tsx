@@ -12,7 +12,8 @@ const Dashboard = lazy(() => import("@/pages/admin/Dashboard"));
 import { correioRoutes } from "./correioRoutes";
 import { gabineteRoutes } from "./gabineteRoutes";
 import { adminChatRoutes } from "./chatRoutes";
-import { administracaoRoutes } from "./administracaoRoutes";
+import { rhRoutes } from "./rhRoutes";
+import { comprasRoutes } from "./comprasRoutes";
 import { saudeRoutes } from "./saudeRoutes";
 import { educacaoRoutes } from "./educacaoRoutes";
 import { assistenciaRoutes } from "./assistenciaRoutes";
@@ -54,11 +55,12 @@ export const adminRoutes: RouteObject[] = [
       },
       
       // Module-specific routes
-      ...solicitacoesRoutes, // Add the new solicitações routes
+      ...solicitacoesRoutes,
       ...correioRoutes,
       ...gabineteRoutes,
       ...adminChatRoutes,
-      ...administracaoRoutes,
+      ...rhRoutes,
+      ...comprasRoutes,
       ...saudeRoutes,
       ...educacaoRoutes,
       ...assistenciaRoutes,
@@ -79,3 +81,4 @@ export const adminRoutes: RouteObject[] = [
 ];
 
 export default adminRoutes;
+

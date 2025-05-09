@@ -4,7 +4,6 @@ import { getChatItem } from "./ChatItem";
 import { getUserRolesItem } from "./UserRolesItem";
 import { getGabineteItem } from "./GabineteItem";
 import { getCorreioItem } from "./CorreioItem";
-import { getAdministracaoItem } from "./AdministracaoItem";
 import { getFinancasItem } from "./FinancasItem";
 import { getEducacaoItem } from "./EducacaoItem";
 import { getSaudeItem } from "./SaudeItem";
@@ -22,6 +21,8 @@ import { getTransporteItem } from "./TransporteItem";
 import { getOuvidoriaItem } from "./OuvidoriaItem";
 import { getSolicitacoesItem } from "./SolicitacoesItem";
 import { getDashboardItem } from "./DashboardItem";
+import { getRecursosHumanosItem } from "./RecursosHumanosItem";
+import { getComprasItem } from "./ComprasItem";
 
 export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => {
   // Include dashboard item first
@@ -32,7 +33,8 @@ export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => 
     getUserRolesItem(),
     getGabineteItem(),
     getCorreioItem(unreadCount),
-    getAdministracaoItem(),
+    getRecursosHumanosItem(), // Added RH item
+    getComprasItem(), // Added Compras item
     getFinancasItem(),
     getEducacaoItem(),
     getSaudeItem(),
@@ -52,3 +54,4 @@ export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => 
   
   return items;
 };
+
