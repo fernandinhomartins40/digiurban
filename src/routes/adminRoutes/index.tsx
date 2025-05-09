@@ -53,7 +53,7 @@ export const adminRoutes: RouteObject[] = [
   {
     path: "",
     element: <AdminLayout />,
-    errorElement: <ErrorBoundary />,
+    errorElement: <ErrorBoundary><div>Erro na aplicação</div></ErrorBoundary>,
     children: [
       // General dashboard route - directly imported instead of lazy loaded
       {

@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { toast, ToastAction } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 /**
  * Displays a session timeout warning with refresh option
