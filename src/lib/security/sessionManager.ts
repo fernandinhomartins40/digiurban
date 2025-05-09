@@ -3,6 +3,10 @@
  */
 
 import { safeStorage } from './securityUtils';
+import { showSessionTimeoutWarning, showSessionExpiredNotification } from '@/components/security/SessionTimeoutWarning';
+import { toast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
 
 // Maximum session idle time (30 minutes)
 export const MAX_IDLE_TIME = 30 * 60 * 1000;
@@ -103,11 +107,6 @@ export const forceSessionRefresh = (redirectUrl: string = '/login') => {
     window.location.reload();
   }
 };
-
-// Import needed components to prevent runtime errors
-import { toast } from "@/hooks/use-toast";
-import { supabase } from '@/integrations/supabase/client';
-import { Session } from '@supabase/supabase-js';
 
 /**
  * Manages session activity and implements auto-logout for security
@@ -210,11 +209,7 @@ export class SessionManager {
     if (idleTime >= MAX_IDLE_TIME) {
       console.log('User idle timeout reached, logging out');
       
-      toast({
-        title: 'Sessão expirada',
-        description: 'Sua sessão expirou por inatividade. Por favor, faça login novamente.',
-        variant: 'default',
-      });
+      showSessionExpiredNotification();
       
       // Perform logout
       await this.forceLogout();
@@ -272,13 +267,7 @@ export class SessionManager {
    */
   private warnSessionExpiry() {
     const handleRefresh = () => this.refreshSession();
-    
-    toast({
-      title: 'Sessão expirando',
-      description: 'Sua sessão irá expirar em breve. Deseja continuar conectado?',
-      variant: 'default',
-      // Do not include JSX in this file - import toast actions from a separate component if needed
-    });
+    showSessionTimeoutWarning(handleRefresh);
   }
   
   /**

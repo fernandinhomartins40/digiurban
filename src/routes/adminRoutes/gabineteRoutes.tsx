@@ -3,23 +3,34 @@ import { RouteObject } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { MayorOnlyRoute } from "@/components/auth/MayorOnlyRoute";
 import { DashboardLoading } from "@/components/dashboard/common/DashboardLoading";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
-// Lazy load components with explicit Suspense boundaries
-const MayorDashboard = lazy(() => import("@/pages/admin/gabinete/Dashboard"));
+// Import Dashboard directly for reliability, lazy load other components
+import MayorDashboard from "@/pages/admin/gabinete/Dashboard";
+
+// Lazy load non-critical components with error boundaries
 const Appointments = lazy(() => import("@/pages/admin/gabinete/Appointments"));
 const CitizenServices = lazy(() => import("@/pages/admin/gabinete/CitizenServices"));
 
-// Helper for lazy-loaded components
+// Helper for lazy-loaded components with error boundaries
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<DashboardLoading message="Carregando..." />}>
-    {children}
-  </Suspense>
+  <ErrorBoundary>
+    <Suspense fallback={<DashboardLoading message="Carregando..." />}>
+      {children}
+    </Suspense>
+  </ErrorBoundary>
 );
+
+// Preload components for better reliability
+if (typeof window !== 'undefined') {
+  // Preload critical components
+  import("@/pages/admin/gabinete/Dashboard");
+}
 
 export const gabineteRoutes: RouteObject[] = [
   {
     path: "gabinete/dashboard",
-    element: <MayorOnlyRoute><SuspenseWrapper><MayorDashboard /></SuspenseWrapper></MayorOnlyRoute>,
+    element: <MayorOnlyRoute><ErrorBoundary><MayorDashboard /></ErrorBoundary></MayorOnlyRoute>,
   },
   {
     path: "gabinete/agenda",

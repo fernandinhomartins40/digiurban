@@ -3,11 +3,21 @@ import { RouteObject } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { DashboardLoading } from "@/components/dashboard/common/DashboardLoading";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 // Import Dashboard directly instead of lazy loading to prevent dynamic import issues
 import Dashboard from "@/pages/admin/Dashboard";
 
-// Lazy load other components with explicit Suspense boundaries
+// Helper for lazy-loaded components with error boundaries
+const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
+  <ErrorBoundary>
+    <Suspense fallback={<DashboardLoading message="Carregando..." />}>
+      {children}
+    </Suspense>
+  </ErrorBoundary>
+);
+
+// Lazy load components with explicit Suspense boundaries - preload for critical routes
 const UserManagement = lazy(() => import("@/pages/admin/users/UserManagement"));
 
 // Import route groups
@@ -33,22 +43,22 @@ import { meioAmbienteRoutes } from "./meioAmbienteRoutes";
 import { ouvidoriaRoutes } from "./ouvidoriaRoutes";
 import { solicitacoesRoutes } from "./solicitacoesRoutes";
 
-// Helper for lazy-loaded components
-const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<DashboardLoading message="Carregando..." />}>
-    {children}
-  </Suspense>
-);
+// Preload critical routes for better performance
+if (typeof window !== 'undefined') {
+  // Preload UserManagement component
+  import("@/pages/admin/users/UserManagement");
+}
 
 export const adminRoutes: RouteObject[] = [
   {
     path: "",
     element: <AdminLayout />,
+    errorElement: <ErrorBoundary />,
     children: [
       // General dashboard route - directly imported instead of lazy loaded
       {
         path: "dashboard",
-        element: <Dashboard />
+        element: <ErrorBoundary><Dashboard /></ErrorBoundary>
       },
 
       {
