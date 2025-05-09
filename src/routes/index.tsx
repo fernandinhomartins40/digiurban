@@ -7,8 +7,8 @@ import { authRoutes } from "./authRoutes";
 import { citizenRoutes } from "./citizenRoutes";
 import LandingPage from "@/pages/Landing";
 
-// Components
-const NotFound = lazy(() => import("@/pages/NotFound"));
+// Import NotFound directly instead of lazy loading
+import NotFound from "@/pages/NotFound";
 
 export const appRoutes: RouteObject[] = [
   {
