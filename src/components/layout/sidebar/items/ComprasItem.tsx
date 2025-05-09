@@ -8,10 +8,6 @@ export const getComprasItem = (): SidebarItemProps => ({
   path: undefined, // Remove direct path since we're adding children
   children: [
     {
-      title: "Solicitações",
-      path: "/admin/compras/solicitacoes",
-    },
-    {
       title: "Fornecedores",
       path: "/admin/compras/fornecedores",
     },

@@ -8,7 +8,6 @@ import { DashboardLoading } from "@/components/dashboard/common/DashboardLoading
 import ComprasIndex from "@/pages/admin/compras/index";
 
 // Lazy load components with proper suspense boundaries
-const SolicitacoesPage = lazy(() => import("@/pages/admin/compras/solicitacoes"));
 const FornecedoresPage = lazy(() => import("@/pages/admin/compras/fornecedores"));
 const FornecedorCadastroPage = lazy(() => import("@/pages/admin/compras/fornecedores/cadastro"));
 const FornecedorDetalhesPage = lazy(() => import("@/pages/admin/compras/fornecedores/[id]"));
@@ -32,11 +31,7 @@ export const comprasRoutes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <SuspenseWrapper><SolicitacoesPage /></SuspenseWrapper>,
-      },
-      {
-        path: "solicitacoes",
-        element: <SuspenseWrapper><SolicitacoesPage /></SuspenseWrapper>,
+        element: <SuspenseWrapper><FornecedoresPage /></SuspenseWrapper>,
       },
       {
         path: "fornecedores",
