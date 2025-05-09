@@ -9,14 +9,6 @@ export const getEducacaoItem = (): SidebarItemProps => ({
   moduleId: "educacao",
   children: [
     {
-      title: "Dashboard Educacional",
-      path: "/admin/educacao/dashboard",
-    },
-    {
-      title: "Painel Educacional",
-      path: "/admin/educacao",
-    },
-    {
       title: "Escolas e CMEIs",
       path: "/admin/educacao/escolas",
     },

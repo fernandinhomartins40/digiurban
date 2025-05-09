@@ -1,6 +1,5 @@
 
 import { RouteObject } from "react-router-dom";
-import EducacaoIndex from "@/pages/admin/educacao/index";
 import EscolasPage from "@/pages/admin/educacao/escolas/index";
 import MatriculaPage from "@/pages/admin/educacao/matricula/index";
 import TransportePage from "@/pages/admin/educacao/transporte/index";
@@ -11,17 +10,8 @@ import CalendarioPage from "@/pages/admin/educacao/calendario/index";
 import ComunicacaoPage from "@/pages/admin/educacao/comunicacao/index";
 import MerendaPage from "@/pages/admin/educacao/merenda/index";
 import OcorrenciasPage from "@/pages/admin/educacao/ocorrencias/index";
-import EducacaoDashboard from "@/pages/admin/educacao/Dashboard";
 
 export const educacaoRoutes: RouteObject[] = [
-  {
-    path: "educacao",
-    element: <EducacaoIndex />,
-  },
-  {
-    path: "educacao/dashboard",
-    element: <EducacaoDashboard />,
-  },
   {
     path: "educacao/escolas",
     element: <EscolasPage />,
