@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { getSecurityMetaTags, generateCSRFToken, storeCSRFToken } from '@/lib/security/securityHeaders';
+import { getSecurityMetaTags, generateCSRFToken, storeCSRFToken, applyCSPToScript } from '@/lib/security/securityHeaders';
 
 /**
  * Hook to add security headers to the document
@@ -28,6 +28,34 @@ export function useSecurityHeaders() {
     const csrfToken = generateCSRFToken();
     storeCSRFToken(csrfToken);
     
+    // Apply nonce to all script elements
+    document.querySelectorAll('script').forEach(script => {
+      if (!script.getAttribute('nonce')) {
+        applyCSPToScript(script);
+      }
+    });
+    
+    // Monitor for dynamically added scripts
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach(mutation => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach(node => {
+            if (node.nodeName === 'SCRIPT') {
+              const scriptElement = node as HTMLScriptElement;
+              if (!scriptElement.getAttribute('nonce')) {
+                applyCSPToScript(scriptElement);
+              }
+            }
+          });
+        }
+      });
+    });
+    
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+    
     return () => {
       // Clean up meta tags on unmount
       document.querySelectorAll('meta[http-equiv]').forEach(tag => {
@@ -35,6 +63,9 @@ export function useSecurityHeaders() {
           tag.remove();
         }
       });
+      
+      // Stop observing
+      observer.disconnect();
     };
   }, []);
 }
@@ -59,4 +90,32 @@ export function useCSRFToken() {
       return token;
     }
   };
+}
+
+/**
+ * Hook to create security-enhanced form submission
+ */
+export function useSecureForm<TData = any, TResult = any>(
+  submitFn: (data: TData) => Promise<TResult>
+) {
+  const { getCSRFToken, refreshCSRFToken } = useCSRFToken();
+  
+  const secureSubmit = async (data: TData): Promise<TResult> => {
+    // Add CSRF token to form data
+    const csrfToken = getCSRFToken();
+    const secureData = {
+      ...data as any,
+      _csrf: csrfToken
+    };
+    
+    // Submit form
+    const result = await submitFn(secureData as TData);
+    
+    // Refresh CSRF token after submission for added security
+    refreshCSRFToken();
+    
+    return result;
+  };
+  
+  return { secureSubmit };
 }

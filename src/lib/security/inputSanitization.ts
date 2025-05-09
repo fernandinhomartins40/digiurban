@@ -153,3 +153,94 @@ export function validateCPF(cpf: string): boolean {
   
   return true;
 }
+
+/**
+ * Validate password strength
+ * @param password Password to validate
+ * @param options Options for password validation
+ * @returns Object with validation result and feedback
+ */
+export function validatePasswordStrength(password: string, options = {
+  minLength: 8,
+  requireUpperCase: true,
+  requireLowerCase: true,
+  requireNumbers: true,
+  requireSpecialChars: true
+}): { isValid: boolean; feedback: string } {
+  const { minLength, requireUpperCase, requireLowerCase, requireNumbers, requireSpecialChars } = options;
+  
+  // Initialize feedback array to collect validation messages
+  const feedbackItems: string[] = [];
+  
+  // Check length
+  if (password.length < minLength) {
+    feedbackItems.push(`A senha deve ter pelo menos ${minLength} caracteres.`);
+  }
+  
+  // Check for uppercase if required
+  if (requireUpperCase && !/[A-Z]/.test(password)) {
+    feedbackItems.push('A senha deve conter pelo menos uma letra maiúscula.');
+  }
+  
+  // Check for lowercase if required
+  if (requireLowerCase && !/[a-z]/.test(password)) {
+    feedbackItems.push('A senha deve conter pelo menos uma letra minúscula.');
+  }
+  
+  // Check for numbers if required
+  if (requireNumbers && !/\d/.test(password)) {
+    feedbackItems.push('A senha deve conter pelo menos um número.');
+  }
+  
+  // Check for special characters if required
+  if (requireSpecialChars && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+    feedbackItems.push('A senha deve conter pelo menos um caractere especial (!@#$%^&*...).');
+  }
+  
+  // Check for commonly used passwords
+  const commonPasswords = [
+    'password', 'senha', '123456', 'qwerty', 'admin', '1234', 'welcome', 
+    'senha123', 'abc123', 'admin123', '123456789'
+  ];
+  
+  if (commonPasswords.includes(password.toLowerCase())) {
+    feedbackItems.push('Esta é uma senha muito comum. Escolha uma senha mais segura.');
+  }
+  
+  // Check for common patterns
+  if (/^(12345|qwerty|asdfg|zxcvb)/i.test(password)) {
+    feedbackItems.push('Esta senha contém um padrão comum. Use uma combinação mais aleatória.');
+  }
+  
+  // Determine if valid based on feedback
+  const isValid = feedbackItems.length === 0;
+  
+  return {
+    isValid,
+    feedback: isValid ? 'Senha válida' : feedbackItems.join(' ')
+  };
+}
+
+/**
+ * Sanitize and normalize URL for safe usage
+ * @param url URL to sanitize
+ * @returns Sanitized URL or empty string if invalid
+ */
+export function sanitizeUrl(url: string): string {
+  if (!url) return '';
+  
+  try {
+    // Try to parse the URL to check validity
+    const parsedUrl = new URL(url);
+    
+    // Only allow http and https protocols
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return '';
+    }
+    
+    return parsedUrl.href;
+  } catch (e) {
+    // If URL is invalid, return empty string
+    return '';
+  }
+}

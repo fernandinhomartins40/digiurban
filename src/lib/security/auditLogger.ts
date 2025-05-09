@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -20,8 +21,12 @@ export enum AuditOperationType {
   DATA_UPDATE = 'data.update',
   DATA_DELETE = 'data.delete',
   DATA_EXPORT = 'data.export',
+  DATA_ACCESS = 'data.access',
   
   CONFIG_CHANGE = 'config.change',
+  
+  SECURITY_EVENT = 'security.event',
+  SECURITY_VIOLATION = 'security.violation',
   
   SYSTEM_ERROR = 'system.error'
 }
@@ -36,6 +41,7 @@ export interface AuditLogEntry {
   details?: any;
   ipAddress?: string;
   userAgent?: string;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
 }
 
 /**
@@ -65,7 +71,8 @@ export class AuditLogger {
           metadata: {
             ip_address: ipAddress,
             user_agent: userAgent,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            severity: entry.severity || 'low'
           }
         }
       };
@@ -93,6 +100,40 @@ export class AuditLogger {
       
       return false;
     }
+  }
+  
+  /**
+   * Log a security violation (higher severity)
+   * @param userId User ID who triggered the violation
+   * @param details Details of the violation
+   * @returns True if logging was successful
+   */
+  static async logSecurityViolation(userId: string, details: any): Promise<boolean> {
+    return this.log({
+      operationType: AuditOperationType.SECURITY_VIOLATION,
+      userId,
+      details,
+      severity: 'high'
+    });
+  }
+  
+  /**
+   * Log a security event (informational)
+   * @param userId User ID associated with the event
+   * @param eventType Type of security event
+   * @param details Additional details
+   * @returns True if logging was successful
+   */
+  static async logSecurityEvent(userId: string, eventType: string, details?: any): Promise<boolean> {
+    return this.log({
+      operationType: AuditOperationType.SECURITY_EVENT,
+      userId,
+      details: {
+        eventType,
+        ...details
+      },
+      severity: 'medium'
+    });
   }
   
   /**
@@ -176,6 +217,58 @@ export class AuditLogger {
       return data.ip;
     } catch (error) {
       return 'unknown';
+    }
+  }
+  
+  /**
+   * Check for suspicious activities in the audit logs
+   * This would typically be done on the server side, but can be used for client-side monitoring
+   */
+  static async checkForSuspiciousActivity(userId: string): Promise<boolean> {
+    try {
+      // Get recent login attempts for this user
+      const { data, error } = await supabase
+        .from('admin_operations_log')
+        .select('*')
+        .eq('performed_by', userId)
+        .eq('operation_type', 'auth.login')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) {
+        console.error('Error checking for suspicious activity:', error);
+        return false;
+      }
+      
+      if (!data || data.length === 0) return false;
+      
+      // Check for multiple devices or locations in a short time
+      const uniqueIps = new Set();
+      const uniqueAgents = new Set();
+      
+      data.forEach((log: any) => {
+        const metadata = log.details?.metadata;
+        if (metadata) {
+          if (metadata.ip_address) uniqueIps.add(metadata.ip_address);
+          if (metadata.user_agent) uniqueAgents.add(metadata.user_agent);
+        }
+      });
+      
+      // If there are multiple IPs or user agents, there might be suspicious activity
+      const isSuspicious = uniqueIps.size > 2 || uniqueAgents.size > 2;
+      
+      // If suspicious, log it
+      if (isSuspicious) {
+        await this.logSecurityEvent(userId, 'multiple_access_points', {
+          uniqueIps: Array.from(uniqueIps),
+          uniqueAgents: Array.from(uniqueAgents)
+        });
+      }
+      
+      return isSuspicious;
+    } catch (error) {
+      console.error('Error in suspicious activity check:', error);
+      return false;
     }
   }
 }

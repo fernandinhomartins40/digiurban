@@ -3,6 +3,9 @@ import { toast } from "@/hooks/use-toast";
 import { AdminUser } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { sanitizeObject } from "@/lib/security/inputSanitization";
+import { AuditLogger, AuditOperationType } from "@/lib/security/auditLogger";
+import { useCSRFToken } from "@/hooks/useSecurityHeaders";
 
 interface UseUserSubmitProps {
   users: AdminUser[];
@@ -11,10 +14,20 @@ interface UseUserSubmitProps {
 
 export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { getCSRFToken } = useCSRFToken();
 
   const handleSubmitUser = async (userData: any): Promise<void> => {
     try {
       setIsSubmitting(true);
+      
+      // Sanitize input data to prevent XSS
+      const sanitizedUserData = sanitizeObject(userData);
+      
+      // Add CSRF token
+      const csrfToken = getCSRFToken();
+      if (!csrfToken) {
+        throw new Error("Falha de segurança: Token CSRF não encontrado.");
+      }
       
       const editingUser = users.find(u => u.id === userData.id);
       
@@ -23,7 +36,8 @@ export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
         const { data, error } = await supabase.functions.invoke('admin-user-operations', {
           body: { 
             operation: 'updateUser',
-            userData
+            userData: sanitizedUserData,
+            _csrf: csrfToken
           }
         });
         
@@ -31,7 +45,7 @@ export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
         if (data.error) throw new Error(data.error);
         
         // Update local state
-        const { permissions, ...userDataWithoutPermissions } = userData;
+        const { permissions, ...userDataWithoutPermissions } = sanitizedUserData;
         setUsers(prevUsers => 
           prevUsers.map(u => 
             u.id === editingUser.id 
@@ -39,6 +53,17 @@ export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
               : u
           )
         );
+        
+        // Log audit event
+        await AuditLogger.log({
+          operationType: AuditOperationType.USER_UPDATE,
+          userId: supabase.auth.getUser().then(res => res.data.user?.id || 'unknown'),
+          targetId: editingUser.id,
+          details: {
+            updatedFields: Object.keys(userDataWithoutPermissions),
+            department: userDataWithoutPermissions.department
+          }
+        });
         
         toast({
           title: "Usuário atualizado",
@@ -49,7 +74,8 @@ export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
         const { data, error } = await supabase.functions.invoke('admin-user-operations', {
           body: { 
             operation: 'createUser',
-            userData
+            userData: sanitizedUserData,
+            _csrf: csrfToken
           }
         });
         
@@ -58,6 +84,17 @@ export function useUserSubmit({ users, setUsers }: UseUserSubmitProps) {
         
         // Add new user to state
         setUsers(prevUsers => [...prevUsers, data.user]);
+        
+        // Log audit event
+        await AuditLogger.log({
+          operationType: AuditOperationType.USER_CREATE,
+          userId: supabase.auth.getUser().then(res => res.data.user?.id || 'unknown'),
+          targetId: data.user.id,
+          details: {
+            role: sanitizedUserData.role,
+            department: sanitizedUserData.department
+          }
+        });
         
         toast({
           title: "Usuário adicionado",
