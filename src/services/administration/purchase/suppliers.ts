@@ -8,7 +8,7 @@ export async function fetchSuppliers(
   isActive?: boolean
 ): Promise<Supplier[]> {
   try {
-    let query = supabase
+    let query = (supabase as any)
       .from("suppliers")
       .select("*")
       .order("name", { ascending: true });
@@ -36,7 +36,7 @@ export async function fetchSuppliers(
 // Get supplier by ID
 export async function getSupplierById(supplierId: string): Promise<Supplier | null> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("suppliers")
       .select("*")
       .eq("id", supplierId)
@@ -59,7 +59,7 @@ export async function getSupplierById(supplierId: string): Promise<Supplier | nu
 // Create a new supplier
 export async function createSupplier(supplier: Omit<Supplier, "id" | "createdAt" | "updatedAt">): Promise<Supplier | null> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("suppliers")
       .insert({
         name: supplier.name,
@@ -107,7 +107,7 @@ export async function updateSupplier(supplierId: string, supplier: Partial<Omit<
     if (supplier.state !== undefined) updateData.state = supplier.state;
     if (supplier.isActive !== undefined) updateData.is_active = supplier.isActive;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("suppliers")
       .update(updateData)
       .eq("id", supplierId)
@@ -137,7 +137,7 @@ export async function updateSupplier(supplierId: string, supplier: Partial<Omit<
 export async function deleteSupplier(supplierId: string): Promise<boolean> {
   try {
     // We're marking as inactive instead of deleting to preserve referential integrity
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("suppliers")
       .update({ is_active: false })
       .eq("id", supplierId);
