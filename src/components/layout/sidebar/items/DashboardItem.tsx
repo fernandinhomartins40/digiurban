@@ -5,6 +5,6 @@ import { SidebarItemProps } from "@/types/sidebar";
 
 export const getDashboardItem = (): SidebarItemProps => ({
   icon: <Home size={18} />,
-  title: "Dashboard",
-  path: "/admin/dashboard",
+  title: "Dashboard do Prefeito",
+  path: "/admin/gabinete/dashboard",
 });

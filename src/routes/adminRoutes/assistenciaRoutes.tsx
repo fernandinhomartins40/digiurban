@@ -4,13 +4,9 @@ import BeneficiosPage from "@/pages/admin/assistencia/beneficios/index";
 import ProgramasSociaisPage from "@/pages/admin/assistencia/programas/index";
 import CRASCREASPage from "@/pages/admin/assistencia/cras/index";
 import FamiliaVulneraveisPage from "@/pages/admin/assistencia/familias/index";
-import AssistenciaDashboard from "@/pages/admin/assistencia/Dashboard";
 
 export const assistenciaRoutes: RouteObject[] = [
-  {
-    path: "assistencia/dashboard",
-    element: <AssistenciaDashboard />,
-  },
+  // Removed AssistenciaDashboard route
   {
     path: "assistencia/beneficios",
     element: <BeneficiosPage />,
