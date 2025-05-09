@@ -17,10 +17,6 @@ export const getGabineteItem = (): SidebarItemProps => ({
       path: "/admin/gabinete/agenda",
     },
     {
-      title: "Solicitações Diretas",
-      path: "/admin/gabinete/solicitacoes",
-    },
-    {
       title: "Serviços por Cidadão",
       path: "/admin/gabinete/cidadaos",
     },
