@@ -18,7 +18,8 @@ const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 // Lazy load components with explicit Suspense boundaries - preload for critical routes
-const UserManagement = lazy(() => import("@/pages/admin/users/UserManagement"));
+// Fix the import path to point to the component's actual location in the components folder
+const UserManagement = lazy(() => import("@/components/users/UserManagement"));
 
 // Import route groups
 import { correioRoutes } from "./correioRoutes";
@@ -46,7 +47,7 @@ import { solicitacoesRoutes } from "./solicitacoesRoutes";
 // Preload critical routes for better performance
 if (typeof window !== 'undefined') {
   // Preload UserManagement and other critical components
-  import("@/pages/admin/users/UserManagement");
+  import("@/components/users/UserManagement");
   import("@/pages/admin/gabinete/Appointments");
   import("@/pages/admin/solicitacoes/SolicitacoesDashboard");
 }
