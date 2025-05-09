@@ -1,9 +1,11 @@
 
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Info, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/auth/useAuth";
 import { DocumentUpload } from "@/components/administracao/rh/DocumentUpload";
 import { DocumentList } from "@/components/administracao/rh/DocumentList";
@@ -20,8 +22,12 @@ import {
   fetchUserRequests,
   fetchAllRequests,
   updateRequestStatus
-} from "@/services/administration/hr"; // Updated import path
+} from "@/services/administration/hr";
+import { 
+  fetchServices,
+} from "@/services/administration/hr/services";
 import { HRDocument, HRDocumentStatus, DocumentType, HRRequestType, HRRequest, HRRequestStatus } from "@/types/administration";
+import { HRService } from "@/types/hr";
 import { isAdminUser } from "@/types/auth";
 
 export default function HRPage() {
@@ -32,11 +38,13 @@ export default function HRPage() {
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [documents, setDocuments] = useState<HRDocument[]>([]);
   const [requestTypes, setRequestTypes] = useState<HRRequestType[]>([]);
+  const [services, setServices] = useState<HRService[]>([]);
   const [requests, setRequests] = useState<HRRequest[]>([]);
   const [isLoading, setIsLoading] = useState({
     documentTypes: true,
     documents: true,
     requestTypes: true,
+    services: true,
     requests: true,
   });
 
@@ -96,6 +104,23 @@ export default function HRPage() {
     };
 
     loadRequestTypes();
+  }, []);
+
+  // Load services
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        setIsLoading(prev => ({ ...prev, services: true }));
+        const data = await fetchServices();
+        setServices(data);
+      } catch (error) {
+        console.error("Error loading services:", error);
+      } finally {
+        setIsLoading(prev => ({ ...prev, services: false }));
+      }
+    };
+
+    loadServices();
   }, []);
 
   // Load requests
@@ -227,9 +252,10 @@ export default function HRPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2 w-full md:w-[400px]">
+        <TabsList className="grid grid-cols-3 w-full md:w-[600px]">
           <TabsTrigger value="documents">Documentos</TabsTrigger>
           <TabsTrigger value="requests">Solicitações</TabsTrigger>
+          <TabsTrigger value="services">Serviços</TabsTrigger>
         </TabsList>
 
         <TabsContent value="documents" className="space-y-4 pt-4">
@@ -285,6 +311,69 @@ export default function HRPage() {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="services" className="space-y-4 pt-4">
+          <div className="space-y-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Serviços RH</CardTitle>
+                {isAdmin && (
+                  <Button asChild>
+                    <Link to="/admin/administracao/rh/servicos">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Gerenciar Serviços
+                    </Link>
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                {isLoading.services ? (
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((index) => (
+                      <Card key={index} className="animate-pulse bg-muted h-16" />
+                    ))}
+                  </div>
+                ) : services.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Nenhum serviço cadastrado.</p>
+                    {isAdmin && (
+                      <Button className="mt-4" asChild>
+                        <Link to="/admin/administracao/rh/servicos">Cadastrar Serviços</Link>
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {services
+                      .filter(service => service.is_active)
+                      .map(service => (
+                        <Card key={service.id} className="flex flex-col h-full">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base">{service.name}</CardTitle>
+                          </CardHeader>
+                          <CardContent className="flex-grow pb-2">
+                            <p className="text-sm text-muted-foreground">
+                              {service.description || "Sem descrição"}
+                            </p>
+                          </CardContent>
+                          <div className="px-6 pb-4 pt-0">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs bg-secondary text-secondary-foreground rounded-full px-2 py-1">
+                                {service.category}
+                              </span>
+                              <Button size="sm" variant="outline" asChild>
+                                <Link to="/admin/solicitacoes/novo">Solicitar</Link>
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>

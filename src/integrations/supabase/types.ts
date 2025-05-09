@@ -2014,6 +2014,48 @@ export type Database = {
           },
         ]
       }
+      hr_services: {
+        Row: {
+          approval_flow: Json | null
+          available_for: string[] | null
+          category: string
+          created_at: string
+          description: string | null
+          form_schema: Json | null
+          id: string
+          is_active: boolean
+          name: string
+          requires_approval: boolean
+          updated_at: string
+        }
+        Insert: {
+          approval_flow?: Json | null
+          available_for?: string[] | null
+          category: string
+          created_at?: string
+          description?: string | null
+          form_schema?: Json | null
+          id?: string
+          is_active?: boolean
+          name: string
+          requires_approval?: boolean
+          updated_at?: string
+        }
+        Update: {
+          approval_flow?: Json | null
+          available_for?: string[] | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          form_schema?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          requires_approval?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mail_document_attachments: {
         Row: {
           document_id: string

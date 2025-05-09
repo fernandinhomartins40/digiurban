@@ -12,6 +12,10 @@ export const getAdministracaoItem = (): SidebarItemProps => ({
       path: "/admin/administracao/rh",
     },
     {
+      title: "RH Serviços",
+      path: "/admin/administracao/rh/servicos",
+    },
+    {
       title: "Solicitações",
       path: "/admin/administracao/solicitacoes",
     },
