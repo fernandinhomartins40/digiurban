@@ -4,6 +4,10 @@ export * from './requests';
 export * from './items';
 export * from './attachments';
 export * from './statusHistory';
+export * from './suppliers';
+export * from './contracts';
+export * from './contractItems';
+export * from './utils';
 
 // Re-export types from types/administration that are used in purchase services
 import { 
@@ -12,7 +16,11 @@ import {
   PurchasePriority,
   PurchaseStatusHistory,
   PurchaseItem,
-  PurchaseAttachment
+  PurchaseAttachment,
+  Supplier,
+  Contract,
+  ContractStatus,
+  ContractItem
 } from "@/types/administration";
 
 export type { 
@@ -21,5 +29,9 @@ export type {
   PurchasePriority,
   PurchaseStatusHistory,
   PurchaseItem,
-  PurchaseAttachment
+  PurchaseAttachment,
+  Supplier,
+  Contract,
+  ContractStatus,
+  ContractItem
 };

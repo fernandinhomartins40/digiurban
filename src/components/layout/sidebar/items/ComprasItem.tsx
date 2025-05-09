@@ -5,6 +5,19 @@ import { SidebarItemProps } from "@/types/sidebar";
 export const getComprasItem = (): SidebarItemProps => ({
   title: "Compras",
   icon: <ShoppingCart className="h-5 w-5" />,
-  path: "/admin/compras",
+  path: undefined, // Remove direct path since we're adding children
+  children: [
+    {
+      title: "Solicitações",
+      path: "/admin/compras/solicitacoes",
+    },
+    {
+      title: "Fornecedores",
+      path: "/admin/compras/fornecedores",
+    },
+    {
+      title: "Contratos",
+      path: "/admin/compras/contratos",
+    },
+  ],
 });
-

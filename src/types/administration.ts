@@ -1,4 +1,3 @@
-
 import { RequestStatus } from "./mayorOffice";
 
 // Common Types
@@ -128,4 +127,50 @@ export type PurchaseStatusHistory = {
   comments: string | null;
   changedBy: string;
   createdAt: Date;
+};
+
+// New supplier types
+export type Supplier = {
+  id: string;
+  name: string;
+  cnpj: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+// New contract types
+export type ContractStatus = 'active' | 'ended' | 'cancelled';
+
+export type Contract = {
+  id: string;
+  contractNumber: string;
+  supplierId: string;
+  supplierName?: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  totalValue: number;
+  status: ContractStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  items?: ContractItem[];
+};
+
+export type ContractItem = {
+  id: string;
+  contractId: string;
+  name: string;
+  description: string | null;
+  quantity: number;
+  quantityUsed: number;
+  unit: string;
+  unitPrice: number;
+  createdAt: Date;
+  updatedAt: Date;
 };
