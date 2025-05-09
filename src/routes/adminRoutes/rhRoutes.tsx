@@ -1,15 +1,24 @@
 
 import { RouteObject } from "react-router-dom";
-import RHPage from "@/pages/admin/rh/index";
+import RHDashboard from "@/pages/admin/rh/dashboard";
 import HRServicesPage from "@/pages/admin/rh/servicos/index";
 
 export const rhRoutes: RouteObject[] = [
   {
     path: "rh",
-    element: <RHPage />,
-  },
-  {
-    path: "rh/servicos",
-    element: <HRServicesPage />,
+    children: [
+      {
+        path: "",
+        element: <RHDashboard />,
+      },
+      {
+        path: "dashboard",
+        element: <RHDashboard />,
+      },
+      {
+        path: "servicos",
+        element: <HRServicesPage />,
+      },
+    ],
   },
 ];

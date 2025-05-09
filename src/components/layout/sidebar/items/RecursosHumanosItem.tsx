@@ -5,11 +5,11 @@ import { SidebarItemProps } from "@/types/sidebar";
 export const getRecursosHumanosItem = (): SidebarItemProps => ({
   title: "Recursos Humanos",
   icon: <Users className="h-5 w-5" />,
-  path: "/admin/rh",
-  submenu: [
+  path: "/admin/rh/dashboard",
+  children: [
     {
       title: "Visão Geral",
-      path: "/admin/rh",
+      path: "/admin/rh/dashboard",
     },
     {
       title: "Serviços RH",
