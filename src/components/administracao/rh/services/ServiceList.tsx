@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Card,
@@ -43,9 +42,11 @@ interface ServiceListProps {
   isLoading: boolean;
   onEdit: (service: HRService) => void;
   onView: (service: HRService) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => void; // This expects a string ID
   onToggleStatus: (id: string, isActive: boolean) => void;
   onCreateNew: () => void;
+  isDeleting?: boolean;
+  error?: Error | null;
 }
 
 export const ServiceList: React.FC<ServiceListProps> = ({
@@ -55,7 +56,9 @@ export const ServiceList: React.FC<ServiceListProps> = ({
   onView,
   onDelete,
   onToggleStatus,
-  onCreateNew
+  onCreateNew,
+  isDeleting = false,
+  error = null
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();

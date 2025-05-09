@@ -28,8 +28,9 @@ export default function HRServicesPage() {
     }
   });
 
-  const handleDelete = (service: HRService) => {
-    deleteMutation.mutate(service.id);
+  // Modified to accept a string ID instead of an HRService object
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
   };
 
   const handleView = (service: HRService) => {
@@ -54,7 +55,7 @@ export default function HRServicesPage() {
       <ServiceList 
         services={services}
         isLoading={isLoading}
-        onDelete={handleDelete}
+        onDelete={handleDelete} // Now correctly accepts a string parameter
         onEdit={handleEdit}
         onView={handleView}
         isDeleting={deleteMutation.isPending}
