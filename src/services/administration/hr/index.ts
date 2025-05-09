@@ -4,3 +4,4 @@ export * from './requestTypes';
 export * from './requests';
 export * from './attachments';
 export * from './statusHistory';
+export * from './services';

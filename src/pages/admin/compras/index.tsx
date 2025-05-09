@@ -1,8 +1,18 @@
 
 import React from "react";
 import { PurchaseRequestList } from "@/components/administracao/compras/PurchaseRequestList";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ComprasPage() {
+  // Add mock data or actual data fetching logic
+  const { data: requests = [], isLoading } = useQuery({
+    queryKey: ["purchase-requests"],
+    queryFn: async () => {
+      // Here we would normally fetch data from an API
+      return [];
+    }
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -12,7 +22,10 @@ export default function ComprasPage() {
         </p>
       </div>
 
-      <PurchaseRequestList />
+      <PurchaseRequestList 
+        requests={requests} 
+        isLoading={isLoading} 
+      />
     </div>
   );
 }
