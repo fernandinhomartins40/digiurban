@@ -20,19 +20,17 @@ import { getSegurancaPublicaItem } from "./SegurancaPublicaItem";
 import { getTransporteItem } from "./TransporteItem";
 import { getOuvidoriaItem } from "./OuvidoriaItem";
 import { getSolicitacoesItem } from "./SolicitacoesItem";
-import { getDashboardItem } from "./DashboardItem";
 import { getRecursosHumanosItem } from "./RecursosHumanosItem";
 import { getComprasItem } from "./ComprasItem";
 
 export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => {
   // Reorganized order as per request
   const items: SidebarItemProps[] = [
-    getDashboardItem(),            // 1º Dashboard
-    getGabineteItem(),             // 2º Gabinete do Prefeito
-    getUserRolesItem(),            // 3º Gerenciamento de Usuários
-    getCorreioItem(unreadCount),   // 4º Correio Interno
-    getChatItem(unreadCount),      // 5º Chat
-    getSolicitacoesItem(),         // 6º Solicitações
+    getGabineteItem(),             // 1º Gabinete do Prefeito (now first item)
+    getUserRolesItem(),            // 2º Gerenciamento de Usuários
+    getCorreioItem(unreadCount),   // 3º Correio Interno
+    getChatItem(unreadCount),      // 4º Chat
+    getSolicitacoesItem(),         // 5º Solicitações
     
     // The remaining items kept in the same order they were before
     getRecursosHumanosItem(),
