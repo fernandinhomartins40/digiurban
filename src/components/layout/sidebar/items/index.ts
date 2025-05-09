@@ -27,7 +27,7 @@ import { getComprasItem } from "./ComprasItem";
 export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => {
   // Reorganized order as per request
   const items: SidebarItemProps[] = [
-    getDashboardItem(),            // Now points to Mayor's dashboard directly
+    getDashboardItem(),            // 1º Dashboard
     getGabineteItem(),             // 2º Gabinete do Prefeito
     getUserRolesItem(),            // 3º Gerenciamento de Usuários
     getCorreioItem(unreadCount),   // 4º Correio Interno

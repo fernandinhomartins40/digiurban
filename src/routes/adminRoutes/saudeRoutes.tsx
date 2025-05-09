@@ -6,9 +6,13 @@ import TFDPage from "@/pages/admin/saude/tfd/index";
 import ProgramasPage from "@/pages/admin/saude/programas/index";
 import CampanhasPage from "@/pages/admin/saude/campanhas/index";
 import ACSPage from "@/pages/admin/saude/acs/index";
+import HealthDashboard from "@/pages/admin/saude/Dashboard";
 
 export const saudeRoutes: RouteObject[] = [
-  // Removed HealthDashboard route
+  {
+    path: "saude/dashboard",
+    element: <HealthDashboard />,
+  },
   {
     path: "saude/atendimentos",
     element: <AtendimentosPage />,

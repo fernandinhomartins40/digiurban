@@ -5,6 +5,9 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { DashboardLoading } from "@/components/dashboard/common/DashboardLoading";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
+// Import Dashboard directly instead of lazy loading to prevent dynamic import issues
+import Dashboard from "@/pages/admin/Dashboard";
+
 // Helper for lazy-loaded components with error boundaries
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
   <ErrorBoundary>
@@ -54,7 +57,12 @@ export const adminRoutes: RouteObject[] = [
     element: <AdminLayout />,
     errorElement: <ErrorBoundary><div>Erro na aplicação</div></ErrorBoundary>,
     children: [
-      // Removing main Dashboard route
+      // General dashboard route - directly imported instead of lazy loaded
+      {
+        path: "dashboard",
+        element: <ErrorBoundary><Dashboard /></ErrorBoundary>
+      },
+
       {
         path: "users",
         element: <SuspenseWrapper><UserManagement /></SuspenseWrapper>,
