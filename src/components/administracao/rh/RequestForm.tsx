@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, SendHorizonal, Plus } from "lucide-react";
+import { Loader2, SendHorizonal, Plus, X, FileText, Paperclip } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { HRRequestType } from "@/types/administration";
 import { useAuth } from "@/contexts/auth/useAuth";
-import { createRequest, uploadRequestAttachment } from "@/services/administration/hr"; // Updated import path
+import { createRequest, uploadRequestAttachment } from "@/services/administration/hr";
 import { toast } from "@/hooks/use-toast";
 
 const baseFormSchema = z.object({
@@ -301,14 +301,17 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
                 }
               })}
 
-              {/* File attachments section */}
+              {/* Document attachments section - Enhanced version */}
               <div className="mt-4">
-                <FormLabel>Anexos (opcional)</FormLabel>
+                <FormLabel>Documentos (opcional)</FormLabel>
                 <div className="border-dashed border-2 border-gray-300 rounded-lg p-4 mt-1">
                   <div className="flex flex-col items-center justify-center space-y-2">
+                    <p className="text-sm text-center text-gray-500 mb-2">
+                      Anexe os documentos necessários diretamente à sua solicitação
+                    </p>
                     <label className="flex flex-col items-center justify-center cursor-pointer">
-                      <Plus className="h-6 w-6 text-gray-400" />
-                      <span className="text-sm text-gray-500 mt-1">Adicionar arquivo</span>
+                      <Paperclip className="h-6 w-6 text-gray-400" />
+                      <span className="text-sm text-gray-500 mt-1">Adicionar documento</span>
                       <input
                         type="file"
                         className="hidden"
@@ -318,12 +321,14 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
                   </div>
                   {files.length > 0 && (
                     <div className="mt-4 space-y-2">
+                      <p className="text-sm font-medium">Documentos anexados:</p>
                       {files.map((file, index) => (
                         <div
                           key={index}
                           className="flex items-center justify-between border rounded-md p-2"
                         >
                           <div className="flex items-center space-x-2 truncate">
+                            <FileText className="h-4 w-4 text-gray-500" />
                             <div className="truncate">{file.name}</div>
                             <div className="text-xs text-gray-500">
                               ({(file.size / 1024).toFixed(1)} KB)
@@ -332,9 +337,10 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
                           <Button
                             variant="ghost"
                             size="sm"
+                            className="text-red-500 hover:text-red-700"
                             onClick={() => handleFileRemove(index)}
                           >
-                            ×
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
                       ))}

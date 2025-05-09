@@ -3,10 +3,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  FileText, 
-  FileCheck,
-  ArrowRight,
-  Users
+  Users, 
+  ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -15,23 +13,13 @@ export default function RHPage() {
 
   const modules = [
     {
-      title: "Documentos",
-      description: "Gerenciamento de documentos de funcionários",
-      icon: <FileText className="h-8 w-8 text-primary" />,
-      path: "#",
-      features: [
-        { name: "Upload de Documentos", icon: <FileText className="h-4 w-4" /> },
-        { name: "Validação", icon: <FileCheck className="h-4 w-4" /> },
-      ],
-    },
-    {
       title: "Serviços RH",
-      description: "Gerenciamento de serviços disponíveis para funcionários",
+      description: "Gerenciamento de serviços e solicitações disponíveis para funcionários",
       icon: <Users className="h-8 w-8 text-primary" />,
       path: "/admin/rh/servicos",
       features: [
-        { name: "Catálogo de Serviços", icon: <FileText className="h-4 w-4" /> },
-        { name: "Solicitações", icon: <FileCheck className="h-4 w-4" /> },
+        { name: "Catálogo de Serviços", icon: <Users className="h-4 w-4" /> },
+        { name: "Solicitações", icon: <Users className="h-4 w-4" /> },
       ],
     },
   ];
@@ -45,7 +33,7 @@ export default function RHPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-1">
         {modules.map((module) => (
           <Card key={module.title} className="overflow-hidden">
             <div className="bg-muted p-4 flex items-center justify-between">
@@ -82,9 +70,8 @@ export default function RHPage() {
             <h3 className="text-lg font-medium">Sobre o Módulo de Recursos Humanos</h3>
             <p className="text-muted-foreground mt-2">
               O módulo de Recursos Humanos centraliza as operações de gestão de pessoas da prefeitura,
-              incluindo gerenciamento de documentos, solicitações de serviços dos funcionários
-              e controle de processos relacionados aos servidores. Ele foi projetado para 
-              facilitar o fluxo de trabalho do departamento de RH e oferecer serviços digitais aos funcionários.
+              incluindo solicitações de serviços dos funcionários e controle de processos relacionados aos servidores.
+              Os documentos podem ser anexados diretamente nas solicitações, simplificando o processo para os servidores.
             </p>
           </div>
         </div>
@@ -92,4 +79,3 @@ export default function RHPage() {
     </div>
   );
 }
-

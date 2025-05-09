@@ -17,4 +17,3 @@ export const getRecursosHumanosItem = (): SidebarItemProps => ({
     },
   ],
 });
-

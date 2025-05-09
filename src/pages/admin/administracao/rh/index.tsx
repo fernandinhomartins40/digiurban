@@ -7,16 +7,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Info, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/auth/useAuth";
-import { DocumentUpload } from "@/components/administracao/rh/DocumentUpload";
-import { DocumentList } from "@/components/administracao/rh/DocumentList";
 import { RequestForm } from "@/components/administracao/rh/RequestForm";
 import { RequestList } from "@/components/administracao/rh/RequestList";
-import { 
-  fetchDocumentTypes, 
-  fetchUserDocuments, 
-  fetchAllDocuments,
-  updateDocumentStatus
-} from "@/services/administration/hrDocumentsService";
 import {
   fetchRequestTypes,
   fetchUserRequests,
@@ -26,7 +18,7 @@ import {
 import { 
   fetchServices,
 } from "@/services/administration/hr/services";
-import { HRDocument, HRDocumentStatus, DocumentType, HRRequestType, HRRequest, HRRequestStatus } from "@/types/administration";
+import { HRRequestType, HRRequest, HRRequestStatus } from "@/types/administration";
 import { HRService } from "@/types/hr";
 import { isAdminUser } from "@/types/auth";
 
@@ -34,61 +26,15 @@ export default function HRPage() {
   const { user } = useAuth();
   const isAdmin = user ? isAdminUser(user) && (user.department === "RH" || user.role === "prefeito") : false;
   
-  const [activeTab, setActiveTab] = useState("documents");
-  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
-  const [documents, setDocuments] = useState<HRDocument[]>([]);
+  const [activeTab, setActiveTab] = useState("requests");
   const [requestTypes, setRequestTypes] = useState<HRRequestType[]>([]);
   const [services, setServices] = useState<HRService[]>([]);
   const [requests, setRequests] = useState<HRRequest[]>([]);
   const [isLoading, setIsLoading] = useState({
-    documentTypes: true,
-    documents: true,
     requestTypes: true,
     services: true,
     requests: true,
   });
-
-  // Load document types
-  useEffect(() => {
-    const loadDocumentTypes = async () => {
-      try {
-        const types = await fetchDocumentTypes();
-        setDocumentTypes(types);
-      } catch (error) {
-        console.error("Error loading document types:", error);
-      } finally {
-        setIsLoading(prev => ({ ...prev, documentTypes: false }));
-      }
-    };
-
-    loadDocumentTypes();
-  }, []);
-
-  // Load documents
-  useEffect(() => {
-    const loadDocuments = async () => {
-      if (!user) return;
-      
-      try {
-        setIsLoading(prev => ({ ...prev, documents: true }));
-        
-        let docs;
-        if (isAdmin) {
-          docs = await fetchAllDocuments();
-        } else {
-          docs = await fetchUserDocuments(user.id);
-        }
-        
-        setDocuments(docs);
-      } catch (error) {
-        console.error("Error loading documents:", error);
-      } finally {
-        setIsLoading(prev => ({ ...prev, documents: false }));
-      }
-    };
-
-    loadDocuments();
-  }, [user, isAdmin]);
 
   // Load request types
   useEffect(() => {
@@ -149,23 +95,6 @@ export default function HRPage() {
     loadRequests();
   }, [user, isAdmin]);
 
-  // Handler for updating document status
-  const handleUpdateDocumentStatus = async (documentId: string, status: HRDocumentStatus) => {
-    if (!user) return;
-    
-    try {
-      const updatedDocument = await updateDocumentStatus(documentId, status, user.id);
-      if (updatedDocument) {
-        // Update documents list
-        setDocuments(prev => 
-          prev.map(doc => doc.id === documentId ? updatedDocument : doc)
-        );
-      }
-    } catch (error) {
-      console.error("Error updating document status:", error);
-    }
-  };
-
   // Handler for updating request status
   const handleUpdateRequestStatus = async (requestId: string, status: HRRequestStatus, comments?: string) => {
     if (!user) return;
@@ -183,28 +112,7 @@ export default function HRPage() {
     }
   };
 
-  // Handlers for refreshing data
-  const handleDocumentUploaded = async () => {
-    if (!user) return;
-    
-    try {
-      setIsLoading(prev => ({ ...prev, documents: true }));
-      
-      let docs;
-      if (isAdmin) {
-        docs = await fetchAllDocuments();
-      } else {
-        docs = await fetchUserDocuments(user.id);
-      }
-      
-      setDocuments(docs);
-    } catch (error) {
-      console.error("Error refreshing documents:", error);
-    } finally {
-      setIsLoading(prev => ({ ...prev, documents: false }));
-    }
-  };
-
+  // Handler for refreshing data
   const handleRequestCreated = async () => {
     if (!user) return;
     
@@ -233,8 +141,8 @@ export default function HRPage() {
           <h1 className="text-2xl font-bold tracking-tight">Recursos Humanos</h1>
           <p className="text-muted-foreground">
             {isAdmin 
-              ? "Gerencie documentos e solicitações de funcionários." 
-              : "Envie documentos e faça solicitações para o setor de RH."
+              ? "Gerencie solicitações e serviços disponíveis para funcionários." 
+              : "Faça solicitações ao setor de RH e anexe documentos necessários."
             }
           </p>
         </div>
@@ -246,45 +154,16 @@ export default function HRPage() {
           <AlertTitle>Modo Administrador</AlertTitle>
           <AlertDescription>
             Você está com acesso de administrador do RH.
-            Pode visualizar e gerenciar documentos e solicitações de todos os funcionários.
+            Pode visualizar e gerenciar solicitações de todos os funcionários.
           </AlertDescription>
         </Alert>
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 w-full md:w-[600px]">
-          <TabsTrigger value="documents">Documentos</TabsTrigger>
+        <TabsList className="grid grid-cols-2 w-full md:w-[400px]">
           <TabsTrigger value="requests">Solicitações</TabsTrigger>
           <TabsTrigger value="services">Serviços</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="documents" className="space-y-4 pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1">
-              {!isLoading.documentTypes && (
-                <DocumentUpload 
-                  documentTypes={documentTypes}
-                  onUploadComplete={handleDocumentUploaded}
-                />
-              )}
-            </div>
-            <div className="md:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Meus Documentos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <DocumentList 
-                    documents={documents}
-                    isLoading={isLoading.documents}
-                    isAdmin={isAdmin}
-                    onUpdateStatus={isAdmin ? handleUpdateDocumentStatus : undefined}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </TabsContent>
 
         <TabsContent value="requests" className="space-y-4 pt-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

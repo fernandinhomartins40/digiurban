@@ -13,4 +13,3 @@ export const rhRoutes: RouteObject[] = [
     element: <HRServicesPage />,
   },
 ];
-
