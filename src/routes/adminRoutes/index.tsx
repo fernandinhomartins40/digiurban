@@ -28,7 +28,6 @@ import { obrasRoutes } from "./obrasRoutes";
 import { servicosRoutes } from "./servicosRoutes";
 import { meioAmbienteRoutes } from "./meioAmbienteRoutes";
 import { ouvidoriaRoutes } from "./ouvidoriaRoutes";
-import { executivoRoutes } from "./executivoRoutes";
 import { solicitacoesRoutes } from "./solicitacoesRoutes";
 
 // Helper for lazy-loaded components
@@ -74,7 +73,6 @@ export const adminRoutes: RouteObject[] = [
       ...servicosRoutes,
       ...meioAmbienteRoutes,
       ...ouvidoriaRoutes,
-      ...executivoRoutes,
       ...otherModulesRoutes,
     ],
   },

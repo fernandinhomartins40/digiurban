@@ -22,13 +22,11 @@ import { getTransporteItem } from "./TransporteItem";
 import { getOuvidoriaItem } from "./OuvidoriaItem";
 import { getSolicitacoesItem } from "./SolicitacoesItem";
 import { getDashboardItem } from "./DashboardItem";
-import { getExecutivoItem } from "./ExecutivoItem";
 
 export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => {
   // Include dashboard item first
   const items: SidebarItemProps[] = [
     getDashboardItem(),
-    getExecutivoItem(),
     getSolicitacoesItem(), // Add Solicitações item in a prominent position
     getChatItem(unreadCount),
     getUserRolesItem(),
