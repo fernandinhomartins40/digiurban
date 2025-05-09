@@ -97,13 +97,13 @@ export default function HRServicesPage() {
     }
   });
 
-  const handleCreateService = (data: ServiceFormData) => {
-    createMutation.mutate(data);
+  const handleCreateService = async (data: ServiceFormData): Promise<void> => {
+    await createMutation.mutateAsync(data);
   };
 
-  const handleUpdateService = (data: ServiceFormData) => {
-    if (!selectedService) return;
-    updateMutation.mutate({ id: selectedService.id, data });
+  const handleUpdateService = async (data: ServiceFormData): Promise<void> => {
+    if (!selectedService) return Promise.resolve();
+    await updateMutation.mutateAsync({ id: selectedService.id, data });
   };
 
   const handleToggleStatus = (id: string, isActive: boolean) => {
