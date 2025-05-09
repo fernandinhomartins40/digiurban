@@ -25,16 +25,18 @@ import { getRecursosHumanosItem } from "./RecursosHumanosItem";
 import { getComprasItem } from "./ComprasItem";
 
 export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => {
-  // Include dashboard item first
+  // Reorganized order as per request
   const items: SidebarItemProps[] = [
-    getDashboardItem(),
-    getSolicitacoesItem(), // Add Solicitações item in a prominent position
-    getChatItem(unreadCount),
-    getUserRolesItem(),
-    getGabineteItem(),
-    getCorreioItem(unreadCount),
-    getRecursosHumanosItem(), // Added RH item
-    getComprasItem(), // Added Compras item
+    getDashboardItem(),            // 1º Dashboard
+    getGabineteItem(),             // 2º Gabinete do Prefeito
+    getUserRolesItem(),            // 3º Gerenciamento de Usuários
+    getCorreioItem(unreadCount),   // 4º Correio Interno
+    getChatItem(unreadCount),      // 5º Chat
+    getSolicitacoesItem(),         // 6º Solicitações
+    
+    // The remaining items kept in the same order they were before
+    getRecursosHumanosItem(),
+    getComprasItem(),
     getFinancasItem(),
     getEducacaoItem(),
     getSaudeItem(),
@@ -54,4 +56,3 @@ export const getSidebarItems = (unreadCount: number = 0): SidebarItemProps[] => 
   
   return items;
 };
-
