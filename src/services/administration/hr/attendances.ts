@@ -35,11 +35,11 @@ export const fetchAttendances = async (
         query = query.eq('employee_id', employeeId);
       }
       
-      if (serviceId) {
+      if (serviceId && serviceId !== 'all') {
         query = query.eq('service_id', serviceId);
       }
       
-      if (status) {
+      if (status && status !== 'all') {
         query = query.eq('status', status);
       }
       
@@ -68,14 +68,14 @@ export const fetchAttendances = async (
       const transformedData: HRAttendance[] = data.map(record => ({
         id: record.id,
         employeeId: record.employee_id,
-        employeeName: record.employee?.name,
+        employeeName: record.employee?.name || '',
         serviceId: record.service_id,
-        serviceName: record.service?.name,
+        serviceName: record.service?.name || '',
         description: record.description,
         status: record.status as HRAttendanceStatus,
         attendanceDate: new Date(record.attendance_date),
         attendedBy: record.attended_by,
-        attendedByName: record.admin?.name,
+        attendedByName: record.admin?.name || '',
         notes: record.notes,
         createdAt: new Date(record.created_at),
         updatedAt: new Date(record.updated_at)

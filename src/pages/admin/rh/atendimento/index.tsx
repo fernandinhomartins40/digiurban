@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
@@ -22,7 +21,7 @@ import AttendanceDetail from "@/components/administracao/rh/attendance/Attendanc
 import AttendanceFilter from "@/components/administracao/rh/attendance/AttendanceFilter";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfDay, endOfDay } from "date-fns";
-import { ApiResponse } from "@/lib/api/supabaseClient";
+import { ApiResponse, apiRequest } from "@/lib/api/supabaseClient";
 
 export default function HRAttendancePage() {
   const { user } = useAuth();
@@ -34,7 +33,7 @@ export default function HRAttendancePage() {
   const [filters, setFilters] = useState<{
     employeeName?: string;
     serviceId?: string;
-    status?: HRAttendanceStatus;
+    status?: HRAttendanceStatus | string;
     startDate?: Date;
     endDate?: Date;
   }>({});
@@ -44,15 +43,17 @@ export default function HRAttendancePage() {
     data: employeesData = { data: [] },
     isLoading: isLoadingEmployees,
     refetch: refetchEmployees,
-  } = useApiQuery<ApiResponse<any>>(
+  } = useApiQuery<{ data: { id: string; name: string; email: string }[] }>(
     ["admin-profiles"],
     async () => {
-      const { data, error } = await supabase
-        .from("admin_profiles")
-        .select("id, name, email")
-        .order("name");
-
-      return { data, error, status: error ? 'error' : 'success' };
+      return apiRequest(async () => {
+        const { data, error } = await supabase
+          .from("admin_profiles")
+          .select("id, name, email")
+          .order("name");
+  
+        return { data: data || [], error, status: error ? 'error' : 'success' };
+      }, { context: 'fetchAdminProfiles' });
     },
     {
       enabled: true,
@@ -67,10 +68,7 @@ export default function HRAttendancePage() {
     isLoading: isLoadingServices,
   } = useApiQuery(
     ["hr-services"],
-    async () => {
-      const response = await fetchServices();
-      return response;
-    },
+    fetchServices,
     {
       enabled: true,
     }
@@ -92,7 +90,7 @@ export default function HRAttendancePage() {
       }
       
       if (filters.status && filters.status !== "all") {
-        params.filters.status = filters.status;
+        params.filters.status = filters.status as HRAttendanceStatus;
       }
       
       if (filters.startDate) {
@@ -112,7 +110,7 @@ export default function HRAttendancePage() {
     data: attendancesData = { data: [] },
     isLoading: isLoadingAttendances,
     refetch: refetchAttendances,
-  } = useApiQuery<ApiResponse<any>>(
+  } = useApiQuery<ApiResponse<HRAttendance[]>>(
     ["hr-attendances", JSON.stringify(queryParams)],
     async () => {
       // If we have an employee name filter, we need to find the employee ID first
@@ -156,7 +154,7 @@ export default function HRAttendancePage() {
   const {
     data: employeeHistoryData = { data: [] },
     refetch: refetchHistory,
-  } = useApiQuery<ApiResponse<any>>(
+  } = useApiQuery<ApiResponse<HRAttendance[]>>(
     ["hr-employee-history", viewingAttendance?.employeeId],
     async () => {
       if (!viewingAttendance?.employeeId) return { data: [], error: null, status: 'success' };

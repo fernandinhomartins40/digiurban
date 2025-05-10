@@ -47,10 +47,7 @@ export const AttendanceForm = ({
   // Fetch HR services
   const { data: servicesResponse } = useApiQuery(
     ['hr-services'],
-    async () => {
-      const response = await fetchServices();
-      return response;
-    },
+    fetchServices,
     {
       enabled: true,
     }

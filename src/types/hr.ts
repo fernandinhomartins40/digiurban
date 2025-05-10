@@ -1,3 +1,4 @@
+
 export type HRService = {
   id: string;
   name: string;
@@ -23,6 +24,7 @@ export type ServiceFormData = Omit<HRService, 'id' | 'created_at' | 'updated_at'
 export type ServiceCategory = 'Tempo' | 'Licenças' | 'Aposentadoria' | 'Transferências' | 'Outros';
 
 export type HRAttendanceStatus = 'in_progress' | 'concluded' | 'cancelled';
+export type HRAttendanceFilterStatus = HRAttendanceStatus | 'all';
 
 export type HRAttendance = {
   id: string;

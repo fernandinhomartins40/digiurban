@@ -27,7 +27,7 @@ interface AttendanceFilterProps {
   onFilter: (filters: {
     employeeName?: string;
     serviceId?: string;
-    status?: HRAttendanceStatus;
+    status?: HRAttendanceStatus | string;
     startDate?: Date;
     endDate?: Date;
   }) => void;
@@ -43,16 +43,16 @@ export const AttendanceFilter = ({
   isLoading,
 }: AttendanceFilterProps) => {
   const [employeeName, setEmployeeName] = React.useState("");
-  const [serviceId, setServiceId] = React.useState("");
-  const [status, setStatus] = React.useState<HRAttendanceStatus | "">("");
+  const [serviceId, setServiceId] = React.useState<string>("all");
+  const [status, setStatus] = React.useState<HRAttendanceStatus | string>("all");
   const [startDate, setStartDate] = React.useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
 
   const handleFilter = () => {
     const filters: any = {};
     if (employeeName) filters.employeeName = employeeName;
-    if (serviceId) filters.serviceId = serviceId;
-    if (status) filters.status = status;
+    if (serviceId && serviceId !== "all") filters.serviceId = serviceId;
+    if (status && status !== "all") filters.status = status as HRAttendanceStatus;
     if (startDate) filters.startDate = startDate;
     if (endDate) filters.endDate = endDate;
     onFilter(filters);
@@ -60,8 +60,8 @@ export const AttendanceFilter = ({
 
   const handleReset = () => {
     setEmployeeName("");
-    setServiceId("");
-    setStatus("");
+    setServiceId("all");
+    setStatus("all");
     setStartDate(undefined);
     setEndDate(undefined);
     onReset();
@@ -112,7 +112,7 @@ export const AttendanceFilter = ({
 
           <div>
             <label className="text-sm font-medium mb-1 block">Status</label>
-            <Select value={status} onValueChange={(value: any) => setStatus(value)}>
+            <Select value={status} onValueChange={(value) => setStatus(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>

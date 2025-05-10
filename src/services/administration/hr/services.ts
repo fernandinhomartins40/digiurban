@@ -1,22 +1,24 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { HRService, ServiceFormData } from "@/types/hr";
+import { ApiResponse, apiRequest } from "@/lib/api/supabaseClient";
 
 /**
  * Fetches all HR services
  */
-export const fetchServices = async (): Promise<HRService[]> => {
-  const { data, error } = await supabase
-    .from('hr_services')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching HR services:', error);
-    throw error;
-  }
-
-  return data as HRService[];
+export const fetchServices = async (): Promise<ApiResponse<HRService[]>> => {
+  return apiRequest(async () => {
+    const { data, error } = await supabase
+      .from('hr_services')
+      .select('*')
+      .order('created_at', { ascending: false });
+  
+    if (error) {
+      console.error('Error fetching HR services:', error);
+      return { data: [], error, status: 'error' };
+    }
+  
+    return { data: data as HRService[], error: null, status: 'success' };
+  }, { context: 'fetchServices' });
 };
 
 /**
