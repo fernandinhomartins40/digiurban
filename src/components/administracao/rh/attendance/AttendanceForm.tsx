@@ -52,7 +52,7 @@ export const AttendanceForm = ({
     }
   );
 
-  // Use the proper response type structure
+  // Extract services from the API response
   const services = servicesResponse?.data || [];
 
   const form = useForm<HRAttendanceCreate>({

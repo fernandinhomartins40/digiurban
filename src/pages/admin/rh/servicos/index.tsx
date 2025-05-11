@@ -1,217 +1,187 @@
-
-import React, { useState } from "react";
-import { ServiceList } from "@/components/administracao/rh/services/ServiceList";
-import { ServiceForm } from "@/components/administracao/rh/services/ServiceForm";
-import { ServiceDetail } from "@/components/administracao/rh/services/ServiceDetail";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import {
-  fetchServices,
-  fetchServiceById,
-  createService,
-  updateService,
-  toggleServiceStatus,
-  deleteService
-} from "@/services/administration/hr/services";
-import { HRService, ServiceFormData } from "@/types/hr";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import React, { useState, useEffect } from "react";
+import { toast } from "@/hooks/use-toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
-
-enum View {
-  LIST,
-  FORM,
-  DETAIL,
-}
+import { Plus } from "lucide-react";
+import { HRService } from "@/types/hr";
+import { useApiQuery } from "@/lib/hooks/useApiQuery";
+import { fetchServices, toggleServiceStatus, deleteService } from "@/services/administration/hr/services";
+import ServiceFormDialog from "@/components/administracao/rh/services/ServiceFormDialog";
+import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
+import { DataTable } from "@/components/data-table/data-table";
+import { HRServiceColumnDef } from "@/components/administracao/rh/services/HRServiceColumnDef";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { RefreshCw } from "lucide-react";
+import { useApiMutation } from "@/lib/hooks/useApiMutation";
 
 export default function HRServicesPage() {
-  const [view, setView] = useState<View>(View.LIST);
-  const [selectedService, setSelectedService] = useState<HRService | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
-  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [allServices, setAllServices] = useState<HRService[]>([]);
+  const [filteredServices, setFilteredServices] = useState<HRService[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
 
-  const queryClient = useQueryClient();
+  const columns = HRServiceColumnDef;
 
-  const { data: services = [], isLoading } = useQuery({
-    queryKey: ["hr-services"],
-    queryFn: async () => {
-      const result = await fetchServices();
-      return result || [];
+  const { data: servicesResponse, isLoading, refetch } = useApiQuery(
+    ["hr-services"],
+    fetchServices,
+    {
+      enabled: true,
+      onSuccess: (data) => {
+        // Extract services from ApiResponse
+        setAllServices(data.data || []);
+        setFilteredServices(data.data || []);
+      },
     }
-  });
+  );
 
-  const createMutation = useMutation({
-    mutationFn: (serviceData: ServiceFormData) => createService(serviceData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["hr-services"] });
-      toast.success("Serviço criado com sucesso");
-      setView(View.LIST);
-    },
-    onError: (error) => {
-      toast.error(`Erro ao criar serviço: ${error.message}`);
+  useEffect(() => {
+    let filtered = [...allServices];
+
+    if (searchQuery) {
+      filtered = filtered.filter((service) =>
+        service.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
-  });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<ServiceFormData> }) => 
-      updateService(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["hr-services"] });
-      toast.success("Serviço atualizado com sucesso");
-      setView(View.LIST);
-    },
-    onError: (error) => {
-      toast.error(`Erro ao atualizar serviço: ${error.message}`);
+    if (categoryFilter) {
+      filtered = filtered.filter((service) => service.category === categoryFilter);
     }
-  });
 
-  const statusMutation = useMutation({
-    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => 
-      toggleServiceStatus(id, isActive),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["hr-services"] });
-      toast.success("Status do serviço atualizado com sucesso");
-    },
-    onError: (error) => {
-      toast.error(`Erro ao atualizar status do serviço: ${error.message}`);
+    setFilteredServices(filtered);
+  }, [searchQuery, categoryFilter, allServices]);
+
+  const toggleStatusMutation = useApiMutation(
+    "toggleServiceStatus",
+    ({ id, isActive }: { id: string; isActive: boolean }) => toggleServiceStatus(id, isActive),
+    {
+      onSuccess: () => {
+        toast({
+          title: "Status do serviço atualizado",
+          description: "O status do serviço foi atualizado com sucesso.",
+        });
+        refetch();
+      },
+      onError: (error) => {
+        console.error("Error toggling service status:", error);
+        toast({
+          title: "Erro ao atualizar status do serviço",
+          description: "Ocorreu um erro ao tentar atualizar o status do serviço.",
+          variant: "destructive",
+        });
+      },
     }
-  });
+  );
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteService(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["hr-services"] });
-      toast.success("Serviço excluído com sucesso");
-      setShowDeleteConfirm(false);
-      setServiceToDelete(null);
-    },
-    onError: (error) => {
-      toast.error(`Erro ao excluir serviço: ${error.message}`);
+  const deleteServiceMutation = useApiMutation(
+    "deleteService",
+    (id: string) => deleteService(id),
+    {
+      onSuccess: () => {
+        toast({
+          title: "Serviço excluído",
+          description: "O serviço foi excluído com sucesso.",
+        });
+        refetch();
+      },
+      onError: (error) => {
+        console.error("Error deleting service:", error);
+        toast({
+          title: "Erro ao excluir serviço",
+          description: "Ocorreu um erro ao tentar excluir o serviço.",
+          variant: "destructive",
+        });
+      },
     }
-  });
+  );
 
-  const handleCreateService = async (data: ServiceFormData): Promise<void> => {
-    await createMutation.mutateAsync(data);
+  const handleDeleteService = (id: string) => {
+    deleteServiceMutation.mutate(id);
   };
 
-  const handleUpdateService = async (data: ServiceFormData): Promise<void> => {
-    if (!selectedService) return Promise.resolve();
-    await updateMutation.mutateAsync({ id: selectedService.id, data });
-  };
-
-  const handleToggleStatus = (id: string, isActive: boolean) => {
-    statusMutation.mutate({ id, isActive });
-  };
-
-  const confirmDelete = (id: string) => {
-    setServiceToDelete(id);
-    setShowDeleteConfirm(true);
-  };
-
-  const handleDelete = () => {
-    if (!serviceToDelete) return;
-    deleteMutation.mutate(serviceToDelete);
-  };
-
-  const handleEdit = (service: HRService) => {
-    setSelectedService(service);
-    setView(View.FORM);
-  };
-
-  const handleView = (service: HRService) => {
-    setSelectedService(service);
-    setView(View.DETAIL);
-  };
-
-  const handleBack = () => {
-    setView(View.LIST);
-    setSelectedService(null);
-  };
-
-  const renderContent = () => {
-    switch (view) {
-      case View.FORM:
-        return (
-          <ServiceForm
-            initialData={selectedService || undefined}
-            onSubmit={(data) =>
-              selectedService
-                ? handleUpdateService(data)
-                : handleCreateService(data)
-            }
-            onCancel={handleBack}
-            isSubmitting={createMutation.isPending || updateMutation.isPending}
-          />
-        );
-      case View.DETAIL:
-        return selectedService ? (
-          <ServiceDetail
-            service={selectedService}
-            onBack={handleBack}
-            onEdit={() => setView(View.FORM)}
-          />
-        ) : null;
-      case View.LIST:
-      default:
-        return (
-          <ServiceList
-            services={services}
-            isLoading={isLoading}
-            onEdit={handleEdit}
-            onView={handleView}
-            onDelete={confirmDelete}
-            onToggleStatus={handleToggleStatus}
-            onCreateNew={() => {
-              setSelectedService(null);
-              setView(View.FORM);
-            }}
-            isDeleting={deleteMutation.isPending}
-            error={null}
-          />
-        );
-    }
+  const handleToggleStatus = async (id: string, isActive: boolean) => {
+    toggleStatusMutation.mutate({ id, isActive });
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Serviços RH</h1>
-        <p className="text-muted-foreground">
-          Gerenciamento de serviços disponíveis para funcionários.
-        </p>
+    <div className="container py-6">
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Serviços RH</h1>
+          <p className="text-muted-foreground">
+            Gerencie os serviços oferecidos pelo departamento de recursos humanos.
+          </p>
+        </div>
+        <Button onClick={() => setIsDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Serviço
+        </Button>
       </div>
 
-      {renderContent()}
+      <div className="mb-4 flex justify-between items-center">
+        <div className="flex items-center">
+          <input
+            type="search"
+            placeholder="Buscar por nome"
+            className="border rounded-md px-4 py-2 mr-2"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <select
+            className="border rounded-md px-4 py-2"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <option value="">Todas as categorias</option>
+            <option value="Tempo">Tempo</option>
+            <option value="Licenças">Licenças</option>
+            <option value="Aposentadoria">Aposentadoria</option>
+            <option value="Transferências">Transferências</option>
+            <option value="Outros">Outros</option>
+          </select>
+        </div>
+        <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Atualizar
+        </Button>
+      </div>
 
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-              Confirmar exclusão
-            </DialogTitle>
-            <DialogDescription>
-              Tem certeza que deseja excluir este serviço? Esta ação não pode
-              ser desfeita.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Excluir
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {isLoading ? (
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader>
+                <CardTitle className="h-6 bg-muted/50 rounded-md w-3/4"></CardTitle>
+                <CardDescription className="h-4 bg-muted/50 rounded-md"></CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-24 bg-muted/50 rounded-md"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : filteredServices.length > 0 ? (
+        <div className="w-full">
+          <DataTableViewOptions table={null} />
+          <DataTable
+            columns={columns}
+            data={filteredServices}
+            handleToggleStatus={handleToggleStatus}
+            handleDeleteService={handleDeleteService}
+            isLoading={isLoading}
+          />
+        </div>
+      ) : (
+        <Alert>
+          <AlertTitle>Nenhum serviço encontrado</AlertTitle>
+          <AlertDescription>
+            Nenhum serviço corresponde aos critérios de busca.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <ServiceFormDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} onServiceCreated={refetch} />
     </div>
   );
 }
