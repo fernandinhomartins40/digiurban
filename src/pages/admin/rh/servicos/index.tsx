@@ -12,7 +12,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ServiceFormDialog from "@/components/administracao/rh/services/ServiceFormDialog";
 import { HRServiceColumnDef } from "@/components/administracao/rh/services/HRServiceColumnDef";
 import { DataTable } from "@/components/data-table/data-table";
-import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 
 export default function HRServicesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -23,20 +22,20 @@ export default function HRServicesPage() {
 
   const columns = HRServiceColumnDef;
 
-  const { data: servicesResponse, isLoading, refetch } = useApiQuery(
+  const { data: servicesData, isLoading, refetch } = useApiQuery(
     ["hr-services"],
-    fetchServices,
+    () => fetchServices(),
     {
       enabled: true,
-      onSuccess: (data) => {
-        if (data && data.data) {
-          // Extract services from ApiResponse
-          setAllServices(data.data || []);
-          setFilteredServices(data.data || []);
-        }
-      },
     }
   );
+
+  useEffect(() => {
+    if (servicesData) {
+      setAllServices(servicesData);
+      setFilteredServices(servicesData);
+    }
+  }, [servicesData]);
 
   useEffect(() => {
     let filtered = [...allServices];
@@ -55,7 +54,7 @@ export default function HRServicesPage() {
   }, [searchQuery, categoryFilter, allServices]);
 
   const toggleStatusMutation = useApiMutation(
-    "toggleServiceStatus",
+    ["toggleServiceStatus"],
     ({ id, isActive }: { id: string; isActive: boolean }) => toggleServiceStatus(id, isActive),
     {
       onSuccess: () => {
@@ -65,7 +64,7 @@ export default function HRServicesPage() {
         });
         refetch();
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error("Error toggling service status:", error);
         toast({
           title: "Erro ao atualizar status do serviço",
@@ -77,7 +76,7 @@ export default function HRServicesPage() {
   );
 
   const deleteServiceMutation = useApiMutation(
-    "deleteService",
+    ["deleteService"],
     (id: string) => deleteService(id),
     {
       onSuccess: () => {
@@ -87,7 +86,7 @@ export default function HRServicesPage() {
         });
         refetch();
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error("Error deleting service:", error);
         toast({
           title: "Erro ao excluir serviço",
@@ -165,7 +164,6 @@ export default function HRServicesPage() {
         </div>
       ) : filteredServices.length > 0 ? (
         <div className="w-full">
-          <DataTableViewOptions table={null} />
           <DataTable
             columns={columns}
             data={filteredServices}
@@ -183,7 +181,11 @@ export default function HRServicesPage() {
         </Alert>
       )}
 
-      <ServiceFormDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} onServiceCreated={refetch} />
+      <ServiceFormDialog 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen} 
+        onServiceCreated={() => refetch()}
+      />
     </div>
   );
 }

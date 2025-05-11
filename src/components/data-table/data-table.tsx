@@ -5,6 +5,7 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  Table as TableType,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -97,3 +98,5 @@ export function DataTable<TData, TValue>({
     </div>
   );
 }
+
+export type { TableType };

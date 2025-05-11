@@ -31,7 +31,8 @@ export const HRServiceColumnDef: ColumnDef<HRService>[] = [
     header: "Status",
     cell: ({ row, table }) => {
       const service = row.original;
-      const handleToggle = table.options.meta?.handleToggleStatus;
+      const meta = table.options.meta;
+      const handleToggle = meta?.handleToggleStatus;
       
       return (
         <div className="flex items-center">
@@ -42,6 +43,7 @@ export const HRServiceColumnDef: ColumnDef<HRService>[] = [
                 handleToggle(service.id, checked);
               }
             }}
+            aria-label={service.is_active ? "Active" : "Inactive"}
           />
           <span className="ml-2">{service.is_active ? "Ativo" : "Inativo"}</span>
         </div>
@@ -52,7 +54,8 @@ export const HRServiceColumnDef: ColumnDef<HRService>[] = [
     id: "actions",
     cell: ({ row, table }) => {
       const service = row.original;
-      const handleDelete = table.options.meta?.handleDeleteService;
+      const meta = table.options.meta;
+      const handleDelete = meta?.handleDeleteService;
       
       return (
         <DropdownMenu>
@@ -81,3 +84,5 @@ export const HRServiceColumnDef: ColumnDef<HRService>[] = [
     },
   },
 ];
+
+export default HRServiceColumnDef;
