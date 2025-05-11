@@ -20,14 +20,14 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar as CalendarIcon, Search, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HRAttendanceStatus } from "@/types/hr";
+import { HRAttendanceFilterStatus } from "@/types/hr";
 import { HRService } from "@/types/hr";
 
 interface AttendanceFilterProps {
   onFilter: (filters: {
     employeeName?: string;
     serviceId?: string;
-    status?: HRAttendanceStatus | string;
+    status?: HRAttendanceFilterStatus;
     startDate?: Date;
     endDate?: Date;
   }) => void;
@@ -44,7 +44,7 @@ export const AttendanceFilter = ({
 }: AttendanceFilterProps) => {
   const [employeeName, setEmployeeName] = React.useState("");
   const [serviceId, setServiceId] = React.useState<string>("all");
-  const [status, setStatus] = React.useState<HRAttendanceStatus | string>("all");
+  const [status, setStatus] = React.useState<HRAttendanceFilterStatus>("all");
   const [startDate, setStartDate] = React.useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
 
@@ -52,7 +52,7 @@ export const AttendanceFilter = ({
     const filters: any = {};
     if (employeeName) filters.employeeName = employeeName;
     if (serviceId && serviceId !== "all") filters.serviceId = serviceId;
-    if (status && status !== "all") filters.status = status as HRAttendanceStatus;
+    if (status && status !== "all") filters.status = status;
     if (startDate) filters.startDate = startDate;
     if (endDate) filters.endDate = endDate;
     onFilter(filters);
@@ -112,7 +112,7 @@ export const AttendanceFilter = ({
 
           <div>
             <label className="text-sm font-medium mb-1 block">Status</label>
-            <Select value={status} onValueChange={(value) => setStatus(value)}>
+            <Select value={status} onValueChange={(value) => setStatus(value as HRAttendanceFilterStatus)}>
               <SelectTrigger>
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>

@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { HRAttendance, HRAttendanceCreate, HRAttendanceUpdate, HRAttendanceStatus } from "@/types/hr";
+import { HRAttendance, HRAttendanceCreate, HRAttendanceUpdate, HRAttendanceStatus, HRAttendanceFilterStatus } from "@/types/hr";
 import { ApiResponse, apiRequest } from "@/lib/api/supabaseClient";
 
 // Fetch all attendances with pagination and sorting
@@ -9,7 +9,7 @@ export const fetchAttendances = async (
     page?: number;
     limit?: number;
     orderBy?: { column: string; ascending?: boolean };
-    filters?: { employeeId?: string; serviceId?: string; status?: HRAttendanceStatus; startDate?: Date; endDate?: Date }
+    filters?: { employeeId?: string; serviceId?: string; status?: HRAttendanceFilterStatus; startDate?: Date; endDate?: Date }
   }
 ): Promise<ApiResponse<HRAttendance[]>> => {
   const limit = options?.limit || 10;
@@ -39,6 +39,7 @@ export const fetchAttendances = async (
         query = query.eq('service_id', serviceId);
       }
       
+      // Only apply status filter if it's not 'all'
       if (status && status !== 'all') {
         query = query.eq('status', status);
       }
@@ -113,7 +114,7 @@ export const fetchAttendanceById = async (id: string): Promise<ApiResponse<HRAtt
         status: data.status as HRAttendanceStatus,
         attendanceDate: new Date(data.attendance_date),
         attendedBy: data.attended_by,
-        attendedByName: data.admin?.name,
+        attendedByName: data.admin?.name || '',
         notes: data.notes,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)

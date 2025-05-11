@@ -1,10 +1,11 @@
+
 import React, { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/contexts/auth/useAuth";
-import { HRAttendance, HRAttendanceCreate, HRAttendanceStatus, HRService } from "@/types/hr";
+import { HRAttendance, HRAttendanceCreate, HRAttendanceStatus, HRAttendanceFilterStatus } from "@/types/hr";
 import { useApiQuery } from "@/lib/hooks/useApiQuery";
 import { useApiMutation } from "@/lib/hooks/useApiMutation";
 import {
@@ -33,7 +34,7 @@ export default function HRAttendancePage() {
   const [filters, setFilters] = useState<{
     employeeName?: string;
     serviceId?: string;
-    status?: HRAttendanceStatus | string;
+    status?: HRAttendanceFilterStatus;
     startDate?: Date;
     endDate?: Date;
   }>({});

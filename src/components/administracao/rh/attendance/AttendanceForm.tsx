@@ -20,10 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { HRAttendanceCreate, HRAttendance, HRAttendanceStatus } from "@/types/hr";
+import { HRAttendanceCreate, HRAttendance, HRAttendanceStatus, HRService } from "@/types/hr";
 import { useAuth } from "@/contexts/auth/useAuth";
 import { fetchServices } from "@/services/administration/hr";
-import { HRService } from "@/types/hr";
 import { useApiQuery } from "@/lib/hooks/useApiQuery";
 
 interface AttendanceFormProps {

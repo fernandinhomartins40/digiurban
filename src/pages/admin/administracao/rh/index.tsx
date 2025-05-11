@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,8 +57,10 @@ export default function HRPage() {
     const loadServices = async () => {
       try {
         setIsLoading(prev => ({ ...prev, services: true }));
-        const data = await fetchServices();
-        setServices(data);
+        const response = await fetchServices();
+        if (response.data) {
+          setServices(response.data);
+        }
       } catch (error) {
         console.error("Error loading services:", error);
       } finally {

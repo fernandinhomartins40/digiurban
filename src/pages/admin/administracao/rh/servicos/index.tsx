@@ -50,8 +50,12 @@ export default function HRServicesPage() {
   const loadServices = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchServices();
-      setServices(data);
+      const response = await fetchServices();
+      if (response.data) {
+        setServices(response.data);
+      } else {
+        setServices([]);
+      }
     } catch (error) {
       console.error("Error loading services:", error);
       toast({
@@ -67,13 +71,17 @@ export default function HRServicesPage() {
   const handleCreateService = async (data: ServiceFormData) => {
     setIsSubmitting(true);
     try {
-      await createService(data);
-      toast({
-        title: "Sucesso",
-        description: "Serviço criado com sucesso.",
-      });
-      await loadServices();
-      setView(View.LIST);
+      const response = await createService(data);
+      if (response.status === 'success' && response.data) {
+        toast({
+          title: "Sucesso",
+          description: "Serviço criado com sucesso.",
+        });
+        await loadServices();
+        setView(View.LIST);
+      } else {
+        throw new Error("Erro ao criar serviço");
+      }
     } catch (error) {
       console.error("Error creating service:", error);
       toast({
@@ -91,13 +99,17 @@ export default function HRServicesPage() {
 
     setIsSubmitting(true);
     try {
-      await updateService(selectedService.id, data);
-      toast({
-        title: "Sucesso",
-        description: "Serviço atualizado com sucesso.",
-      });
-      await loadServices();
-      setView(View.LIST);
+      const response = await updateService(selectedService.id, data);
+      if (response.status === 'success') {
+        toast({
+          title: "Sucesso",
+          description: "Serviço atualizado com sucesso.",
+        });
+        await loadServices();
+        setView(View.LIST);
+      } else {
+        throw new Error("Erro ao atualizar serviço");
+      }
     } catch (error) {
       console.error("Error updating service:", error);
       toast({
@@ -112,12 +124,16 @@ export default function HRServicesPage() {
 
   const handleToggleStatus = async (id: string, isActive: boolean) => {
     try {
-      await toggleServiceStatus(id, isActive);
-      toast({
-        title: "Sucesso",
-        description: `Serviço ${isActive ? "ativado" : "desativado"} com sucesso.`,
-      });
-      await loadServices();
+      const response = await toggleServiceStatus(id, isActive);
+      if (response.status === 'success') {
+        toast({
+          title: "Sucesso",
+          description: `Serviço ${isActive ? "ativado" : "desativado"} com sucesso.`,
+        });
+        await loadServices();
+      } else {
+        throw new Error("Erro ao alterar status do serviço");
+      }
     } catch (error) {
       console.error("Error toggling service status:", error);
       toast({
@@ -132,14 +148,18 @@ export default function HRServicesPage() {
     if (!serviceToDelete) return;
 
     try {
-      await deleteService(serviceToDelete);
-      toast({
-        title: "Sucesso",
-        description: "Serviço excluído com sucesso.",
-      });
-      await loadServices();
-      setShowDeleteConfirm(false);
-      setServiceToDelete(null);
+      const response = await deleteService(serviceToDelete);
+      if (response.status === 'success') {
+        toast({
+          title: "Sucesso",
+          description: "Serviço excluído com sucesso.",
+        });
+        await loadServices();
+        setShowDeleteConfirm(false);
+        setServiceToDelete(null);
+      } else {
+        throw new Error("Erro ao excluir serviço");
+      }
     } catch (error) {
       console.error("Error deleting service:", error);
       toast({
