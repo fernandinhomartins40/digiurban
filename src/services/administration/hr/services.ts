@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { HRService, ServiceFormData } from "@/types/hr";
 import { ApiResponse, apiRequest } from "@/lib/api/supabaseClient";

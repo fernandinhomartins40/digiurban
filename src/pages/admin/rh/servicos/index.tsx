@@ -1,18 +1,18 @@
+
 import React, { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { HRService } from "@/types/hr";
 import { useApiQuery } from "@/lib/hooks/useApiQuery";
-import { fetchServices, toggleServiceStatus, deleteService } from "@/services/administration/hr/services";
-import ServiceFormDialog from "@/components/administracao/rh/services/ServiceFormDialog";
-import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
-import { DataTable } from "@/components/data-table/data-table";
-import { HRServiceColumnDef } from "@/components/administracao/rh/services/HRServiceColumnDef";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { RefreshCw } from "lucide-react";
 import { useApiMutation } from "@/lib/hooks/useApiMutation";
+import { fetchServices, toggleServiceStatus, deleteService } from "@/services/administration/hr/services";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ServiceFormDialog from "@/components/administracao/rh/services/ServiceFormDialog";
+import { HRServiceColumnDef } from "@/components/administracao/rh/services/HRServiceColumnDef";
+import { DataTable } from "@/components/data-table/data-table";
+import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 
 export default function HRServicesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -29,9 +29,11 @@ export default function HRServicesPage() {
     {
       enabled: true,
       onSuccess: (data) => {
-        // Extract services from ApiResponse
-        setAllServices(data.data || []);
-        setFilteredServices(data.data || []);
+        if (data && data.data) {
+          // Extract services from ApiResponse
+          setAllServices(data.data || []);
+          setFilteredServices(data.data || []);
+        }
       },
     }
   );

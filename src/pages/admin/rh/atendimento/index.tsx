@@ -134,14 +134,11 @@ export default function HRAttendancePage() {
       // If filtering by employee (either by name/id or by selection)
       const effectiveEmployeeId = employeeId || selectedEmployeeId;
       
-      let response;
       if (effectiveEmployeeId) {
-        response = await fetchAttendancesByEmployee(effectiveEmployeeId, queryParams);
+        return await fetchAttendancesByEmployee(effectiveEmployeeId, queryParams);
       } else {
-        response = await fetchAttendances(queryParams);
+        return await fetchAttendances(queryParams);
       }
-      
-      return response;
     },
     {
       enabled: true,

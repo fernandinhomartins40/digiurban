@@ -21,8 +21,7 @@ export const fetchAttendances = async (
       .select(`
         *,
         employee:employee_id(id, name, email),
-        service:service_id(id, name),
-        admin:attended_by(id, name)
+        service:service_id(id, name)
       `)
       .range(offset, offset + limit - 1);
     
@@ -65,21 +64,27 @@ export const fetchAttendances = async (
     
     // Transform the data to match our type
     if (data) {
-      const transformedData: HRAttendance[] = data.map(record => ({
-        id: record.id,
-        employeeId: record.employee_id,
-        employeeName: record.employee ? record.employee.name : '',
-        serviceId: record.service_id,
-        serviceName: record.service ? record.service.name : '',
-        description: record.description,
-        status: record.status as HRAttendanceStatus,
-        attendanceDate: new Date(record.attendance_date),
-        attendedBy: record.attended_by,
-        attendedByName: record.admin ? record.admin.name : '',
-        notes: record.notes,
-        createdAt: new Date(record.created_at),
-        updatedAt: new Date(record.updated_at)
-      }));
+      const transformedData: HRAttendance[] = data.map(record => {
+        // Safely access properties
+        const employee = record.employee as any || {};
+        const service = record.service as any || {};
+        
+        return {
+          id: record.id,
+          employeeId: record.employee_id,
+          employeeName: employee.name || '',
+          serviceId: record.service_id,
+          serviceName: service.name || '',
+          description: record.description,
+          status: record.status as HRAttendanceStatus,
+          attendanceDate: new Date(record.attendance_date),
+          attendedBy: record.attended_by,
+          attendedByName: '', // Will be filled by a separate query if needed
+          notes: record.notes,
+          createdAt: new Date(record.created_at),
+          updatedAt: new Date(record.updated_at)
+        };
+      });
       
       return { data: transformedData, error, status: error ? 'error' : 'success' };
     }
@@ -96,24 +101,27 @@ export const fetchAttendanceById = async (id: string): Promise<ApiResponse<HRAtt
       .select(`
         *,
         employee:employee_id(id, name, email),
-        service:service_id(id, name),
-        admin:attended_by(id, name)
+        service:service_id(id, name)
       `)
       .eq('id', id)
       .single();
     
     if (data) {
+      // Safely access properties
+      const employee = data.employee as any || {};
+      const service = data.service as any || {};
+        
       const transformedData: HRAttendance = {
         id: data.id,
         employeeId: data.employee_id,
-        employeeName: data.employee ? data.employee.name : '',
+        employeeName: employee.name || '',
         serviceId: data.service_id,
-        serviceName: data.service ? data.service.name : '',
+        serviceName: service.name || '',
         description: data.description,
         status: data.status as HRAttendanceStatus,
         attendanceDate: new Date(data.attendance_date),
         attendedBy: data.attended_by,
-        attendedByName: data.admin ? data.admin.name : '',
+        attendedByName: '', // Will be filled by a separate query if needed
         notes: data.notes,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
