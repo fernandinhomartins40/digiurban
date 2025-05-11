@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { HRAttendance, HRAttendanceCreate, HRAttendanceUpdate, HRAttendanceStatus, HRAttendanceFilterStatus } from "@/types/hr";
 import { ApiResponse, apiRequest } from "@/lib/api/supabaseClient";
@@ -69,14 +68,14 @@ export const fetchAttendances = async (
       const transformedData: HRAttendance[] = data.map(record => ({
         id: record.id,
         employeeId: record.employee_id,
-        employeeName: record.employee?.name || '',
+        employeeName: record.employee ? record.employee.name : '',
         serviceId: record.service_id,
-        serviceName: record.service?.name || '',
+        serviceName: record.service ? record.service.name : '',
         description: record.description,
         status: record.status as HRAttendanceStatus,
         attendanceDate: new Date(record.attendance_date),
         attendedBy: record.attended_by,
-        attendedByName: record.admin?.name || '',
+        attendedByName: record.admin ? record.admin.name : '',
         notes: record.notes,
         createdAt: new Date(record.created_at),
         updatedAt: new Date(record.updated_at)
@@ -107,14 +106,14 @@ export const fetchAttendanceById = async (id: string): Promise<ApiResponse<HRAtt
       const transformedData: HRAttendance = {
         id: data.id,
         employeeId: data.employee_id,
-        employeeName: data.employee?.name,
+        employeeName: data.employee ? data.employee.name : '',
         serviceId: data.service_id,
-        serviceName: data.service?.name,
+        serviceName: data.service ? data.service.name : '',
         description: data.description,
         status: data.status as HRAttendanceStatus,
         attendanceDate: new Date(data.attendance_date),
         attendedBy: data.attended_by,
-        attendedByName: data.admin?.name || '',
+        attendedByName: data.admin ? data.admin.name : '',
         notes: data.notes,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)

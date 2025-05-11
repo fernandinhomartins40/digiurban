@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,8 +19,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar as CalendarIcon, Search, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { HRAttendanceFilterStatus } from "@/types/hr";
-import { HRService } from "@/types/hr";
+import { HRAttendanceFilterStatus, HRService } from "@/types/hr";
 
 interface AttendanceFilterProps {
   onFilter: (filters: {

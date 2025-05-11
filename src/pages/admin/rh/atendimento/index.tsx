@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/contexts/auth/useAuth";
-import { HRAttendance, HRAttendanceCreate, HRAttendanceStatus, HRAttendanceFilterStatus } from "@/types/hr";
+import { HRAttendance, HRAttendanceCreate, HRAttendanceStatus, HRAttendanceFilterStatus, HRService } from "@/types/hr";
 import { useApiQuery } from "@/lib/hooks/useApiQuery";
 import { useApiMutation } from "@/lib/hooks/useApiMutation";
 import {
@@ -44,7 +44,7 @@ export default function HRAttendancePage() {
     data: employeesData = { data: [] },
     isLoading: isLoadingEmployees,
     refetch: refetchEmployees,
-  } = useApiQuery<{ data: { id: string; name: string; email: string }[] }>(
+  } = useApiQuery<ApiResponse<{ id: string; name: string; email: string }[]>>(
     ["admin-profiles"],
     async () => {
       return apiRequest(async () => {
@@ -343,7 +343,7 @@ export default function HRAttendancePage() {
           <AttendanceFilter
             onFilter={handleFilter}
             onReset={handleResetFilters}
-            services={services as HRService[]}
+            services={services}
             isLoading={isLoading}
           />
         </div>

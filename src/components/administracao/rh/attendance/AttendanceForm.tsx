@@ -52,6 +52,7 @@ export const AttendanceForm = ({
     }
   );
 
+  // Use the proper response type structure
   const services = servicesResponse?.data || [];
 
   const form = useForm<HRAttendanceCreate>({
