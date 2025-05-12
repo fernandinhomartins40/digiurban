@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useApiMutation } from "@/lib/hooks"; // Updated import
+import { useApiMutation } from "@/lib/hooks";
 import { createService, updateService } from "@/services/administration/hr/services";
 import { HRService, ServiceFormData, ServiceCategory } from "@/types/hr";
 
@@ -29,7 +28,7 @@ const formSchema = z.object({
         label: z.string(),
         required: z.boolean(),
       })
-    ).optional(),
+    ).default([]),
   }).optional(),
   available_for: z.array(z.string()).optional(),
 });
@@ -83,7 +82,7 @@ export function ServiceFormDialog({
   });
 
   // Create mutation
-  const { mutate: create, isLoading: isCreating } = useApiMutation(
+  const { mutate: create, isPending: isCreating } = useApiMutation(
     async (data: FormValues) => {
       const serviceData: ServiceFormData = {
         name: data.name,
@@ -96,13 +95,12 @@ export function ServiceFormDialog({
         available_for: data.available_for || [],
       };
       
-      const response = await createService(serviceData);
-      return response;
+      return createService(serviceData);
     },
     {
       onSuccess: (response) => {
-        if (response.status === 'success' && response.data) {
-          onSaved(response.data);
+        if (response) {
+          onSaved(response);
           form.reset();
         }
       },
@@ -110,7 +108,7 @@ export function ServiceFormDialog({
   );
 
   // Update mutation
-  const { mutate: update, isLoading: isUpdating } = useApiMutation(
+  const { mutate: update, isPending: isUpdating } = useApiMutation(
     async (data: FormValues) => {
       if (!service) return null;
       
@@ -125,13 +123,12 @@ export function ServiceFormDialog({
         available_for: data.available_for || [],
       };
       
-      const response = await updateService(service.id, serviceData);
-      return response;
+      return updateService(service.id, serviceData);
     },
     {
       onSuccess: (response) => {
-        if (response?.status === 'success' && response.data) {
-          onSaved(response.data);
+        if (response) {
+          onSaved(response);
           form.reset();
         }
       },

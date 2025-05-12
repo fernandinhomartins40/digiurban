@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -146,7 +145,7 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
       // Upload attachments if any
       if (files.length > 0) {
         for (const file of files) {
-          await uploadRequestAttachment(user.id, request.id, file);
+          await uploadRequestAttachment(request.id, file);
         }
       }
 

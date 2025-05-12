@@ -1,262 +1,174 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { HRAttendance, HRAttendanceCreate, HRAttendanceStatus, HRAttendanceUpdate } from "@/types/hr";
 import { ApiResponse } from "@/lib/api/supabaseClient";
+import { HRAttendance, HRAttendanceCreate, HRAttendanceStatus, HRAttendanceUpdate } from "@/types/hr";
 
-/**
- * Fetches all HR attendances
- */
-export const fetchAttendances = async (): Promise<ApiResponse<HRAttendance[]>> => {
-  try {
-    const { data, error } = await supabase
-      .from('hr_attendances')
-      .select(`
-        *,
-        admin:attended_by(name),
-        service:service_id(name)
-      `)
-      .order('created_at', { ascending: false });
-  
-    if (error) {
-      console.error('Error fetching HR attendances:', error);
-      return { data: [], error, status: 'error' };
-    }
-  
-    const formattedData: HRAttendance[] = data.map(item => ({
-      id: item.id,
-      employeeId: item.employee_id,
-      employeeName: item.employee_name, // This might be null
-      serviceId: item.service_id,
-      serviceName: item.service?.name || '',
-      description: item.description,
-      status: item.status as HRAttendanceStatus,
-      attendanceDate: new Date(item.attendance_date),
-      attendedBy: item.attended_by,
-      attendedByName: item.admin?.name || '',
-      notes: item.notes || null,
-      createdAt: new Date(item.created_at),
-      updatedAt: new Date(item.updated_at)
-    }));
-  
-    return { data: formattedData, error: null, status: 'success' };
-  } catch (error) {
-    console.error('Error in fetchAttendances:', error);
-    return { data: [], error: error as Error, status: 'error' };
-  }
+// Format attendance from database to frontend format
+const formatAttendance = (data: any): HRAttendance => {
+  return {
+    id: data.id,
+    employeeId: data.employee_id,
+    employeeName: data.employee_name || 'Unknown Employee',
+    serviceId: data.service_id,
+    serviceName: data.service?.name || null,
+    description: data.description,
+    status: data.status,
+    attendanceDate: new Date(data.attendance_date),
+    attendedBy: data.attended_by,
+    attendedByName: data.admin_name || 'Unknown Admin',
+    notes: data.notes,
+    createdAt: new Date(data.created_at),
+    updatedAt: new Date(data.updated_at),
+  };
 };
 
-/**
- * Fetches attendances by status
- */
-export const fetchAttendancesByStatus = async (status: HRAttendanceStatus): Promise<ApiResponse<HRAttendance[]>> => {
+// Fetch all attendances
+export async function fetchAttendances(): Promise<ApiResponse<HRAttendance[]>> {
   try {
     const { data, error } = await supabase
       .from('hr_attendances')
       .select(`
         *,
-        admin:attended_by(name),
-        service:service_id(name)
+        service:service_id(name),
+        admin_name:attended_by(name)
+      `)
+      .order('attendance_date', { ascending: false });
+
+    if (error) throw error;
+
+    // Format the data for frontend use
+    const formattedData = data.map(item => ({
+      ...formatAttendance({
+        ...item,
+        employee_name: `Employee ${item.employee_id.substring(0, 4)}`, // Temporary employee name
+        admin_name: item.admin_name?.name || 'Unknown Admin'
+      })
+    }));
+
+    return { data: formattedData, error: null };
+  } catch (error: any) {
+    console.error('Error fetching attendances:', error);
+    return { data: null, error };
+  }
+}
+
+// Fetch attendances by status
+export async function fetchAttendancesByStatus(
+  status: HRAttendanceStatus
+): Promise<ApiResponse<HRAttendance[]>> {
+  try {
+    const { data, error } = await supabase
+      .from('hr_attendances')
+      .select(`
+        *,
+        service:service_id(name),
+        admin_name:attended_by(name)
       `)
       .eq('status', status)
-      .order('created_at', { ascending: false });
+      .order('attendance_date', { ascending: false });
 
-    if (error) {
-      console.error(`Error fetching HR attendances with status ${status}:`, error);
-      return { data: [], error, status: 'error' };
-    }
+    if (error) throw error;
 
-    const formattedData: HRAttendance[] = data.map(item => ({
-      id: item.id,
-      employeeId: item.employee_id,
-      employeeName: item.employee_name, // This might be null
-      serviceId: item.service_id,
-      serviceName: item.service?.name || '',
-      description: item.description,
-      status: item.status as HRAttendanceStatus,
-      attendanceDate: new Date(item.attendance_date),
-      attendedBy: item.attended_by,
-      attendedByName: item.admin?.name || '',
-      notes: item.notes || null,
-      createdAt: new Date(item.created_at),
-      updatedAt: new Date(item.updated_at)
+    // Format the data for frontend use
+    const formattedData = data.map(item => ({
+      ...formatAttendance({
+        ...item,
+        employee_name: `Employee ${item.employee_id.substring(0, 4)}`, // Temporary employee name
+        admin_name: item.admin_name?.name || 'Unknown Admin'
+      })
     }));
 
-    return { data: formattedData, error: null, status: 'success' };
-  } catch (error) {
-    console.error(`Error in fetchAttendancesByStatus for ${status}:`, error);
-    return { data: [], error: error as Error, status: 'error' };
+    return { data: formattedData, error: null };
+  } catch (error: any) {
+    console.error('Error fetching attendances by status:', error);
+    return { data: null, error };
   }
-};
+}
 
-/**
- * Creates a new HR attendance record
- */
-export const createAttendance = async (attendanceData: HRAttendanceCreate): Promise<ApiResponse<HRAttendance | null>> => {
+// Create a new attendance
+export async function createAttendance(
+  attendance: HRAttendanceCreate
+): Promise<ApiResponse<HRAttendance>> {
   try {
-    // Convert from our app's model to the database schema
-    const dbAttendance = {
-      employee_id: attendanceData.employeeId,
-      service_id: attendanceData.serviceId,
-      description: attendanceData.description,
-      status: attendanceData.status,
-      attendance_date: attendanceData.attendanceDate.toISOString(),
-      attended_by: attendanceData.attendedBy,
-      notes: attendanceData.notes
-    };
-
     const { data, error } = await supabase
       .from('hr_attendances')
-      .insert([dbAttendance])
+      .insert({
+        employee_id: attendance.employeeId,
+        service_id: attendance.serviceId,
+        description: attendance.description,
+        status: attendance.status,
+        attendance_date: new Date(attendance.attendanceDate).toISOString(),
+        attended_by: attendance.attendedBy,
+        notes: attendance.notes,
+      })
       .select(`
         *,
-        admin:attended_by(name),
-        service:service_id(name)
+        service:service_id(name),
+        admin_name:attended_by(name)
       `)
       .single();
 
-    if (error) {
-      console.error('Error creating HR attendance:', error);
-      return { data: null, error, status: 'error' };
-    }
+    if (error) throw error;
 
-    const formattedData: HRAttendance = {
-      id: data.id,
-      employeeId: data.employee_id,
-      employeeName: data.employee_name, // This might be null
-      serviceId: data.service_id,
-      serviceName: data.service?.name || '',
-      description: data.description,
-      status: data.status as HRAttendanceStatus,
-      attendanceDate: new Date(data.attendance_date),
-      attendedBy: data.attended_by,
-      attendedByName: data.admin?.name || '',
-      notes: data.notes || null,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
-    };
+    // Format the data for frontend use
+    const formattedData = formatAttendance({
+      ...data,
+      employee_name: `Employee ${data.employee_id.substring(0, 4)}`, // Temporary employee name
+      admin_name: data.admin_name?.name || 'Unknown Admin'
+    });
 
-    return { data: formattedData, error: null, status: 'success' };
-  } catch (error) {
-    console.error('Error in createAttendance:', error);
-    return { data: null, error: error as Error, status: 'error' };
+    return { data: formattedData, error: null };
+  } catch (error: any) {
+    console.error('Error creating attendance:', error);
+    return { data: null, error };
   }
-};
+}
 
-/**
- * Updates an existing HR attendance record
- */
-export const updateAttendance = async (id: string, attendanceData: HRAttendanceUpdate): Promise<ApiResponse<HRAttendance | null>> => {
+// Update attendance
+export async function updateAttendance(
+  id: string,
+  updates: HRAttendanceUpdate
+): Promise<ApiResponse<HRAttendance>> {
   try {
-    // Convert from our app's model to the database schema
-    const dbAttendance: Record<string, any> = {};
-    
-    if (attendanceData.serviceId !== undefined) dbAttendance.service_id = attendanceData.serviceId;
-    if (attendanceData.description !== undefined) dbAttendance.description = attendanceData.description;
-    if (attendanceData.status !== undefined) dbAttendance.status = attendanceData.status;
-    if (attendanceData.attendanceDate !== undefined) dbAttendance.attendance_date = attendanceData.attendanceDate.toISOString();
-    if (attendanceData.notes !== undefined) dbAttendance.notes = attendanceData.notes;
+    // Create the update object with only the fields we want to update
+    const updateData: any = {};
+    if (updates.serviceId !== undefined) updateData.service_id = updates.serviceId;
+    if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.status !== undefined) updateData.status = updates.status;
+    if (updates.notes !== undefined) updateData.notes = updates.notes;
+    if (updates.attendanceDate !== undefined) updateData.attendance_date = new Date(updates.attendanceDate).toISOString();
 
     const { data, error } = await supabase
       .from('hr_attendances')
-      .update(dbAttendance)
+      .update(updateData)
       .eq('id', id)
       .select(`
         *,
-        admin:attended_by(name),
-        service:service_id(name)
+        service:service_id(name),
+        admin_name:attended_by(name)
       `)
       .single();
 
-    if (error) {
-      console.error('Error updating HR attendance:', error);
-      return { data: null, error, status: 'error' };
-    }
+    if (error) throw error;
 
-    const formattedData: HRAttendance = {
-      id: data.id,
-      employeeId: data.employee_id,
-      employeeName: data.employee_name, // This might be null
-      serviceId: data.service_id,
-      serviceName: data.service?.name || '',
-      description: data.description,
-      status: data.status as HRAttendanceStatus,
-      attendanceDate: new Date(data.attendance_date),
-      attendedBy: data.attended_by,
-      attendedByName: data.admin?.name || '',
-      notes: data.notes || null,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
-    };
+    // Format the data for frontend use
+    const formattedData = formatAttendance({
+      ...data,
+      employee_name: `Employee ${data.employee_id.substring(0, 4)}`, // Temporary employee name
+      admin_name: data.admin_name?.name || 'Unknown Admin'
+    });
 
-    return { data: formattedData, error: null, status: 'success' };
-  } catch (error) {
-    console.error('Error in updateAttendance:', error);
-    return { data: null, error: error as Error, status: 'error' };
+    return { data: formattedData, error: null };
+  } catch (error: any) {
+    console.error('Error updating attendance:', error);
+    return { data: null, error };
   }
-};
+}
 
-/**
- * Changes the status of an attendance record
- */
-export const updateAttendanceStatus = async (id: string, status: HRAttendanceStatus): Promise<ApiResponse<HRAttendance | null>> => {
-  try {
-    const { data, error } = await supabase
-      .from('hr_attendances')
-      .update({ status })
-      .eq('id', id)
-      .select(`
-        *,
-        admin:attended_by(name),
-        service:service_id(name)
-      `)
-      .single();
-
-    if (error) {
-      console.error('Error updating HR attendance status:', error);
-      return { data: null, error, status: 'error' };
-    }
-
-    const formattedData: HRAttendance = {
-      id: data.id,
-      employeeId: data.employee_id,
-      employeeName: data.employee_name, // This might be null
-      serviceId: data.service_id,
-      serviceName: data.service?.name || '',
-      description: data.description,
-      status: data.status as HRAttendanceStatus,
-      attendanceDate: new Date(data.attendance_date),
-      attendedBy: data.attended_by,
-      attendedByName: data.admin?.name || '',
-      notes: data.notes || null,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
-    };
-
-    return { data: formattedData, error: null, status: 'success' };
-  } catch (error) {
-    console.error('Error in updateAttendanceStatus:', error);
-    return { data: null, error: error as Error, status: 'error' };
-  }
-};
-
-/**
- * Deletes an HR attendance record
- */
-export const deleteAttendance = async (id: string): Promise<ApiResponse<boolean>> => {
-  try {
-    const { error } = await supabase
-      .from('hr_attendances')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting HR attendance:', error);
-      return { data: false, error, status: 'error' };
-    }
-
-    return { data: true, error: null, status: 'success' };
-  } catch (error) {
-    console.error('Error in deleteAttendance:', error);
-    return { data: false, error: error as Error, status: 'error' };
-  }
-};
+// Update attendance status
+export async function updateAttendanceStatus(
+  id: string,
+  status: HRAttendanceStatus
+): Promise<ApiResponse<HRAttendance>> {
+  return updateAttendance(id, { status });
+}

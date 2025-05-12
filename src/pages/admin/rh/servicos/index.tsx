@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { PlusCircle, Filter } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
-import { useApiMutation } from "@/lib/hooks"; // Fixed import
+import { useApiMutation } from "@/lib/hooks";
 import { ServiceFormDialog } from "@/components/administracao/rh/services/ServiceFormDialog";
 
 export default function HRServicesPage() {
@@ -54,17 +54,15 @@ export default function HRServicesPage() {
   // Toggle service status mutation
   const { mutate: toggleStatus } = useApiMutation(
     async (data: { id: string, isActive: boolean }) => {
-      return await toggleServiceStatus(data.id, data.isActive);
+      return toggleServiceStatus(data.id, data.isActive);
     },
     {
       onSuccess: (response) => {
-        if (response.status === 'success') {
-          toast({
-            title: "Sucesso",
-            description: `Serviço ${response.data?.is_active ? "ativado" : "desativado"} com sucesso.`,
-          });
-          loadServices();
-        }
+        toast({
+          title: "Sucesso",
+          description: `Serviço ${response?.is_active ? "ativado" : "desativado"} com sucesso.`,
+        });
+        loadServices();
       },
       invalidateQueries: ['services']
     }
@@ -73,17 +71,15 @@ export default function HRServicesPage() {
   // Delete service mutation
   const { mutate: removeService } = useApiMutation(
     async (id: string) => {
-      return await deleteService(id);
+      return deleteService(id);
     },
     {
-      onSuccess: (response) => {
-        if (response.status === 'success') {
-          toast({
-            title: "Sucesso",
-            description: "Serviço excluído com sucesso.",
-          });
-          loadServices();
-        }
+      onSuccess: () => {
+        toast({
+          title: "Sucesso",
+          description: "Serviço excluído com sucesso.",
+        });
+        loadServices();
       },
       invalidateQueries: ['services']
     }

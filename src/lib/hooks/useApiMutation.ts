@@ -20,7 +20,6 @@ export interface UseApiMutationOptions<TData, TError, TVariables, TContext>
 
 // Custom hook that wraps useMutation with our API utilities
 export function useApiMutation<TData, TVariables = void, TContext = unknown>(
-  mutationKey: string,
   mutationFn: (variables: TVariables) => Promise<ApiResponse<TData>>,
   options: UseApiMutationOptions<TData, any, TVariables, TContext> = {}
 ): UseMutationResult<TData, any, TVariables, TContext> {
@@ -51,7 +50,7 @@ export function useApiMutation<TData, TVariables = void, TContext = unknown>(
       return response.data as TData;
     } finally {
       if (enableMetrics) {
-        trackApiCall(`mutation:${mutationKey}`, startTime, success);
+        trackApiCall(`mutation`, startTime, success);
       }
     }
   };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from "@/hooks/use-toast";
 import { DataTable } from "@/components/data-table/data-table";
@@ -82,9 +81,9 @@ export default function HRAttendancePage() {
   }, [activeTab]);
 
   // Update attendance status mutation
-  const { mutate: updateStatus, isLoading: isUpdating } = useApiMutation(
+  const { mutate: updateStatus, isPending: isUpdating } = useApiMutation(
     async (data: { id: string; status: HRAttendanceStatus; }) => {
-      return await updateAttendanceStatus(data.id, data.status);
+      return updateAttendanceStatus(data.id, data.status);
     },
     {
       onSuccess: () => {

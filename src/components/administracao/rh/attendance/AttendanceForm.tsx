@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useApiMutation } from "@/lib/hooks"; // Updated import
+import { useApiMutation } from "@/lib/hooks";
 import { useAuth } from "@/contexts/auth/useAuth";
 import { createAttendance, updateAttendance } from "@/services/administration/hr/attendances";
 import { HRAttendance, HRService } from "@/types/hr";
@@ -53,7 +52,7 @@ export default function AttendanceForm({ services, initialData, onSuccess, onCan
         },
   });
 
-  const { mutate: submitAttendance, isLoading: isSubmitting } = useApiMutation(
+  const { mutate: submitAttendance, isPending } = useApiMutation(
     async (data: FormValues) => {
       if (!user) throw new Error("User not authenticated");
       
@@ -77,10 +76,8 @@ export default function AttendanceForm({ services, initialData, onSuccess, onCan
     },
     {
       onSuccess: (response) => {
-        if (response.status === 'success') {
-          onSuccess();
-          form.reset();
-        }
+        onSuccess();
+        form.reset();
       },
     }
   );
@@ -199,8 +196,8 @@ export default function AttendanceForm({ services, initialData, onSuccess, onCan
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Salvando..." : initialData ? "Atualizar" : "Registrar"}
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "Salvando..." : initialData ? "Atualizar" : "Registrar"}
           </Button>
         </div>
       </form>
