@@ -8,6 +8,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { HRService } from "@/types/hr";
 import { Switch } from "@/components/ui/switch";
 
+// Add proper typing for the table meta
+interface HRServiceTableMeta {
+  handleToggleStatus?: (id: string, isActive: boolean) => void;
+  handleDeleteService?: (id: string) => void;
+}
+
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData> extends HRServiceTableMeta {}
+}
+
 export const HRServiceColumnDef: ColumnDef<HRService>[] = [
   {
     accessorKey: "name",
@@ -32,15 +42,14 @@ export const HRServiceColumnDef: ColumnDef<HRService>[] = [
     cell: ({ row, table }) => {
       const service = row.original;
       const meta = table.options.meta;
-      const handleToggle = meta?.handleToggleStatus;
       
       return (
         <div className="flex items-center">
           <Switch 
             checked={service.is_active}
             onCheckedChange={(checked) => {
-              if (handleToggle) {
-                handleToggle(service.id, checked);
+              if (meta?.handleToggleStatus) {
+                meta.handleToggleStatus(service.id, checked);
               }
             }}
             aria-label={service.is_active ? "Active" : "Inactive"}
@@ -55,7 +64,6 @@ export const HRServiceColumnDef: ColumnDef<HRService>[] = [
     cell: ({ row, table }) => {
       const service = row.original;
       const meta = table.options.meta;
-      const handleDelete = meta?.handleDeleteService;
       
       return (
         <DropdownMenu>
@@ -73,7 +81,7 @@ export const HRServiceColumnDef: ColumnDef<HRService>[] = [
               Editar
             </DropdownMenuItem>
             <DropdownMenuItem 
-              onClick={() => handleDelete && handleDelete(service.id)}
+              onClick={() => meta?.handleDeleteService && meta.handleDeleteService(service.id)}
               className="text-red-600"
             >
               Excluir

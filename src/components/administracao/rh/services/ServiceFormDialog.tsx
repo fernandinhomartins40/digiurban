@@ -1,139 +1,158 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { 
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription
-} from "@/components/ui/dialog";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { HRService, ServiceFormData, ServiceCategory } from "@/types/hr";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useApiMutation } from "@/lib/hooks/useApiQuery";
 import { createService, updateService } from "@/services/administration/hr/services";
-import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-
-const serviceCategories: ServiceCategory[] = [
-  "Tempo", "Licenças", "Aposentadoria", "Transferências", "Outros"
-];
+import { HRService, ServiceFormData, ServiceCategory } from "@/types/hr";
 
 const formSchema = z.object({
-  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+  name: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
   description: z.string().optional(),
-  category: z.string().min(1, "Categoria é obrigatória"),
+  category: z.string().min(1, "A categoria é obrigatória"),
   is_active: z.boolean().default(true),
   requires_approval: z.boolean().default(true),
+  approval_flow: z.any().optional(),
+  form_schema: z.object({
+    fields: z.array(
+      z.object({
+        name: z.string(),
+        type: z.string(),
+        label: z.string(),
+        required: z.boolean(),
+      })
+    ).optional(),
+  }).optional(),
+  available_for: z.array(z.string()).optional(),
 });
+
+type FormValues = z.infer<typeof formSchema>;
+
+const CATEGORIES: ServiceCategory[] = [
+  'Tempo',
+  'Licenças',
+  'Aposentadoria',
+  'Transferências',
+  'Outros',
+];
 
 interface ServiceFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  serviceToEdit?: HRService;
-  onServiceCreated?: () => void;
+  service: HRService | null;
+  onSaved: (service: HRService) => void;
 }
 
-const ServiceFormDialog: React.FC<ServiceFormDialogProps> = ({
+export function ServiceFormDialog({
   open,
   onOpenChange,
-  serviceToEdit,
-  onServiceCreated
-}) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const form = useForm<z.infer<typeof formSchema>>({
+  service,
+  onSaved,
+}: ServiceFormDialogProps) {
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: serviceToEdit?.name || "",
-      description: serviceToEdit?.description || "",
-      category: serviceToEdit?.category || "",
-      is_active: serviceToEdit?.is_active ?? true,
-      requires_approval: serviceToEdit?.requires_approval ?? true,
-    },
+    defaultValues: service
+      ? {
+          name: service.name,
+          description: service.description || "",
+          category: service.category,
+          is_active: service.is_active,
+          requires_approval: service.requires_approval,
+          approval_flow: service.approval_flow,
+          form_schema: service.form_schema,
+          available_for: service.available_for || [],
+        }
+      : {
+          name: "",
+          description: "",
+          category: "",
+          is_active: true,
+          requires_approval: true,
+          approval_flow: null,
+          form_schema: { fields: [] },
+          available_for: [],
+        },
   });
 
-  useEffect(() => {
-    if (serviceToEdit) {
-      form.reset({
-        name: serviceToEdit.name,
-        description: serviceToEdit.description || "",
-        category: serviceToEdit.category,
-        is_active: serviceToEdit.is_active,
-        requires_approval: serviceToEdit.requires_approval,
-      });
-    } else {
-      form.reset({
-        name: "",
-        description: "",
-        category: "",
-        is_active: true,
-        requires_approval: true,
-      });
-    }
-  }, [serviceToEdit, form]);
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true);
-    try {
+  // Create mutation
+  const { mutate: create, isLoading: isCreating } = useApiMutation(
+    async (data: FormValues) => {
       const serviceData: ServiceFormData = {
-        name: values.name,
-        description: values.description || null,
-        category: values.category,
-        is_active: values.is_active,
-        requires_approval: values.requires_approval,
-        form_schema: serviceToEdit?.form_schema || { fields: [] },
-        approval_flow: serviceToEdit?.approval_flow || null,
-        available_for: serviceToEdit?.available_for || [],
+        name: data.name,
+        description: data.description || null,
+        category: data.category,
+        is_active: data.is_active,
+        requires_approval: data.requires_approval,
+        approval_flow: data.approval_flow,
+        form_schema: data.form_schema || { fields: [] },
+        available_for: data.available_for || [],
       };
-
-      let result;
-      if (serviceToEdit) {
-        result = await updateService(serviceToEdit.id, serviceData);
-      } else {
-        result = await createService(serviceData);
-      }
-
-      if (result) {
-        toast({
-          title: serviceToEdit ? "Serviço atualizado" : "Serviço criado",
-          description: serviceToEdit
-            ? "O serviço foi atualizado com sucesso."
-            : "O serviço foi criado com sucesso.",
-        });
-        onOpenChange(false);
-        if (onServiceCreated) {
-          onServiceCreated();
+      
+      const response = await createService(serviceData);
+      return response;
+    },
+    {
+      onSuccess: (response) => {
+        if (response.status === 'success' && response.data) {
+          onSaved(response.data);
+          form.reset();
         }
-      } else {
-        throw new Error("Falha ao salvar o serviço.");
-      }
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Ocorreu um erro ao salvar o serviço.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
+      },
     }
-  };
+  );
+
+  // Update mutation
+  const { mutate: update, isLoading: isUpdating } = useApiMutation(
+    async (data: FormValues) => {
+      if (!service) return null;
+      
+      const serviceData: Partial<ServiceFormData> = {
+        name: data.name,
+        description: data.description || null,
+        category: data.category,
+        is_active: data.is_active,
+        requires_approval: data.requires_approval,
+        approval_flow: data.approval_flow,
+        form_schema: data.form_schema || { fields: [] },
+        available_for: data.available_for || [],
+      };
+      
+      const response = await updateService(service.id, serviceData);
+      return response;
+    },
+    {
+      onSuccess: (response) => {
+        if (response?.status === 'success' && response.data) {
+          onSaved(response.data);
+          form.reset();
+        }
+      },
+    }
+  );
+
+  function onSubmit(data: FormValues) {
+    if (service) {
+      update(data);
+    } else {
+      create(data);
+    }
+  }
+
+  const isSubmitting = isCreating || isUpdating;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {serviceToEdit ? "Editar Serviço" : "Novo Serviço"}
-          </DialogTitle>
-          <DialogDescription>
-            {serviceToEdit
-              ? "Edite as informações do serviço."
-              : "Preencha os dados para criar um novo serviço."}
-          </DialogDescription>
+          <DialogTitle>{service ? "Editar Serviço" : "Novo Serviço"}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -144,7 +163,7 @@ const ServiceFormDialog: React.FC<ServiceFormDialogProps> = ({
                 <FormItem>
                   <FormLabel>Nome do Serviço</FormLabel>
                   <FormControl>
-                    <Input placeholder="Digite o nome do serviço" {...field} />
+                    <Input placeholder="Nome do serviço" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -159,8 +178,7 @@ const ServiceFormDialog: React.FC<ServiceFormDialogProps> = ({
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Digite uma descrição para o serviço"
-                      className="resize-none"
+                      placeholder="Descrição do serviço"
                       {...field}
                       value={field.value || ""}
                     />
@@ -178,8 +196,8 @@ const ServiceFormDialog: React.FC<ServiceFormDialogProps> = ({
                   <FormLabel>Categoria</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
                     value={field.value}
+                    defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -187,7 +205,7 @@ const ServiceFormDialog: React.FC<ServiceFormDialogProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {serviceCategories.map((category) => (
+                      {CATEGORIES.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
                         </SelectItem>
@@ -204,12 +222,12 @@ const ServiceFormDialog: React.FC<ServiceFormDialogProps> = ({
                 control={form.control}
                 name="is_active"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <FormItem className="flex flex-row items-center justify-between p-3 border rounded-md">
                     <div className="space-y-0.5">
-                      <FormLabel>Ativo</FormLabel>
-                      <p className="text-muted-foreground text-xs">
-                        O serviço está disponível para solicitação
-                      </p>
+                      <FormLabel>Serviço Ativo</FormLabel>
+                      <FormDescription>
+                        Desative para ocultar este serviço
+                      </FormDescription>
                     </div>
                     <FormControl>
                       <Switch
@@ -225,12 +243,12 @@ const ServiceFormDialog: React.FC<ServiceFormDialogProps> = ({
                 control={form.control}
                 name="requires_approval"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <FormItem className="flex flex-row items-center justify-between p-3 border rounded-md">
                     <div className="space-y-0.5">
-                      <FormLabel>Requer aprovação</FormLabel>
-                      <p className="text-muted-foreground text-xs">
-                        O serviço requer fluxo de aprovação
-                      </p>
+                      <FormLabel>Requer Aprovação</FormLabel>
+                      <FormDescription>
+                        Requer aprovação de gestores
+                      </FormDescription>
                     </div>
                     <FormControl>
                       <Switch
@@ -253,16 +271,7 @@ const ServiceFormDialog: React.FC<ServiceFormDialogProps> = ({
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : serviceToEdit ? (
-                  "Atualizar"
-                ) : (
-                  "Criar"
-                )}
+                {isSubmitting ? "Salvando..." : service ? "Atualizar" : "Salvar"}
               </Button>
             </DialogFooter>
           </form>
@@ -270,6 +279,4 @@ const ServiceFormDialog: React.FC<ServiceFormDialogProps> = ({
       </DialogContent>
     </Dialog>
   );
-};
-
-export default ServiceFormDialog;
+}

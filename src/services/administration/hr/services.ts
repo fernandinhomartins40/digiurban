@@ -6,7 +6,7 @@ import { ApiResponse, apiRequest } from "@/lib/api/supabaseClient";
 /**
  * Fetches all HR services
  */
-export const fetchServices = async (): Promise<HRService[]> => {
+export const fetchServices = async (): Promise<ApiResponse<HRService[]>> => {
   try {
     const { data, error } = await supabase
       .from('hr_services')
@@ -15,20 +15,20 @@ export const fetchServices = async (): Promise<HRService[]> => {
   
     if (error) {
       console.error('Error fetching HR services:', error);
-      return [];
+      return { data: [], error, status: 'error' };
     }
   
-    return data as HRService[];
+    return { data: data as HRService[], error: null, status: 'success' };
   } catch (error) {
     console.error('Error in fetchServices:', error);
-    return [];
+    return { data: [], error: error as Error, status: 'error' };
   }
 };
 
 /**
  * Fetches HR services by category
  */
-export const fetchServicesByCategory = async (category: string): Promise<HRService[]> => {
+export const fetchServicesByCategory = async (category: string): Promise<ApiResponse<HRService[]>> => {
   try {
     const { data, error } = await supabase
       .from('hr_services')
@@ -38,20 +38,20 @@ export const fetchServicesByCategory = async (category: string): Promise<HRServi
 
     if (error) {
       console.error('Error fetching HR services by category:', error);
-      return [];
+      return { data: [], error, status: 'error' };
     }
 
-    return data as HRService[];
+    return { data: data as HRService[], error: null, status: 'success' };
   } catch (error) {
     console.error('Error in fetchServicesByCategory:', error);
-    return [];
+    return { data: [], error: error as Error, status: 'error' };
   }
 };
 
 /**
  * Fetches a HR service by ID
  */
-export const fetchServiceById = async (id: string): Promise<HRService | null> => {
+export const fetchServiceById = async (id: string): Promise<ApiResponse<HRService | null>> => {
   try {
     const { data, error } = await supabase
       .from('hr_services')
@@ -61,20 +61,20 @@ export const fetchServiceById = async (id: string): Promise<HRService | null> =>
 
     if (error) {
       console.error('Error fetching HR service by ID:', error);
-      return null;
+      return { data: null, error, status: 'error' };
     }
 
-    return data as HRService;
+    return { data: data as HRService, error: null, status: 'success' };
   } catch (error) {
     console.error('Error in fetchServiceById:', error);
-    return null;
+    return { data: null, error: error as Error, status: 'error' };
   }
 };
 
 /**
  * Creates a new HR service
  */
-export const createService = async (serviceData: ServiceFormData): Promise<HRService | null> => {
+export const createService = async (serviceData: ServiceFormData): Promise<ApiResponse<HRService | null>> => {
   try {
     const { data, error } = await supabase
       .from('hr_services')
@@ -84,20 +84,20 @@ export const createService = async (serviceData: ServiceFormData): Promise<HRSer
 
     if (error) {
       console.error('Error creating HR service:', error);
-      return null;
+      return { data: null, error, status: 'error' };
     }
 
-    return data as HRService;
+    return { data: data as HRService, error: null, status: 'success' };
   } catch (error) {
     console.error('Error in createService:', error);
-    return null;
+    return { data: null, error: error as Error, status: 'error' };
   }
 };
 
 /**
  * Updates an existing HR service
  */
-export const updateService = async (id: string, serviceData: Partial<ServiceFormData>): Promise<HRService | null> => {
+export const updateService = async (id: string, serviceData: Partial<ServiceFormData>): Promise<ApiResponse<HRService | null>> => {
   try {
     const { data, error } = await supabase
       .from('hr_services')
@@ -108,20 +108,20 @@ export const updateService = async (id: string, serviceData: Partial<ServiceForm
 
     if (error) {
       console.error('Error updating HR service:', error);
-      return null;
+      return { data: null, error, status: 'error' };
     }
 
-    return data as HRService;
+    return { data: data as HRService, error: null, status: 'success' };
   } catch (error) {
     console.error('Error in updateService:', error);
-    return null;
+    return { data: null, error: error as Error, status: 'error' };
   }
 };
 
 /**
  * Toggles the status of a HR service
  */
-export const toggleServiceStatus = async (id: string, isActive: boolean): Promise<HRService | null> => {
+export const toggleServiceStatus = async (id: string, isActive: boolean): Promise<ApiResponse<HRService | null>> => {
   try {
     const { data, error } = await supabase
       .from('hr_services')
@@ -132,20 +132,20 @@ export const toggleServiceStatus = async (id: string, isActive: boolean): Promis
 
     if (error) {
       console.error('Error toggling HR service status:', error);
-      return null;
+      return { data: null, error, status: 'error' };
     }
 
-    return data as HRService;
+    return { data: data as HRService, error: null, status: 'success' };
   } catch (error) {
     console.error('Error in toggleServiceStatus:', error);
-    return null;
+    return { data: null, error: error as Error, status: 'error' };
   }
 };
 
 /**
  * Deletes a HR service
  */
-export const deleteService = async (id: string): Promise<boolean> => {
+export const deleteService = async (id: string): Promise<ApiResponse<boolean>> => {
   try {
     const { error } = await supabase
       .from('hr_services')
@@ -154,12 +154,12 @@ export const deleteService = async (id: string): Promise<boolean> => {
 
     if (error) {
       console.error('Error deleting HR service:', error);
-      return false;
+      return { data: false, error, status: 'error' };
     }
 
-    return true;
+    return { data: true, error: null, status: 'success' };
   } catch (error) {
     console.error('Error in deleteService:', error);
-    return false;
+    return { data: false, error: error as Error, status: 'error' };
   }
 };

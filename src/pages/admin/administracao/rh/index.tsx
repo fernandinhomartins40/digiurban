@@ -9,18 +9,18 @@ import { Info, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/auth/useAuth";
 import { RequestForm } from "@/components/administracao/rh/RequestForm";
 import { RequestList } from "@/components/administracao/rh/RequestList";
+import { HRRequestType, HRRequest, HRRequestStatus } from "@/types/administration";
+import { HRService } from "@/types/hr";
+import { isAdminUser } from "@/types/auth";
 import {
   fetchRequestTypes,
   fetchUserRequests,
   fetchAllRequests,
   updateRequestStatus
-} from "@/services/administration/hr";
+} from "@/services/administration/hr/requests";
 import { 
   fetchServices,
 } from "@/services/administration/hr/services";
-import { HRRequestType, HRRequest, HRRequestStatus } from "@/types/administration";
-import { HRService } from "@/types/hr";
-import { isAdminUser } from "@/types/auth";
 
 export default function HRPage() {
   const { user } = useAuth();
@@ -202,7 +202,7 @@ export default function HRPage() {
                 <CardTitle>Serviços RH</CardTitle>
                 {isAdmin && (
                   <Button asChild>
-                    <Link to="/admin/administracao/rh/servicos">
+                    <Link to="/admin/rh/servicos">
                       <FileText className="h-4 w-4 mr-2" />
                       Gerenciar Serviços
                     </Link>
@@ -221,7 +221,7 @@ export default function HRPage() {
                     <p className="text-muted-foreground">Nenhum serviço cadastrado.</p>
                     {isAdmin && (
                       <Button className="mt-4" asChild>
-                        <Link to="/admin/administracao/rh/servicos">Cadastrar Serviços</Link>
+                        <Link to="/admin/rh/servicos">Cadastrar Serviços</Link>
                       </Button>
                     )}
                   </div>

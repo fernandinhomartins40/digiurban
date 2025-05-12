@@ -9,21 +9,28 @@ import {
   CheckCircle, Clock, XCircle, Users 
 } from "lucide-react";
 
+interface AttendanceStatsType {
+  total: number;
+  inProgress: number;
+  concluded: number;
+  cancelled: number;
+}
+
 export default function AttendanceStats() {
-  const { data: stats, isLoading } = useApiQuery(
+  const { data: statsResponse, isLoading } = useApiQuery(
     ["hr-attendance-stats"], 
     () => fetchAttendanceStats(),
     { enabled: true }
   );
 
-  const defaultStats = {
+  const defaultStats: AttendanceStatsType = {
     total: 0,
     inProgress: 0,
     concluded: 0,
     cancelled: 0
   };
 
-  const attendanceStats = stats || defaultStats;
+  const stats: AttendanceStatsType = statsResponse?.data || defaultStats;
 
   if (isLoading) {
     return (
@@ -51,7 +58,7 @@ export default function AttendanceStats() {
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{attendanceStats.total}</div>
+          <div className="text-2xl font-bold">{stats.total}</div>
           <p className="text-xs text-muted-foreground">
             Todos os atendimentos registrados
           </p>
@@ -64,7 +71,7 @@ export default function AttendanceStats() {
           <Clock className="h-4 w-4 text-blue-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-blue-600">{attendanceStats.inProgress}</div>
+          <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
           <p className="text-xs text-muted-foreground">
             Atendimentos que ainda estão em processo
           </p>
@@ -77,7 +84,7 @@ export default function AttendanceStats() {
           <CheckCircle className="h-4 w-4 text-green-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-green-600">{attendanceStats.concluded}</div>
+          <div className="text-2xl font-bold text-green-600">{stats.concluded}</div>
           <p className="text-xs text-muted-foreground">
             Atendimentos finalizados com sucesso
           </p>
@@ -90,14 +97,12 @@ export default function AttendanceStats() {
           <XCircle className="h-4 w-4 text-red-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-red-600">{attendanceStats.cancelled}</div>
+          <div className="text-2xl font-bold text-red-600">{stats.cancelled}</div>
           <p className="text-xs text-muted-foreground">
             Atendimentos que foram cancelados
           </p>
         </CardContent>
       </Card>
-
-      {/* You can add more stats cards or charts here */}
     </div>
   );
 }

@@ -21,25 +21,20 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   isLoading?: boolean;
-  handleDeleteService?: (id: string) => void;
-  handleToggleStatus?: (id: string, isActive: boolean) => void;
+  meta?: Record<string, any>;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   isLoading = false,
-  handleDeleteService,
-  handleToggleStatus,
+  meta = {},
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    meta: {
-      handleDeleteService,
-      handleToggleStatus,
-    },
+    meta,
   });
 
   if (isLoading) {

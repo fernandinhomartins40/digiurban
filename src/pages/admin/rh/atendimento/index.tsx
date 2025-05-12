@@ -1,192 +1,162 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useApiQuery } from "@/lib/hooks/useApiQuery";
-import { useApiMutation } from "@/lib/hooks/useApiMutation";
-import { HRAttendance, HRAttendanceFilterStatus, HRAttendanceStatus } from "@/types/hr";
-import { Plus, FileSearch } from "lucide-react";
+import { useApiQuery, useApiMutation } from "@/lib/hooks/useApiQuery";
 import { toast } from "@/hooks/use-toast";
-import { fetchAttendances, updateAttendance } from "@/services/administration/hr/attendances";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Plus } from "lucide-react";
+import { HRAttendance, HRAttendanceStatus, HRAttendanceFilterStatus, HRService } from "@/types/hr";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchServices } from "@/services/administration/hr/services";
-import AttendanceForm from "@/components/administracao/rh/attendance/AttendanceForm";
+import { fetchAttendances, updateAttendance } from "@/services/administration/hr/attendances";
 import AttendanceList from "@/components/administracao/rh/attendance/AttendanceList";
+import AttendanceForm from "@/components/administracao/rh/attendance/AttendanceForm";
 import AttendanceStats from "@/components/administracao/rh/attendance/AttendanceStats";
-import { useAuth } from "@/contexts/auth/useAuth";
 
-export default function HRAttendancePage() {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("list");
-  const [searchTerm, setSearchTerm] = useState("");
+export default function AttendancePage() {
+  const [showForm, setShowForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<HRAttendanceFilterStatus>("all");
-  const [filteredAttendances, setFilteredAttendances] = useState<HRAttendance[]>([]);
+  const [selectedAttendance, setSelectedAttendance] = useState<HRAttendance | null>(null);
 
   // Fetch services
-  const { data: services = [] } = useApiQuery(["hr-services"], () => 
-    fetchServices(), { enabled: true }
+  const { data: servicesResponse, isLoading: isLoadingServices } = useApiQuery(
+    ["hr-services"],
+    () => fetchServices(),
+    { enabled: true }
   );
+  
+  // Create a variable for the services from the response
+  const services: HRService[] = servicesResponse?.data || [];
 
-  // Fetch attendances
+  // Fetch attendances with filters
   const { 
-    data: attendances = [], 
-    isLoading,
-    refetch 
+    data: attendancesResponse, 
+    isLoading: isLoadingAttendances,
+    refetch: refetchAttendances
   } = useApiQuery(
-    ["hr-attendances", statusFilter], 
-    () => fetchAttendances(statusFilter), 
+    ["hr-attendances", statusFilter],
+    () => fetchAttendances(statusFilter),
     { enabled: true }
   );
 
-  // Filter attendances based on search term
-  useEffect(() => {
-    if (!attendances) {
-      setFilteredAttendances([]);
-      return;
-    }
+  // Create a variable for the attendances from the response
+  const attendances: HRAttendance[] = attendancesResponse?.data || [];
 
-    const filtered = attendances.filter(attendance => {
-      const matchesSearch = 
-        !searchTerm || 
-        attendance.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        attendance.serviceName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        attendance.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-      return matchesSearch;
-    });
-
-    setFilteredAttendances(filtered);
-  }, [searchTerm, attendances]);
-
-  // Update attendance status mutation
-  const updateAttendanceMutation = useApiMutation(
-    "updateAttendance",
-    (data: { id: string; status: HRAttendanceStatus }) => 
-      updateAttendance(data.id, { status: data.status }),
+  // Handle status update
+  const { mutate: updateStatus, isLoading: isUpdating } = useApiMutation(
+    async (data: { id: string; status: HRAttendanceStatus }) => {
+      const result = await updateAttendance(data.id, { status: data.status });
+      return result;
+    },
     {
-      onSuccess: () => {
-        toast({
-          title: "Status atualizado",
-          description: "O status do atendimento foi atualizado com sucesso.",
-        });
-        refetch();
+      onSuccess: (response) => {
+        if (response.status === 'success') {
+          toast({
+            title: "Status atualizado",
+            description: "O status do atendimento foi atualizado com sucesso.",
+          });
+          refetchAttendances();
+        } else {
+          toast({
+            title: "Erro",
+            description: "Ocorreu um erro ao atualizar o status.",
+            variant: "destructive",
+          });
+        }
       },
-      onError: (error: any) => {
+      onError: (error) => {
         toast({
           title: "Erro",
-          description: error.message || "Ocorreu um erro ao atualizar o status do atendimento.",
+          description: "Ocorreu um erro ao atualizar o status.",
           variant: "destructive",
         });
+        console.error("Error updating attendance status:", error);
       },
     }
   );
 
-  const handleStatusChange = (id: string, status: HRAttendanceStatus) => {
-    updateAttendanceMutation.mutate({ id, status });
-  };
-
+  // Handle attendance creation
   const handleAttendanceCreated = () => {
-    refetch();
-    setActiveTab("list");
+    setShowForm(false);
+    refetchAttendances();
     toast({
       title: "Atendimento registrado",
-      description: "O atendimento foi registrado com sucesso.",
+      description: "O novo atendimento foi registrado com sucesso.",
     });
   };
 
+  // Handle attendance editing
+  const handleEditAttendance = (attendance: HRAttendance) => {
+    setSelectedAttendance(attendance);
+    setShowForm(true);
+  };
+
+  // Handle status change
+  const handleStatusChange = (attendanceId: string, newStatus: HRAttendanceStatus) => {
+    updateStatus({ id: attendanceId, status: newStatus });
+  };
+
   return (
-    <div className="container py-6">
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+    <div className="space-y-6">
+      <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Atendimento RH</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Atendimentos RH</h1>
           <p className="text-muted-foreground">
-            Registre e acompanhe os atendimentos aos funcionários.
+            Registre e gerencie os atendimentos realizados pelo setor de Recursos Humanos.
           </p>
         </div>
-        <Button
-          className="mt-4 md:mt-0"
-          onClick={() => setActiveTab("new")}
-          disabled={activeTab === "new"}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Atendimento
+        <Button onClick={() => { setSelectedAttendance(null); setShowForm(!showForm); }}>
+          {showForm ? "Cancelar" : <><Plus className="mr-2 h-4 w-4" /> Novo Atendimento</>}
         </Button>
       </div>
 
-      <div className="space-y-4">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="list">Lista de Atendimentos</TabsTrigger>
-            <TabsTrigger value="new">Novo Atendimento</TabsTrigger>
-            <TabsTrigger value="stats">Estatísticas</TabsTrigger>
-          </TabsList>
+      {!showForm && <AttendanceStats />}
 
-          <TabsContent value="list" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                  <CardTitle>Atendimentos</CardTitle>
-                  <div className="flex flex-col md:flex-row gap-2">
-                    <div className="relative">
-                      <FileSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="search"
-                        placeholder="Buscar atendimentos..."
-                        className="pl-8 w-full md:w-auto"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    <Select
-                      value={statusFilter}
-                      onValueChange={(value) => setStatusFilter(value as HRAttendanceFilterStatus)}
-                    >
-                      <SelectTrigger className="w-full md:w-[180px]">
-                        <SelectValue placeholder="Filtrar por status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="in_progress">Em Andamento</SelectItem>
-                        <SelectItem value="concluded">Concluídos</SelectItem>
-                        <SelectItem value="cancelled">Cancelados</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <AttendanceList
-                  attendances={filteredAttendances}
-                  isLoading={isLoading}
-                  onStatusChange={handleStatusChange}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="new">
-            <Card>
-              <CardHeader>
-                <CardTitle>Novo Atendimento</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AttendanceForm
-                  services={services}
-                  onAttendanceCreated={handleAttendanceCreated}
-                  currentUser={user}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="stats">
-            <AttendanceStats />
-          </TabsContent>
-        </Tabs>
-      </div>
+      {showForm ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>{selectedAttendance ? "Editar Atendimento" : "Novo Atendimento"}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AttendanceForm 
+              services={services}
+              initialData={selectedAttendance}
+              onSuccess={handleAttendanceCreated}
+              onCancel={() => setShowForm(false)}
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Histórico de Atendimentos</CardTitle>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as HRAttendanceFilterStatus)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="in_progress">Em Andamento</SelectItem>
+                <SelectItem value="concluded">Concluídos</SelectItem>
+                <SelectItem value="cancelled">Cancelados</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent>
+            {isLoadingAttendances ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <AttendanceList
+                attendances={attendances}
+                onStatusChange={handleStatusChange}
+                onEdit={handleEditAttendance}
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
