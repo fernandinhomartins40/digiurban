@@ -1,162 +1,219 @@
 
-import React, { useState, useEffect } from "react";
-import { useApiQuery, useApiMutation } from "@/lib/hooks/useApiQuery";
+import React, { useState, useEffect } from 'react';
 import { toast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus } from "lucide-react";
-import { HRAttendance, HRAttendanceStatus, HRAttendanceFilterStatus, HRService } from "@/types/hr";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/data-table/data-table";
+import { HRAttendance, HRAttendanceStatus, HRService } from "@/types/hr";
+import { 
+  fetchAttendances, 
+  fetchAttendancesByStatus,
+  updateAttendanceStatus 
+} from "@/services/administration/hr/attendances";
 import { fetchServices } from "@/services/administration/hr/services";
-import { fetchAttendances, updateAttendance } from "@/services/administration/hr/attendances";
-import AttendanceList from "@/components/administracao/rh/attendance/AttendanceList";
-import AttendanceForm from "@/components/administracao/rh/attendance/AttendanceForm";
-import AttendanceStats from "@/components/administracao/rh/attendance/AttendanceStats";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { AttendanceStats } from "@/components/administracao/rh/attendance/AttendanceStats";
+import { AttendanceForm } from "@/components/administracao/rh/attendance/AttendanceForm";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useApiMutation } from "@/lib/hooks"; // Fixed import
+import AttendanceColumnDef from "@/components/administracao/rh/attendance/AttendanceColumnDef";
 
-export default function AttendancePage() {
-  const [showForm, setShowForm] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<HRAttendanceFilterStatus>("all");
-  const [selectedAttendance, setSelectedAttendance] = useState<HRAttendance | null>(null);
+export default function HRAttendancePage() {
+  const [activeTab, setActiveTab] = useState<HRAttendanceFilterStatus>("all");
+  const [attendances, setAttendances] = useState<HRAttendance[]>([]);
+  const [services, setServices] = useState<HRService[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showNewAttendanceDialog, setShowNewAttendanceDialog] = useState(false);
+  const [stats, setStats] = useState({
+    total: 0,
+    inProgress: 0,
+    concluded: 0,
+    cancelled: 0
+  });
 
-  // Fetch services
-  const { data: servicesResponse, isLoading: isLoadingServices } = useApiQuery(
-    ["hr-services"],
-    () => fetchServices(),
-    { enabled: true }
-  );
-  
-  // Create a variable for the services from the response
-  const services: HRService[] = servicesResponse?.data || [];
+  // Load attendance data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
 
-  // Fetch attendances with filters
-  const { 
-    data: attendancesResponse, 
-    isLoading: isLoadingAttendances,
-    refetch: refetchAttendances
-  } = useApiQuery(
-    ["hr-attendances", statusFilter],
-    () => fetchAttendances(statusFilter),
-    { enabled: true }
-  );
+        // Get services first
+        const servicesResponse = await fetchServices();
+        if (servicesResponse.data) {
+          setServices(servicesResponse.data);
+        }
 
-  // Create a variable for the attendances from the response
-  const attendances: HRAttendance[] = attendancesResponse?.data || [];
-
-  // Handle status update
-  const { mutate: updateStatus, isLoading: isUpdating } = useApiMutation(
-    async (data: { id: string; status: HRAttendanceStatus }) => {
-      const result = await updateAttendance(data.id, { status: data.status });
-      return result;
-    },
-    {
-      onSuccess: (response) => {
-        if (response.status === 'success') {
-          toast({
-            title: "Status atualizado",
-            description: "O status do atendimento foi atualizado com sucesso.",
-          });
-          refetchAttendances();
+        // Get attendance data based on active tab
+        let attendancesResponse;
+        if (activeTab === 'all') {
+          attendancesResponse = await fetchAttendances();
         } else {
-          toast({
-            title: "Erro",
-            description: "Ocorreu um erro ao atualizar o status.",
-            variant: "destructive",
+          attendancesResponse = await fetchAttendancesByStatus(activeTab as HRAttendanceStatus);
+        }
+
+        if (attendancesResponse.data) {
+          setAttendances(attendancesResponse.data);
+        }
+
+        // Calculate stats
+        const allAttendances = await fetchAttendances();
+        if (allAttendances.data) {
+          setStats({
+            total: allAttendances.data.length,
+            inProgress: allAttendances.data.filter(a => a.status === 'in_progress').length,
+            concluded: allAttendances.data.filter(a => a.status === 'concluded').length,
+            cancelled: allAttendances.data.filter(a => a.status === 'cancelled').length
           });
         }
-      },
-      onError: (error) => {
+      } catch (error) {
+        console.error('Error loading data:', error);
         toast({
           title: "Erro",
-          description: "Ocorreu um erro ao atualizar o status.",
+          description: "Não foi possível carregar os dados.",
           variant: "destructive",
         });
-        console.error("Error updating attendance status:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [activeTab]);
+
+  // Update attendance status mutation
+  const { mutate: updateStatus, isLoading: isUpdating } = useApiMutation(
+    async (data: { id: string; status: HRAttendanceStatus; }) => {
+      return await updateAttendanceStatus(data.id, data.status);
+    },
+    {
+      onSuccess: () => {
+        toast({
+          title: "Sucesso",
+          description: "Status do atendimento atualizado com sucesso.",
+        });
+        
+        // Reload data after update
+        refreshData();
       },
+      invalidateQueries: ['attendances']
     }
   );
 
-  // Handle attendance creation
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as HRAttendanceFilterStatus);
+  };
+
+  // Refresh data after changes
+  const refreshData = async () => {
+    setIsLoading(true);
+
+    try {
+      // Refresh services
+      const servicesResponse = await fetchServices();
+      if (servicesResponse.data) {
+        setServices(servicesResponse.data);
+      }
+
+      // Refresh attendances based on current tab
+      let attendancesResponse;
+      if (activeTab === 'all') {
+        attendancesResponse = await fetchAttendances();
+      } else {
+        attendancesResponse = await fetchAttendancesByStatus(activeTab as HRAttendanceStatus);
+      }
+
+      if (attendancesResponse.data) {
+        setAttendances(attendancesResponse.data);
+      }
+
+      // Update stats
+      const allAttendances = await fetchAttendances();
+      if (allAttendances.data) {
+        setStats({
+          total: allAttendances.data.length,
+          inProgress: allAttendances.data.filter(a => a.status === 'in_progress').length,
+          concluded: allAttendances.data.filter(a => a.status === 'concluded').length,
+          cancelled: allAttendances.data.filter(a => a.status === 'cancelled').length
+        });
+      }
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar os dados.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle new attendance creation
   const handleAttendanceCreated = () => {
-    setShowForm(false);
-    refetchAttendances();
-    toast({
-      title: "Atendimento registrado",
-      description: "O novo atendimento foi registrado com sucesso.",
-    });
-  };
-
-  // Handle attendance editing
-  const handleEditAttendance = (attendance: HRAttendance) => {
-    setSelectedAttendance(attendance);
-    setShowForm(true);
-  };
-
-  // Handle status change
-  const handleStatusChange = (attendanceId: string, newStatus: HRAttendanceStatus) => {
-    updateStatus({ id: attendanceId, status: newStatus });
+    setShowNewAttendanceDialog(false);
+    refreshData();
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Atendimentos RH</h1>
+          <h1 className="text-2xl font-bold">Atendimentos RH</h1>
           <p className="text-muted-foreground">
-            Registre e gerencie os atendimentos realizados pelo setor de Recursos Humanos.
+            Gerencie os atendimentos de funcionários realizados pelo RH
           </p>
         </div>
-        <Button onClick={() => { setSelectedAttendance(null); setShowForm(!showForm); }}>
-          {showForm ? "Cancelar" : <><Plus className="mr-2 h-4 w-4" /> Novo Atendimento</>}
+        <Button onClick={() => setShowNewAttendanceDialog(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Novo Atendimento
         </Button>
       </div>
 
-      {!showForm && <AttendanceStats />}
+      <AttendanceStats stats={stats} />
 
-      {showForm ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{selectedAttendance ? "Editar Atendimento" : "Novo Atendimento"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AttendanceForm 
-              services={services}
-              initialData={selectedAttendance}
-              onSuccess={handleAttendanceCreated}
-              onCancel={() => setShowForm(false)}
-            />
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Histórico de Atendimentos</CardTitle>
-            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as HRAttendanceFilterStatus)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="in_progress">Em Andamento</SelectItem>
-                <SelectItem value="concluded">Concluídos</SelectItem>
-                <SelectItem value="cancelled">Cancelados</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardHeader>
-          <CardContent>
-            {isLoadingAttendances ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <AttendanceList
-                attendances={attendances}
-                onStatusChange={handleStatusChange}
-                onEdit={handleEditAttendance}
+      <Card>
+        <CardHeader>
+          <CardTitle>Atendimentos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="all">Todos</TabsTrigger>
+              <TabsTrigger value="in_progress">Em Andamento</TabsTrigger>
+              <TabsTrigger value="concluded">Concluídos</TabsTrigger>
+              <TabsTrigger value="cancelled">Cancelados</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={activeTab}>
+              <DataTable 
+                columns={AttendanceColumnDef}
+                data={attendances}
+                isLoading={isLoading}
+                meta={{
+                  handleUpdateStatus: (id: string, status: HRAttendanceStatus) => {
+                    updateStatus({ id, status });
+                  }
+                }}
               />
-            )}
-          </CardContent>
-        </Card>
-      )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      <Dialog open={showNewAttendanceDialog} onOpenChange={setShowNewAttendanceDialog}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <h2 className="text-xl font-semibold mb-4">Registrar Novo Atendimento</h2>
+          <AttendanceForm
+            services={services || []}
+            onSuccess={handleAttendanceCreated}
+            onCancel={() => setShowNewAttendanceDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+// Extend HRAttendanceStatus with 'all' for filtering
+type HRAttendanceFilterStatus = HRAttendanceStatus | 'all';

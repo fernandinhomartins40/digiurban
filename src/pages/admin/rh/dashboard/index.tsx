@@ -1,114 +1,151 @@
 
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useApiQuery } from "@/lib/hooks/useApiQuery";
-import { fetchServices } from "@/services/administration/hr/services";
-import { fetchAttendanceStats } from "@/services/administration/hr/attendances";
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LineChart, PieChart } from "lucide-react";
-import AttendanceStats from "@/components/administracao/rh/attendance/AttendanceStats";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import { fetchServices } from '@/services/administration/hr/services';
+import { fetchAttendances } from '@/services/administration/hr/attendances';
+import { HRService } from '@/types/hr';
 
-export default function HRDashboardPage() {
-  // Fetch services to show some stats about them
-  const { data: servicesResponse } = useApiQuery(
-    ["hr-services-dashboard"],
-    () => fetchServices(),
-    { enabled: true }
-  );
+export default function RHDashboard() {
+  const [services, setServices] = useState<HRService[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    activeServices: 0,
+    totalServices: 0,
+    servicesByCategory: [] as Array<{ name: string; value: number }>,
+  });
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        const servicesResponse = await fetchServices();
+        if (servicesResponse.data) {
+          setServices(servicesResponse.data);
+          
+          // Calculate stats
+          const activeServices = servicesResponse.data.filter(s => s.is_active).length;
+          
+          // Group services by category
+          const categoryCount = servicesResponse.data.reduce((acc, service) => {
+            acc[service.category] = (acc[service.category] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+          
+          // Convert to chart format
+          const servicesByCategory = Object.entries(categoryCount).map(([name, value]) => ({
+            name,
+            value
+          }));
+          
+          setStats({
+            activeServices,
+            totalServices: servicesResponse.data.length,
+            servicesByCategory,
+          });
+        }
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
   
-  const services = servicesResponse?.data || [];
-  const activeServices = services.filter(service => service.is_active);
-
+  // Colors for the pie chart
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard RH</h1>
-          <p className="text-muted-foreground">
-            Acompanhe as métricas de atendimentos e serviços do RH.
-          </p>
-        </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Dashboard RH</h1>
+        <p className="text-muted-foreground">
+          Visão geral do módulo de recursos humanos
+        </p>
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total de Serviços
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalServices}</div>
+            <p className="text-xs text-muted-foreground">
+              Serviços cadastrados
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              Serviços Ativos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.activeServices}</div>
+            <p className="text-xs text-muted-foreground">
+              Serviços disponíveis
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              Serviços Inativos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalServices - stats.activeServices}</div>
+            <p className="text-xs text-muted-foreground">
+              Serviços desativados
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <PieChart className="h-4 w-4" />
-            <span>Visão Geral</span>
-          </TabsTrigger>
-          <TabsTrigger value="trends" className="flex items-center gap-2">
-            <LineChart className="h-4 w-4" />
-            <span>Tendências</span>
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview" className="space-y-4">
-          <AttendanceStats />
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Total de Serviços</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{services.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  Serviços cadastrados no sistema
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Serviços Ativos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{activeServices.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  Serviços disponíveis para solicitação
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Categorias</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {new Set(services.map(service => service.category)).size}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Diferentes categorias de serviços
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Taxa de Conclusão</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">--</div>
-                <p className="text-xs text-muted-foreground">
-                  Atendimentos concluídos com sucesso
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        <TabsContent value="trends">
-          <Card>
-            <CardHeader>
-              <CardTitle>Análise de Tendências</CardTitle>
-              <CardDescription>
-                Visualize as tendências de atendimentos ao longo do tempo.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-[300px] flex justify-center items-center">
-              <div className="text-center text-muted-foreground">
-                Gráficos de tendências em desenvolvimento
+      <Card>
+        <CardHeader>
+          <CardTitle>Distribuição de Serviços por Categoria</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-2">
+          <div className="h-80 w-full">
+            {stats.servicesByCategory.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stats.servicesByCategory}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {stats.servicesByCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                {isLoading ? "Carregando..." : "Nenhum dado disponível"}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

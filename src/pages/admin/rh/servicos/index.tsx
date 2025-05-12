@@ -1,286 +1,179 @@
 
 import React, { useState, useEffect } from "react";
-import { useApiQuery, useApiMutation } from "@/lib/hooks/useApiQuery";
-import { useAuth } from "@/contexts/auth/useAuth";
 import { toast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Loader2, PlusCircle, Search, X } from "lucide-react";
-import { fetchServices, deleteService, toggleServiceStatus } from "@/services/administration/hr/services";
-import { ServiceFormDialog } from "@/components/administracao/rh/services/ServiceFormDialog";
-import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 import { DataTable } from "@/components/data-table/data-table";
 import { HRServiceColumnDef } from "@/components/administracao/rh/services/HRServiceColumnDef";
 import { HRService } from "@/types/hr";
+import { 
+  fetchServices,
+  toggleServiceStatus,
+  deleteService
+} from "@/services/administration/hr/services";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { PlusCircle, Filter } from "lucide-react";
+import { Dialog } from "@/components/ui/dialog";
+import { useApiMutation } from "@/lib/hooks"; // Fixed import
+import { ServiceFormDialog } from "@/components/administracao/rh/services/ServiceFormDialog";
 
-export default function ServicosPage() {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [searchTerm, setSearchTerm] = useState<string>("");
+export default function HRServicesPage() {
   const [services, setServices] = useState<HRService[]>([]);
-  const [filteredServices, setFilteredServices] = useState<HRService[]>([]);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
-  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [editingService, setEditingService] = useState<HRService | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showServiceFormDialog, setShowServiceFormDialog] = useState(false);
+  const [selectedService, setSelectedService] = useState<HRService | null>(null);
+  const [activeCategories, setActiveCategories] = useState<string[]>([]);
 
-  // Fetch services
-  const { data: servicesResponse, isLoading } = useApiQuery(
-    ["hr-services"],
-    () => fetchServices(),
-    { enabled: true }
-  );
-
+  // Load services data
   useEffect(() => {
-    if (servicesResponse?.data) {
-      setServices(servicesResponse.data);
-      setFilteredServices(servicesResponse.data);
-    }
-  }, [servicesResponse]);
+    loadServices();
+  }, []);
 
-  // Filter services based on search term and active tab
-  useEffect(() => {
-    if (services.length > 0) {
-      let filtered = [...services];
-      
-      // Filter by tab
-      if (activeTab !== "all") {
-        filtered = filtered.filter(service => service.category === activeTab);
+  const loadServices = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetchServices();
+      if (response.data) {
+        setServices(response.data);
+        
+        // Extract unique categories
+        const categories = Array.from(new Set(response.data.map(service => service.category)));
+        setActiveCategories(categories);
       }
-      
-      // Filter by search term
-      if (searchTerm) {
-        const lowercaseTerm = searchTerm.toLowerCase();
-        filtered = filtered.filter(
-          service => 
-            service.name.toLowerCase().includes(lowercaseTerm) || 
-            service.description?.toLowerCase().includes(lowercaseTerm)
-        );
-      }
-      
-      setFilteredServices(filtered);
+    } catch (error) {
+      console.error("Error loading services:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os serviços.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [activeTab, searchTerm, services]);
+  };
 
-  // Delete mutation
-  const { mutate: confirmDelete } = useApiMutation(
-    async (id: string) => {
-      const result = await deleteService(id);
-      return result;
+  // Toggle service status mutation
+  const { mutate: toggleStatus } = useApiMutation(
+    async (data: { id: string, isActive: boolean }) => {
+      return await toggleServiceStatus(data.id, data.isActive);
     },
     {
       onSuccess: (response) => {
         if (response.status === 'success') {
           toast({
-            title: "Serviço excluído",
-            description: "O serviço foi excluído com sucesso.",
+            title: "Sucesso",
+            description: `Serviço ${response.data?.is_active ? "ativado" : "desativado"} com sucesso.`,
           });
-          
-          // Update local state without refetching
-          setServices(prev => prev.filter(service => service.id !== serviceToDelete));
-          
-          setShowDeleteConfirm(false);
-          setServiceToDelete(null);
-        } else {
-          toast({
-            title: "Erro",
-            description: "Não foi possível excluir o serviço.",
-            variant: "destructive",
-          });
+          loadServices();
         }
       },
-      onError: () => {
-        toast({
-          title: "Erro",
-          description: "Ocorreu um erro ao excluir o serviço.",
-          variant: "destructive",
-        });
-      },
+      invalidateQueries: ['services']
     }
   );
 
-  // Toggle status mutation
-  const { mutate: toggleStatus } = useApiMutation(
-    async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      const result = await toggleServiceStatus(id, isActive);
-      return result;
+  // Delete service mutation
+  const { mutate: removeService } = useApiMutation(
+    async (id: string) => {
+      return await deleteService(id);
     },
     {
       onSuccess: (response) => {
-        if (response.status === 'success' && response.data) {
+        if (response.status === 'success') {
           toast({
-            title: "Status atualizado",
-            description: `Serviço ${response.data.is_active ? "ativado" : "desativado"} com sucesso.`,
+            title: "Sucesso",
+            description: "Serviço excluído com sucesso.",
           });
-          
-          // Update local state without refetching
-          setServices(prev => 
-            prev.map(service => 
-              service.id === response.data?.id ? response.data : service
-            )
-          );
-        } else {
-          toast({
-            title: "Erro",
-            description: "Não foi possível atualizar o status do serviço.",
-            variant: "destructive",
-          });
+          loadServices();
         }
       },
-      onError: () => {
-        toast({
-          title: "Erro",
-          description: "Ocorreu um erro ao alterar o status do serviço.",
-          variant: "destructive",
-        });
-      },
+      invalidateQueries: ['services']
     }
   );
 
-  // Get unique categories for tabs
-  const categories = Array.from(
-    new Set(services.map(service => service.category))
-  );
-
-  // Handle editing
-  const handleEdit = (service: HRService) => {
-    setEditingService(service);
-    setIsDialogOpen(true);
-  };
-
-  // Handlers for table actions
-  const handleDeleteService = (id: string) => {
-    setServiceToDelete(id);
-    setShowDeleteConfirm(true);
-  };
-
-  const handleToggleStatus = (id: string, isActive: boolean) => {
-    toggleStatus({ id, isActive });
-  };
-
-  // Handle service created or updated
-  const handleServiceSaved = (service: HRService) => {
-    setServices(prev => {
-      // Check if the service already exists in the array
-      const exists = prev.some(s => s.id === service.id);
-      
-      // If it exists, update it, otherwise add it
-      return exists
-        ? prev.map(s => s.id === service.id ? service : s)
-        : [...prev, service];
+  // Filter services by category
+  const filterByCategory = (category: string) => {
+    setActiveCategories(prev => {
+      if (prev.includes(category)) {
+        return prev.filter(c => c !== category);
+      } else {
+        return [...prev, category];
+      }
     });
-    
-    setIsDialogOpen(false);
-    setEditingService(null);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // Handle service save from dialog
+  const handleServiceSaved = (service: HRService) => {
+    setShowServiceFormDialog(false);
+    setSelectedService(null);
+    loadServices();
+  };
+
+  // Open form for editing
+  const handleEditService = (service: HRService) => {
+    setSelectedService(service);
+    setShowServiceFormDialog(true);
+  };
+
+  // Get all unique categories from services
+  const allCategories = Array.from(new Set(services.map(service => service.category)));
+
+  // Filter services based on active categories
+  const filteredServices = activeCategories.length > 0
+    ? services.filter(service => activeCategories.includes(service.category))
+    : services;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Serviços RH</h1>
+          <h1 className="text-2xl font-bold">Serviços RH</h1>
           <p className="text-muted-foreground">
-            Gerencie os serviços que podem ser solicitados pelos servidores.
+            Gerencie os serviços disponíveis para funcionários
           </p>
         </div>
-        <Button 
-          onClick={() => {
-            setEditingService(null);
-            setIsDialogOpen(true);
-          }}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Novo Serviço
+        <Button onClick={() => setShowServiceFormDialog(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Novo Serviço
         </Button>
       </div>
 
       <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle>Lista de Serviços</CardTitle>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative w-full sm:w-[300px]">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar serviço..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-8 w-full"
-                />
-                {searchTerm && (
-                  <X
-                    className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer"
-                    onClick={() => setSearchTerm("")}
-                  />
-                )}
-              </div>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Serviços</CardTitle>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">Filtrar por categoria:</span>
+            <div className="flex flex-wrap gap-2">
+              {allCategories.map(category => (
+                <Button
+                  key={category}
+                  variant={activeCategories.includes(category) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => filterByCategory(category)}
+                >
+                  {category}
+                </Button>
+              ))}
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              {categories.map(category => (
-                <TabsTrigger key={category} value={category}>
-                  {category}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            <TabsContent value={activeTab} className="space-y-4">
-              <DataTable 
-                columns={HRServiceColumnDef} 
-                data={filteredServices}
-                meta={{
-                  handleDeleteService,
-                  handleToggleStatus
-                }}
-              />
-            </TabsContent>
-          </Tabs>
+          <DataTable 
+            columns={HRServiceColumnDef}
+            data={filteredServices}
+            isLoading={isLoading}
+            meta={{
+              handleToggleStatus: (id: string, isActive: boolean) => toggleStatus({ id, isActive }),
+              handleDeleteService: (id: string) => removeService(id),
+              handleEditService,
+              handleViewService: (service: HRService) => console.log("View service", service)
+            }}
+          />
         </CardContent>
       </Card>
 
-      {/* Confirm Delete Dialog */}
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmar exclusão</DialogTitle>
-            <DialogDescription>
-              Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={() => serviceToDelete && confirmDelete(serviceToDelete)}
-            >
-              Excluir
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Service Form Dialog */}
       <ServiceFormDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        service={editingService}
+        open={showServiceFormDialog}
+        onOpenChange={setShowServiceFormDialog}
+        service={selectedService}
         onSaved={handleServiceSaved}
       />
     </div>

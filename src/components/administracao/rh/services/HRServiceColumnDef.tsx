@@ -12,8 +12,11 @@ import { Switch } from "@/components/ui/switch";
 interface HRServiceTableMeta {
   handleToggleStatus?: (id: string, isActive: boolean) => void;
   handleDeleteService?: (id: string) => void;
+  handleEditService?: (service: HRService) => void;
+  handleViewService?: (service: HRService) => void;
 }
 
+// Add the table meta to the module declaration
 declare module '@tanstack/react-table' {
   interface TableMeta<TData> extends HRServiceTableMeta {}
 }
@@ -74,10 +77,14 @@ export const HRServiceColumnDef: ColumnDef<HRService>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => console.log("View details", service.id)}>
+            <DropdownMenuItem 
+              onClick={() => meta?.handleViewService && meta.handleViewService(service)}
+            >
               Ver detalhes
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => console.log("Edit", service.id)}>
+            <DropdownMenuItem 
+              onClick={() => meta?.handleEditService && meta.handleEditService(service)}
+            >
               Editar
             </DropdownMenuItem>
             <DropdownMenuItem 

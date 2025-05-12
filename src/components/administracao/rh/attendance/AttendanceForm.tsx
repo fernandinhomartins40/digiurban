@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useApiMutation } from "@/lib/hooks/useApiQuery";
+import { useApiMutation } from "@/lib/hooks"; // Updated import
 import { useAuth } from "@/contexts/auth/useAuth";
 import { createAttendance, updateAttendance } from "@/services/administration/hr/attendances";
 import { HRAttendance, HRService } from "@/types/hr";
