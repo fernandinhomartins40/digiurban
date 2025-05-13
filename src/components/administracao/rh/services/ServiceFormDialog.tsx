@@ -20,16 +20,20 @@ const formSchema = z.object({
   is_active: z.boolean().default(true),
   requires_approval: z.boolean().default(true),
   approval_flow: z.any().optional(),
-  form_schema: z.object({
-    fields: z.array(
-      z.object({
-        name: z.string(),
-        type: z.string(),
-        label: z.string(),
-        required: z.boolean(),
-      })
-    ).default([]),
-  }).optional(),
+  form_schema: z
+    .object({
+      fields: z
+        .array(
+          z.object({
+            name: z.string(),
+            type: z.string(),
+            label: z.string(),
+            required: z.boolean(),
+          })
+        )
+        .default([]),
+    })
+    .optional(),
   available_for: z.array(z.string()).optional(),
 });
 
@@ -83,24 +87,34 @@ export function ServiceFormDialog({
 
   // Create mutation
   const { mutate: create, isPending: isCreating } = useApiMutation(
-    async (data: FormValues) => {
+    async (values: FormValues) => {
+      // Make sure form_schema.fields is properly initialized
+      const formSchema = values.form_schema || { fields: [] };
+      
       const serviceData: ServiceFormData = {
-        name: data.name,
-        description: data.description || null,
-        category: data.category,
-        is_active: data.is_active,
-        requires_approval: data.requires_approval,
-        approval_flow: data.approval_flow,
-        form_schema: data.form_schema || { fields: [] },
-        available_for: data.available_for || [],
+        name: values.name,
+        description: values.description || null,
+        category: values.category,
+        is_active: values.is_active,
+        requires_approval: values.requires_approval,
+        approval_flow: values.approval_flow,
+        form_schema: { 
+          fields: formSchema.fields.map(field => ({
+            name: field.name || '',
+            type: field.type || 'text',
+            label: field.label || '',
+            required: field.required || false,
+          }))
+        },
+        available_for: values.available_for || [],
       };
       
       return createService(serviceData);
     },
     {
       onSuccess: (response) => {
-        if (response) {
-          onSaved(response);
+        if (response && response.data) {
+          onSaved(response.data);
           form.reset();
         }
       },
@@ -109,37 +123,47 @@ export function ServiceFormDialog({
 
   // Update mutation
   const { mutate: update, isPending: isUpdating } = useApiMutation(
-    async (data: FormValues) => {
+    async (values: FormValues) => {
       if (!service) return null;
       
+      // Make sure form_schema.fields is properly initialized
+      const formSchema = values.form_schema || { fields: [] };
+      
       const serviceData: Partial<ServiceFormData> = {
-        name: data.name,
-        description: data.description || null,
-        category: data.category,
-        is_active: data.is_active,
-        requires_approval: data.requires_approval,
-        approval_flow: data.approval_flow,
-        form_schema: data.form_schema || { fields: [] },
-        available_for: data.available_for || [],
+        name: values.name,
+        description: values.description || null,
+        category: values.category,
+        is_active: values.is_active,
+        requires_approval: values.requires_approval,
+        approval_flow: values.approval_flow,
+        form_schema: { 
+          fields: formSchema.fields.map(field => ({
+            name: field.name || '',
+            type: field.type || 'text',
+            label: field.label || '',
+            required: field.required || false,
+          }))
+        },
+        available_for: values.available_for || [],
       };
       
       return updateService(service.id, serviceData);
     },
     {
       onSuccess: (response) => {
-        if (response) {
-          onSaved(response);
+        if (response && response.data) {
+          onSaved(response.data);
           form.reset();
         }
       },
     }
   );
 
-  function onSubmit(data: FormValues) {
+  function onSubmit(values: FormValues) {
     if (service) {
-      update(data);
+      update(values);
     } else {
-      create(data);
+      create(values);
     }
   }
 

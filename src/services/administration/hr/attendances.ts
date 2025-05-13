@@ -41,14 +41,14 @@ export async function fetchAttendances(): Promise<ApiResponse<HRAttendance[]>> {
       ...formatAttendance({
         ...item,
         employee_name: `Employee ${item.employee_id.substring(0, 4)}`, // Temporary employee name
-        admin_name: item.admin_name?.name || 'Unknown Admin'
+        admin_name: item.admin_name || 'Unknown Admin'
       })
     }));
 
-    return { data: formattedData, error: null };
+    return { data: formattedData, error: null, status: 'success' };
   } catch (error: any) {
     console.error('Error fetching attendances:', error);
-    return { data: null, error };
+    return { data: null, error, status: 'error' };
   }
 }
 
@@ -74,14 +74,14 @@ export async function fetchAttendancesByStatus(
       ...formatAttendance({
         ...item,
         employee_name: `Employee ${item.employee_id.substring(0, 4)}`, // Temporary employee name
-        admin_name: item.admin_name?.name || 'Unknown Admin'
+        admin_name: item.admin_name || 'Unknown Admin'
       })
     }));
 
-    return { data: formattedData, error: null };
+    return { data: formattedData, error: null, status: 'success' };
   } catch (error: any) {
     console.error('Error fetching attendances by status:', error);
-    return { data: null, error };
+    return { data: null, error, status: 'error' };
   }
 }
 
@@ -114,13 +114,13 @@ export async function createAttendance(
     const formattedData = formatAttendance({
       ...data,
       employee_name: `Employee ${data.employee_id.substring(0, 4)}`, // Temporary employee name
-      admin_name: data.admin_name?.name || 'Unknown Admin'
+      admin_name: data.admin_name || 'Unknown Admin'
     });
 
-    return { data: formattedData, error: null };
+    return { data: formattedData, error: null, status: 'success' };
   } catch (error: any) {
     console.error('Error creating attendance:', error);
-    return { data: null, error };
+    return { data: null, error, status: 'error' };
   }
 }
 
@@ -155,13 +155,13 @@ export async function updateAttendance(
     const formattedData = formatAttendance({
       ...data,
       employee_name: `Employee ${data.employee_id.substring(0, 4)}`, // Temporary employee name
-      admin_name: data.admin_name?.name || 'Unknown Admin'
+      admin_name: data.admin_name || 'Unknown Admin'
     });
 
-    return { data: formattedData, error: null };
+    return { data: formattedData, error: null, status: 'success' };
   } catch (error: any) {
     console.error('Error updating attendance:', error);
-    return { data: null, error };
+    return { data: null, error, status: 'error' };
   }
 }
 

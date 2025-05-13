@@ -132,26 +132,26 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
       setIsSubmitting(true);
 
       // Create request
-      const request = await createRequest(
+      const response = await createRequest(
         user.id,
         selectedRequestType.id,
         values
       );
 
-      if (!request) {
+      if (!response || response.error || !response.data) {
         throw new Error("Erro ao criar solicitação");
       }
 
       // Upload attachments if any
       if (files.length > 0) {
         for (const file of files) {
-          await uploadRequestAttachment(request.id, file);
+          await uploadRequestAttachment(response.data.id, file);
         }
       }
 
       toast({
         title: "Solicitação enviada",
-        description: `Solicitação ${request.protocolNumber} enviada com sucesso.`,
+        description: `Solicitação ${response.data.protocolNumber} enviada com sucesso.`,
       });
 
       // Reset forms and state
@@ -300,7 +300,7 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
                 }
               })}
 
-              {/* Document attachments section - Enhanced version */}
+              {/* Document attachments section */}
               <div className="mt-4">
                 <FormLabel>Documentos (opcional)</FormLabel>
                 <div className="border-dashed border-2 border-gray-300 rounded-lg p-4 mt-1">

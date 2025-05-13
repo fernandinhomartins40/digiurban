@@ -53,37 +53,37 @@ export default function AttendanceForm({ services, initialData, onSuccess, onCan
   });
 
   const { mutate: submitAttendance, isPending } = useApiMutation(
-    async (data: FormValues) => {
+    async (values: FormValues) => {
       if (!user) throw new Error("User not authenticated");
       
       if (initialData) {
         return await updateAttendance(initialData.id, {
-          serviceId: data.serviceId || null,
-          description: data.description,
-          notes: data.notes,
+          serviceId: values.serviceId || null,
+          description: values.description,
+          notes: values.notes,
         });
       } else {
         return await createAttendance({
-          employeeId: data.employeeId,
-          serviceId: data.serviceId || null,
-          description: data.description,
+          employeeId: values.employeeId,
+          serviceId: values.serviceId || null,
+          description: values.description,
           status: "in_progress",
           attendanceDate: new Date(),
           attendedBy: user.id,
-          notes: data.notes,
+          notes: values.notes,
         });
       }
     },
     {
-      onSuccess: (response) => {
+      onSuccess: () => {
         onSuccess();
         form.reset();
       },
     }
   );
 
-  function onSubmit(data: FormValues) {
-    submitAttendance(data);
+  function onSubmit(values: FormValues) {
+    submitAttendance(values);
   }
 
   return (

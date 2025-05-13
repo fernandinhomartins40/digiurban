@@ -12,44 +12,35 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { PlusCircle, Filter } from "lucide-react";
-import { Dialog } from "@/components/ui/dialog";
-import { useApiMutation } from "@/lib/hooks";
+import { useApiMutation, useApiQuery } from "@/lib/hooks";
 import { ServiceFormDialog } from "@/components/administracao/rh/services/ServiceFormDialog";
 
 export default function HRServicesPage() {
   const [services, setServices] = useState<HRService[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [showServiceFormDialog, setShowServiceFormDialog] = useState(false);
   const [selectedService, setSelectedService] = useState<HRService | null>(null);
   const [activeCategories, setActiveCategories] = useState<string[]>([]);
 
-  // Load services data
-  useEffect(() => {
-    loadServices();
-  }, []);
+  // Load services data using useApiQuery
+  const { 
+    data: servicesData, 
+    isLoading, 
+    refetch: refetchServices 
+  } = useApiQuery(
+    ['services'], 
+    fetchServices
+  );
 
-  const loadServices = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetchServices();
-      if (response.data) {
-        setServices(response.data);
-        
-        // Extract unique categories
-        const categories = Array.from(new Set(response.data.map(service => service.category)));
-        setActiveCategories(categories);
-      }
-    } catch (error) {
-      console.error("Error loading services:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os serviços.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+  // Update services state when data changes
+  useEffect(() => {
+    if (servicesData?.data) {
+      setServices(servicesData.data);
+      
+      // Extract unique categories
+      const categories = Array.from(new Set(servicesData.data.map(service => service.category)));
+      setActiveCategories(categories);
     }
-  };
+  }, [servicesData]);
 
   // Toggle service status mutation
   const { mutate: toggleStatus } = useApiMutation(
@@ -58,13 +49,14 @@ export default function HRServicesPage() {
     },
     {
       onSuccess: (response) => {
-        toast({
-          title: "Sucesso",
-          description: `Serviço ${response?.is_active ? "ativado" : "desativado"} com sucesso.`,
-        });
-        loadServices();
-      },
-      invalidateQueries: ['services']
+        if (response?.data) {
+          toast({
+            title: "Sucesso",
+            description: `Serviço ${response.data.is_active ? "ativado" : "desativado"} com sucesso.`,
+          });
+          refetchServices();
+        }
+      }
     }
   );
 
@@ -79,9 +71,8 @@ export default function HRServicesPage() {
           title: "Sucesso",
           description: "Serviço excluído com sucesso.",
         });
-        loadServices();
-      },
-      invalidateQueries: ['services']
+        refetchServices();
+      }
     }
   );
 
@@ -97,10 +88,10 @@ export default function HRServicesPage() {
   };
 
   // Handle service save from dialog
-  const handleServiceSaved = (service: HRService) => {
+  const handleServiceSaved = () => {
     setShowServiceFormDialog(false);
     setSelectedService(null);
-    loadServices();
+    refetchServices();
   };
 
   // Open form for editing
@@ -157,8 +148,12 @@ export default function HRServicesPage() {
             data={filteredServices}
             isLoading={isLoading}
             meta={{
-              handleToggleStatus: (id: string, isActive: boolean) => toggleStatus({ id, isActive }),
-              handleDeleteService: (id: string) => removeService(id),
+              handleToggleStatus: (id: string, isActive: boolean) => {
+                toggleStatus({ id, isActive });
+              },
+              handleDeleteService: (id: string) => {
+                removeService(id);
+              },
               handleEditService,
               handleViewService: (service: HRService) => console.log("View service", service)
             }}

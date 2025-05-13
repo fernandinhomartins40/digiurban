@@ -1,68 +1,81 @@
 
 import React from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
+import { 
+  CheckCircle, 
+  MoreHorizontal, 
+  Pencil, 
+  AlertCircle 
+} from "lucide-react";
 import { HRAttendance, HRAttendanceStatus } from "@/types/hr";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
-// Add proper typing for the table meta
-interface AttendanceTableMeta {
-  handleUpdateStatus?: (id: string, status: HRAttendanceStatus) => void;
+interface AttendanceColumnMeta {
+  onStatusChange: (id: string, status: HRAttendanceStatus) => void;
+  onEditAttendance: (attendance: HRAttendance) => void;
 }
 
-// Add the table meta to the module declaration
-declare module '@tanstack/react-table' {
-  interface TableMeta<TData> extends AttendanceTableMeta {}
-}
+// Formats the date to a nicer format
+const formatDate = (date: Date): string => {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};
 
+// Returns appropriate badge for each status
 const getStatusBadge = (status: HRAttendanceStatus) => {
   switch (status) {
-    case 'in_progress':
-      return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Em Andamento</Badge>;
-    case 'concluded':
+    case "in_progress":
+      return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Em Andamento</Badge>;
+    case "concluded":
       return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Concluído</Badge>;
-    case 'cancelled':
+    case "cancelled":
       return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Cancelado</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
 };
 
-const AttendanceColumnDef: ColumnDef<HRAttendance>[] = [
+export const AttendanceColumnDef: ColumnDef<HRAttendance>[] = [
   {
     accessorKey: "employeeName",
     header: "Funcionário",
+    cell: ({ row }) => <div>{row.original.employeeName}</div>,
+  },
+  {
+    accessorKey: "description",
+    header: "Descrição",
     cell: ({ row }) => (
-      <div>
-        <div className="font-medium">{row.original.employeeName}</div>
-        <div className="text-sm text-muted-foreground">ID: {row.original.employeeId}</div>
+      <div className="max-w-[200px] truncate" title={row.original.description}>
+        {row.original.description}
       </div>
     ),
   },
   {
     accessorKey: "serviceName",
     header: "Serviço",
-    cell: ({ row }) => row.original.serviceName || "-",
+    cell: ({ row }) => <div>{row.original.serviceName || "N/A"}</div>,
   },
   {
     accessorKey: "attendanceDate",
-    header: "Data",
-    cell: ({ row }) => format(row.original.attendanceDate, "dd/MM/yyyy HH:mm", { locale: ptBR }),
+    header: "Data do Atendimento",
+    cell: ({ row }) => <div>{formatDate(row.original.attendanceDate)}</div>,
   },
   {
     accessorKey: "attendedByName",
     header: "Atendido Por",
-    cell: ({ row }) => row.original.attendedByName || "-",
+    cell: ({ row }) => <div>{row.original.attendedByName}</div>,
   },
   {
     accessorKey: "status",
@@ -73,45 +86,39 @@ const AttendanceColumnDef: ColumnDef<HRAttendance>[] = [
     id: "actions",
     cell: ({ row, table }) => {
       const attendance = row.original;
-      const meta = table.options.meta;
+      const meta = table.options.meta as AttendanceColumnMeta;
       
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              disabled={attendance.status === 'concluded'}
-              onClick={() => meta?.handleUpdateStatus && meta.handleUpdateStatus(attendance.id, 'concluded')}
-            >
-              <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-              Marcar como concluído
+            <DropdownMenuItem onClick={() => meta.onEditAttendance(attendance)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Editar
             </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={attendance.status === 'in_progress'}
-              onClick={() => meta?.handleUpdateStatus && meta.handleUpdateStatus(attendance.id, 'in_progress')}
-            >
-              <Clock className="mr-2 h-4 w-4 text-blue-500" />
-              Marcar como em andamento
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={attendance.status === 'cancelled'}
-              onClick={() => meta?.handleUpdateStatus && meta.handleUpdateStatus(attendance.id, 'cancelled')}
-            >
-              <XCircle className="mr-2 h-4 w-4 text-red-500" />
-              Marcar como cancelado
-            </DropdownMenuItem>
+            {attendance.status !== "concluded" && (
+              <DropdownMenuItem 
+                onClick={() => meta.onStatusChange(attendance.id, "concluded")}
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Marcar como Concluído
+              </DropdownMenuItem>
+            )}
+            {attendance.status !== "cancelled" && (
+              <DropdownMenuItem 
+                onClick={() => meta.onStatusChange(attendance.id, "cancelled")}
+              >
+                <AlertCircle className="mr-2 h-4 w-4" />
+                Cancelar Atendimento
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       );
     },
   },
 ];
-
-export default AttendanceColumnDef;

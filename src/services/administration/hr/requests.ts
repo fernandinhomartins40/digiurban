@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/lib/api/supabaseClient';
 import { HRRequest, HRRequestStatus, HRRequestType } from '@/types/administration';
@@ -6,7 +5,7 @@ import { HRRequest, HRRequestStatus, HRRequestType } from '@/types/administratio
 /**
  * Fetches all request types
  */
-export const fetchRequestTypes = async (): Promise<HRRequestType[]> => {
+export const fetchRequestTypes = async (): Promise<ApiResponse<HRRequestType[]>> {
   try {
     const { data, error } = await supabase
       .from('hr_request_types')
@@ -15,24 +14,29 @@ export const fetchRequestTypes = async (): Promise<HRRequestType[]> => {
 
     if (error) {
       console.error('Error fetching request types:', error);
-      return [];
+      return { data: [], error, status: 'error' };
     }
 
-    return data.map(type => ({
-      ...type,
+    const formattedData = data.map(type => ({
+      id: type.id,
+      name: type.name,
+      description: type.description || null,
+      formSchema: type.form_schema,
       createdAt: new Date(type.created_at),
       updatedAt: new Date(type.updated_at)
     })) as HRRequestType[];
+
+    return { data: formattedData, error: null, status: 'success' };
   } catch (error) {
     console.error('Error in fetchRequestTypes:', error);
-    return [];
+    return { data: [], error, status: 'error' };
   }
 };
 
 /**
  * Fetches requests for a specific user
  */
-export const fetchUserRequests = async (userId: string): Promise<HRRequest[]> => {
+export const fetchUserRequests = async (userId: string): Promise<ApiResponse<HRRequest[]>> {
   try {
     const { data, error } = await supabase
       .from('hr_requests')
@@ -45,25 +49,38 @@ export const fetchUserRequests = async (userId: string): Promise<HRRequest[]> =>
 
     if (error) {
       console.error('Error fetching user requests:', error);
-      return [];
+      return { data: [], error, status: 'error' };
     }
 
-    return data.map(request => ({
-      ...request,
-      requestType: request.request_type,
+    const formattedData = data.map(request => ({
+      id: request.id,
+      protocolNumber: request.protocol_number,
+      userId: request.user_id,
+      requestTypeId: request.request_type_id,
+      requestType: {
+        id: request.request_type_id,
+        name: request.request_type?.name || '',
+        description: request.request_type?.description || null,
+        formSchema: { fields: [] } // Default value, should be populated if needed
+      },
+      formData: request.form_data,
+      status: request.status,
+      assignedTo: request.assigned_to,
       createdAt: new Date(request.created_at),
       updatedAt: new Date(request.updated_at)
     })) as HRRequest[];
+
+    return { data: formattedData, error: null, status: 'success' };
   } catch (error) {
     console.error('Error in fetchUserRequests:', error);
-    return [];
+    return { data: [], error, status: 'error' };
   }
 };
 
 /**
  * Fetches all requests (admin view)
  */
-export const fetchAllRequests = async (): Promise<HRRequest[]> => {
+export const fetchAllRequests = async (): Promise<ApiResponse<HRRequest[]>> {
   try {
     const { data, error } = await supabase
       .from('hr_requests')
@@ -75,36 +92,49 @@ export const fetchAllRequests = async (): Promise<HRRequest[]> => {
 
     if (error) {
       console.error('Error fetching all requests:', error);
-      return [];
+      return { data: [], error, status: 'error' };
     }
 
-    return data.map(request => ({
-      ...request,
-      requestType: request.request_type,
+    const formattedData = data.map(request => ({
+      id: request.id,
+      protocolNumber: request.protocol_number,
+      userId: request.user_id,
+      requestTypeId: request.request_type_id,
+      requestType: {
+        id: request.request_type_id,
+        name: request.request_type?.name || '',
+        description: request.request_type?.description || null,
+        formSchema: { fields: [] } // Default value, should be populated if needed
+      },
+      formData: request.form_data,
+      status: request.status,
+      assignedTo: request.assigned_to,
       createdAt: new Date(request.created_at),
       updatedAt: new Date(request.updated_at)
     })) as HRRequest[];
+
+    return { data: formattedData, error: null, status: 'success' };
   } catch (error) {
     console.error('Error in fetchAllRequests:', error);
-    return [];
+    return { data: [], error, status: 'error' };
   }
 };
 
 /**
  * Creates a new request
  */
-export const createRequest = async (data: {
-  userId: string;
-  requestTypeId: string;
-  formData: Record<string, any>;
-}): Promise<HRRequest | null> => {
+export const createRequest = async (
+  userId: string,
+  requestTypeId: string,
+  formData: Record<string, any>
+): Promise<ApiResponse<HRRequest | null>> {
   try {
     const { data: requestData, error } = await supabase
       .from('hr_requests')
       .insert([{
-        user_id: data.userId,
-        request_type_id: data.requestTypeId,
-        form_data: data.formData,
+        user_id: userId,
+        request_type_id: requestTypeId,
+        form_data: formData,
         status: 'pending' as HRRequestStatus
       }])
       .select(`
@@ -115,18 +145,31 @@ export const createRequest = async (data: {
 
     if (error) {
       console.error('Error creating request:', error);
-      return null;
+      return { data: null, error, status: 'error' };
     }
 
-    return {
-      ...requestData,
-      requestType: requestData.request_type,
+    const formattedRequest = {
+      id: requestData.id,
+      protocolNumber: requestData.protocol_number,
+      userId: requestData.user_id,
+      requestTypeId: requestData.request_type_id,
+      requestType: {
+        id: requestData.request_type_id,
+        name: requestData.request_type?.name || '',
+        description: requestData.request_type?.description || null,
+        formSchema: { fields: [] } // Default value, should be populated if needed
+      },
+      formData: requestData.form_data,
+      status: requestData.status,
+      assignedTo: requestData.assigned_to,
       createdAt: new Date(requestData.created_at),
       updatedAt: new Date(requestData.updated_at)
     } as HRRequest;
+
+    return { data: formattedRequest, error: null, status: 'success' };
   } catch (error) {
     console.error('Error in createRequest:', error);
-    return null;
+    return { data: null, error, status: 'error' };
   }
 };
 
@@ -138,7 +181,7 @@ export const updateRequestStatus = async (
   status: HRRequestStatus, 
   comments: string | null, 
   changedById: string
-): Promise<HRRequest | null> => {
+): Promise<ApiResponse<HRRequest | null>> {
   try {
     // First update the request
     const { data: requestData, error: requestError } = await supabase
@@ -153,7 +196,7 @@ export const updateRequestStatus = async (
 
     if (requestError) {
       console.error('Error updating request status:', requestError);
-      return null;
+      return { data: null, error: requestError, status: 'error' };
     }
 
     // Then add history entry
@@ -168,17 +211,31 @@ export const updateRequestStatus = async (
 
     if (historyError) {
       console.error('Error adding status history:', historyError);
+      // Continue despite history error
     }
 
-    return {
-      ...requestData,
-      requestType: requestData.request_type,
+    const formattedRequest = {
+      id: requestData.id,
+      protocolNumber: requestData.protocol_number,
+      userId: requestData.user_id,
+      requestTypeId: requestData.request_type_id,
+      requestType: {
+        id: requestData.request_type_id,
+        name: requestData.request_type?.name || '',
+        description: requestData.request_type?.description || null,
+        formSchema: { fields: [] } // Default value, should be populated if needed
+      },
+      formData: requestData.form_data,
+      status: requestData.status,
+      assignedTo: requestData.assigned_to,
       createdAt: new Date(requestData.created_at),
       updatedAt: new Date(requestData.updated_at)
     } as HRRequest;
+
+    return { data: formattedRequest, error: null, status: 'success' };
   } catch (error) {
     console.error('Error in updateRequestStatus:', error);
-    return null;
+    return { data: null, error, status: 'error' };
   }
 };
 
