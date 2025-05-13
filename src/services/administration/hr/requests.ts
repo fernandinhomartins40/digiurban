@@ -5,7 +5,7 @@ import { HRRequest, HRRequestStatus, HRRequestType } from '@/types/administratio
 /**
  * Fetches all request types
  */
-export const fetchRequestTypes = async (): Promise<ApiResponse<HRRequestType[]>> {
+export const fetchRequestTypes = async (): Promise<ApiResponse<HRRequestType[]>> => {
   try {
     const { data, error } = await supabase
       .from('hr_request_types')
@@ -36,7 +36,7 @@ export const fetchRequestTypes = async (): Promise<ApiResponse<HRRequestType[]>>
 /**
  * Fetches requests for a specific user
  */
-export const fetchUserRequests = async (userId: string): Promise<ApiResponse<HRRequest[]>> {
+export const fetchUserRequests = async (userId: string): Promise<ApiResponse<HRRequest[]>> => {
   try {
     const { data, error } = await supabase
       .from('hr_requests')
@@ -80,7 +80,7 @@ export const fetchUserRequests = async (userId: string): Promise<ApiResponse<HRR
 /**
  * Fetches all requests (admin view)
  */
-export const fetchAllRequests = async (): Promise<ApiResponse<HRRequest[]>> {
+export const fetchAllRequests = async (): Promise<ApiResponse<HRRequest[]>> => {
   try {
     const { data, error } = await supabase
       .from('hr_requests')
@@ -127,7 +127,7 @@ export const createRequest = async (
   userId: string,
   requestTypeId: string,
   formData: Record<string, any>
-): Promise<ApiResponse<HRRequest | null>> {
+): Promise<ApiResponse<HRRequest | null>> => {
   try {
     const { data: requestData, error } = await supabase
       .from('hr_requests')
@@ -181,7 +181,7 @@ export const updateRequestStatus = async (
   status: HRRequestStatus, 
   comments: string | null, 
   changedById: string
-): Promise<ApiResponse<HRRequest | null>> {
+): Promise<ApiResponse<HRRequest | null>> => {
   try {
     // First update the request
     const { data: requestData, error: requestError } = await supabase
