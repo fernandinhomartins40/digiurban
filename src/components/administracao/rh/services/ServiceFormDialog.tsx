@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -113,7 +114,7 @@ export function ServiceFormDialog({
     },
     {
       onSuccess: (response) => {
-        if (response && response.data) {
+        if (response && response.status === 'success' && response.data) {
           onSaved(response.data);
           form.reset();
         }
@@ -151,7 +152,7 @@ export function ServiceFormDialog({
     },
     {
       onSuccess: (response) => {
-        if (response && response.data) {
+        if (response && response.status === 'success' && response.data) {
           onSaved(response.data);
           form.reset();
         }

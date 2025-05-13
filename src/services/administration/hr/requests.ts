@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/lib/api/supabaseClient';
 import { HRRequest, HRRequestStatus, HRRequestType } from '@/types/administration';
@@ -129,14 +130,15 @@ export const createRequest = async (
   formData: Record<string, any>
 ): Promise<ApiResponse<HRRequest | null>> => {
   try {
+    // Note: We don't need to set protocol_number as it will be set by trigger
     const { data: requestData, error } = await supabase
       .from('hr_requests')
-      .insert([{
+      .insert({
         user_id: userId,
         request_type_id: requestTypeId,
         form_data: formData,
         status: 'pending' as HRRequestStatus
-      }])
+      })
       .select(`
         *,
         request_type:request_type_id(name, description)

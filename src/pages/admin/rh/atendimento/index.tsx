@@ -25,7 +25,7 @@ export default function AttendancePage() {
 
   // Fetch attendances based on active tab
   const { 
-    data: attendances,
+    data: attendancesResponse,
     isLoading,
     refetch: refetchAttendances
   } = useApiQuery(
@@ -40,7 +40,7 @@ export default function AttendancePage() {
   );
 
   // Fetch services for the form
-  const { data: services = { data: [] } } = useApiQuery(
+  const { data: servicesResponse = { status: 'success', data: [] } } = useApiQuery(
     ['services'],
     fetchServices
   );
@@ -85,6 +85,10 @@ export default function AttendancePage() {
     setShowNewAttendanceForm(true);
   };
 
+  // Extract data safely from API responses
+  const attendances = attendancesResponse?.data || [];
+  const services = servicesResponse?.data || [];
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -118,7 +122,7 @@ export default function AttendancePage() {
         <CardContent>
           <DataTable 
             columns={AttendanceColumnDef}
-            data={attendances?.data || []}
+            data={attendances}
             isLoading={isLoading}
             meta={{
               onStatusChange: (id: string, status: HRAttendanceStatus) => changeStatus({ id, status }),
@@ -139,7 +143,7 @@ export default function AttendancePage() {
             </DialogTitle>
           </DialogHeader>
           <AttendanceForm
-            services={services?.data || []}
+            services={services}
             initialData={selectedAttendance}
             onSuccess={handleAttendanceSuccess}
             onCancel={() => {

@@ -23,7 +23,7 @@ export default function HRServicesPage() {
 
   // Load services data using useApiQuery
   const { 
-    data: servicesData, 
+    data: servicesResponse, 
     isLoading, 
     refetch: refetchServices 
   } = useApiQuery(
@@ -33,14 +33,17 @@ export default function HRServicesPage() {
 
   // Update services state when data changes
   useEffect(() => {
-    if (servicesData?.data) {
-      setServices(servicesData.data);
+    if (servicesResponse?.status === 'success' && servicesResponse.data) {
+      setServices(servicesResponse.data);
       
       // Extract unique categories
-      const categories = Array.from(new Set(servicesData.data.map(service => service.category)));
+      const categories = Array.from(
+        new Set(servicesResponse.data.map(service => service.category))
+      ).filter(Boolean) as string[];
+      
       setActiveCategories(categories);
     }
-  }, [servicesData]);
+  }, [servicesResponse]);
 
   // Toggle service status mutation
   const { mutate: toggleStatus } = useApiMutation(
@@ -49,7 +52,7 @@ export default function HRServicesPage() {
     },
     {
       onSuccess: (response) => {
-        if (response?.data) {
+        if (response?.status === 'success' && response.data) {
           toast({
             title: "Sucesso",
             description: `Serviço ${response.data.is_active ? "ativado" : "desativado"} com sucesso.`,

@@ -40,8 +40,10 @@ export default function HRPage() {
   useEffect(() => {
     const loadRequestTypes = async () => {
       try {
-        const types = await fetchRequestTypes();
-        setRequestTypes(types);
+        const response = await fetchRequestTypes();
+        if (response.status === 'success' && response.data) {
+          setRequestTypes(response.data);
+        }
       } catch (error) {
         console.error("Error loading request types:", error);
       } finally {
@@ -79,14 +81,16 @@ export default function HRPage() {
       try {
         setIsLoading(prev => ({ ...prev, requests: true }));
         
-        let reqs;
+        let response;
         if (isAdmin) {
-          reqs = await fetchAllRequests();
+          response = await fetchAllRequests();
         } else {
-          reqs = await fetchUserRequests(user.id);
+          response = await fetchUserRequests(user.id);
         }
         
-        setRequests(reqs);
+        if (response.status === 'success' && response.data) {
+          setRequests(response.data);
+        }
       } catch (error) {
         console.error("Error loading requests:", error);
       } finally {
@@ -102,11 +106,11 @@ export default function HRPage() {
     if (!user) return;
     
     try {
-      const updatedRequest = await updateRequestStatus(requestId, status, comments || null, user.id);
-      if (updatedRequest) {
+      const response = await updateRequestStatus(requestId, status, comments || null, user.id);
+      if (response.status === 'success' && response.data) {
         // Update requests list
         setRequests(prev => 
-          prev.map(req => req.id === requestId ? updatedRequest : req)
+          prev.map(req => req.id === requestId ? response.data! : req)
         );
       }
     } catch (error) {
@@ -121,14 +125,16 @@ export default function HRPage() {
     try {
       setIsLoading(prev => ({ ...prev, requests: true }));
       
-      let reqs;
+      let response;
       if (isAdmin) {
-        reqs = await fetchAllRequests();
+        response = await fetchAllRequests();
       } else {
-        reqs = await fetchUserRequests(user.id);
+        response = await fetchUserRequests(user.id);
       }
       
-      setRequests(reqs);
+      if (response.status === 'success' && response.data) {
+        setRequests(response.data);
+      }
     } catch (error) {
       console.error("Error refreshing requests:", error);
     } finally {
