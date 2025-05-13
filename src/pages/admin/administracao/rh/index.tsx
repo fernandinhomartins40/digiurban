@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -21,6 +20,7 @@ import {
 import { 
   fetchServices,
 } from "@/services/administration/hr/services";
+import { ApiResponse } from "@/lib/api/supabaseClient";
 
 export default function HRPage() {
   const { user } = useAuth();

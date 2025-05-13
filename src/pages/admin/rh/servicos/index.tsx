@@ -14,6 +14,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { PlusCircle, Filter } from "lucide-react";
 import { useApiMutation, useApiQuery } from "@/lib/hooks";
 import { ServiceFormDialog } from "@/components/administracao/rh/services/ServiceFormDialog";
+import { ApiResponse } from "@/lib/api/supabaseClient";
 
 export default function HRServicesPage() {
   const [services, setServices] = useState<HRService[]>([]);
@@ -51,7 +52,7 @@ export default function HRServicesPage() {
       return toggleServiceStatus(data.id, data.isActive);
     },
     {
-      onSuccess: (response) => {
+      onSuccess: (response: ApiResponse<HRService | null>) => {
         if (response?.status === 'success' && response.data) {
           toast({
             title: "Sucesso",

@@ -17,6 +17,7 @@ import AttendanceForm from "@/components/administracao/rh/attendance/AttendanceF
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PlusCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { ApiResponse } from "@/lib/api/supabaseClient";
 
 export default function AttendancePage() {
   const [activeTab, setActiveTab] = useState<HRAttendanceStatus | 'all'>('all');
@@ -40,7 +41,7 @@ export default function AttendancePage() {
   );
 
   // Fetch services for the form
-  const { data: servicesResponse = { status: 'success', data: [] } } = useApiQuery(
+  const { data: servicesResponse = { status: 'success', data: [] as HRService[] } } = useApiQuery(
     ['services'],
     fetchServices
   );

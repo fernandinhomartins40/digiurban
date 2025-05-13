@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useApiMutation } from "@/lib/hooks";
 import { createService, updateService } from "@/services/administration/hr/services";
 import { HRService, ServiceFormData, ServiceCategory } from "@/types/hr";
+import { ApiResponse } from "@/lib/api/supabaseClient";
 
 const formSchema = z.object({
   name: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
@@ -113,7 +114,7 @@ export function ServiceFormDialog({
       return createService(serviceData);
     },
     {
-      onSuccess: (response) => {
+      onSuccess: (response: ApiResponse<HRService | null>) => {
         if (response && response.status === 'success' && response.data) {
           onSaved(response.data);
           form.reset();
@@ -151,7 +152,7 @@ export function ServiceFormDialog({
       return updateService(service.id, serviceData);
     },
     {
-      onSuccess: (response) => {
+      onSuccess: (response: ApiResponse<HRService | null>) => {
         if (response && response.status === 'success' && response.data) {
           onSaved(response.data);
           form.reset();
