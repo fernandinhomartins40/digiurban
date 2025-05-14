@@ -27,19 +27,19 @@ export default function HRServicesPage() {
     data: servicesResponse, 
     isLoading, 
     refetch: refetchServices 
-  } = useApiQuery<ApiResponse<HRService[]>>(
+  } = useApiQuery<HRService[]>(
     ['services'], 
     fetchServices
   );
 
   // Update services state when data changes
   useEffect(() => {
-    if (servicesResponse?.status === 'success' && servicesResponse.data) {
-      setServices(servicesResponse.data);
+    if (servicesResponse) {
+      setServices(servicesResponse);
       
       // Extract unique categories
       const categories = Array.from(
-        new Set(servicesResponse.data.map(service => service.category))
+        new Set(servicesResponse.map(service => service.category))
       ).filter(Boolean) as string[];
       
       setActiveCategories(categories);
@@ -65,7 +65,7 @@ export default function HRServicesPage() {
   );
 
   // Delete service mutation
-  const { mutate: removeService } = useApiMutation(
+  const { mutate: removeService } = useApiMutation<ApiResponse<boolean>, string>(
     async (id: string) => {
       return deleteService(id);
     },

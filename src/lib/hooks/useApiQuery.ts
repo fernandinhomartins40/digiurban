@@ -2,7 +2,6 @@
 import { useQuery, UseQueryResult, UseQueryOptions } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { ApiResponse, handleApiError, ApiError } from "../api/supabaseClient";
-import { trackApiCall } from "../monitoring/performance";
 
 // Enhanced options interface with our custom properties
 export interface UseApiQueryOptions<TData, TError> 
@@ -29,7 +28,7 @@ export function useApiQuery<TData>(
   
   const [isRefetching, setIsRefetching] = useState(false);
   
-  // Wrapper for the query function that adds metrics tracking
+  // Wrapper for the query function that adds metrics tracking and unwraps ApiResponse
   const wrappedQueryFn = async () => {
     const startTime = performance.now();
     let success = false;
@@ -85,3 +84,9 @@ export function useApiQuery<TData>(
     isRefetching,
   } as UseQueryResult<TData, any> & { isRefetching: boolean };
 }
+
+// Helper function to track API call metrics
+const trackApiCall = (endpoint: string, startTime: number, success: boolean) => {
+  const duration = performance.now() - startTime;
+  console.log(`API Call to ${endpoint}: ${success ? 'Success' : 'Failed'} in ${duration.toFixed(2)}ms`);
+};

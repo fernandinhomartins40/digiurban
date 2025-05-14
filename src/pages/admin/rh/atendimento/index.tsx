@@ -29,7 +29,7 @@ export default function AttendancePage() {
     data: attendancesResponse,
     isLoading,
     refetch: refetchAttendances
-  } = useApiQuery<ApiResponse<HRAttendance[]>>(
+  } = useApiQuery<HRAttendance[]>(
     ['attendances', activeTab],
     async () => {
       if (activeTab === 'all') {
@@ -41,13 +41,13 @@ export default function AttendancePage() {
   );
 
   // Fetch services for the form
-  const { data: servicesResponse = { status: 'success', data: [] as HRService[] } } = useApiQuery<ApiResponse<HRService[]>>(
+  const { data: servicesResponse } = useApiQuery<HRService[]>(
     ['services'],
     fetchServices
   );
 
   // Handle status change mutation
-  const { mutate: changeStatus } = useApiMutation(
+  const { mutate: changeStatus } = useApiMutation<ApiResponse<HRAttendance>, { id: string; status: HRAttendanceStatus }>(
     async (data: { id: string; status: HRAttendanceStatus }) => {
       return updateAttendanceStatus(data.id, data.status);
     },
@@ -87,8 +87,8 @@ export default function AttendancePage() {
   };
 
   // Extract data safely from API responses
-  const attendances = attendancesResponse?.data || [];
-  const services = servicesResponse?.data || [];
+  const attendances = attendancesResponse || [];
+  const services = servicesResponse || [];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
