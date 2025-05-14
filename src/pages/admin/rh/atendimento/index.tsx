@@ -29,7 +29,7 @@ export default function AttendancePage() {
     data: attendancesResponse,
     isLoading,
     refetch: refetchAttendances
-  } = useApiQuery(
+  } = useApiQuery<ApiResponse<HRAttendance[]>>(
     ['attendances', activeTab],
     async () => {
       if (activeTab === 'all') {
@@ -41,7 +41,7 @@ export default function AttendancePage() {
   );
 
   // Fetch services for the form
-  const { data: servicesResponse = { status: 'success', data: [] as HRService[] } } = useApiQuery(
+  const { data: servicesResponse = { status: 'success', data: [] as HRService[] } } = useApiQuery<ApiResponse<HRService[]>>(
     ['services'],
     fetchServices
   );

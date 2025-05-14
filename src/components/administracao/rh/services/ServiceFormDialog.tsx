@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -88,7 +87,7 @@ export function ServiceFormDialog({
   });
 
   // Create mutation
-  const { mutate: create, isPending: isCreating } = useApiMutation(
+  const { mutate: create, isPending: isCreating } = useApiMutation<ApiResponse<HRService | null>, FormValues>(
     async (values: FormValues) => {
       // Make sure form_schema.fields is properly initialized
       const formSchema = values.form_schema || { fields: [] };
@@ -114,7 +113,7 @@ export function ServiceFormDialog({
       return createService(serviceData);
     },
     {
-      onSuccess: (response: ApiResponse<HRService | null>) => {
+      onSuccess: (response) => {
         if (response && response.status === 'success' && response.data) {
           onSaved(response.data);
           form.reset();
@@ -124,7 +123,7 @@ export function ServiceFormDialog({
   );
 
   // Update mutation
-  const { mutate: update, isPending: isUpdating } = useApiMutation(
+  const { mutate: update, isPending: isUpdating } = useApiMutation<ApiResponse<HRService | null>, FormValues>(
     async (values: FormValues) => {
       if (!service) return null;
       
@@ -152,7 +151,7 @@ export function ServiceFormDialog({
       return updateService(service.id, serviceData);
     },
     {
-      onSuccess: (response: ApiResponse<HRService | null>) => {
+      onSuccess: (response) => {
         if (response && response.status === 'success' && response.data) {
           onSaved(response.data);
           form.reset();

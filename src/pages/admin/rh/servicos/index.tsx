@@ -27,7 +27,7 @@ export default function HRServicesPage() {
     data: servicesResponse, 
     isLoading, 
     refetch: refetchServices 
-  } = useApiQuery(
+  } = useApiQuery<ApiResponse<HRService[]>>(
     ['services'], 
     fetchServices
   );
@@ -47,12 +47,12 @@ export default function HRServicesPage() {
   }, [servicesResponse]);
 
   // Toggle service status mutation
-  const { mutate: toggleStatus } = useApiMutation(
+  const { mutate: toggleStatus } = useApiMutation<ApiResponse<HRService | null>, { id: string, isActive: boolean }>(
     async (data: { id: string, isActive: boolean }) => {
       return toggleServiceStatus(data.id, data.isActive);
     },
     {
-      onSuccess: (response: ApiResponse<HRService | null>) => {
+      onSuccess: (response) => {
         if (response?.status === 'success' && response.data) {
           toast({
             title: "Sucesso",
