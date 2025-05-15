@@ -8,27 +8,24 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
+import { Toaster as SonnerToaster } from "sonner"
 
 export function Toaster() {
-  const { toasts } = useToast()
-
+  // Instead of accessing toasts directly, we'll use the Sonner toaster
   return (
-    <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
-        return (
-          <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
-              )}
-            </div>
-            {action}
-            <ToastClose />
-          </Toast>
-        )
-      })}
-      <ToastViewport />
-    </ToastProvider>
+    <>
+      <SonnerToaster 
+        position="bottom-right"
+        toastOptions={{
+          classNames: {
+            toast: "group toast border-border shadow-lg",
+            title: "text-sm font-semibold",
+            description: "text-sm opacity-90",
+            actionButton: "bg-primary text-primary-foreground",
+            cancelButton: "bg-muted text-muted-foreground",
+          }
+        }}
+      />
+    </>
   )
 }

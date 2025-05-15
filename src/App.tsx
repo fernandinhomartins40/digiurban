@@ -3,7 +3,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { appRoutes } from './routes';
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner"; // Updated to use the sonner implementation
 import { ThemeProvider } from '@/components/theme-provider';
 
 // Configure React Query Client
