@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { appRoutes } from './routes';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/AuthContext';
-import { ThemeProvider } from '@/contexts/ThemeContext'; // Fixed import
+import { ThemeProvider } from '@/components/theme-provider'; // Use the correct import
 
 // Configure React Query Client
 const queryClient = new QueryClient({
@@ -21,7 +21,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
+      <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <Routes>

@@ -1,28 +1,17 @@
 
 import React, { createContext, useContext } from "react";
-// Change the import to use our new exported useAuth
-import { AuthContext as SupabaseAuthContext } from "@/contexts/auth/AuthProvider";
+// Remove the imported AuthContext since we're creating it here
+// Change the import to use the exported types
+import { AuthContextType } from "@/contexts/auth/types";
 import { User } from "@/types/auth";
 
-interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  userType: "admin" | "citizen" | null;
-  login: (email: string, password: string, userType: "admin" | "citizen") => Promise<void>;
-  register: (userData: any, userType: "admin" | "citizen") => Promise<void>;
-  logout: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updatePassword: (password: string) => Promise<void>;
-  hasPermission: (moduleId: string, action: "create" | "read" | "update" | "delete") => boolean;
-  // Add session property that was missing
-  session: any; 
-}
-
+// Create our own AuthContext
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const authContext = useContext(SupabaseAuthContext);
+  // Import and use the actual authentication provider implementation
+  const { useAuth: useSupabaseAuth } = require("@/contexts/auth/AuthProvider");
+  const authContext = useSupabaseAuth();
   
   if (!authContext) {
     throw new Error("AuthProvider must be used within a Supabase AuthProvider");
