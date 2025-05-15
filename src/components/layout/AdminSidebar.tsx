@@ -1,5 +1,6 @@
 
 import React from "react";
+import { useLocation } from "react-router-dom"; // Import useLocation
 import { SidebarItem } from "./sidebar/SidebarItem";
 import { UserSection } from "./sidebar/UserSection";
 import { getSidebarItems } from "./sidebar/sidebarItems";
@@ -10,12 +11,17 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ ready = false }: AdminSidebarProps) {
+  // Get current location to force re-render on route changes
+  const location = useLocation();
+  
   // Only use query hooks when component is ready
   const { unreadCount } = useSidebarMail(ready);
   
   // Get sidebar items with the unread count
   const sidebarItems = getSidebarItems(unreadCount);
 
+  // Log the current path for debugging
+  console.log("Current path:", location.pathname);
   console.log("Rendered AdminSidebar with items:", sidebarItems.map(i => i.title));
 
   return (

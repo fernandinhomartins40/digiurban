@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -25,14 +25,32 @@ export const SidebarItem = ({ icon, title, path, children, moduleId, badge }: Si
   const [isOpen, setIsOpen] = useState(false);
   const hasChildren = children && children.length > 0;
   
-  // Check for active state: either direct path match or one of children paths match
-  const isActive = path 
-    ? location.pathname === path 
-    : children?.some(child => location.pathname === child.path);
+  // Improved active state detection
+  const isActive = React.useMemo(() => {
+    if (!path && !children) return false;
+    
+    // Direct path match
+    if (path && (location.pathname === path || location.pathname.startsWith(`${path}/`))) {
+      return true;
+    }
+    
+    // Check if any child path matches or starts with the current location
+    if (children) {
+      return children.some(child => 
+        location.pathname === child.path || 
+        location.pathname.startsWith(`${child.path}/`)
+      );
+    }
+    
+    return false;
+  }, [location.pathname, path, children]);
   
   // Auto-expand menu when any child is active
   useEffect(() => {
-    if (children?.some(child => location.pathname === child.path)) {
+    if (children?.some(child => 
+      location.pathname === child.path || 
+      location.pathname.startsWith(`${child.path}/`)
+    )) {
       setIsOpen(true);
     }
   }, [location.pathname, children]);
@@ -69,24 +87,30 @@ export const SidebarItem = ({ icon, title, path, children, moduleId, badge }: Si
           </button>
           {isOpen && (
             <div className="pl-6 mt-1 space-y-1">
-              {children.map((child, index) => (
-                <Link
-                  key={index}
-                  to={child.path}
-                  className={cn(
-                    "flex items-center w-full px-4 py-2 text-sm rounded-md",
-                    location.pathname === child.path
-                      ? "bg-primary/10 text-primary"
-                      : "text-gray-700 hover:bg-gray-100"
-                  )}
-                  data-testid={`sidebar-child-${child.title}`}
-                >
-                  <span className="flex-1">{child.title}</span>
-                  {child.badge && child.badge > 0 && (
-                    <Badge className="bg-primary">{child.badge}</Badge>
-                  )}
-                </Link>
-              ))}
+              {children.map((child, index) => {
+                // Check if this child item is active
+                const isChildActive = location.pathname === child.path || 
+                                    location.pathname.startsWith(`${child.path}/`);
+                
+                return (
+                  <Link
+                    key={index}
+                    to={child.path}
+                    className={cn(
+                      "flex items-center w-full px-4 py-2 text-sm rounded-md",
+                      isChildActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-700 hover:bg-gray-100"
+                    )}
+                    data-testid={`sidebar-child-${child.title}`}
+                  >
+                    <span className="flex-1">{child.title}</span>
+                    {child.badge && child.badge > 0 && (
+                      <Badge className="bg-primary">{child.badge}</Badge>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
