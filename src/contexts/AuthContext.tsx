@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext } from "react";
-import { useAuth as useSupabaseAuth } from "@/contexts/auth/AuthProvider";
+// Change the import to use our new exported useAuth
+import { AuthContext as SupabaseAuthContext } from "@/contexts/auth/AuthProvider";
 import { User } from "@/types/auth";
 
 interface AuthContextType {
@@ -14,12 +15,18 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
   hasPermission: (moduleId: string, action: "create" | "read" | "update" | "delete") => boolean;
+  // Add session property that was missing
+  session: any; 
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const authContext = useSupabaseAuth();
+  const authContext = useContext(SupabaseAuthContext);
+  
+  if (!authContext) {
+    throw new Error("AuthProvider must be used within a Supabase AuthProvider");
+  }
   
   return <AuthContext.Provider value={authContext}>{children}</AuthContext.Provider>;
 }

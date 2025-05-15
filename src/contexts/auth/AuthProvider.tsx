@@ -12,6 +12,17 @@ import { toast } from "@/hooks/use-toast";
 // Create Context
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Add the useAuth hook export here
+export function useAuth(): AuthContextType {
+  const context = React.useContext(AuthContext);
+  
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  
+  return context;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);

@@ -4,7 +4,7 @@ import { Session } from "@supabase/supabase-js";
 
 export interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  session: Session | null;  // Add this line to include the session property
   isLoading: boolean;
   isAuthenticated: boolean;
   userType: "admin" | "citizen" | null;
