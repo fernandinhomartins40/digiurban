@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { DataTable } from "@/components/data-table/data-table";
@@ -50,12 +51,15 @@ export default function HRServicesPage() {
       return toggleServiceStatus(data.id, data.isActive);
     },
     {
-      onSuccess: (data) => {
-        toast({
-          title: "Sucesso",
-          description: `Serviço ${data.is_active ? "ativado" : "desativado"} com sucesso.`,
-        });
-        refetchServices();
+      onSuccess: (response) => {
+        // Extract data from the API response
+        if (response.data && response.status === 'success') {
+          toast({
+            title: "Sucesso",
+            description: `Serviço ${response.data.is_active ? "ativado" : "desativado"} com sucesso.`,
+          });
+          refetchServices();
+        }
       }
     }
   );
@@ -66,12 +70,14 @@ export default function HRServicesPage() {
       return deleteService(id);
     },
     {
-      onSuccess: () => {
-        toast({
-          title: "Sucesso",
-          description: "Serviço excluído com sucesso.",
-        });
-        refetchServices();
+      onSuccess: (response) => {
+        if (response.data && response.status === 'success') {
+          toast({
+            title: "Sucesso",
+            description: "Serviço excluído com sucesso.",
+          });
+          refetchServices();
+        }
       }
     }
   );

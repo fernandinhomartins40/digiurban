@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -113,9 +114,12 @@ export function ServiceFormDialog({
       return createService(serviceData);
     },
     {
-      onSuccess: (data) => {
-        onSaved(data);
-        form.reset();
+      onSuccess: (response) => {
+        // Extract the service data from the API response
+        if (response.data && response.status === 'success') {
+          onSaved(response.data);
+          form.reset();
+        }
       },
     }
   );
@@ -149,9 +153,12 @@ export function ServiceFormDialog({
       return updateService(service.id, serviceData);
     },
     {
-      onSuccess: (data) => {
-        onSaved(data);
-        form.reset();
+      onSuccess: (response) => {
+        // Extract the service data from the API response
+        if (response.data && response.status === 'success') {
+          onSaved(response.data);
+          form.reset();
+        }
       },
     }
   );
