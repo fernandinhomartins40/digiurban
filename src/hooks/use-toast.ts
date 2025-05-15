@@ -1,45 +1,47 @@
 
-import { toast as sonnerToast, type ToastT } from "sonner";
+import { useState, useEffect } from 'react';
+import { toast as sonnerToast, ToastT } from 'sonner';
 
 export type ToastProps = {
-  title?: string;
-  description?: string;
-  variant?: "default" | "destructive" | "success";
   id?: string;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
   action?: React.ReactNode;
-  [key: string]: any;
+  variant?: 'default' | 'destructive';
 };
 
-// Array to store toast references
-let toasts: ToastT[] = [];
-
-export function toast({ title, description, variant = "default", ...props }: ToastProps) {
-  const id = sonnerToast(title, {
+export const toast = ({ title, description, variant, action, ...props }: ToastProps) => {
+  return sonnerToast(title as string, {
     description,
-    classNames: {
-      toast: variant === "destructive" 
-        ? "bg-destructive text-destructive-foreground" 
-        : variant === "success" 
-          ? "bg-green-500 text-white" 
-          : "",
-    },
+    action,
+    className: variant === 'destructive' ? 'bg-destructive text-destructive-foreground' : undefined,
     ...props,
   });
-  
-  // Store reference to toast for potential future manipulation
-  toasts.push({id, title, description, ...props});
-  return id;
-}
+};
 
-export function useToast() {
-  return { 
-    toast,
-    toasts: () => toasts, // Getter function to access current toasts
-    dismiss: (toastId?: string | number) => {
-      if (toastId) {
-        sonnerToast.dismiss(toastId);
-        toasts = toasts.filter(t => t.id !== toastId);
-      }
+export const useToast = () => {
+  const [toasts, setToasts] = useState<ToastT[]>([]);
+
+  useEffect(() => {
+    return () => {
+      toasts.forEach((toast) => {
+        if (toast.id) {
+          sonnerToast.dismiss(toast.id);
+        }
+      });
+    };
+  }, [toasts]);
+
+  return {
+    toast: (props: ToastProps) => {
+      const newToast = toast(props) as ToastT;
+      setToasts((prev) => [...prev, newToast]);
+      return newToast;
     },
+    dismiss: (toastId: string) => {
+      sonnerToast.dismiss(toastId);
+      setToasts((prev) => prev.filter((toast) => toast.id !== toastId));
+    },
+    toasts
   };
-}
+};

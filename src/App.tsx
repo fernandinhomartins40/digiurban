@@ -1,10 +1,8 @@
-// App.tsx
-// Remover o QueryClientProvider duplicado e usar apenas o que está em AppProviders.tsx
 
+// App.tsx
 import React, { useEffect } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { appRoutes } from './routes';
-import { AppProviders } from './components/providers/AppProviders';
 
 // Create router
 const router = createBrowserRouter(appRoutes);
@@ -17,11 +15,7 @@ function App() {
     };
   }, []);
 
-  return (
-    <AppProviders>
-      <RouterProvider router={router} />
-    </AppProviders>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
