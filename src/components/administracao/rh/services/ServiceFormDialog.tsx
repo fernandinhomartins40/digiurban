@@ -87,7 +87,7 @@ export function ServiceFormDialog({
   });
 
   // Create mutation
-  const { mutate: create, isPending: isCreating } = useApiMutation<ApiResponse<HRService | null>, FormValues>(
+  const { mutate: create, isPending: isCreating } = useApiMutation<HRService, FormValues>(
     async (values: FormValues) => {
       // Make sure form_schema.fields is properly initialized
       const formSchema = values.form_schema || { fields: [] };
@@ -113,19 +113,17 @@ export function ServiceFormDialog({
       return createService(serviceData);
     },
     {
-      onSuccess: (response) => {
-        if (response && response.status === 'success' && response.data) {
-          onSaved(response.data);
-          form.reset();
-        }
+      onSuccess: (data) => {
+        onSaved(data);
+        form.reset();
       },
     }
   );
 
   // Update mutation
-  const { mutate: update, isPending: isUpdating } = useApiMutation<ApiResponse<HRService | null>, FormValues>(
+  const { mutate: update, isPending: isUpdating } = useApiMutation<HRService, FormValues>(
     async (values: FormValues) => {
-      if (!service) return null;
+      if (!service) return null as unknown as ApiResponse<HRService>;
       
       // Make sure form_schema.fields is properly initialized
       const formSchema = values.form_schema || { fields: [] };
@@ -151,11 +149,9 @@ export function ServiceFormDialog({
       return updateService(service.id, serviceData);
     },
     {
-      onSuccess: (response) => {
-        if (response && response.status === 'success' && response.data) {
-          onSaved(response.data);
-          form.reset();
-        }
+      onSuccess: (data) => {
+        onSaved(data);
+        form.reset();
       },
     }
   );

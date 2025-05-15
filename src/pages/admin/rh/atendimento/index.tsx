@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,6 @@ import AttendanceForm from "@/components/administracao/rh/attendance/AttendanceF
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PlusCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { ApiResponse } from "@/lib/api/supabaseClient";
 
 export default function AttendancePage() {
   const [activeTab, setActiveTab] = useState<HRAttendanceStatus | 'all'>('all');
@@ -26,7 +24,7 @@ export default function AttendancePage() {
 
   // Fetch attendances based on active tab
   const { 
-    data: attendancesResponse,
+    data: attendances,
     isLoading,
     refetch: refetchAttendances
   } = useApiQuery<HRAttendance[]>(
@@ -41,13 +39,13 @@ export default function AttendancePage() {
   );
 
   // Fetch services for the form
-  const { data: servicesResponse } = useApiQuery<HRService[]>(
+  const { data: services } = useApiQuery<HRService[]>(
     ['services'],
     fetchServices
   );
 
   // Handle status change mutation
-  const { mutate: changeStatus } = useApiMutation<ApiResponse<HRAttendance>, { id: string; status: HRAttendanceStatus }>(
+  const { mutate: changeStatus } = useApiMutation<HRAttendance, { id: string; status: HRAttendanceStatus }>(
     async (data: { id: string; status: HRAttendanceStatus }) => {
       return updateAttendanceStatus(data.id, data.status);
     },
@@ -86,10 +84,6 @@ export default function AttendancePage() {
     setShowNewAttendanceForm(true);
   };
 
-  // Extract data safely from API responses
-  const attendances = attendancesResponse || [];
-  const services = servicesResponse || [];
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -123,7 +117,7 @@ export default function AttendancePage() {
         <CardContent>
           <DataTable 
             columns={AttendanceColumnDef}
-            data={attendances}
+            data={attendances || []}
             isLoading={isLoading}
             meta={{
               onStatusChange: (id: string, status: HRAttendanceStatus) => changeStatus({ id, status }),

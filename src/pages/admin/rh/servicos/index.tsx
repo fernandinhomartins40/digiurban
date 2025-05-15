@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { DataTable } from "@/components/data-table/data-table";
@@ -14,7 +13,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { PlusCircle, Filter } from "lucide-react";
 import { useApiMutation, useApiQuery } from "@/lib/hooks";
 import { ServiceFormDialog } from "@/components/administracao/rh/services/ServiceFormDialog";
-import { ApiResponse } from "@/lib/api/supabaseClient";
 
 export default function HRServicesPage() {
   const [services, setServices] = useState<HRService[]>([]);
@@ -24,7 +22,7 @@ export default function HRServicesPage() {
 
   // Load services data using useApiQuery
   const { 
-    data: servicesResponse, 
+    data: fetchedServices, 
     isLoading, 
     refetch: refetchServices 
   } = useApiQuery<HRService[]>(
@@ -34,38 +32,36 @@ export default function HRServicesPage() {
 
   // Update services state when data changes
   useEffect(() => {
-    if (servicesResponse) {
-      setServices(servicesResponse);
+    if (fetchedServices) {
+      setServices(fetchedServices);
       
       // Extract unique categories
       const categories = Array.from(
-        new Set(servicesResponse.map(service => service.category))
+        new Set(fetchedServices.map(service => service.category))
       ).filter(Boolean) as string[];
       
       setActiveCategories(categories);
     }
-  }, [servicesResponse]);
+  }, [fetchedServices]);
 
   // Toggle service status mutation
-  const { mutate: toggleStatus } = useApiMutation<ApiResponse<HRService | null>, { id: string, isActive: boolean }>(
+  const { mutate: toggleStatus } = useApiMutation<HRService, { id: string, isActive: boolean }>(
     async (data: { id: string, isActive: boolean }) => {
       return toggleServiceStatus(data.id, data.isActive);
     },
     {
-      onSuccess: (response) => {
-        if (response?.status === 'success' && response.data) {
-          toast({
-            title: "Sucesso",
-            description: `Serviço ${response.data.is_active ? "ativado" : "desativado"} com sucesso.`,
-          });
-          refetchServices();
-        }
+      onSuccess: (data) => {
+        toast({
+          title: "Sucesso",
+          description: `Serviço ${data.is_active ? "ativado" : "desativado"} com sucesso.`,
+        });
+        refetchServices();
       }
     }
   );
 
   // Delete service mutation
-  const { mutate: removeService } = useApiMutation<ApiResponse<boolean>, string>(
+  const { mutate: removeService } = useApiMutation<boolean, string>(
     async (id: string) => {
       return deleteService(id);
     },
