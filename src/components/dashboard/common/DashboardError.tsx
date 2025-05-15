@@ -11,6 +11,8 @@ interface DashboardErrorProps {
 }
 
 export function DashboardError({ error, onRetry, className }: DashboardErrorProps) {
+  console.log('[DashboardError] Rendering error state:', error);
+  
   return (
     <Alert variant="destructive" className={`my-4 ${className}`}>
       <AlertCircle className="h-4 w-4" />

@@ -34,14 +34,20 @@ export function useApiQuery<TData>(
     let success = false;
     
     try {
+      console.log(`[useApiQuery] Fetching data for key: ${queryKey[0]}`);
       const response = await queryFn();
       
       if (response.error) {
+        console.error(`[useApiQuery] Error in response:`, response.error);
         throw response.error;
       }
       
       success = true;
+      console.log(`[useApiQuery] Success for key: ${queryKey[0]}`, response.data);
       return response.data as TData;
+    } catch (error) {
+      console.error(`[useApiQuery] Caught error for key: ${queryKey[0]}`, error);
+      throw error;
     } finally {
       if (enableMetrics) {
         trackApiCall(`query:${queryKey[0]}`, startTime, success);

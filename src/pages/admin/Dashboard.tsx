@@ -1,5 +1,5 @@
 
-import React, { useTransition } from "react";
+import React, { useTransition, useEffect } from "react";
 import { Activity, Users, FileText, Bell, Clock } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/common/DashboardHeader";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -9,10 +9,22 @@ import { ChartCard, DashboardBarChart, DashboardLineChart, DashboardPieChart } f
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 
 export default function AdminDashboard() {
+  console.log("[AdminDashboard] Component rendering");
+  
   // Add transition state
   const [isPending, startTransition] = useTransition();
+  
+  // Add initialization indicator
+  useEffect(() => {
+    console.log("[AdminDashboard] Component mounted");
+    
+    return () => {
+      console.log("[AdminDashboard] Component unmounted");
+    };
+  }, []);
   
   const {
     dateRange,
@@ -29,20 +41,42 @@ export default function AdminDashboard() {
     handleRetry
   } = useMainDashboard();
   
+  useEffect(() => {
+    console.log("[AdminDashboard] Data status:", { 
+      metricsLoaded: !!metricsData, 
+      chartsLoaded: !!chartData,
+      isLoading,
+      isError
+    });
+    
+    // Notify on error for debugging
+    if (isError && error) {
+      console.error("[AdminDashboard] Error loading dashboard:", error);
+      toast({
+        title: "Erro ao carregar dashboard",
+        description: `Detalhes: ${error.message || 'Erro desconhecido'}`,
+        variant: "destructive",
+      });
+    }
+  }, [metricsData, chartData, isLoading, isError, error]);
+  
   // Wrap date functions in startTransition
   const handleDateRangeChange = (range: "7d" | "30d" | "90d" | "custom") => {
+    console.log("[AdminDashboard] Changing date range to:", range);
     startTransition(() => {
       originalHandleDateRangeChange(range);
     });
   };
   
   const setStartDate = (date?: Date) => {
+    console.log("[AdminDashboard] Setting start date:", date);
     startTransition(() => {
       originalSetStartDate(date);
     });
   };
   
   const setEndDate = (date?: Date) => {
+    console.log("[AdminDashboard] Setting end date:", date);
     startTransition(() => {
       originalSetEndDate(date);
     });

@@ -99,7 +99,7 @@ const fetchMainDashboardMetrics = async (
   startDate?: Date,
   endDate?: Date
 ): Promise<DashboardMetrics> => {
-  console.log("Fetching main dashboard metrics with params:", { startDate, endDate });
+  console.log("[fetchMainDashboardMetrics] Called with params:", { startDate, endDate });
   
   // Return mock data for now
   return mockMetricsData;
@@ -109,13 +109,15 @@ const fetchMainDashboardChartData = async (
   startDate?: Date,
   endDate?: Date
 ): Promise<DashboardChartData> => {
-  console.log("Fetching main dashboard chart data with params:", { startDate, endDate });
+  console.log("[fetchMainDashboardChartData] Called with params:", { startDate, endDate });
   
   // Return mock chart data for now
   return mockChartData;
 };
 
 export function useMainDashboard() {
+  console.log("[useMainDashboard] Hook initialized");
+  
   // Use the shared date range filter hook
   const {
     dateRange,
@@ -137,8 +139,14 @@ export function useMainDashboard() {
   } = useApiQuery<DashboardMetrics>(
     ["mainDashboardMetrics", startDate?.toISOString(), endDate?.toISOString()],
     async () => {
-      // Return mock data directly instead of making API call
-      return { data: mockMetricsData, error: null, status: 'success' };
+      console.log("[useMainDashboard] Fetching metrics data");
+      try {
+        // Return mock data directly instead of making API call
+        return { data: mockMetricsData, error: null, status: 'success' };
+      } catch (error) {
+        console.error("[useMainDashboard] Error fetching metrics:", error);
+        return { data: null, error: error as Error, status: 'error' };
+      }
     },
     {
       staleTime: CACHE_TIMES.REGULAR, // 5 minutes
@@ -156,14 +164,27 @@ export function useMainDashboard() {
   } = useApiQuery<DashboardChartData>(
     ["mainDashboardCharts", startDate?.toISOString(), endDate?.toISOString()],
     async () => {
-      // Return mock data directly instead of making API call
-      return { data: mockChartData, error: null, status: 'success' };
+      console.log("[useMainDashboard] Fetching chart data");
+      try {
+        // Return mock data directly instead of making API call
+        return { data: mockChartData, error: null, status: 'success' };
+      } catch (error) {
+        console.error("[useMainDashboard] Error fetching chart data:", error);
+        return { data: null, error: error as Error, status: 'error' };
+      }
     },
     {
       staleTime: CACHE_TIMES.REGULAR, // 5 minutes
       customErrorMessage: "Não foi possível carregar os gráficos do dashboard principal",
     }
   );
+
+  console.log("[useMainDashboard] Data status:", { 
+    metricsLoaded: !!metricsData, 
+    chartsLoaded: !!chartData,
+    isLoading: isLoadingMetrics || isLoadingCharts,
+    hasErrors: !!metricsError || !!chartsError
+  });
 
   // Determine error state
   const error = metricsError || chartsError;
@@ -172,6 +193,7 @@ export function useMainDashboard() {
 
   // Handle retry
   const handleRetry = () => {
+    console.log("[useMainDashboard] Retrying data fetch");
     refetchMetrics();
     refetchCharts();
   };

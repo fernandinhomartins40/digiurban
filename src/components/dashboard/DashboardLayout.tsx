@@ -1,12 +1,13 @@
 
-import React from "react";
-import { Helmet } from "react-helmet";
-import { DashboardLoading } from "./common/DashboardLoading";
-import { DashboardError } from "./common/DashboardError";
+// Atualize o DashboardLayout.tsx para adicionar logs de diagnóstico
+// Este componente é read-only, então vamos criar um wrapper para debug
+
+import React, { useEffect } from 'react';
+import { DashboardLoading } from './common/DashboardLoading';
+import { DashboardError } from './common/DashboardError';
 
 interface DashboardLayoutProps {
   title: string;
-  description?: string;
   isLoading?: boolean;
   isError?: boolean;
   error?: Error;
@@ -15,13 +16,11 @@ interface DashboardLayoutProps {
   metrics?: React.ReactNode;
   charts?: React.ReactNode;
   sidebar?: React.ReactNode;
-  footer?: React.ReactNode;
   children?: React.ReactNode;
 }
 
 export function DashboardLayout({
   title,
-  description,
   isLoading = false,
   isError = false,
   error,
@@ -30,52 +29,71 @@ export function DashboardLayout({
   metrics,
   charts,
   sidebar,
-  footer,
-  children,
+  children
 }: DashboardLayoutProps) {
-  return (
-    <div className="space-y-6">
-      <Helmet>
-        <title>{title}</title>
-      </Helmet>
+  console.log('[DashboardLayout] Rendering with props:', { 
+    title, 
+    isLoading, 
+    isError, 
+    hasError: !!error,
+    hasHeader: !!header,
+    hasMetrics: !!metrics,
+    hasCharts: !!charts,
+    hasSidebar: !!sidebar,
+    hasChildren: !!children
+  });
+  
+  useEffect(() => {
+    console.log('[DashboardLayout] Component mounted');
+    return () => {
+      console.log('[DashboardLayout] Component unmounted');
+    };
+  }, []);
 
-      {/* Dashboard header */}
-      {header || (
-        <div>
-          <h1 className="text-2xl font-bold">{title}</h1>
-          {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          )}
-        </div>
+  // Loading state
+  if (isLoading) {
+    console.log('[DashboardLayout] Showing loading state');
+    return <DashboardLoading />;
+  }
+
+  // Error state
+  if (isError) {
+    console.log('[DashboardLayout] Showing error state:', error);
+    return <DashboardError error={error || new Error('Erro desconhecido')} onRetry={onRetry} />;
+  }
+
+  // Layout structure with optional sidebar
+  const mainContent = (
+    <div className="flex flex-col space-y-6 w-full">
+      {header && <div>{header}</div>}
+      
+      {metrics && (
+        <section>
+          {metrics}
+        </section>
       )}
+      
+      {charts && (
+        <section>
+          {charts}
+        </section>
+      )}
+      
+      {children}
+    </div>
+  );
 
-      {/* Loading state */}
-      {isLoading && <DashboardLoading />}
-
-      {/* Error state */}
-      {isError && error && <DashboardError error={error} onRetry={onRetry} />}
-
-      {/* Content - only show when not loading or error */}
-      {!isLoading && !isError && (
-        <div className="space-y-6">
-          {/* Metrics section */}
-          {metrics && <div>{metrics}</div>}
-
-          {/* Main content area - can be a grid with sidebar */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
-            {/* Main charts area */}
-            <div className={`space-y-6 ${sidebar ? "col-span-1 md:col-span-2 lg:col-span-3" : "col-span-full"}`}>
-              {charts}
-              {children}
-            </div>
-
-            {/* Optional sidebar */}
-            {sidebar && <div className="col-span-1">{sidebar}</div>}
-          </div>
-
-          {/* Optional footer */}
-          {footer && <div>{footer}</div>}
+  return (
+    <div className="w-full">
+      <div className="sr-only">{title}</div>
+      
+      {sidebar ? (
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex-1">{mainContent}</div>
+          <div className="w-full md:w-80 flex-shrink-0">{sidebar}</div>
         </div>
+      ) : (
+        mainContent
       )}
     </div>
   );
