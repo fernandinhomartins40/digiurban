@@ -1,7 +1,8 @@
 
 import React from "react";
 import { ThemeProvider } from "@/components/theme-provider";
-import { AuthProvider } from "@/contexts/AuthContext"; 
+import { AuthProvider as SupabaseAuthProvider } from "@/contexts/auth/AuthProvider"; 
+import { AuthProvider as AppAuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { NewChatPanel } from "@/components/chat/NewChatPanel"; 
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -22,13 +23,15 @@ export function AppProviders({ children }: AppProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
         <SecurityProvider>
-          <AuthProvider>
-            <ChatProvider>
-              {children}
-              <Toaster />
-              <NewChatPanel />
-            </ChatProvider>
-          </AuthProvider>
+          <SupabaseAuthProvider>
+            <AppAuthProvider>
+              <ChatProvider>
+                {children}
+                <Toaster />
+                <NewChatPanel />
+              </ChatProvider>
+            </AppAuthProvider>
+          </SupabaseAuthProvider>
         </SecurityProvider>
       </ThemeProvider>
     </QueryClientProvider>

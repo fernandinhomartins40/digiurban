@@ -4,8 +4,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { appRoutes } from './routes';
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from '@/contexts/AuthContext';
-import { ThemeProvider } from '@/components/theme-provider'; // Use the correct import
+import { AuthProvider } from '@/contexts/auth/AuthProvider';
+import { ThemeProvider } from '@/components/theme-provider';
 
 // Configure React Query Client
 const queryClient = new QueryClient({

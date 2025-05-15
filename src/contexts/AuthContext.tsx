@@ -1,16 +1,14 @@
 
 import React, { createContext, useContext } from "react";
-// Remove the imported AuthContext since we're creating it here
-// Change the import to use the exported types
 import { AuthContextType } from "@/contexts/auth/types";
 import { User } from "@/types/auth";
+import { useAuth as useSupabaseAuth } from "@/contexts/auth/useAuth";
 
 // Create our own AuthContext
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Import and use the actual authentication provider implementation
-  const { useAuth: useSupabaseAuth } = require("@/contexts/auth/AuthProvider");
+  // Use the imported hook instead of requiring it
   const authContext = useSupabaseAuth();
   
   if (!authContext) {
