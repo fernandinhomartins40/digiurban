@@ -22,8 +22,8 @@ function App() {
     <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
       <QueryClientProvider client={queryClient}>
         <Routes>
-          {/* Root redirect to login for now */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Root redirect to auth/login for now */}
+          <Route path="/" element={<Navigate to="/auth/login" replace />} />
           
           {/* Render all application routes */}
           {appRoutes.map((route, index) => {

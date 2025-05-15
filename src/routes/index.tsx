@@ -28,6 +28,11 @@ export const appRoutes: RouteObject[] = [
     path: "citizen/*",
     children: citizenRoutes,
   },
+  // Adiciona uma rota específica para /login que redireciona para /auth/login
+  {
+    path: "login",
+    element: <Navigate to="/auth/login" replace />,
+  },
   {
     path: "*",
     element: <NotFound />,
