@@ -5,7 +5,7 @@ import { SidebarItemProps } from "@/types/sidebar";
 export const getComprasItem = (): SidebarItemProps => ({
   title: "Compras",
   icon: <ShoppingCart className="h-5 w-5" />,
-  path: undefined, // Remove direct path since we're adding children
+  moduleId: "compras", // Adicionando moduleId para verificação de permissões
   children: [
     {
       title: "Fornecedores",

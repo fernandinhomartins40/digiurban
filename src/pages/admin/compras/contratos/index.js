@@ -1,3 +1,3 @@
 
-// Barrel file to re-export the component
-export { default } from './index.tsx';
+// Correctly export the Contratos component
+export { default } from './ContratosPage';

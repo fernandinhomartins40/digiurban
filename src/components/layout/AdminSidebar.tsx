@@ -2,7 +2,7 @@
 import React from "react";
 import { SidebarItem } from "./sidebar/SidebarItem";
 import { UserSection } from "./sidebar/UserSection";
-import { getSidebarItems } from "./sidebar/items";
+import { getSidebarItems } from "./sidebar/sidebarItems";
 import { useSidebarMail } from "./sidebar/useSidebarMail";
 
 interface AdminSidebarProps {
@@ -10,10 +10,13 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ ready = false }: AdminSidebarProps) {
+  // Only use query hooks when component is ready
   const { unreadCount } = useSidebarMail(ready);
   
-  // Get sidebar items without the separate mayor dashboard item
+  // Get sidebar items with the unread count
   const sidebarItems = getSidebarItems(unreadCount);
+
+  console.log("Rendered AdminSidebar with items:", sidebarItems.map(i => i.title));
 
   return (
     <aside className="flex flex-col h-full w-64 bg-white border-r">
@@ -23,7 +26,10 @@ export function AdminSidebar({ ready = false }: AdminSidebarProps) {
       
       <div className="px-2 py-4 space-y-1 overflow-y-auto flex-grow">
         {sidebarItems.map((item, index) => (
-          <SidebarItem key={index} {...item} />
+          <SidebarItem 
+            key={index} 
+            {...item} 
+          />
         ))}
       </div>
       
