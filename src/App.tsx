@@ -1,11 +1,8 @@
 
 // App.tsx
 import React, { useEffect } from 'react';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { useRoutes } from 'react-router-dom';
 import { appRoutes } from './routes';
-
-// Create router
-const router = createBrowserRouter(appRoutes);
 
 function App() {
   useEffect(() => {
@@ -15,7 +12,10 @@ function App() {
     };
   }, []);
 
-  return <RouterProvider router={router} />;
+  // Use the routes directly instead of creating another RouterProvider
+  const routing = useRoutes(appRoutes);
+  
+  return routing;
 }
 
 export default App;

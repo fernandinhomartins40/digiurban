@@ -1,6 +1,7 @@
 
 import React from "react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { BrowserRouter as Router } from "react-router-dom";
 import { AuthProvider as SupabaseAuthProvider } from "@/contexts/auth/AuthProvider"; 
 import { AuthProvider as AppAuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,15 +24,17 @@ export function AppProviders({ children }: AppProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
         <SecurityProvider>
-          <SupabaseAuthProvider>
-            <AppAuthProvider>
-              <ChatProvider>
-                {children}
-                <Toaster />
-                <NewChatPanel />
-              </ChatProvider>
-            </AppAuthProvider>
-          </SupabaseAuthProvider>
+          <Router>
+            <SupabaseAuthProvider>
+              <AppAuthProvider>
+                <ChatProvider>
+                  {children}
+                  <Toaster />
+                  <NewChatPanel />
+                </ChatProvider>
+              </AppAuthProvider>
+            </SupabaseAuthProvider>
+          </Router>
         </SecurityProvider>
       </ThemeProvider>
     </QueryClientProvider>

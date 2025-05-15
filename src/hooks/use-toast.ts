@@ -34,7 +34,7 @@ export const useToast = () => {
 
   return {
     toast: (props: ToastProps) => {
-      const newToast = toast(props) as ToastT;
+      const newToast = toast(props) as unknown as ToastT;
       setToasts((prev) => [...prev, newToast]);
       return newToast;
     },
