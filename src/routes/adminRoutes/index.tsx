@@ -18,9 +18,8 @@ const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 // Lazy load components with explicit Suspense boundaries - preload for critical routes
-// Fix the import path to point to the component's actual location in the components folder
-// Commenting out this component until it's implemented properly
-// const UserManagement = lazy(() => import("@/components/users/UserManagement"));
+// Use the UserManagement component from pages/admin/users
+const UserManagement = lazy(() => import("@/pages/admin/users/UserManagement"));
 
 // Import route groups
 import { correioRoutes } from "./correioRoutes";
@@ -50,8 +49,8 @@ if (typeof window !== 'undefined') {
   // Preload Dashboard component
   console.log("Preloading Dashboard component");
   
-  // Temporarily comment out the UserManagement preload until implemented
-  // import("@/components/users/UserManagement");
+  // Preload UserManagement component
+  import("@/pages/admin/users/UserManagement");
   
   import("@/pages/admin/gabinete/Appointments");
   import("@/pages/admin/solicitacoes/SolicitacoesDashboard");
@@ -69,13 +68,11 @@ export const adminRoutes: RouteObject[] = [
         element: <ErrorBoundary><Dashboard /></ErrorBoundary>
       },
 
-      // Temporarily comment out UserManagement until implemented
-      /*
+      // User Management route - uncommented and fixed
       {
         path: "users",
         element: <SuspenseWrapper><UserManagement /></SuspenseWrapper>,
       },
-      */
       
       // Module-specific routes
       ...solicitacoesRoutes,
