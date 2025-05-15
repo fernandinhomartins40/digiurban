@@ -131,7 +131,7 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
     try {
       setIsSubmitting(true);
 
-      // Create request
+      // Create request - fix: pass values as the third argument (formData)
       const response = await createRequest(
         user.id,
         selectedRequestType.id,

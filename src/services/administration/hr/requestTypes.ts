@@ -1,33 +1,35 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { HRRequestType } from "@/types/administration";
-import { toast } from "@/hooks/use-toast";
+import { ApiResponse } from "@/lib/api/supabaseClient";
 
-// Fetch request types
-export async function fetchRequestTypes(): Promise<HRRequestType[]> {
+/**
+ * Fetches all request types
+ */
+export const fetchRequestTypes = async (): Promise<ApiResponse<HRRequestType[]>> => {
   try {
     const { data, error } = await supabase
-      .from("hr_request_types")
-      .select("*")
-      .order("name");
+      .from('hr_request_types')
+      .select('*')
+      .order('name');
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching request types:', error);
+      return { data: [], error, status: 'error' };
+    }
 
-    return (data || []).map((type) => ({
+    const formattedData = data.map(type => ({
       id: type.id,
       name: type.name,
-      description: type.description,
-      formSchema: type.form_schema as { fields: { name: string; type: string; label: string; required: boolean; }[] },
+      description: type.description || null,
+      formSchema: type.form_schema,
       createdAt: new Date(type.created_at),
-      updatedAt: new Date(type.updated_at),
-    }));
-  } catch (error: any) {
-    console.error("Error fetching request types:", error.message);
-    toast({
-      title: "Erro ao carregar tipos de solicitação",
-      description: error.message,
-      variant: "destructive",
-    });
-    return [];
+      updatedAt: new Date(type.updated_at)
+    })) as HRRequestType[];
+
+    return { data: formattedData, error: null, status: 'success' };
+  } catch (error) {
+    console.error('Error in fetchRequestTypes:', error);
+    return { data: [], error, status: 'error' };
   }
-}
+};

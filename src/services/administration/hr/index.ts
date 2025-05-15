@@ -1,4 +1,5 @@
 
+// Re-export services
 export * from './services';
 export * from './attendances';
 
@@ -11,6 +12,7 @@ export {
   updateRequestStatus,
 } from './requests';
 
+// Export the attachments and history functions from dedicated modules
 export * from './attachments';
 export * from './statusHistory';
 export * from './requestTypes';
