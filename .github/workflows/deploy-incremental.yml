@@ -264,16 +264,21 @@ jobs:
           # Deploy DigiUrban React App
           echo '🚀 Executando deploy DigiUrban React App...'
           
-          # Instalar dependências
-          echo '📦 Installing dependencies...'
-          if command -v npm >/dev/null 2>&1; then
-            npm ci
-          else
-            echo '❌ Node.js/npm não encontrado! Instalando...'
+          # Instalar Node.js e npm se necessário
+          echo '📦 Verificando Node.js e npm...'
+          if ! command -v node >/dev/null 2>&1; then
+            echo '📦 Instalando Node.js...'
             curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
             apt-get install -y nodejs
-            npm ci
           fi
+          
+          echo '📋 Versões instaladas:'
+          node --version
+          npm --version
+          
+          # Instalar dependências (incluindo devDependencies para build)
+          echo '📦 Installing dependencies...'
+          npm ci --include=dev
           
           # Build do frontend
           echo '🏗️ Building React app...'
