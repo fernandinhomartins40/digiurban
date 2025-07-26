@@ -1,0 +1,408 @@
+name: 🚀 Deploy DigiUrban React App
+
+# Controle de concorrência - ÚNICO deploy por vez
+concurrency:
+  group: digiurban-production-deploy
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'package*.json'
+      - 'sql-scripts/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+env:
+  VPS_HOST: '31.97.85.98'
+  VPS_USER: 'root'
+  APP_DIR: '/root/digiurban'
+  APP_PORT: '3002'
+
+jobs:
+  analyze-changes:
+    name: 🔍 Analisar Mudanças
+    runs-on: ubuntu-latest
+    outputs:
+      has_code_changes: ${{ steps.changes.outputs.has_code_changes }}
+      has_package_changes: ${{ steps.changes.outputs.has_package_changes }}
+      has_config_changes: ${{ steps.changes.outputs.has_config_changes }}
+      needs_restart: ${{ steps.changes.outputs.needs_restart }}
+      deploy_type: ${{ steps.changes.outputs.deploy_type }}
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+    
+    - name: 🔍 Analisar arquivos alterados
+      id: changes
+      run: |
+        echo "🔍 Analisando mudanças desde o último commit..."
+        
+        # Obter arquivos alterados
+        CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "all")
+        echo "📁 Arquivos alterados:"
+        echo "$CHANGED_FILES"
+        
+        # Inicializar flags
+        HAS_CODE=false
+        HAS_PACKAGE=false
+        HAS_CONFIG=false
+        NEEDS_RESTART=false
+        
+        # Analisar tipos de mudanças para DigiUrban React App
+        if echo "$CHANGED_FILES" | grep -E "(src/.*\.(js|ts|tsx|jsx|json)|vite\.config\.(js|ts)|index\.html)" > /dev/null; then
+          HAS_CODE=true
+          echo "✅ Mudanças de código frontend detectadas"
+        fi
+        
+        if echo "$CHANGED_FILES" | grep -E "package(-lock)?\.json" > /dev/null; then
+          HAS_PACKAGE=true
+          echo "📦 Mudanças em dependências detectadas"
+        fi
+        
+        if echo "$CHANGED_FILES" | grep -E "(\.env|vite\.config\.(js|ts)|tailwind\.config\.(js|ts))" > /dev/null; then
+          HAS_CONFIG=true
+          echo "⚙️ Mudanças de configuração detectadas"
+        fi
+        
+        # Determinar se precisa restart
+        if [[ "$HAS_CODE" == "true" || "$HAS_CONFIG" == "true" ]]; then
+          NEEDS_RESTART=true
+        fi
+        
+        # Determinar tipo de deploy
+        if [[ "$HAS_PACKAGE" == "true" ]]; then
+          DEPLOY_TYPE="full"
+          echo "🔄 Deploy completo necessário (dependências mudaram)"
+        elif [[ "$HAS_CODE" == "true" ]]; then
+          DEPLOY_TYPE="code-only"
+          echo "📝 Deploy apenas de código"
+        elif [[ "$HAS_CONFIG" == "true" ]]; then
+          DEPLOY_TYPE="config-only"
+          echo "⚙️ Deploy apenas de configuração"
+        else
+          DEPLOY_TYPE="minimal"
+          echo "📋 Deploy mínimo (docs/workflows)"
+        fi
+        
+        # Definir outputs
+        echo "has_code_changes=$HAS_CODE" >> $GITHUB_OUTPUT
+        echo "has_package_changes=$HAS_PACKAGE" >> $GITHUB_OUTPUT
+        echo "has_config_changes=$HAS_CONFIG" >> $GITHUB_OUTPUT
+        echo "needs_restart=$NEEDS_RESTART" >> $GITHUB_OUTPUT
+        echo "deploy_type=$DEPLOY_TYPE" >> $GITHUB_OUTPUT
+
+  deploy:
+    name: 🚀 Deploy Incremental
+    runs-on: ubuntu-latest
+    needs: analyze-changes
+    timeout-minutes: 15
+    
+    steps:
+    - name: 📋 Info do Deploy Incremental
+      run: |
+        echo "🚀 Deploy Incremental DigiUrban"
+        echo "=============================================="
+        echo "Commit: ${{ github.sha }}"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Tipo de Deploy: ${{ needs.analyze-changes.outputs.deploy_type }}"
+        echo "Mudanças de Código: ${{ needs.analyze-changes.outputs.has_code_changes }}"
+        echo "Mudanças de Dependências: ${{ needs.analyze-changes.outputs.has_package_changes }}"
+        echo "Precisa Restart: ${{ needs.analyze-changes.outputs.needs_restart }}"
+        echo "=============================================="
+
+    - name: 🔑 Configurar SSH
+      run: |
+        echo "🔑 Configurando SSH para deploy incremental..."
+        sudo apt-get update && sudo apt-get install -y sshpass
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ env.VPS_HOST }} >> ~/.ssh/known_hosts
+        echo "✅ SSH configurado"
+
+    - name: 🔍 Verificar estado atual da VPS
+      run: |
+        echo "🔍 Verificando estado atual..."
+        sshpass -p '${{ secrets.VPS_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "
+          echo '=== Estado Atual da VPS ==='
+          echo 'Docker version:'
+          docker --version || echo 'Docker não encontrado'
+          
+          echo ''
+          echo 'Docker Compose version:'
+          if command -v 'docker compose' >/dev/null 2>&1; then
+            docker compose version
+            DOCKER_COMPOSE_CMD='docker compose'
+          elif command -v 'docker-compose' >/dev/null 2>&1; then
+            docker-compose version
+            DOCKER_COMPOSE_CMD='docker-compose'
+          else
+            echo 'Docker Compose não encontrado'
+            DOCKER_COMPOSE_CMD='none'
+          fi
+          
+          echo ''
+          echo 'Docker Containers:'
+          docker ps --format 'table {{.Names}}\t{{.Status}}' | grep nginx-digiurban || echo 'Nginx não rodando'
+          
+          echo ''
+          echo 'Aplicação React status:'
+          if docker ps | grep -q nginx-digiurban; then
+            echo '✅ Nginx DigiUrban rodando'
+            docker ps | grep nginx-digiurban
+          else
+            echo '❌ Nginx DigiUrban não encontrado'
+          fi
+          
+          echo ''
+          echo 'Última atualização:'
+          cd ${{ env.APP_DIR }} && git log --oneline -1 2>/dev/null || echo 'Repositório não inicializado'
+        "
+
+    - name: 📦 Backup Inteligente (somente se necessário)
+      if: needs.analyze-changes.outputs.deploy_type == 'full'
+      run: |
+        echo "📦 Fazendo backup completo (deploy full)..."
+        sshpass -p '${{ secrets.VPS_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "
+          TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
+          BACKUP_DIR=/opt/digiurban-backups/backup_\$TIMESTAMP
+          mkdir -p \$BACKUP_DIR
+          
+          # Backup da build anterior se existir
+          if [ -d ${{ env.APP_DIR }}/dist ]; then
+            cp -r ${{ env.APP_DIR }}/dist \$BACKUP_DIR/dist_backup
+            echo '✅ Build anterior backed up'
+          fi
+          
+          # Backup da configuração atual
+          if [ -f ${{ env.APP_DIR }}/.env ]; then
+            cp ${{ env.APP_DIR }}/.env \$BACKUP_DIR/
+            echo '✅ Environment file backed up'
+          fi
+          
+          echo \"📦 Backup completo criado: \$BACKUP_DIR\"
+        "
+
+    - name: 📦 Backup Rápido (somente dados críticos)
+      if: needs.analyze-changes.outputs.deploy_type != 'full'
+      run: |
+        echo "📦 Backup rápido (apenas dados críticos)..."
+        sshpass -p '${{ secrets.VPS_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "
+          if [ -f ${{ env.APP_DIR }}/.env ]; then
+            cp ${{ env.APP_DIR }}/.env /tmp/env_backup
+            echo '✅ Environment preservado'
+          fi
+          
+          # Backup da build anterior se existir
+          if [ -d ${{ env.APP_DIR }}/dist ]; then
+            tar -czf /tmp/dist_backup.tar.gz -C ${{ env.APP_DIR }} dist
+            echo '✅ Build anterior preservado'
+          fi
+        "
+
+    - name: 🐳 Instalar Docker e Docker Compose
+      run: |
+        echo "🐳 Garantindo Docker e Docker Compose..."
+        sshpass -p '${{ secrets.VPS_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "
+          # Criar diretório se não existir
+          mkdir -p ${{ env.APP_DIR }}
+          cd ${{ env.APP_DIR }}
+          
+          # Instalar Docker se não estiver instalado
+          if ! command -v docker >/dev/null 2>&1; then
+            echo '📦 Instalando Docker...'
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh
+            systemctl enable docker
+            systemctl start docker
+            echo '✅ Docker instalado'
+          else
+            echo '✅ Docker já instalado'
+            docker --version
+          fi
+          
+          # Instalar Docker Compose standalone se não estiver disponível
+          if ! command -v 'docker compose' >/dev/null 2>&1 && ! command -v 'docker-compose' >/dev/null 2>&1; then
+            echo '📦 Instalando Docker Compose standalone...'
+            COMPOSE_VERSION=\$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d'\"' -f4)
+            curl -L \"https://github.com/docker/compose/releases/download/\${COMPOSE_VERSION}/docker-compose-\$(uname -s)-\$(uname -m)\" -o /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+            echo '✅ Docker Compose standalone instalado'
+            docker-compose --version
+          else
+            echo '✅ Docker Compose já disponível'
+            if command -v 'docker compose' >/dev/null 2>&1; then
+              docker compose version
+            else
+              docker-compose --version
+            fi
+          fi
+        "
+
+    - name: 🚀 Deploy usando Script de Produção
+      run: |
+        echo "🚀 Executando deploy com script de produção..."
+        sshpass -p '${{ secrets.VPS_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "
+          # Garantir que o diretório existe
+          mkdir -p ${{ env.APP_DIR }}
+          cd ${{ env.APP_DIR }}
+          
+          # Clonar ou atualizar o repositório primeiro
+          if [ ! -d .git ]; then
+            echo '🆕 Clonando repositório...'
+            git clone https://github.com/${{ github.repository }}.git .
+          else
+            echo '📥 Atualizando repositório...'
+            git fetch origin
+            git reset --hard origin/main
+          fi
+          
+          # Deploy DigiUrban React App
+          echo '🚀 Executando deploy DigiUrban React App...'
+          
+          # Instalar dependências
+          echo '📦 Installing dependencies...'
+          if command -v npm >/dev/null 2>&1; then
+            npm ci
+          else
+            echo '❌ Node.js/npm não encontrado! Instalando...'
+            curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+            apt-get install -y nodejs
+            npm ci
+          fi
+          
+          # Build do frontend
+          echo '🏗️ Building React app...'
+          npm run build
+          
+          # Verificar se o build existe e tem conteúdo
+          if [ ! -f "dist/index.html" ]; then
+            echo '❌ Build falhou! Tentando novamente...'
+            npm run build
+            if [ ! -f "dist/index.html" ]; then
+              echo '❌ Build falhou definitivamente!'
+              exit 1
+            fi
+          fi
+          
+          echo '📁 Conteúdo do build:'
+          ls -la dist/
+          
+          # Parar container anterior se existir
+          echo '🔄 Parando container anterior...'
+          docker rm -f nginx-digiurban 2>/dev/null || true
+          
+          # Iniciar nginx com React app na porta 3002
+          echo '🚀 Deploying React app to nginx on port ${{ env.APP_PORT }}...'
+          docker run -d --name nginx-digiurban \
+            -p ${{ env.APP_PORT }}:80 \
+            -v "$(pwd)/dist:/usr/share/nginx/html:ro" \
+            --restart unless-stopped \
+            nginx:alpine
+          
+          # Aguardar nginx inicializar
+          echo '⏳ Aguardando nginx inicializar...'
+          sleep 10
+          
+          # Verificar se está funcionando
+          echo '🔍 Testando React app...'
+          for i in {1..5}; do
+            if curl -f -s http://localhost:${{ env.APP_PORT }}/ >/dev/null 2>&1; then
+              echo '✅ React app funcionando!'
+              break
+            else
+              echo "⏳ Tentativa $i/5..."
+              sleep 5
+            fi
+            
+            if [ $i -eq 5 ]; then
+              echo '❌ React app não respondeu após 5 tentativas'
+              docker logs nginx-digiurban
+              exit 1
+            fi
+          done
+          
+          echo '✅ DigiUrban React App deployed successfully on port ${{ env.APP_PORT }}'
+          
+          echo '✅ Deploy da aplicação React concluído'
+        "
+
+
+    - name: 🔍 Verificação Rápida
+      run: |
+        echo "🔍 Verificação final..."
+        sshpass -p '${{ secrets.VPS_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "
+          cd ${{ env.APP_DIR }}
+          
+          # Verificar status do container nginx
+          echo '🔍 Status do container nginx:'
+          if docker ps | grep -q nginx-digiurban; then
+            echo '✅ Nginx DigiUrban rodando'
+            docker ps | grep nginx-digiurban
+          else
+            echo '❌ Nginx DigiUrban não encontrado'
+            echo '🔍 Verificando todos os containers:'
+            docker ps -a | grep nginx-digiurban || echo 'Container não existe'
+            exit 1
+          fi
+          
+          # Verificar health check da aplicação React
+          echo '🔍 Testando aplicação React...'
+          for i in {1..3}; do
+            if curl -f -s http://localhost:${{ env.APP_PORT }}/ >/dev/null 2>&1; then
+              echo '✅ Aplicação React respondendo'
+              break
+            else
+              echo \"⏳ Tentativa \$i/3...\"
+              sleep 5
+            fi
+            
+            if [ \$i -eq 3 ]; then
+              echo '❌ Aplicação React não está respondendo'
+              docker logs nginx-digiurban --tail 10
+              exit 1
+            fi
+          done
+        "
+
+    - name: 📊 Relatório do Deploy Incremental
+      if: always()
+      run: |
+        echo "📊 RELATÓRIO DO DEPLOY INCREMENTAL"
+        echo "=================================="
+        sshpass -p '${{ secrets.VPS_PASSWORD }}' ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "
+          echo 'Tipo de Deploy: ${{ needs.analyze-changes.outputs.deploy_type }}'
+          echo 'Restart Executado: ${{ needs.analyze-changes.outputs.needs_restart }}'
+          echo 'Dependências Atualizadas: ${{ needs.analyze-changes.outputs.has_package_changes }}'
+          echo ''
+          
+          echo '=== Status da Aplicação React ==='
+          cd ${{ env.APP_DIR }}
+          
+          # Verificar container nginx
+          if docker ps | grep -q nginx-digiurban; then
+            echo '✅ Nginx DigiUrban rodando'
+            docker ps | grep nginx-digiurban
+          else
+            echo '❌ Nginx DigiUrban não encontrado'
+          fi
+          
+          echo ''
+          echo '=== Último Commit ==='
+          git log --oneline -1
+          
+          echo ''
+          echo '🎯 Aplicação React: http://${{ env.VPS_HOST }}:${{ env.APP_PORT }}'
+          echo '⚡ Deploy incremental DigiUrban React concluído!'
+        "
+
+    - name: 🎉 Deploy Incremental Concluído
+      run: |
+        echo "🎉 DEPLOY INCREMENTAL DIGIURBAN REACT REALIZADO COM SUCESSO!"
+        echo "⚡ Tipo: ${{ needs.analyze-changes.outputs.deploy_type }}"
+        echo "🛡️ Deploy preservou configurações existentes"
+        echo "🚀 Aplicação React: http://${{ env.VPS_HOST }}:${{ env.APP_PORT }}"
