@@ -269,6 +269,7 @@ jobs:
           if ! command -v node >/dev/null 2>&1; then
             echo '📦 Instalando Node.js...'
             curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+            apt-get update
             apt-get install -y nodejs
           fi
           
@@ -276,22 +277,51 @@ jobs:
           node --version
           npm --version
           
-          # Instalar dependências (incluindo devDependencies para build)
+          # Limpar cache npm e node_modules
+          echo '🧹 Limpando cache...'
+          npm cache clean --force || true
+          rm -rf node_modules package-lock.json || true
+          
+          # Instalar dependências com fallbacks
           echo '📦 Installing dependencies...'
-          npm ci --include=dev
+          if ! npm install; then
+            echo '⚠️ npm install falhou, tentando com --legacy-peer-deps...'
+            if ! npm install --legacy-peer-deps; then
+              echo '⚠️ Tentando npm install --force...'
+              npm install --force
+            fi
+          fi
+          
+          # Verificar se vite está disponível
+          echo '🔍 Verificando Vite...'
+          if ! npx vite --version >/dev/null 2>&1; then
+            echo '📦 Instalando Vite globalmente...'
+            npm install -g vite
+          fi
           
           # Build do frontend
           echo '🏗️ Building React app...'
-          npm run build
+          if ! npm run build; then
+            echo '⚠️ Build falhou com npm, tentando com npx...'
+            if ! npx vite build; then
+              echo '⚠️ Tentando build com vite global...'
+              vite build || {
+                echo '❌ Todos os métodos de build falharam!'
+                echo '📋 Estrutura do projeto:'
+                ls -la
+                echo '📋 Conteúdo package.json:'
+                cat package.json | grep -A5 -B5 scripts || true
+                exit 1
+              }
+            fi
+          fi
           
           # Verificar se o build existe e tem conteúdo
           if [ ! -f "dist/index.html" ]; then
-            echo '❌ Build falhou! Tentando novamente...'
-            npm run build
-            if [ ! -f "dist/index.html" ]; then
-              echo '❌ Build falhou definitivamente!'
-              exit 1
-            fi
+            echo '❌ Build não gerou dist/index.html!'
+            echo '📁 Verificando se existe pasta dist:'
+            ls -la dist/ || echo 'Pasta dist não existe'
+            exit 1
           fi
           
           echo '📁 Conteúdo do build:'
