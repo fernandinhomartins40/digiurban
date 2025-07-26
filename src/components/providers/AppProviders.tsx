@@ -23,7 +23,8 @@ export function AppProviders({ children }: AppProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="digiurban-theme">
-        <SecurityProvider>
+        {/* SecurityProvider desabilitado para desenvolvimento */}
+        {/* <SecurityProvider> */}
           <Router>
             <SupabaseAuthProvider>
               <AppAuthProvider>
@@ -35,7 +36,7 @@ export function AppProviders({ children }: AppProvidersProps) {
               </AppAuthProvider>
             </SupabaseAuthProvider>
           </Router>
-        </SecurityProvider>
+        {/* </SecurityProvider> */}
       </ThemeProvider>
     </QueryClientProvider>
   );

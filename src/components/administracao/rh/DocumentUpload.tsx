@@ -97,10 +97,10 @@ export function DocumentUpload({ documentTypes, onUploadComplete }: DocumentUplo
         fileRef.current.value = "";
       }
       onUploadComplete();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao enviar documento",
+        description: error instanceof Error ? error.message : "Erro ao enviar documento",
         variant: "destructive",
       });
     } finally {

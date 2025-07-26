@@ -26,7 +26,7 @@ export function AppointmentFilters({
   setSearchTerm 
 }: AppointmentFiltersProps) {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm && setSearchTerm(e.target.value);
+    setSearchTerm?.(e.target.value);
   };
 
   return (

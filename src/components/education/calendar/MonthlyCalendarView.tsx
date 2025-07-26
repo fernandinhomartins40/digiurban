@@ -137,7 +137,7 @@ export function MonthlyCalendarView({
                         "border-l-2"
                       )}
                       style={{ 
-                        backgroundColor: `${event.color}20` || "#f3f4f6",
+                        backgroundColor: event.color ? `${event.color}20` : "#f3f4f6",
                         borderLeftColor: event.color || "#6366f1" 
                       }}
                       onClick={(e) => {

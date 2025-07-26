@@ -79,10 +79,10 @@ export function PurchaseRequestForm({ onRequestCreated, departmentsList }: Purch
       setFiles([]);
       onRequestCreated();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao criar solicitação de compra",
+        description: error instanceof Error ? error.message : "Erro ao criar solicitação de compra",
         variant: "destructive",
       });
     } finally {

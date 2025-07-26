@@ -5,7 +5,7 @@ import { ChartCard, DashboardLineChart } from "./common/DashboardCharts";
 
 interface InsightsChartProps {
   className?: string;
-  data?: any[];
+  data?: Record<string, unknown>[];
 }
 
 // Default chart data if none is provided

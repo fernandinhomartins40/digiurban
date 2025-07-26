@@ -42,7 +42,7 @@ export const ChartCard = ({ title, description, children, className }: ChartProp
 
 // Comparison Chart - combines bars and lines
 interface ComparisonChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   bars?: Array<{
     dataKey: string;
     fill: string;
@@ -113,7 +113,7 @@ export const DashboardComparisonChart = ({
 
 // Area Chart - for showing trends over time with filled areas
 interface AreaChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   areas: Array<{
     dataKey: string;
     fill: string;
@@ -193,7 +193,7 @@ export const DashboardAreaChart = ({
 
 // Scatter Plot - for correlation analysis
 interface ScatterPlotProps {
-  data: any[];
+  data: Record<string, unknown>[];
   xAxisDataKey: string;
   yAxisDataKey: string;
   height?: number;
@@ -241,7 +241,7 @@ export const DashboardScatterPlot = ({
 
 // Advanced Pie Chart - for more customized pie charts with legends and labels
 interface AdvancedPieChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   dataKey: string;
   nameKey: string;
   height?: number;

@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.npm
+.git
+.gitignore
+README.md
+.env
+.nyc_output
+coverage
+.cache
+dist
+.claude
+ATUALIZACAO_SUPABASE.md
+MELHORIAS_SUGERIDAS.md
+SETUP_AUTHENTICATION_COMPLETE.md

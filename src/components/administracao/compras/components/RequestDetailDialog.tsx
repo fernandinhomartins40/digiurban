@@ -66,8 +66,8 @@ export function RequestDetailDialog({
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (error: any) {
-      console.error("Error downloading file:", error.message);
+    } catch (error: unknown) {
+      console.error("Error downloading file:", error instanceof Error ? error.message : error);
     }
   };
 

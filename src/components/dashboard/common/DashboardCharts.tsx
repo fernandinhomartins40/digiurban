@@ -41,7 +41,7 @@ export const ChartCard = memo(({ title, description, children, className }: Char
 ChartCard.displayName = "ChartCard";
 
 interface LineChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   lines: {
     dataKey: string;
     stroke?: string;
@@ -90,7 +90,7 @@ export const DashboardLineChart = memo(
 DashboardLineChart.displayName = "DashboardLineChart";
 
 interface BarChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   bars: {
     dataKey: string;
     fill?: string;
@@ -149,7 +149,7 @@ export const DashboardBarChart = memo(
 DashboardBarChart.displayName = "DashboardBarChart";
 
 interface PieChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   dataKey: string;
   nameKey: string;
   colors?: string[];

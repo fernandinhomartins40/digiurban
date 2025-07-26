@@ -47,7 +47,7 @@ export const AttendanceFilter = ({
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
 
   const handleFilter = () => {
-    const filters: any = {};
+    const filters: Record<string, unknown> = {};
     if (employeeName) filters.employeeName = employeeName;
     if (serviceId && serviceId !== "all") filters.serviceId = serviceId;
     if (status && status !== "all") filters.status = status;

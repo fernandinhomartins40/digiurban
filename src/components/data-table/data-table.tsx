@@ -21,7 +21,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   isLoading?: boolean;
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
 }
 
 export function DataTable<TData, TValue>({

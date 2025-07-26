@@ -50,8 +50,8 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
   });
 
   // Dynamic form for request type fields
-  const [dynamicFormSchema, setDynamicFormSchema] = useState<z.ZodObject<any>>(z.object({}));
-  const dynamicForm = useForm<any>({
+  const [dynamicFormSchema, setDynamicFormSchema] = useState<z.ZodObject<Record<string, z.ZodTypeAny>>>(z.object({}));
+  const dynamicForm = useForm<Record<string, unknown>>({
     resolver: zodResolver(dynamicFormSchema),
   });
 
@@ -63,9 +63,9 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
     setSelectedRequestType(requestType);
 
     // Build dynamic form schema based on fields from selected request type
-    const schemaFields: { [key: string]: any } = {};
+    const schemaFields: Record<string, z.ZodTypeAny> = {};
     requestType.formSchema.fields.forEach((field) => {
-      let fieldSchema: any;
+      let fieldSchema: z.ZodTypeAny;
       
       if (field.type === 'date') {
         fieldSchema = z.string();
@@ -118,7 +118,7 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
   };
 
   // Submit form
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Record<string, unknown>) => {
     if (!user || !selectedRequestType) {
       toast({
         title: "Erro",
@@ -161,10 +161,10 @@ export function RequestForm({ requestTypes, onRequestCreated }: RequestFormProps
       setFiles([]);
       onRequestCreated();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao criar solicitação",
+        description: error instanceof Error ? error.message : "Erro ao criar solicitação",
         variant: "destructive",
       });
     } finally {

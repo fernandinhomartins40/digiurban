@@ -26,7 +26,7 @@ export function PurchaseFilters({
     <div className="flex items-center space-x-2">
       <Select
         value={statusFilter}
-        onValueChange={(value: any) => onStatusChange(value)}
+        onValueChange={(value: string) => onStatusChange(value)}
       >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Filtrar por status" />

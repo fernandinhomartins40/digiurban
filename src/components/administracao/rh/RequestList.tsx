@@ -39,8 +39,8 @@ export function RequestList({
   onUpdateStatus,
 }: RequestListProps) {
   const [selectedRequest, setSelectedRequest] = React.useState<HRRequest | null>(null);
-  const [attachments, setAttachments] = React.useState<any[]>([]);
-  const [history, setHistory] = React.useState<any[]>([]);
+  const [attachments, setAttachments] = React.useState<unknown[]>([]);
+  const [history, setHistory] = React.useState<unknown[]>([]);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [statusComment, setStatusComment] = React.useState("");
   const [loadingDetails, setLoadingDetails] = React.useState(false);
@@ -113,12 +113,12 @@ export function RequestList({
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (error: any) {
-      console.error("Error downloading file:", error.message);
+    } catch (error: unknown) {
+      console.error("Error downloading file:", error instanceof Error ? error.message : error);
     }
   };
 
-  const renderFormData = (formData: Record<string, any>) => {
+  const renderFormData = (formData: Record<string, unknown>) => {
     return Object.entries(formData).map(([key, value]) => (
       <div key={key} className="mb-2">
         <span className="font-medium">{key}: </span>

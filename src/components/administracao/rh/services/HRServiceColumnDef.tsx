@@ -18,7 +18,8 @@ interface HRServiceTableMeta {
 
 // Add the table meta to the module declaration
 declare module '@tanstack/react-table' {
-  interface TableMeta<TData> extends HRServiceTableMeta {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface TableMeta<TData extends Record<string, unknown>> extends HRServiceTableMeta {}
 }
 
 export const HRServiceColumnDef: ColumnDef<HRService>[] = [

@@ -108,18 +108,19 @@ export const DEFAULT_CSP: CSPOptions = {
   defaultSrc: ["'self'"],
   scriptSrc: [
     "'self'", 
-    "https://vvuwhkaxrwrdgydxvprr.supabase.co",
+    "http://82.25.69.57:8186",
     "'strict-dynamic'",
     // Allow nonce-based scripts (nonce will be added dynamically)
     (typeof window !== 'undefined') ? `'nonce-${generateNonce()}'` : ''
   ],
   styleSrc: ["'self'", "https://fonts.googleapis.com", "'unsafe-inline'"], // Safe in modern browsers with trusted sources
-  imgSrc: ["'self'", "data:", "https://vvuwhkaxrwrdgydxvprr.supabase.co", "https://*.supabase.co", "https://supabase.com"],
-  connectSrc: ["'self'", "https://vvuwhkaxrwrdgydxvprr.supabase.co", "https://*.supabase.co", "https://supabase.com"],
+  imgSrc: ["'self'", "data:", "http://82.25.69.57:8186"],
+
+  connectSrc: ["'self'", "http://82.25.69.57:8186"],
   fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
   objectSrc: ["'none'"],
   mediaSrc: ["'self'"],
-  frameSrc: ["'self'", "https://vvuwhkaxrwrdgydxvprr.supabase.co"],
+  frameSrc: ["'self'", "http://82.25.69.57:8186"],
   formAction: ["'self'"],
   baseUri: ["'self'"],
   childSrc: ["'self'", "blob:"],
